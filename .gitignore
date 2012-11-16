@@ -21,3 +21,12 @@
 /mop-packaging/.project
 /mop/.classpath
 /mop/.project
+/content/target
+/cli/target
+/ear/target
+/config/target
+/mop-packaging/target
+/mop/target
+/idm/target
+/ecmadmin/target
+/gadget/target
