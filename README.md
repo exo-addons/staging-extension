@@ -1,4 +1,4 @@
-platform-staging-extension
-==========================
+gatein-management-content-extension
+===================================
 
-Platform Staging Extension
+GateIn Management Content extension

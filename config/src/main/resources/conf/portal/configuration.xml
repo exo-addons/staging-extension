@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://www.exoplaform.org/xml/ns/kernel_1_0.xsd http://www.exoplaform.org/xml/ns/kernel_1_0.xsd"
+   xmlns="http://www.exoplaform.org/xml/ns/kernel_1_0.xsd">
+	<component>
+		<type>org.exoplatform.platform.organization.injector.DataInjectorService</type>
+	</component>
+	<component>
+	  <key>org.gatein.management.api.ManagementService</key>
+	  <type>org.gatein.management.core.api.ManagementServiceImpl</type>
+	</component>
+	<component>
+	  <key>org.gatein.management.api.controller.ManagementController</key>
+	  <type>org.gatein.management.core.api.controller.SimpleManagementController</type>
+	</component>
+	<component>
+	  <type>org.gatein.management.rest.RestApplication</type>
+	</component>
+	<component>
+	  <type>org.gatein.management.runtime.RuntimeContextImpl</type>
+	</component>
+	<component>
+	  <type>org.gatein.management.runtime.ManagementBootstrap</type>
+	</component>
+</configuration>

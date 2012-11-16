@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.exoplatform.platform.staging</groupId>
+		<artifactId>platform-staging-extension-parent</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>platform-staging-extension-cli</artifactId>
+	<name>Platform Staging Extension - CLI</name>
+	<description>Platform Staging Extension - CLI</description>
+	<packaging>war</packaging>
+	<dependencies>
+		<dependency>
+			<groupId>org.gatein.management</groupId>
+			<artifactId>gatein-management-cli</artifactId>
+			<type>war</type>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<configuration>
+					<dependentWarExcludes>WEB-INF/crash.properties,WEB-INF/lib/bcprov*.jar</dependentWarExcludes>   
+				</configuration>
+			</plugin>
+		</plugins>
+		<finalName>gatein-management-cli</finalName>
+	</build>
+</project>
