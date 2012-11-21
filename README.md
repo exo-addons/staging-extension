@@ -39,7 +39,18 @@ Prerequisite : install [eXo Platform 3.5 bundle](http://www.exoplatform.com/comp
 		cp ear/target/exo-platform-staging-extension/lib/* CATALINA_HOME/lib
 		cp -r ear/target/exo-platform-staging-extension/gatein-management-cli.war CATALINA_HOME/webapp
 
-Step 3 : Run
+Step 3 : Configure Platform
+----------------------------
+
+Delete "PortalLoginModule" from the security domain "gatein-domain":
+
+	If the bundle is based on JBoss, delete the entry from:
+	JBOSS_HOME/server/default/deploy/gatein.ear/META-INF/gatein-jboss-beans.xml
+
+	Else If the bundle is based on Tomcat, delete the entry from:
+	CATALINA_HOME/conf/jaas.conf
+
+Step 4 : Run
 ------------
 
 Use eXo start script.
