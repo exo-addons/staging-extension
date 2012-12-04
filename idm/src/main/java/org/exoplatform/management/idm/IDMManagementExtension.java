@@ -52,9 +52,14 @@ public class IDMManagementExtension implements ManagementExtension {
     ManagedResource.Registration idm = registration
         .registerManagedResource(description("IDM (Model Object for Portal) Managed Resource, responsible for handling management operations on users, groups, membership types and memberships."));
     idm.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty."));
-    idm.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new IDMExportResource(), description("Export IDM resources."),
+	
+    ManagedResource.Registration operations = idm
+        .registerSubResource("operations", description("Workaround : Export Resource can't be added to parent operation handler."));
+	
+    operations.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty."));
+    operations.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new IDMExportResource(), description("Export IDM resources."),
         false);
-    idm.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new IDMImportResource(), description("Import organization data"));
+    operations.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new IDMImportResource(), description("Import organization data"));
 
   }
 
