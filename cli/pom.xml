@@ -22,7 +22,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<configuration>
-					<dependentWarExcludes>WEB-INF/crash.properties,WEB-INF/lib/bcprov*.jar</dependentWarExcludes>   
+					<dependentWarExcludes>WEB-INF/crash.properties,WEB-INF/lib/bcprov*.jar,WEB-INF/lib/groovy*.jar</dependentWarExcludes>   
 				</configuration>
 			</plugin>
 		</plugins>
