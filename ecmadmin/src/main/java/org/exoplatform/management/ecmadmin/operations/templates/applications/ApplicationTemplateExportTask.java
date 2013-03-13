@@ -20,23 +20,21 @@ import org.gatein.management.api.operation.model.ExportTask;
 public class ApplicationTemplateExportTask implements ExportTask {
   private final ApplicationTemplateManagerService applicationTemplateManagerService;
   private final String applicationName;
-  private final String templatePath;
+  private String templatePath;
   private final String templateCategory;
   private final String templateName;
 
   public ApplicationTemplateExportTask(ApplicationTemplateManagerService applicationTemplateManagerService,
-      String applicationName, String templatePath) {
+      String applicationName, String templateCategory, String templateName) {
     this.applicationTemplateManagerService = applicationTemplateManagerService;
     this.applicationName = applicationName;
-    this.templatePath = templatePath;
-    String templatePathArray[] = this.templatePath.split("/");
-    if (templatePathArray.length == 1) {
-      this.templateCategory = "";
-      this.templateName = templatePathArray[0];
-    } else {
-      this.templateCategory = templatePathArray[0];
-      this.templateName = templatePathArray[1];
+    this.templateCategory = templateCategory;
+    this.templateName = templateName;
+    templatePath = "";
+    if (templateCategory != null && !templateCategory.isEmpty()) {
+      templatePath += templateCategory + "/";
     }
+    templatePath += templateName;
   }
 
   @Override

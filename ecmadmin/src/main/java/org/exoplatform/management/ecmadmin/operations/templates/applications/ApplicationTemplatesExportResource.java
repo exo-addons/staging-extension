@@ -2,9 +2,12 @@ package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
@@ -32,13 +35,28 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    Set<String> templates = null;
     ApplicationTemplateManagerService applicationTemplateManagerService = operationContext.getRuntimeContext()
         .getRuntimeComponent(ApplicationTemplateManagerService.class);
     try {
-      templates = applicationTemplateManagerService.getConfiguredAppTemplateMap(applicationName);
-      for (String template : templates) {
-        exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, template));
+      Node templatesHome = applicationTemplateManagerService.getApplicationTemplateHome(applicationName,
+          SessionProvider.createSystemProvider());
+      if (templatesHome != null) {
+        NodeIterator nodeIterator = templatesHome.getNodes();
+        while (nodeIterator.hasNext()) {
+          Node categoryNode = nodeIterator.nextNode();
+          if (categoryNode.getName().endsWith(".gtmpl")) {
+            Node templateNode = categoryNode;
+            exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode
+                .getName(), templateNode.getName()));
+          } else {
+            NodeIterator templatesIterator = categoryNode.getNodes();
+            while (templatesIterator.hasNext()) {
+              Node templateNode = templatesIterator.nextNode();
+              exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode
+                  .getName(), templateNode.getName()));
+            }
+          }
+        }
       }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
