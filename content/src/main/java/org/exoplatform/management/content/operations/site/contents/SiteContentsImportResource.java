@@ -15,9 +15,12 @@ import java.util.zip.ZipInputStream;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
+import javax.jcr.NodeIterator;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.query.Query;
+import javax.jcr.query.QueryManager;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -151,8 +154,10 @@ public class SiteContentsImportResource implements OperationHandler {
       }
 
       try {
-        Node oldNode = session.getRootNode().getNode(relPath);
-        oldNode.remove();
+        if (session.itemExists(relPath)) {
+          Node oldNode = (Node) session.getItem(relPath);
+          oldNode.remove();
+        }
       } catch (PathNotFoundException e) {
         log.error("Error when trying to find and delete the node: " + relPath, e);
       } catch (RepositoryException e) {
@@ -167,11 +172,31 @@ public class SiteContentsImportResource implements OperationHandler {
       createJCRPath(session, path);
 
       session.importXML(path, new ByteArrayInputStream(nodes.get(name).getBytes("UTF-8")), uuidBehaviorValue);
+      session.save();
+
+      // Clean publication information
+      cleanPublication(path, session);
+      session.save();
     }
     // save at the end
     // TODO Can there be too much data? Big memory consumption...
     // TODO Transaction instead of a simple session?
     session.save();
+  }
+
+  private void cleanPublication(String path, Session session) throws Exception {
+    QueryManager manager = session.getWorkspace().getQueryManager();
+    String statement = "select * from nt:base where jcr:path LIKE '" + path + "/%' and publication:liveRevision IS NOT NULL";
+    Query query = manager.createQuery(statement.toString(), Query.SQL);
+    NodeIterator iter = query.execute().getNodes();
+    while (iter.hasNext()) {
+      Node node = iter.nextNode();
+      if (node.hasProperty("publication:liveRevision") && node.hasProperty("publication:currentState")) {
+        log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
+        node.setProperty("publication:liveRevision", "");
+        node.setProperty("publication:currentState", "published");
+      }
+    }
 
   }
 
