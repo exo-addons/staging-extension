@@ -42,6 +42,7 @@ public class NodeTypeExportResource implements OperationHandler {
           exportTasks.add(new NodeTypeExportTask(nodeType, "nodetype"));
         }
       }
+      exportTasks.add(new NamespacesExportTask(repositoryService.getCurrentRepository().getNamespaceRegistry(), "nodetype"));
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while retrieving nodetypes", exception);
     }
