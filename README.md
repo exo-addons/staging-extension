@@ -56,6 +56,6 @@ Step 4 : Run
 Use eXo start script.
 
 Now, use SSH client to connect to the console:
- ssh -p 2000 root@localhost
+ ssh -p 2001 root@localhost
  *  mgmt connect -c portal
  *  y o u r  c o m m a n d s
