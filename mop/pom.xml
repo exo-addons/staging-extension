@@ -13,36 +13,20 @@
 			<groupId>org.exoplatform.portal</groupId>
 			<artifactId>exo.portal.component.portal</artifactId>
 			<version>3.2.0-GA</version>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.portal</groupId>
 			<artifactId>exo.portal.component.common</artifactId>
 			<version>3.2.0-GA</version>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.portal</groupId>
 			<artifactId>exo.portal.component.management</artifactId>
 			<version>3.2.0-GA</version>
-			<exclusions>
-				<exclusion>
-					<groupId>*</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
+			<scope>provided</scope>
 		</dependency>
-
 	</dependencies>
 	<build>
 		<plugins>
@@ -63,6 +47,7 @@
 									<artifactId>exo.portal.component.portal</artifactId>
 									<outputDirectory>${project.build.directory}/classes</outputDirectory>
 									<includes>org/exoplatform/portal/mop/management/**</includes>
+									<excludes>org/exoplatform/portal/mop/management/exportimport/PageImportTask.class</excludes>
 								</artifactItem>
 								<artifactItem>
 									<groupId>org.exoplatform.portal</groupId>
