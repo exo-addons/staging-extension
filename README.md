@@ -1,4 +1,6 @@
 Platform Staging Extension
+for
+eXo Platform 3.5
 ===================
 
 "Platform Staging Extension" provides extensions based on "GateIN Management" (1.0.1-GA) to export/import Platform data. This is helpful for System administrators to transfer data from a Platform Server to another.
@@ -36,7 +38,17 @@ Prerequisite : install [eXo Platform 3.5 bundle](http://www.exoplatform.com/comp
 	If the bundle is based on JBoss:
 		cp ear/target/exo-platform-staging-extension.ear JBOSS_HONE/server/default/deploy
 	Else, if the bundle is based on Tomcat
-		cp ear/target/exo-platform-staging-extension/lib/* CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/gatein-management-api-1.0.1-GA.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/gatein-management-core-1.0.1-GA.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/gatein-management-rest-1.0.1-GA.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/gatein-management-spi-1.0.1-GA.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-config-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-content-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-ecmadmin-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-gadget-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-idm-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-mop-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
+		cp ear/target/exo-platform-staging-extension/lib/staging-extension-mop-packaging-1.0.0-SNAPSHOT.jar CATALINA_HOME/lib
 		cp -r ear/target/exo-platform-staging-extension/gatein-management-cli.war CATALINA_HOME/webapp
 
 Step 3 : Configure Platform
