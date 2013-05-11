@@ -145,13 +145,7 @@ public class SiteContentsImportResource implements OperationHandler {
 
       String relPath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
 
-      if (log.isInfoEnabled()) {
-        log.info("Deleting the node " + workspace + ":" + relPath);
-      }
-
-      if (relPath.startsWith("/")) {
-        relPath = relPath.substring(1);
-      }
+      log.info("Deleting the node " + workspace + ":" + relPath);
 
       try {
         if (session.itemExists(relPath)) {
@@ -316,6 +310,7 @@ public class SiteContentsImportResource implements OperationHandler {
         }
         // seo file ?
         else if (filePath.endsWith(SiteSEOExportTask.FILENAME)) {
+          String lang = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.indexOf(SiteSEOExportTask.FILENAME));
           XStream xStream = new XStream();
           xStream.alias("seo", List.class);
           InputStreamReader isr = new InputStreamReader(zis, "UTF-8");
@@ -324,7 +319,7 @@ public class SiteContentsImportResource implements OperationHandler {
           List<PageMetadataModel> models = (List<PageMetadataModel>) xStream.fromXML(isr);
           if (models != null && !models.isEmpty()) {
             for (PageMetadataModel pageMetadataModel : models) {
-              seoService.storePageMetadata(pageMetadataModel, siteName, false);
+              seoService.storeMetadata(pageMetadataModel, siteName, false, lang);
             }
           }
         }
@@ -381,8 +376,8 @@ public class SiteContentsImportResource implements OperationHandler {
   // ZipInputStream.
   // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
   // information.
-  private static class NonCloseableZipInputStream extends ZipInputStream {
-    private NonCloseableZipInputStream(InputStream inputStream) {
+  public static class NonCloseableZipInputStream extends ZipInputStream {
+    public NonCloseableZipInputStream(InputStream inputStream) {
       super(inputStream);
     }
 

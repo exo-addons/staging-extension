@@ -30,3 +30,5 @@
 /idm/target
 /ecmadmin/target
 /gadget/target
+.project
+.settings

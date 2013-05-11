@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -11,15 +12,15 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 
-import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.portal.config.DataStorage;
-import org.exoplatform.portal.config.Query;
 import org.exoplatform.portal.config.model.Application;
 import org.exoplatform.portal.config.model.Container;
 import org.exoplatform.portal.config.model.ModelObject;
 import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.portal.mop.page.PageContext;
+import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.pom.spi.portlet.Portlet;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -57,6 +58,7 @@ public class SiteContentsExportResource implements OperationHandler {
   private RepositoryService repositoryService = null;
   private WCMService wcmService = null;
   private DataStorage dataStorage = null;
+  private PageService pageService = null;
 
   private SiteMetaData metaData = null;
 
@@ -76,6 +78,7 @@ public class SiteContentsExportResource implements OperationHandler {
       wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
       dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
+      pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
       wcmService = operationContext.getRuntimeContext().getRuntimeComponent(WCMService.class);
       Collection<NodeLocation> sitesLocations = wcmConfigurationService.getAllLivePortalsLocation();
       if (sitesLocations == null || sitesLocations.size() != 1) {
@@ -124,10 +127,12 @@ public class SiteContentsExportResource implements OperationHandler {
       return;
     }
     // pages
-    LazyPageList<Page> pagLazyList = dataStorage.find(new Query<Page>(SiteType.PORTAL.getName(), siteName, Page.class));
-    List<Page> pageList = pagLazyList.getAll();
+    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null)
+        .iterator();
     Set<String> contentSet = new HashSet<String>();
-    for (Page page : pageList) {
+    while (pagesQueryResult.hasNext()) {
+      PageContext pageContext = (PageContext) pagesQueryResult.next();
+      Page page = dataStorage.getPage(pageContext.getKey().format());
       contentSet.addAll(getSCVPaths(page.getChildren()));
       contentSet.addAll(getCLVPaths(page.getChildren()));
     }

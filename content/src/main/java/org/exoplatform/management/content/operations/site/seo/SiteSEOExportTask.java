@@ -19,15 +19,17 @@ public class SiteSEOExportTask implements ExportTask {
 
   private final List<PageMetadataModel> models;
   private final String siteName;
+  private final String lang;
 
-  public SiteSEOExportTask(List<PageMetadataModel> models, String siteName) {
+  public SiteSEOExportTask(List<PageMetadataModel> models, String siteName, String lang) {
     this.models = models;
     this.siteName = siteName;
+    this.lang = lang;
   }
 
   @Override
   public String getEntry() {
-    return SiteUtil.getSiteBasePath(siteName) + "/" + FILENAME;
+    return SiteUtil.getSiteBasePath(siteName) + "/" + lang + "_" + FILENAME;
   }
 
   @Override

@@ -3,23 +3,23 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.exoplatform.platform</groupId>
-		<artifactId>exo.platform.parent</artifactId>
-		<version>3.5.4</version>
+		<artifactId>platform</artifactId>
+		<version>4.0.0</version>
 	</parent>
 	<groupId>org.exoplatform.extensions.staging</groupId>
 	<artifactId>staging-extension-parent</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>2.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>Staging Extension</name>
-	<description>Staging Extension</description>
+	<description>Staging Extension for eXo Platform 4</description>
 	<scm>
 		<connection>scm:git:git://github.com/exo-addons/staging-extension.git</connection>
 		<developerConnection>scm:git:git@github.com:exo-addons/staging-extension.git</developerConnection>
 		<url>https://github.com/exo-addons/staging-extension</url>
 	</scm>
 	<properties>
-		<gatein.management.version>1.0.1-GA</gatein.management.version>
-		<org.exoplatform.platform.version>3.5.4</org.exoplatform.platform.version>
+		<gatein.management.version>1.1.0.Final</gatein.management.version>
+		<org.exoplatform.platform.version>4.0.0</org.exoplatform.platform.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -50,23 +50,23 @@
 				<type>war</type>
 			</dependency>
 			<dependency>
-				<groupId>org.exoplatform.portal</groupId>
+				<groupId>org.gatein.portal</groupId>
 				<artifactId>exo.portal.component.common</artifactId>
-				<version>${org.exoplatform.portal.version}</version>
+				<version>${org.gatein.portal.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.exoplatform.portal</groupId>
+				<groupId>org.gatein.portal</groupId>
 				<artifactId>exo.portal.component.application-registry</artifactId>
-				<version>${org.exoplatform.portal.version}</version>
+				<version>${org.gatein.portal.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.exoplatform.ecms</groupId>
-				<artifactId>exo-ecms-core-services</artifactId>
+				<artifactId>ecms-core-services</artifactId>
 				<version>${org.exoplatform.ecms.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.exoplatform.ecms</groupId>
-				<artifactId>exo-ecms-core-webui</artifactId>
+				<artifactId>ecms-core-webui</artifactId>
 				<version>${org.exoplatform.ecms.version}</version>
 			</dependency>
 			<dependency>
@@ -92,8 +92,6 @@
 		<module>content</module>
 		<module>ecmadmin</module>
 		<module>gadget</module>
-		<module>idm</module>
-		<module>mop</module>
 		<module>mop-packaging</module>
 		<module>config</module>
 		<module>ear</module>

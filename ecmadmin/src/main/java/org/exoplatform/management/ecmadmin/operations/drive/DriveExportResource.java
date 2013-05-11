@@ -52,7 +52,7 @@ public class DriveExportResource implements OperationHandler {
       templatesComponentPlugin.setInitParams(templatesPluginInitParams);
       componentPluginsList.add(templatesComponentPlugin);
 
-      List<DriveData> driveDataList = driveService.getAllDrives();
+      List<DriveData> driveDataList = driveService.getAllDrives(true);
       for (DriveData driveData : driveDataList) {
         if (filters.isEmpty() || filters.contains(driveData.getName())) {
           ObjectParameter objectParam = new ObjectParameter();

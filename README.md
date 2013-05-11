@@ -1,17 +1,17 @@
-Platform Staging Extension
-===================
+Staging Extension for eXo Platform 4
+====================================
 
-"Platform Staging Extension" provides extensions based on "GateIN Management" (1.0.1-GA) to export/import Platform data. This is helpful for System administrators to transfer data from a Platform Server to another.
+"Staging Extension" provides extensions based on "GateIN Management" (1.1.0.Final) to export/import Platform data.
+This is helpful for System administrators to transfer data from a Platform Server to another.
 This tool manage data of types:
 
-Pages and navigations (MOP extension provided by RedHat).
-IDM: organizational model elements.
+Sites : Pages and navigations (MOP extension provided by RedHat).
 ECM Admin templates, configurations and metadata.
 Gadgets
-Sites JCR Contents
-Another extension was added to provide a Platform extension package for sites configurations.
+Sites : Contents, documents and categories
+Packaging: generate a configuration extension with Sites configurations
 
-The MOP extension allows to export/import site related data (portal layout, pages and navigations).
+The export/import operations can be done via REST, SSH or SCP.
 
 Getting Started
 ===============
@@ -31,31 +31,20 @@ then build the project with maven :
 Step 2 : Deploy 
 ---------------
 
-Prerequisite : install [eXo Platform 3.5 bundle](http://www.exoplatform.com/company/en/download-exo-platform)
+Prerequisite : install [eXo Platform 4]
 
 	If the bundle is based on JBoss:
 		cp ear/target/exo-platform-staging-extension.ear JBOSS_HONE/server/default/deploy
 	Else, if the bundle is based on Tomcat
 		cp ear/target/exo-platform-staging-extension/lib/* CATALINA_HOME/lib
-		cp -r ear/target/exo-platform-staging-extension/gatein-management-cli.war CATALINA_HOME/webapp
+		cp -r ear/target/exo-platform-staging-extension/gatein-management-cli.war CATALINA_HOME/webapps
 
-Step 3 : Configure Platform
-----------------------------
-
-Delete "PortalLoginModule" from the security domain "gatein-domain":
-
-	If the bundle is based on JBoss, delete the entry from:
-	JBOSS_HOME/server/default/deploy/gatein.ear/META-INF/gatein-jboss-beans.xml
-
-	Else If the bundle is based on Tomcat, delete the entry from:
-	CATALINA_HOME/conf/jaas.conf
-
-Step 4 : Run
+Step 3 : Run
 ------------
 
-Use eXo start script.
-
-Now, use SSH client to connect to the console:
+1/ Start eXo Platform 4 server.
+2/ Use SSH client to connect to the console:
  ssh -p 2001 root@localhost
- *  mgmt connect -c portal
- *  y o u r  c o m m a n d s
+ *  mgmt connect
+3/ Use "help" command to get the list of commands.
+4/ Use "ls" command to get list of data to manage.
