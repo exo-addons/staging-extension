@@ -21,8 +21,8 @@ Step 1 :  Build
 
 Prerequisite : install [Maven 3](http://maven.apache.org/download.html).
 
-    git clone https://github.com/exo-addons/platform-staging-extension.git
-    cd platform-staging-extension
+    git clone https://github.com/exo-addons/staging-extension.git
+    cd staging-extension
 
 then build the project with maven :
 
@@ -43,8 +43,12 @@ Step 3 : Run
 ------------
 
 1/ Start eXo Platform 4 server.
+
 2/ Use SSH client to connect to the console:
- ssh -p 2001 root@localhost
- *  mgmt connect
+
+    ssh -p 2001 root@localhost
+    mgmt connect
+
 3/ Use "help" command to get the list of commands.
+
 4/ Use "ls" command to get list of data to manage.
