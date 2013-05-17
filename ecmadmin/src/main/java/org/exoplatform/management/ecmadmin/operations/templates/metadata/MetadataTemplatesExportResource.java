@@ -10,6 +10,7 @@ import org.exoplatform.services.cms.metadata.MetadataService;
 import org.exoplatform.services.cms.metadata.impl.MetadataServiceImpl;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
@@ -33,6 +34,8 @@ public class MetadataTemplatesExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
     String operationName = operationContext.getOperationName();
+    OperationAttributes attributes = operationContext.getAttributes();
+    List<String> filters = attributes.getValues("filter");
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
@@ -49,6 +52,9 @@ public class MetadataTemplatesExportResource implements OperationHandler {
       boolean[] isDialogValues = new boolean[] { true, false };
       List<String> metadataList = metadataService.getMetadataList();
       for (String metadataName : metadataList) {
+        if (filters != null && !filters.isEmpty() && !filters.contains(metadataName)) {
+          continue;
+        }
         metadata = new MetadataTemplatesMetaData();
 
         // TODO label is not exposed by the API...

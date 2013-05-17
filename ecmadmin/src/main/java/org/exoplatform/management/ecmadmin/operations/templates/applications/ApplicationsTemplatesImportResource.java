@@ -95,7 +95,7 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
             continue;
           }
         }
-        templateService.createTemplate(category, templateName, zis, new String[] { "*" });
+        templateService.createTemplate(category, templateName, templateName, zis, new String[] { "*" });
         zis.closeEntry();
       }
       zis.close();

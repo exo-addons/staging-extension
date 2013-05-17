@@ -11,6 +11,7 @@ import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
@@ -33,6 +34,8 @@ public class NodeTypesTemplatesExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
     String operationName = operationContext.getOperationName();
+    OperationAttributes attributes = operationContext.getAttributes();
+    List<String> filters = attributes.getValues("filter");
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
@@ -45,7 +48,9 @@ public class NodeTypesTemplatesExportResource implements OperationHandler {
         NodeIterator templatesNodes = templatesHome.getNodes();
         while (templatesNodes.hasNext()) {
           Node node = templatesNodes.nextNode();
-
+          if (filters != null && !filters.isEmpty() && !filters.contains(node.getName())) {
+            continue;
+          }
           metadata = new NodeTypeTemplatesMetaData();
           metadata.setLabel(templateService.getTemplateLabel(node.getName()));
           metadata.setDocumentTemplate(node.getProperty(TemplateService.DOCUMENT_TEMPLATE_PROP).getBoolean());
