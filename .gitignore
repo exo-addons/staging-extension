@@ -33,3 +33,4 @@
 .project
 .settings
 /portlet/.classpath
+/portlet/target

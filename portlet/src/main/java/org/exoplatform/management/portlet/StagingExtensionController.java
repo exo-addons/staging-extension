@@ -61,7 +61,8 @@ public class StagingExtensionController {
     }
     if (selectedNode == null) {
       return Response.content(500, "You have to select a resource.");
-    }    try {
+    }
+    try {
       stagingExtensionService.importResource(selectedNode, file);
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {

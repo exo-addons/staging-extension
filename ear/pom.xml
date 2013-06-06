@@ -29,12 +29,12 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>staging-extension-idm</artifactId> -->
-		<!-- <version>${project.version}</version> -->
-		<!-- <scope>provided</scope> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>staging-extension-portlet</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>staging-extension-gadget</artifactId>
@@ -98,6 +98,12 @@
 							<artifactId>staging-extension-cli</artifactId>
 							<contextRoot>gatein-management-cli</contextRoot>
 							<bundleFileName>gatein-management-cli.war</bundleFileName>
+						</webModule>
+						<webModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>staging-extension-portlet</artifactId>
+							<contextRoot>staging-extension-portlet</contextRoot>
+							<bundleFileName>staging-extension-portlet.war</bundleFileName>
 						</webModule>
 					</modules>
 				</configuration>
