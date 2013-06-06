@@ -1,0 +1,140 @@
+.css-treeview ul,
+.css-treeview li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.css-treeview ul.css-treeview-parent-ul {
+  padding: 10px !important;
+}
+.css-treeview input {
+  position: absolute;
+  opacity: 0;
+}
+.css-treeview {
+-moz-user-select: none;
+-webkit-user-select: none;
+user-select: none;
+padding: 10px;
+margin-bottom: 30px;
+font-size: 18px;
+font-weight: 200;
+line-height: 30px;
+color: inherit;
+background-color: rgb(238, 238, 238);
+border-radius: 6px 6px 6px 6px;
+}
+.css-treeview a {
+  color: #00f;
+  text-decoration: none;
+}
+.css-treeview a:hover {
+  text-decoration: underline;
+}
+.css-treeview input + label + ul {
+  margin: 0 0 0 22px;
+}
+.css-treeview input ~ ul {
+  display: none;
+}
+.css-treeview input:disabled + label {
+  cursor: default;
+  opacity: .6;
+}
+.css-treeview input:checked:not(:disabled) ~ ul {
+  display: block;
+}
+.css-treeview label,
+.css-treeview a,
+.css-treeview label::before {
+  display: inline-block;
+  height: 18px;
+  line-height: 16px;
+  vertical-align: middle;
+}
+.css-treeview label {
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  padding: 3px;
+}
+.css-treeview .parent {
+  background: transparent url("/staging-extension-portlet/style/images/parent.gif") no-repeat 19px 50%;
+  background-size: 18px;
+}
+.css-treeview .Clickable {
+  cursor: pointer;
+}
+.css-treeview .SelectedNode {
+  background-color: #fcf8e3;
+  border-top: 1px solid #dddddd;
+}
+.css-treeview .Clickable:hover {
+  background-color: orange;
+}
+.css-treeview .NotClickable {
+  cursor: default;
+}
+.css-treeview .leaf::before {
+  background: transparent url("/staging-extension-portlet/style/images/leaf.png") no-repeat center;
+  margin: 0 10px 0 0;
+  background-size: 18px;
+}
+.css-treeview .parent::before {
+  background: transparent url("/staging-extension-portlet/style/images/plus.png") no-repeat center;
+}
+.css-treeview label::before {
+  content: "";
+  width: 16px;
+  margin: 0 22px 0 0;
+  vertical-align: middle;
+}
+.css-treeview input:checked + .parent::before {
+  background: transparent url("/staging-extension-portlet/style/images/minus.png") no-repeat center;
+}
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .css-treeview {
+    -webkit-animation: webkit-adjacent-element-selector-bugfix infinite 1s;
+  }
+  @-webkit-keyframes webkit-adjacent-element-selector-bugfix {
+    from {
+      padding: 0;
+    }
+    to {
+      padding: 0;
+    }
+  }
+}
+.error {
+  background-color: #f2dede;
+  padding: 8px;
+  line-height: 32px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #dddddd;
+}
+.success {
+  background-color: #dff0d8;
+  padding: 8px;
+  line-height: 32px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #dddddd;
+}
+.progressBar {
+  background-color: #fcf8e3;
+  padding: 8px;
+  line-height: 32px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #dddddd;
+}
+.hero-unit {
+  border: 1px solid #dddddd;
+  background-color: #eeeeee;
+  padding: 6px 60px;
+}
+.staging-portlet-container {
+  background-color: #fefefe;
+  padding: 12px;
+}

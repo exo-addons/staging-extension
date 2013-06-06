@@ -1,0 +1,28 @@
+<%if(selectedNode != null) {%>
+  <%if(selectedNode.isExportable()) {%>
+    <div class="hero-unit">
+      <h3>Export Resource (Zip File)</h3>
+      <p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="button-download" alt="/rest/managed-components<%=selectedNode.getPath()%>.zip">Export</button>
+        </div>
+      </p>
+    </div>
+  <%}%>
+  <%if(selectedNode.isImportable()) {%>
+    <form method="post" enctype="multipart/form-data" id="importForm" action="@{StagingExtensionController.importResource()}">
+      <div class="hero-unit">
+        <h3>Import Resource (Zip File)</h3>
+        <p>
+            <input title="Upload file" type="file" id="filteToImport" accept=".zip" name="filteToImport" />
+        </p>
+        <p>
+          <div class="form-actions">
+            <button type="button" id="importButton" class="btn btn-primary" title="<%=selectedNode.getPath()%>">Import</button>
+            <span class="" id="importMessage"></span>
+          </div>
+        </p>
+      </div>
+    </form>
+  <%}%>
+<%}%>

@@ -1,0 +1,45 @@
+<%
+  public String computeChildContent(def node) {
+    String content = "<li>";
+    String classContent = "NotClickable";
+    String onclickContent = "";
+    String checkedNode = "";
+    if(node.isImportable() || node.isExportable()) {
+      classContent = "Clickable";
+      if(selectedPath!= null && selectedPath.startsWith(node.getPath())) {
+      if(selectedPath.equals(node.getPath())) {
+          classContent += " SelectedNode";
+        }
+        checkedNode = "checked='checked'";
+      }
+    }
+    if(!node.getChildren().isEmpty()) {
+        content += "<input type='checkbox' "+checkedNode+" id='"+node.getPath()+"'><label title='"+node.getPath()+"' class='parent "+classContent+"' for='"+node.getPath()+"'>"+node.getText()+"</label>";
+      content += "<ul>";
+			node.getChildren().each { child ->
+			    content += computeChildContent(child);
+      }
+      content += "</ul>";
+    } else {
+      content += "<input type='checkbox' id='"+node.getPath()+"'><label title='"+node.getPath()+"' class='leaf "+classContent+"' for='"+node.getPath()+"'>"+node.getText()+"</label>";
+    }
+    content += "</li>";
+    return content;
+  }
+%>
+<div class="container-fluid staging-portlet-container">
+  <div class="row-fluid">
+    <div class="span4 css-treeview">
+      <center><h3>Staging resources </h3></center>
+      <hr />
+      <ul class="css-treeview-parent-ul">
+        <%nodes.each { node -> %>
+          <%=computeChildContent(node)%>
+        <%}%>
+      </ul>
+    </div>
+    <div class="span7" id="exportImportForm">
+        #{include path=form.gtmpl}#{/include}
+    </div>
+  </div>
+</div>

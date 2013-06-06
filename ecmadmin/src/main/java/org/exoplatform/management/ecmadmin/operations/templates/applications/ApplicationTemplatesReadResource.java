@@ -36,11 +36,15 @@ public class ApplicationTemplatesReadResource implements OperationHandler {
     try {
       Set<String> nonSortedTemplates = templateManagerService.getConfiguredAppTemplateMap(applicationName);
 
-      // convert to List in order to sort it
-      List<String> templatesList = new ArrayList<String>(nonSortedTemplates);
-      Collections.sort(templatesList);
-
-      templates = new TreeSet<String>(templatesList);
+      if(nonSortedTemplates != null) {
+        // convert to List in order to sort it
+        List<String> templatesList = new ArrayList<String>(nonSortedTemplates);
+        Collections.sort(templatesList);
+        templates = new TreeSet<String>(templatesList);
+      } else {
+        templates = new TreeSet<String>();
+      }
+      
     } catch (Exception e) {
       throw new OperationException("Read template applications", "Error while retrieving applications with templates", e);
     }

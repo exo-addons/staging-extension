@@ -92,6 +92,7 @@
 		<module>content</module>
 		<module>ecmadmin</module>
 		<module>gadget</module>
+		<module>portlet</module>
 		<module>mop-packaging</module>
 		<module>config</module>
 		<module>ear</module>
