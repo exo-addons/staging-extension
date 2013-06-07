@@ -25,10 +25,10 @@ public class GadgetReadResource implements OperationHandler {
     if (gadgetRegistryService == null) {
       gadgetRegistryService = operationContext.getRuntimeContext().getRuntimeComponent(GadgetRegistryService.class);
       if (gadgetRegistryService == null) {
-        throw new OperationException(OperationNames.EXPORT_RESOURCE, "DataInjectorService doesn't exist.");
+        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Cannot get GadgetRegistryService instance.");
       }
     }
-    Set<String> result = new HashSet<String>();;
+    Set<String> result = new HashSet<String>();
     try {
       List<Gadget> gadgets = gadgetRegistryService.getAllGadgets();
       for (Gadget gadget : gadgets) {
@@ -38,6 +38,6 @@ public class GadgetReadResource implements OperationHandler {
       throw new OperationException(OperationNames.READ_RESOURCE, "Error while retrieving gadget list.", e);
     }
 
-    resultHandler.completed(new ReadResourceModel("Available users.", result));
+    resultHandler.completed(new ReadResourceModel("Available gadgets.", result));
   }
 }

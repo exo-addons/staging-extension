@@ -4,9 +4,6 @@
    xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd"
    xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
 	<component>
-		<type>org.exoplatform.platform.organization.injector.DataInjectorService</type>
-	</component>
-	<component>
 	  <key>org.gatein.management.api.ManagementService</key>
 	  <type>org.gatein.management.core.api.ManagementServiceImpl</type>
 	</component>

@@ -4,7 +4,7 @@
       <h3>Export Resource (Zip File)</h3>
       <p>
         <div class="form-actions">
-          <button type="button" class="btn btn-primary" id="button-download" alt="/rest/managed-components<%=selectedNode.getPath()%>.zip">Export</button>
+          <button type="button" class="btn btn-primary" id="button-download" alt="/portal/rest/managed-components<%=selectedNode.getPath()%>.zip">Export</button>
         </div>
       </p>
     </div>

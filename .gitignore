@@ -34,3 +34,6 @@
 .settings
 /portlet/.classpath
 /portlet/target
+/registry/.classpath
+/registry/.project
+/registry/target
