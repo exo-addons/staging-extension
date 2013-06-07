@@ -104,16 +104,16 @@
 						</manifestEntries>
 					</archive>
 					<modules>
-<!-- 						<jarModule> -->
-<!-- 							<groupId>${project.groupId}</groupId> -->
-<!-- 							<artifactId>staging-extension-content</artifactId> -->
-<!-- 							<bundleDir>lib</bundleDir> -->
-<!-- 						</jarModule> -->
-<!-- 						<jarModule> -->
-<!-- 							<groupId>${project.groupId}</groupId> -->
-<!-- 							<artifactId>staging-extension-ecmadmin</artifactId> -->
-<!-- 							<bundleDir>lib</bundleDir> -->
-<!-- 						</jarModule> -->
+						<jarModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>staging-extension-content</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>staging-extension-ecmadmin</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
 						<jarModule>
 							<groupId>${project.groupId}</groupId>
 							<artifactId>staging-extension-gadget</artifactId>
@@ -124,11 +124,11 @@
 							<artifactId>staging-extension-registry</artifactId>
 							<bundleDir>lib</bundleDir>
 						</jarModule>
-<!-- 						<jarModule> -->
-<!-- 							<groupId>${project.groupId}</groupId> -->
-<!-- 							<artifactId>staging-extension-mop-packaging</artifactId> -->
-<!-- 							<bundleDir>lib</bundleDir> -->
-<!-- 						</jarModule> -->
+						<jarModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>staging-extension-mop-packaging</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
 						<jarModule>
 							<groupId>${project.groupId}</groupId>
 							<artifactId>staging-extension-config</artifactId>
@@ -159,12 +159,12 @@
 							<artifactId>juzu-plugins-portlet</artifactId>
 							<bundleDir>lib</bundleDir>
 						</jarModule>
-						<!-- <webModule> -->
-						<!-- <groupId>${project.groupId}</groupId> -->
-						<!-- <artifactId>staging-extension-cli</artifactId> -->
-						<!-- <contextRoot>gatein-management-cli</contextRoot> -->
-						<!-- <bundleFileName>gatein-management-cli.war</bundleFileName> -->
-						<!-- </webModule> -->
+						<webModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>staging-extension-cli</artifactId>
+							<contextRoot>gatein-management-cli</contextRoot>
+							<bundleFileName>gatein-management-cli.war</bundleFileName>
+						</webModule>
 						<webModule>
 							<groupId>${project.groupId}</groupId>
 							<artifactId>staging-extension-portlet</artifactId>
