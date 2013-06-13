@@ -1,6 +1,6 @@
 <%if(selectedNode != null) {%>
   <%if(selectedNode.isExportable()) {%>
-    <div class="hero-unit">
+    <div class="operationBox">
       <h3>Export Resource (Zip File)</h3>
       <p>
         <div class="form-actions">
@@ -11,7 +11,7 @@
   <%}%>
   <%if(selectedNode.isImportable()) {%>
     <form method="post" enctype="multipart/form-data" id="importForm" action="@{StagingExtensionController.importResource()}">
-      <div class="hero-unit">
+      <div class="operationBox">
         <h3>Import Resource (Zip File)</h3>
         <p>
             <input title="Upload file" type="file" id="filteToImport" accept=".zip" name="filteToImport" />

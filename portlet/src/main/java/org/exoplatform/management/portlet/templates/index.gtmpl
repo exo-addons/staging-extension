@@ -28,8 +28,8 @@
   }
 %>
 <div class="container-fluid staging-portlet-container">
-  <div class="row-fluid">
-    <div class="span4 css-treeview">
+  <div class="tableContent">
+    <div class="leftColumn css-treeview">
       <center><h3>Staging resources </h3></center>
       <hr />
       <ul class="css-treeview-parent-ul">
@@ -38,7 +38,7 @@
         <%}%>
       </ul>
     </div>
-    <div class="span7" id="exportImportForm">
+    <div class="rightColumn" id="exportImportForm">
         #{include path=form.gtmpl}#{/include}
     </div>
   </div>

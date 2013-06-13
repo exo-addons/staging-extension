@@ -3,24 +3,31 @@
 	padding: 12px;
 }
 
-.hero-unit {
-	border: 1px solid #dddddd;
-	background-color: #eeeeee;
-	padding: 6px 60px;
-}
-
-.css-treeview {
+@blockBG: #f8f8f8;
+@blockRadius: 6px;
+.blockStyle {
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
-	padding: 10px;
+	border: 1px solid #dddddd;
+	background-color: @blockBG;
 	margin-bottom: 30px;
 	font-size: 18px;
 	font-weight: 200;
 	line-height: 30px;
-	color: inherit;
-	background-color: rgb(238, 238, 238);
-	border-radius: 6px 6px 6px 6px;
+	-webkit-border-radius: @blockRadius;
+	-moz-border-radius: @blockRadius;
+	border-radius: @blockRadius;
+}
+
+.operationBox {
+	.blockStyle;
+	padding: 6px 60px;
+}
+
+.css-treeview {
+	.blockStyle;
+	padding: 10px;
 	.labelAMixin {
 		display: inline-block;
 		height: 18px;
@@ -111,11 +118,12 @@
 
 	.Clickable {
 		cursor: pointer;
+		white-space: nowrap;
 	}
 
 	.SelectedNode {
 		background-color: #fcf8e3;
-		border-top: 1px solid #dddddd;
+		border: 1px solid #dddddd;
 	}
 
 	.Clickable:hover {
@@ -163,3 +171,23 @@
 		}
 	}
 }
+
+.leftColumn {
+	margin-left: 0;
+	width: 33%;
+	display: block;
+	float: left;
+}
+
+.rightColumn {
+	margin-left: 2%;
+	width: 64%;
+	display: block;
+	float: left;
+}
+
+.tableContent {
+	display: inline-block;
+	width: 100%;
+}
+

@@ -82,29 +82,7 @@ public class RegistryImportResource implements OperationHandler {
         ObjectParameter objectParameter = (ObjectParameter) uctx.unmarshalDocument(zin, "UTF-8");
         if (filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX)) {
           Application application = (Application)objectParameter.getObject();
-          ApplicationCategory category = applicationRegistryService.getApplicationCategory(application.getCategoryName());
-          if (category == null) {
-            log.warn("Category  '" + application.getCategoryName() + "' was not found, creating it.");
-            category = new ApplicationCategory();
-            category.setName(application.getCategoryName());
-            category.setDisplayName(application.getCategoryName());
-            category.setDescription(application.getCategoryName());
-            List<String> permExprs = new ArrayList<String>();
-            permExprs.add("Everyone");
-            applicationRegistryService.save(category);
-          }
-          Application applicationFromRepo = applicationRegistryService.getApplication(application.getCategoryName(), application.getApplicationName());
-          if (applicationFromRepo != null) {
-            if (replaceExisting) {
-              log.info("Replacing Application:  " + category.getName() + "/" + application.getApplicationName());
-              applicationRegistryService.remove(applicationFromRepo);
-              applicationRegistryService.save(category, application);
-            } else {
-              log.info("Application already exists:  " + category.getName() + "/" + application.getApplicationName() + ", set replaceExisting=true if you want to override it.");
-            }
-          } else {
-            applicationRegistryService.save(category, application);
-          }
+          createApplication(application, replaceExisting);
         } else {
           ApplicationCategory category = (ApplicationCategory)objectParameter.getObject();
           ApplicationCategory categoryFromRepo = applicationRegistryService.getApplicationCategory(category.getName());
@@ -119,6 +97,10 @@ public class RegistryImportResource implements OperationHandler {
           } else {
             applicationRegistryService.save(category);
           }
+          List<Application> applications = category.getApplications();
+          for (Application application : applications) {
+            createApplication(application, replaceExisting);
+          }
         }
         zin.closeEntry();
       }
@@ -132,6 +114,32 @@ public class RegistryImportResource implements OperationHandler {
     }
 
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void createApplication(Application application, boolean replaceExisting) {
+    ApplicationCategory category = applicationRegistryService.getApplicationCategory(application.getCategoryName());
+    if (category == null) {
+      log.warn("Category  '" + application.getCategoryName() + "' was not found, creating it.");
+      category = new ApplicationCategory();
+      category.setName(application.getCategoryName());
+      category.setDisplayName(application.getCategoryName());
+      category.setDescription(application.getCategoryName());
+      List<String> permExprs = new ArrayList<String>();
+      permExprs.add("Everyone");
+      applicationRegistryService.save(category);
+    }
+    Application applicationFromRepo = applicationRegistryService.getApplication(application.getCategoryName(), application.getApplicationName());
+    if (applicationFromRepo != null) {
+      if (replaceExisting) {
+        log.info("Replacing Application:  " + category.getName() + "/" + application.getApplicationName());
+        applicationRegistryService.remove(applicationFromRepo);
+        applicationRegistryService.save(category, application);
+      } else {
+        log.info("Application already exists:  " + category.getName() + "/" + application.getApplicationName() + ", set replaceExisting=true if you want to override it.");
+      }
+    } else {
+      applicationRegistryService.save(category, application);
+    }
   }
 
 }
