@@ -6,34 +6,21 @@
 		<artifactId>staging-extension-parent</artifactId>
 		<version>2.0.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>staging-extension-ear</artifactId>
+	<artifactId>staging-extension-jpp-ear</artifactId>
 	<packaging>ear</packaging>
-	<name>Staging Extension - EAR</name>
-	<description>Staging Extension - EAR</description>
+	<name>Staging Extension - JPP EAR</name>
+	<description>Staging Extension - JPP EAR</description>
 	<dependencies>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>staging-extension-cli</artifactId>
+			<artifactId>staging-extension-portlet</artifactId>
 			<version>${project.version}</version>
 			<type>war</type>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>staging-extension-content</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>staging-extension-ecmadmin</artifactId>
-			<version>${project.version}</version>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>staging-extension-portlet</artifactId>
-			<version>${project.version}</version>
+			<groupId>org.exoplatform.commons</groupId>
+			<artifactId>commons-webui-resources</artifactId>
 			<type>war</type>
 			<scope>provided</scope>
 		</dependency>
@@ -61,6 +48,36 @@
 			<version>${project.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.exoplatform.commons</groupId>
+			<artifactId>commons-juzu</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.juzu</groupId>
+			<artifactId>juzu-core</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.juzu</groupId>
+			<artifactId>juzu-bom-core</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.juzu</groupId>
+			<artifactId>juzu-plugins-less</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.juzu</groupId>
+			<artifactId>juzu-plugins-upload</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.juzu</groupId>
+			<artifactId>juzu-plugins-portlet</artifactId>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>staging-extension</finalName>
@@ -81,16 +98,6 @@
 					<modules>
 						<jarModule>
 							<groupId>${project.groupId}</groupId>
-							<artifactId>staging-extension-content</artifactId>
-							<bundleDir>lib</bundleDir>
-						</jarModule>
-						<jarModule>
-							<groupId>${project.groupId}</groupId>
-							<artifactId>staging-extension-ecmadmin</artifactId>
-							<bundleDir>lib</bundleDir>
-						</jarModule>
-						<jarModule>
-							<groupId>${project.groupId}</groupId>
 							<artifactId>staging-extension-gadget</artifactId>
 							<bundleDir>lib</bundleDir>
 						</jarModule>
@@ -101,19 +108,44 @@
 						</jarModule>
 						<jarModule>
 							<groupId>${project.groupId}</groupId>
-							<artifactId>staging-extension-mop-packaging</artifactId>
-							<bundleDir>lib</bundleDir>
-						</jarModule>
-						<jarModule>
-							<groupId>${project.groupId}</groupId>
 							<artifactId>staging-extension-config</artifactId>
 							<bundleDir>lib</bundleDir>
 						</jarModule>
+						<jarModule>
+							<groupId>org.juzu</groupId>
+							<artifactId>juzu-core</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>org.exoplatform.commons</groupId>
+							<artifactId>commons-juzu</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>org.juzu</groupId>
+							<artifactId>juzu-bom-core</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>org.juzu</groupId>
+							<artifactId>juzu-plugins-less</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>org.juzu</groupId>
+							<artifactId>juzu-plugins-upload</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>org.juzu</groupId>
+							<artifactId>juzu-plugins-portlet</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
 						<webModule>
-							<groupId>${project.groupId}</groupId>
-							<artifactId>staging-extension-cli</artifactId>
-							<contextRoot>gatein-management-cli</contextRoot>
-							<bundleFileName>gatein-management-cli.war</bundleFileName>
+							<groupId>org.exoplatform.commons</groupId>
+							<artifactId>commons-webui-resources</artifactId>
+							<contextRoot>CommonsResources</contextRoot>
+							<bundleFileName>CommonsResources.war</bundleFileName>
 						</webModule>
 						<webModule>
 							<groupId>${project.groupId}</groupId>
