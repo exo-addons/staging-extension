@@ -29,12 +29,12 @@ public class SiteContentsExportTask implements ExportTask {
     this.absolutePath = absolutePath;
   }
 
-  @Override
+  
   public String getEntry() {
     return SiteUtil.getSiteContentsBasePath(siteName) + absolutePath + ".xml";
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     Session session = null;
     try {

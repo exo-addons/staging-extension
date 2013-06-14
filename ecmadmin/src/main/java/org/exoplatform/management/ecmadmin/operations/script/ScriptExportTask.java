@@ -19,12 +19,12 @@ public class ScriptExportTask implements ExportTask {
     this.scriptData = scriptData;
   }
 
-  @Override
+  
   public String getEntry() {
     return "script/" + scriptPath;
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     try {
       outputStream.write(scriptData.getBytes("UTF-8"));

@@ -65,7 +65,7 @@ public class SiteContentsImportResource implements OperationHandler {
     this.filePath = filePath;
   }
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
     if (importedSiteName == null) {
@@ -386,7 +386,7 @@ public class SiteContentsImportResource implements OperationHandler {
       super(inputStream);
     }
 
-    @Override
+    
     public void close() throws IOException {}
 
     private void reallyClose() throws IOException {

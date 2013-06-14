@@ -89,6 +89,7 @@
 
 	<modules>
 		<module>cli</module>
+		<module>registry</module>
 		<module>content</module>
 		<module>ecmadmin</module>
 		<module>gadget</module>
@@ -97,5 +98,6 @@
 		<module>mop-packaging</module>
 		<module>config</module>
 		<module>ear</module>
+		<module>ear-epp</module>
 	</modules>
 </project>

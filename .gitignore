@@ -30,3 +30,17 @@
 /idm/target
 /ecmadmin/target
 /gadget/target
+/registry/.settings
+/registry/target
+/registry/.classpath
+/registry/.project
+/.settings
+/.project
+/cli/.settings
+/content/.settings
+/ear/.settings
+/ecmadmin/.settings
+/gadget/.settings
+/idm/.settings
+/mop/.settings
+/mop-packaging/.settings

@@ -23,12 +23,12 @@ public class NodeTypeExportTask implements ExportTask {
     this.type = type;
   }
 
-  @Override
+  
   public String getEntry() {
     return type + "/" + nodeType.getName().replace(":", "_") + "-nodeType.xml";
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     try {
       String xmlContent = getNodeTypeXML(nodeType);

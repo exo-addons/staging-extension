@@ -23,7 +23,7 @@ import org.gatein.management.spi.ManagementExtension;
  * @version $Revision$
  */
 public class IDMManagementExtension implements ManagementExtension {
-  @Override
+  
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("idm");
 
@@ -42,12 +42,12 @@ public class IDMManagementExtension implements ManagementExtension {
 
   }
 
-  @Override
+  
   public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {
-      @Override
+      
       public String getDescription() {
         return description;
       }
@@ -55,7 +55,7 @@ public class IDMManagementExtension implements ManagementExtension {
   }
 
   public static class EmptyReadResource implements OperationHandler {
-    @Override
+    
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
         OperationException {
       resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));

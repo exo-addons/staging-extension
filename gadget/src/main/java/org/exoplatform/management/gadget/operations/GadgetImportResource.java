@@ -1,5 +1,6 @@
 package org.exoplatform.management.gadget.operations;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.zip.ZipEntry;
@@ -8,6 +9,7 @@ import java.util.zip.ZipInputStream;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Session;
 
+import org.apache.commons.io.IOUtils;
 import org.exoplatform.application.gadget.Gadget;
 import org.exoplatform.application.gadget.GadgetRegistryService;
 import org.exoplatform.application.registry.impl.ApplicationRegistryChromatticLifeCycle;
@@ -41,7 +43,7 @@ public class GadgetImportResource implements OperationHandler {
   private RepositoryService repositoryService;
   private GadgetRegistryService gadgetRegistryService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
     if (chromatticManager == null) {
@@ -127,7 +129,8 @@ public class GadgetImportResource implements OperationHandler {
             log.info(gadgetName + "already exists. Ignore gadget.");
           }
         }
-        session.importXML(jcrPath, zis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(zis));
+        session.importXML(jcrPath, byteArrayInputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         session.save();
         zis.closeEntry();
       }

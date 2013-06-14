@@ -53,7 +53,7 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
     this.pathPrefix = pathPrefix + "/";
   }
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream
     super.execute(operationContext, resultHandler);

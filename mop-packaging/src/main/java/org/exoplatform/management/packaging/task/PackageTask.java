@@ -24,14 +24,14 @@ public class PackageTask implements ExportTask {
        this.file = tmpFolder;
     }
 
-    @Override
+    
     public String getEntry()
     {
       return "/platform-extension/";
     }
 
 
-    @Override
+    
     public void export(OutputStream outputStream) throws IOException
 
     {

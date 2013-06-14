@@ -21,7 +21,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class TaxonomyReadResource implements OperationHandler {
   private TaxonomyService taxonomyService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     Set<String> taxonomies = new HashSet<String>();
     try {

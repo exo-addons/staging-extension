@@ -33,12 +33,12 @@ public class NamespacesExportTask implements ExportTask {
     this.type = type;
   }
 
-  @Override
+  
   public String getEntry() {
     return type + "/jcr-namespaces-configuration.xml";
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     try {
       ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();

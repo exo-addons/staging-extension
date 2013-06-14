@@ -18,7 +18,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class LiveSitesReadResource implements OperationHandler {
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
       UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(

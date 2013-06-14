@@ -22,12 +22,12 @@ public class SiteMetaDataExportTask implements ExportTask {
     this.metaData = metaData;
   }
 
-  @Override
+  
   public String getEntry() {
     return SiteUtil.getSiteContentsBasePath(metaData.getOptions().get(SiteMetaData.SITE_NAME)) + "/" + FILENAME;
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     xStream.alias("metadata", SiteMetaData.class);

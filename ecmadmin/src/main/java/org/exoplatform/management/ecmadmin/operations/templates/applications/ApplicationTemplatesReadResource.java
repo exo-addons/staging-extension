@@ -20,7 +20,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class ApplicationTemplatesReadResource implements OperationHandler {
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     String operationName = operationContext.getOperationName();
     PathAddress address = operationContext.getAddress();

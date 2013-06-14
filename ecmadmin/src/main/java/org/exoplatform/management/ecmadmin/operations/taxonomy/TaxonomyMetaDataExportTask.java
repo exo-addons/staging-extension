@@ -22,12 +22,12 @@ public class TaxonomyMetaDataExportTask implements ExportTask {
     this.path = path;
   }
 
-  @Override
+  
   public String getEntry() {
     return path + "/metadata.xml";
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     xStream.alias("metadata", TaxonomyMetaData.class);

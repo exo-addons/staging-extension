@@ -34,7 +34,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  */
 public class QueriesExportResource implements OperationHandler {
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
       QueryService queryService = operationContext.getRuntimeContext().getRuntimeComponent(QueryService.class);

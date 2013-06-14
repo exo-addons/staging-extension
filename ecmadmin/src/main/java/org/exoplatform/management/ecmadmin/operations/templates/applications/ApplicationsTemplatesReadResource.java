@@ -17,7 +17,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class ApplicationsTemplatesReadResource implements OperationHandler {
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     Set<String> applications = new HashSet<String>();
     ApplicationTemplateManagerService templateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(

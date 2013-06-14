@@ -20,7 +20,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class DriveReadResource implements OperationHandler {
   private ManageDriveService driveService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (driveService == null) {
       driveService = operationContext.getRuntimeContext().getRuntimeComponent(ManageDriveService.class);

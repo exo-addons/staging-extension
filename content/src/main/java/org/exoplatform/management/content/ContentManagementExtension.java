@@ -21,7 +21,7 @@ import org.gatein.management.spi.ManagementExtension;
  * @version $Revision$
  */
 public class ContentManagementExtension implements ManagementExtension {
-  @Override
+  
   public void initialize(ExtensionContext context) {
     ComponentRegistration contentRegistration = context.registerManagedComponent("content");
 
@@ -60,12 +60,12 @@ public class ContentManagementExtension implements ManagementExtension {
     seo.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteSEOExportResource(), description("Export site SEO data"));
   }
 
-  @Override
+  
   public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {
-      @Override
+      
       public String getDescription() {
         return description;
       }

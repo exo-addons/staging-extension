@@ -23,7 +23,7 @@ public class QueriesExportTask implements ExportTask {
     this.userId = userId;
   }
 
-  @Override
+  
   public String getEntry() {
     if (userId != null) {
       return "queries/users/" + this.userId + "-queries-configuration.xml";
@@ -32,7 +32,7 @@ public class QueriesExportTask implements ExportTask {
     }
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     try {
       ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();

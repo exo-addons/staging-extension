@@ -22,7 +22,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class NodeTypeReadResource implements OperationHandler {
   private RepositoryService repositoryService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (repositoryService == null) {
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);

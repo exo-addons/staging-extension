@@ -15,7 +15,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class QueriesReadResource implements OperationHandler {
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     QueryService queryService = operationContext.getRuntimeContext().getRuntimeComponent(QueryService.class);
 

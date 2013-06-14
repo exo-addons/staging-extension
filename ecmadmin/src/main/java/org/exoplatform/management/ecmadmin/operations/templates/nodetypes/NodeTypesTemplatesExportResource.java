@@ -29,7 +29,7 @@ public class NodeTypesTemplatesExportResource implements OperationHandler {
   private NodeTypeTemplatesMetaData metadata;
   private TemplateService templateService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
     String operationName = operationContext.getOperationName();

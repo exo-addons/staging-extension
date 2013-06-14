@@ -25,12 +25,12 @@ public class TaxonomyTreeExportTask implements ExportTask {
     this.repositoryService = repositoryService;
   }
 
-  @Override
+  
   public String getEntry() {
     return path + "/tree.xml";
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     SessionProvider sessionProvider = SessionProvider.createSystemProvider();
     try {

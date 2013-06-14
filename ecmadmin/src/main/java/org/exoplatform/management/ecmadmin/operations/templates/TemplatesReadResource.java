@@ -12,7 +12,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 
 public class TemplatesReadResource implements OperationHandler {
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
       OperationException {
     Set<String> children = new LinkedHashSet<String>(2);

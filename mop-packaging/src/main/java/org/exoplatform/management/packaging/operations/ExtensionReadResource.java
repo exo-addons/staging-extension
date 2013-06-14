@@ -16,7 +16,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  */
 public class ExtensionReadResource implements OperationHandler
 {
-    @Override
+    
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException
     {
         try {

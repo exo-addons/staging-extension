@@ -37,12 +37,12 @@ public class ApplicationTemplateExportTask implements ExportTask {
     templatePath += templateName;
   }
 
-  @Override
+  
   public String getEntry() {
     return "templates/applications/" + this.applicationName + "/" + templatePath;
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     InputStream templateFileIS = null;
     try {

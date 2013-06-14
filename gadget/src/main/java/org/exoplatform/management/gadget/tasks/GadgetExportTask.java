@@ -28,12 +28,12 @@ public class GadgetExportTask implements ExportTask {
     this.manageableRepository = manageableRepository;
   }
 
-  @Override
+  
   public String getEntry() {
     return gadgetName + ".xml";
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     SessionProvider sessionProvider = SessionProvider.createSystemProvider();
     try {

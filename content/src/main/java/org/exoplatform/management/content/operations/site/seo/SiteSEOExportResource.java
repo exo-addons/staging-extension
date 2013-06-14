@@ -25,7 +25,7 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
  */
 public class SiteSEOExportResource implements OperationHandler {
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
       String operationName = operationContext.getOperationName();

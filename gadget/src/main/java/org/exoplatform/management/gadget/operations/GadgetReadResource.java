@@ -20,7 +20,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class GadgetReadResource implements OperationHandler {
   private GadgetRegistryService gadgetRegistryService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (gadgetRegistryService == null) {
       gadgetRegistryService = operationContext.getRuntimeContext().getRuntimeComponent(GadgetRegistryService.class);

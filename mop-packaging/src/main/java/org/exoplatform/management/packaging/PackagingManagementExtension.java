@@ -16,7 +16,7 @@ import org.gatein.management.spi.ManagementExtension;
  */
 public class PackagingManagementExtension implements ManagementExtension
 {
-   @Override
+   
    public void initialize(ExtensionContext context)
    {
 	   	ComponentRegistration registration = context.registerManagedComponent("package");
@@ -30,7 +30,7 @@ public class PackagingManagementExtension implements ManagementExtension
        extension.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ExtensionExportResource(), description("export of the extension"));
    }
 
-   @Override
+   
    public void destroy()
    {
    }
@@ -39,7 +39,7 @@ public class PackagingManagementExtension implements ManagementExtension
    {
       return new ManagedDescription()
       {
-         @Override
+         
          public String getDescription()
          {
             return description;

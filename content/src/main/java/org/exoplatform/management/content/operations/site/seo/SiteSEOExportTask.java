@@ -25,12 +25,12 @@ public class SiteSEOExportTask implements ExportTask {
     this.siteName = siteName;
   }
 
-  @Override
+  
   public String getEntry() {
     return SiteUtil.getSiteBasePath(siteName) + "/" + FILENAME;
   }
 
-  @Override
+  
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     xStream.alias("seo", List.class);

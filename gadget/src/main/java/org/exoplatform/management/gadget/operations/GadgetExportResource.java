@@ -29,7 +29,7 @@ public class GadgetExportResource implements OperationHandler {
   private ChromatticManager chromatticManager;
   private RepositoryService repositoryService;
 
-  @Override
+  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (chromatticManager == null) {
       chromatticManager = operationContext.getRuntimeContext().getRuntimeComponent(ChromatticManager.class);
