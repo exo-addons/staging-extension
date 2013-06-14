@@ -3,14 +3,16 @@
 	padding: 12px;
 }
 
+@selectionBColor: ivory;
 @blockBG: #f8f8f8;
 @blockRadius: 6px;
-.blockStyle {
+
+.blockStyle(@bgcolor) {
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
 	border: 1px solid #dddddd;
-	background-color: @blockBG;
+	background-color: @bgcolor;
 	margin-bottom: 30px;
 	font-size: 18px;
 	font-weight: 200;
@@ -21,12 +23,13 @@
 }
 
 .operationBox {
-	.blockStyle;
+	.blockStyle(@blockBG);
 	padding: 6px 60px;
+	margin: 30px 0;
 }
 
 .css-treeview {
-	.blockStyle;
+	.blockStyle(@blockBG);
 	padding: 10px;
 	.labelAMixin {
 		display: inline-block;
@@ -122,7 +125,7 @@
 	}
 
 	.SelectedNode {
-		background-color: #fcf8e3;
+		background-color: @selectionBColor;
 		border: 1px solid #dddddd;
 	}
 
@@ -180,10 +183,12 @@
 }
 
 .rightColumn {
-	margin-left: 2%;
-	width: 64%;
+	width: 58%;
 	display: block;
 	float: left;
+	margin: 0 2%;
+	padding: 2%;
+	.blockStyle(@selectionBColor);
 }
 
 .tableContent {

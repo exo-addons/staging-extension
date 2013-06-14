@@ -25,7 +25,7 @@
 			contentType: false,
 			beforeSend: function(){
 				importMessageSpan.attr("class", "progressBar");
-				importMessageSpan.html("Proceeding ...");
+				importMessageSpan.html("processing ...");
 		    },
 			success: function(data){
 		        importMessageSpan.attr("class", "success");
