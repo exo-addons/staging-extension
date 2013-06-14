@@ -1,5 +1,5 @@
 <%if(selectedNode != null) {%>
-  <center><h5><%=selectedNode.getPath()%></h5></center>
+  <h5><%=selectedNode.getPath()%></h5>
   <hr>
   <%if(selectedNode.isExportable()) {%>
     <div class="operationBox">
