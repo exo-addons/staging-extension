@@ -38,3 +38,5 @@
 /registry/.project
 /registry/target
 /ear-jpp/target
+/site/target
+/site/.classpath

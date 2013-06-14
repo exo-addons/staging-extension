@@ -89,6 +89,7 @@
 
 	<modules>
 		<module>cli</module>
+		<module>site</module>
 		<module>content</module>
 		<module>ecmadmin</module>
 		<module>gadget</module>

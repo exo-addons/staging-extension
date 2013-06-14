@@ -42,6 +42,9 @@ public class StagingExtensionImpl implements StagingExtension {
     for (String childName : result.getChildren()) {
       TreeNode child = new TreeNode(childName);
       child.setExportable(true);
+      if(child.getText().equals("mop")) {
+        continue;
+      }
       children.add(child);
       computeDataRecursively(child);
     }
