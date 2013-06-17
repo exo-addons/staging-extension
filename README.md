@@ -35,31 +35,33 @@ Prerequisite :
 
 * Download and install [eXo Platform 4] if you use eXo Platform 4
 
-	If the bundle is based on JBoss:
-		cp ear/target/staging-extension/lib/* JBOSS_HONE/standalone/deployments/platform.ear/lib
-		cp ear/target/staging-extension/gatein-management-cli.war JBOSS_HONE/standalone/deployments/platform.ear
-		cp ear/target/staging-extension/staging-portlet.war JBOSS_HONE/standalone/deployments/platform.ear
-	Else, if the bundle is based on Tomcat
-		cp ear/target/staging-extension/lib/* CATALINA_HOME/lib
-		cp ear/target/staging-extension/gatein-management-cli.war CATALINA_HOME/webapps
-		cp ear/target/staging-extension/staging-portlet.war CATALINA_HOME/webapps
+	** If the bundle is based on JBoss:
 
-* Download and install [JBoss JPP 6] if you use JPP 6
-	cp ear/target/exo-platform-staging-extension.ear JBOSS_HONE/gatein/extensions
+    cp ear/target/staging-extension/lib/* JBOSS_HONE/standalone/deployments/platform.ear/lib
+    cp ear/target/staging-extension/gatein-management-cli.war JBOSS_HONE/standalone/deployments/platform.ear
+    cp ear/target/staging-extension/staging-portlet.war JBOSS_HONE/standalone/deployments/platform.ear
+	
+	** Else, if the bundle is based on Tomcat:
+
+    cp ear/target/staging-extension/lib/* CATALINA_HOME/lib
+    cp ear/target/staging-extension/gatein-management-cli.war CATALINA_HOME/webapps
+    cp ear/target/staging-extension/staging-portlet.war CATALINA_HOME/webapps
+
+* Download and install [JBoss JPP 6], if you use JPP 6 copy this file:
+	** cp ear-epp/target/staging-extension.ear JBOSS_HONE/gatein/extensions
 
 Step 3 : Run
 ------------
 
-1/ Start eXo Platform 4 server.
-
-2/ Use SSH client to connect to the console:
+# Start eXo Platform 4 server.
+# Use SSH client to connect to the console:
 
     ssh -p 2001 root@localhost
     mgmt connect
 
-3/ Use "help" command to get the list of commands.
+# Use "help" command to get the list of commands.
 
-4/ Use "ls" command to get list of data to manage.
+# Use "ls" command to get list of data to manage.
 
 Step 4 : Use Portlet
 ------------
