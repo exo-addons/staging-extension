@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.exoplatform.platform</groupId>
 		<artifactId>exo.platform.parent</artifactId>
-		<version>3.5.4</version>
+		<version>3.5.7</version>
 	</parent>
 	<groupId>org.exoplatform.extensions.staging</groupId>
 	<artifactId>staging-extension-parent</artifactId>
@@ -19,7 +19,7 @@
 	</scm>
 	<properties>
 		<gatein.management.version>1.0.1-GA</gatein.management.version>
-		<org.exoplatform.platform.version>3.5.4</org.exoplatform.platform.version>
+		<org.exoplatform.platform.version>3.5.7</org.exoplatform.platform.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
