@@ -31,13 +31,21 @@ then build the project with maven :
 Step 2 : Deploy 
 ---------------
 
-Prerequisite : install [eXo Platform 4]
+Prerequisite : 
+
+* Download and install [eXo Platform 4] if you use eXo Platform 4
 
 	If the bundle is based on JBoss:
-		cp ear/target/exo-platform-staging-extension.ear JBOSS_HONE/server/default/deploy
+		cp ear/target/staging-extension/lib/* JBOSS_HONE/standalone/deployments/platform.ear/lib
+		cp ear/target/staging-extension/gatein-management-cli.war JBOSS_HONE/standalone/deployments/platform.ear
+		cp ear/target/staging-extension/staging-portlet.war JBOSS_HONE/standalone/deployments/platform.ear
 	Else, if the bundle is based on Tomcat
-		cp ear/target/exo-platform-staging-extension/lib/* CATALINA_HOME/lib
-		cp -r ear/target/exo-platform-staging-extension/gatein-management-cli.war CATALINA_HOME/webapps
+		cp ear/target/staging-extension/lib/* CATALINA_HOME/lib
+		cp ear/target/staging-extension/gatein-management-cli.war CATALINA_HOME/webapps
+		cp ear/target/staging-extension/staging-portlet.war CATALINA_HOME/webapps
+
+* Download and install [JBoss JPP 6] if you use JPP 6
+	cp ear/target/exo-platform-staging-extension.ear JBOSS_HONE/gatein/extensions
 
 Step 3 : Run
 ------------
@@ -52,3 +60,8 @@ Step 3 : Run
 3/ Use "help" command to get the list of commands.
 
 4/ Use "ls" command to get list of data to manage.
+
+Step 4 : Use Portlet
+------------
+
+Staging extension features can be used via UI by adding "Staging Extension Portlet" into a page.
