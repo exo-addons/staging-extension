@@ -40,7 +40,8 @@ public class StagingExtensionImpl implements StagingExtension {
     ReadResourceModel result = (ReadResourceModel) response.getResult();
     List<TreeNode> children = new ArrayList<TreeNode>(result.getChildren().size());
     for (String childName : result.getChildren()) {
-      TreeNode child = new TreeNode(childName);
+      String description = result.getChildDescription(childName).getDescription();
+      TreeNode child = new TreeNode(childName, description);
       child.setExportable(true);
       if(child.getText().equals("mop")) {
         continue;
@@ -111,7 +112,8 @@ public class StagingExtensionImpl implements StagingExtension {
     List<TreeNode> children = new ArrayList<TreeNode>(result.getChildren().size());
     parentNode.setChildren(children);
     for (String childName : result.getChildren()) {
-      TreeNode child = new TreeNode(childName);
+      String description = result.getChildDescription(childName).getDescription();
+      TreeNode child = new TreeNode(childName, description);
       child.setParent(parentNode);
       children.add(child);
       computeDataRecursively(child);

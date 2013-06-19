@@ -4,10 +4,9 @@
 }
 
 @selectionBColor: ivory;
-@blockBG: #f8f8f8;
+@blockBG: #f7f7f7;
 @blockRadius: 6px;
-
-.blockStyle(@bgcolor) {
+.blockStyle (@bgcolor) {
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	user-select: none;
@@ -20,17 +19,31 @@
 	-webkit-border-radius: @blockRadius;
 	-moz-border-radius: @blockRadius;
 	border-radius: @blockRadius;
+	box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.35), -1px 0 1px #ffffff;
 }
 
 .operationBox {
-	.blockStyle(@blockBG);
+	.blockStyle (@blockBG);
 	padding: 6px 60px;
 	margin: 30px 0;
 }
 
+.descriptionBox {
+	.blockStyle (#f5f5f5);
+	padding: 6px 60px;
+	margin: 30px 0;
+	box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.35), -1px 0 1px #ffffff;
+	text-shadow: 0 1px 1px #FFF;
+	background-image: linear-gradient(to bottom, #f6f6f6, #e5e5e5);
+	b {
+		color: #2f5e92;
+	}
+}
+
 .css-treeview {
-	.blockStyle(@blockBG);
+	.blockStyle (@blockBG);
 	padding: 10px;
+	background-image: linear-gradient(to right, #f6f6f6, #e5e5e5);
 	.labelAMixin {
 		display: inline-block;
 		height: 18px;
@@ -52,7 +65,11 @@
 	}
 
 	ul.css-treeview-parent-ul {
-		padding: 10px ! important;
+		padding: 5px;
+		margin: 10px;
+		background-color: #FAFAFA;
+		border-radius: 3px;
+		border: 1px solid lightblue;
 	}
 
 	a {
@@ -107,6 +124,7 @@
 	.parent {
 		background: transparent url("/staging-extension-portlet/style/images/parent.gif") no-repeat 19px 50%;
 		background-size: 18px;
+		text-transform: capitalize;
 	}
 
 	.parent::before {
@@ -126,11 +144,12 @@
 
 	.SelectedNode {
 		background-color: @selectionBColor;
-		border: 1px solid #dddddd;
+		border: 1px solid darkgray;
 	}
 
 	.Clickable:hover {
-		background-color: orange;
+		background-color: lightsteelblue;
+		border: 1px solid lightcoral;
 	}
 
 	.NotClickable {
@@ -177,7 +196,7 @@
 
 .leftColumn {
 	margin-left: 0;
-	width: 33%;
+	width: 32%;
 	display: block;
 	float: left;
 }
@@ -187,8 +206,8 @@
 	display: block;
 	float: left;
 	margin: 0 2%;
-	padding: 2%;
-	.blockStyle(@selectionBColor);
+	padding: 0 2%;
+	.blockStyle (#FBFBFB);
 }
 
 .tableContent {

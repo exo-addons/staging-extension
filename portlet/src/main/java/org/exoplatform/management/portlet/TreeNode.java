@@ -10,11 +10,13 @@ public class TreeNode implements Serializable {
   private TreeNode parent;
   private List<TreeNode> children;
   private String text;
+  private String description;
   private boolean importable = false;
   private boolean exportable = false;
 
-  public TreeNode(String text) {
+  public TreeNode(String text, String description) {
     this.text = text;
+    this.description = description;
     this.children = new ArrayList<TreeNode>();
   }
 
@@ -81,5 +83,13 @@ public class TreeNode implements Serializable {
 
   public void setImportable(boolean importable) {
     this.importable = importable;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
   }
 }

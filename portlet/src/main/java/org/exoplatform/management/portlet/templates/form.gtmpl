@@ -1,6 +1,7 @@
 <%if(selectedNode != null) {%>
-  <h5><%=selectedNode.getPath()%></h5>
-  <hr>
+  <div class="descriptionBox">
+    <b>Description : </b><%=selectedNode.getDescription()%>
+  </div>
   <%if(selectedNode.isExportable()) {%>
     <div class="operationBox">
       <h3>Export Resource (Zip File)</h3>

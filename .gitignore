@@ -40,3 +40,10 @@
 /ear-jpp/target
 /site/target
 /site/.classpath
+
+/cli/src/main/webapp/META-INF/MANIFEST.MF
+/cli/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-cli/pom.properties
+/cli/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-cli/pom.xml
+/portlet/src/main/webapp/META-INF/MANIFEST.MF
+/portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-portlet/pom.properties
+/portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-portlet/pom.xml

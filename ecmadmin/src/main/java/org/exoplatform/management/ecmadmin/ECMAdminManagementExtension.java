@@ -55,7 +55,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     ComponentRegistration ecmadminRegistration = context.registerManagedComponent("ecmadmin");
 
     ManagedResource.Registration ecmadmin = ecmadminRegistration
-        .registerManagedResource(description("Ecmadmin Managed Resource, responsible for handling management operations on ECMS administration contents."));
+        .registerManagedResource(description("ECMS (Enterprise Content Management Suite) administration resources."));
     ecmadmin.registerOperationHandler(OperationNames.READ_RESOURCE, new ECMAdminContentReadResource(),
         description("Lists available ECMS administration data"));
     ecmadmin.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ECMAdminContentImportResource(),
@@ -63,13 +63,13 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/templates
     ManagedResource.Registration templates = ecmadmin.registerSubResource("templates",
-        description("Sites Managed Resource, responsible for handling management operations on templates."));
+        description("ECMS Groovy templates for 'Content List' and 'Advanced Search' Portlets, metadata, nodetypes and JCR Action."));
     templates.registerOperationHandler(OperationNames.READ_RESOURCE, new TemplatesReadResource(),
         description("Lists available template types"));
 
     // /ecmadmin/templates/applications
     ManagedResource.Registration applicationsTemplates = templates.registerSubResource("applications",
-        description("Sites Managed Resource, responsible for handling management operations on applications templates."));
+        description("ECMS Groovy templates for Content List Portlet and Advanced Search Portlet"));
     applicationsTemplates.registerOperationHandler(OperationNames.READ_RESOURCE, new ApplicationsTemplatesReadResource(),
         description("Lists available applications containing templates"));
     applicationsTemplates.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ApplicationsTemplatesImportResource(),
@@ -77,7 +77,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/templates/applications/<application_name>
     ManagedResource.Registration applicationTemplates = applicationsTemplates.registerSubResource("{application-name: .*}",
-        description("Sites Managed Resource, responsible for handling management operations on templates of an application."));
+        description("ECMS Groovy templates for {application-name} Portlet."));
     applicationTemplates.registerOperationHandler(OperationNames.READ_RESOURCE, new ApplicationTemplatesReadResource(),
         description("Lists available templates of an application"));
     applicationTemplates.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ApplicationTemplatesExportResource(),
@@ -85,7 +85,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/templates/nodetypes
     ManagedResource.Registration nodetypesTemplates = templates.registerSubResource("nodetypes",
-        description("Sites Managed Resource, responsible for handling management operations on node types templates."));
+        description("ECMS Groovy templates for nodetypes."));
     nodetypesTemplates.registerOperationHandler(OperationNames.READ_RESOURCE, new NodeTypesTemplatesReadResource(),
         description("Lists available node types templates"));
     nodetypesTemplates.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new NodeTypesTemplatesExportResource(),
@@ -95,7 +95,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/templates/metadata
     ManagedResource.Registration metadataTemplates = templates.registerSubResource("metadata",
-        description("Sites Managed Resource, responsible for handling management operations on metadata templates."));
+        description("Nodetypes for metadata."));
     metadataTemplates.registerOperationHandler(OperationNames.READ_RESOURCE, new MetadataTemplatesReadResource(),
         description("Lists available metadata templates"));
     metadataTemplates.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new MetadataTemplatesExportResource(),
@@ -105,7 +105,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/queries
     ManagedResource.Registration queries = ecmadmin.registerSubResource("queries",
-        description("Queries Managed Resource, responsible for handling management operations on queries."));
+        description("JCR saved 'public' and 'private' Queries."));
     queries.registerOperationHandler(OperationNames.READ_RESOURCE, new QueriesReadResource(),
         description("Lists available queries"));
     queries.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new QueriesExportResource(),
@@ -114,7 +114,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/taxonomy
     ManagedResource.Registration taxonomies = ecmadmin.registerSubResource("taxonomy",
-        description("Taxonomy Managed Resource, responsible for handling management operations on taxonomies."));
+        description("Taxonomies / Categories."));
     taxonomies.registerOperationHandler(OperationNames.READ_RESOURCE, new TaxonomyReadResource(),
         description("Lists available taxonomies"));
     taxonomies.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new TaxonomyImportResource(),
@@ -122,14 +122,14 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/taxonomy/name
     ManagedResource.Registration taxonomy = taxonomies.registerSubResource("{taxonomy-name: .*}",
-        description("Taxonomy Managed Resource, responsible for handling management operations on taxonomies."));
+        description("Taxonomy '{taxonomy-name}'."));
     taxonomy.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("nothing"));
     taxonomy.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new TaxonomyExportResource(),
         description("Exports selected taxonomy"));
 
     // /ecmadmin/script
     ManagedResource.Registration script = ecmadmin.registerSubResource("script",
-        description("ECMS script Managed Resource, responsible for handling management operations on ECMS scripts."));
+        description("ECMS scripts of types : interceptor, widget and action."));
     script.registerOperationHandler(OperationNames.READ_RESOURCE, new ScriptReadResource(),
         description("Lists available scripts"));
     script.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ScriptExportResource(),
@@ -138,7 +138,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/action
     ManagedResource.Registration action = ecmadmin.registerSubResource("action",
-        description("Action Managed Resource, responsible for handling management operations on actions."));
+        description("NodeTypes of type JCR action."));
     action.registerOperationHandler(OperationNames.READ_RESOURCE, new ActionReadResource(),
         description("Lists available actions"));
     action.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ActionExportResource(),
@@ -148,7 +148,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/nodetype
     ManagedResource.Registration nodetype = ecmadmin.registerSubResource("nodetype",
-        description("Nodetype Managed Resource, responsible for handling management operations on nodetypes."));
+        description("All JCR Nodetypes and Namespaces."));
     nodetype.registerOperationHandler(OperationNames.READ_RESOURCE, new NodeTypeReadResource(),
         description("Lists available actions"));
     nodetype.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new NodeTypeExportResource(),
@@ -158,7 +158,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
 
     // /ecmadmin/drive
     ManagedResource.Registration drive = ecmadmin.registerSubResource("drive",
-        description("ECMS Drive Managed Resource, responsible for handling management operations on ECMS drives."));
+        description("ECMS General and group Drives configuration."));
     drive.registerOperationHandler(OperationNames.READ_RESOURCE, new DriveReadResource(), description("Lists available drives"));
     drive.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new DriveExportResource(),
         description("Exports available drives"));

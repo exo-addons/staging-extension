@@ -30,12 +30,12 @@ public class ApplicationRegistryManagementExtension implements ManagementExtensi
     ComponentRegistration registration = context.registerManagedComponent("registry");
 
     ManagedResource.Registration registry = registration
-        .registerManagedResource(description("Application Registry Managed Resource, responsible for handling management operations Application Registry."));
+        .registerManagedResource(description("Application Registry Managed Resource"));
     registry.registerOperationHandler(OperationNames.READ_RESOURCE, new RegistryReadResource(), description("Application Registry Managed Resource."));
     registry.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new RegistryImportResource(), description("Import Application Registry data."));
 
     // /registry/<category_name>
-    ManagedResource.Registration applicationCategory = registry.registerSubResource("{category-name: .*}", description("Application Registry : Category Managed Resource."));
+    ManagedResource.Registration applicationCategory = registry.registerSubResource("{category-name: .*}", description("Application Registry Category"));
     applicationCategory.registerOperationHandler(OperationNames.READ_RESOURCE, new CategoryReadResource(), description("Empty."));
     applicationCategory.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CategoryExportResource(), description("Export Category declaration in Application Registry."));
 
