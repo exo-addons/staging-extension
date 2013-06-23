@@ -3,24 +3,24 @@
 	xsi:schemaLocation="http://www.gatein.org/xml/ns/gatein_resources_1_3 http://www.gatein.org/xml/ns/gatein_resources_1_3"
 	xmlns="http://www.gatein.org/xml/ns/gatein_resources_1_3">
 	<portlet-skin>
-		<application-name>staging-extension-portlet</application-name>
-		<portlet-name>StagingExtensionPortlet</portlet-name>
+		<application-name>extension-generator-portlet</application-name>
+		<portlet-name>ExtensionGeneratorPortlet</portlet-name>
 		<skin-name>Default</skin-name>
-		<css-path>/skin/css/stagingextension.css</css-path>
+		<css-path>/skin/css/extensiongenerator.css</css-path>
 		<css-priority>1</css-priority>
 	</portlet-skin>
 	<portlet>
-		<name>StagingExtensionPortlet</name>
+		<name>ExtensionGeneratorPortlet</name>
 		<module>
 			<depends>
-				<module>jQueryStagingExtension</module>
+				<module>jQueryExtensionGeneratorPortlet</module>
 			</depends>
 		</module>
 	</portlet>
 	<module>
-		<name>jQueryStagingExtension</name>
+		<name>jQueryExtensionGeneratorPortlet</name>
 		<script>
-			<path>/js/stagingextension/stagingextension.js</path>
+			<path>/js/extensiongenerator/extensiongenerator.js</path>
 		</script>
 		<depends>
 			<module>juzu-ajax</module>

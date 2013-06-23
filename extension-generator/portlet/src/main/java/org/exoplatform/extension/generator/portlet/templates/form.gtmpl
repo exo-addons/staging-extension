@@ -1,0 +1,12 @@
+<div class="form-actions">
+  <button type="button" onclick="location.href='@{ExtensionGeneratorController.exportExtensionWAR()}'" class="btn btn-primary" id="button-download">Generate</button>
+</div>
+<% if(!selectedResources.isEmpty()) {%>
+  <div class="resources-list">
+    <ul>
+      <% selectedResources.each { nodePath -> %>
+        <li><%=nodePath%></li>
+      <%}%>
+    </ul>
+  </div>
+<%}%>

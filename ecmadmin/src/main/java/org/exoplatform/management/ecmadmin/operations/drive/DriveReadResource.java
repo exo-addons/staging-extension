@@ -27,7 +27,7 @@ public class DriveReadResource implements OperationHandler {
     }
     try {
       Set<String> driveNames = new HashSet<String>();
-      List<DriveData> driveDataList = driveService.getAllDrives();
+      List<DriveData> driveDataList = driveService.getAllDrives(true);
       for (DriveData driveData : driveDataList) {
         driveNames.add(driveData.getName());
       }

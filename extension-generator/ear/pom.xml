@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.exoplatform.extensions.staging</groupId>
+		<artifactId>extension-generator</artifactId>
+		<version>2.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>extension-generator-ear</artifactId>
+	<packaging>ear</packaging>
+	<name>Extension Generator - EAR</name>
+	<description>eXo Developper Kit - Extension Generator - EAR</description>
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>extension-generator-portlet</artifactId>
+			<version>${project.version}</version>
+			<type>war</type>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>extension-generator-service</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>extension-generator</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ear-plugin</artifactId>
+				<configuration>
+					<displayName>extension-generator.ear</displayName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+						<manifestEntries>
+							<Dependencies>org.gatein,org.gatein.lib</Dependencies>
+						</manifestEntries>
+					</archive>
+					<modules>
+						<jarModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>extension-generator-service</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<webModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>extension-generator-portlet</artifactId>
+							<contextRoot>extension-generator-portlet</contextRoot>
+							<bundleFileName>extension-generator-portlet.war</bundleFileName>
+						</webModule>
+					</modules>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>

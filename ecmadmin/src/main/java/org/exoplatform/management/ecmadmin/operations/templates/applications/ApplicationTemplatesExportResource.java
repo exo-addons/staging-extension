@@ -35,25 +35,25 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    ApplicationTemplateManagerService applicationTemplateManagerService = operationContext.getRuntimeContext()
-        .getRuntimeComponent(ApplicationTemplateManagerService.class);
+    ApplicationTemplateManagerService applicationTemplateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(ApplicationTemplateManagerService.class);
     try {
-      Node templatesHome = applicationTemplateManagerService.getApplicationTemplateHome(applicationName,
-          SessionProvider.createSystemProvider());
+      Node templatesHome = applicationTemplateManagerService.getApplicationTemplateHome(applicationName, SessionProvider.createSystemProvider());
       if (templatesHome != null) {
-        NodeIterator nodeIterator = templatesHome.getNodes();
-        while (nodeIterator.hasNext()) {
-          Node categoryNode = nodeIterator.nextNode();
-          if (categoryNode.getName().endsWith(".gtmpl")) {
-            Node templateNode = categoryNode;
-            exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode
-                .getName(), templateNode.getName()));
-          } else {
-            NodeIterator templatesIterator = categoryNode.getNodes();
-            while (templatesIterator.hasNext()) {
-              Node templateNode = templatesIterator.nextNode();
-              exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode
-                  .getName(), templateNode.getName()));
+        if (applicationName.endsWith(".gtmpl")) {
+          exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, templatesHome.getParent().getParent().getName(), templatesHome.getParent().getName(), templatesHome.getName()));
+        } else {
+          NodeIterator nodeIterator = templatesHome.getNodes();
+          while (nodeIterator.hasNext()) {
+            Node categoryNode = nodeIterator.nextNode();
+            if (categoryNode.getName().endsWith(".gtmpl")) {
+              Node templateNode = categoryNode;
+              exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName()));
+            } else {
+              NodeIterator templatesIterator = categoryNode.getNodes();
+              while (templatesIterator.hasNext()) {
+                Node templateNode = templatesIterator.nextNode();
+                exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName()));
+              }
             }
           }
         }

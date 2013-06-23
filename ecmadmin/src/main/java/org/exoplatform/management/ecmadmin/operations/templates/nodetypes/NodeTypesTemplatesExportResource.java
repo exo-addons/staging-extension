@@ -54,6 +54,7 @@ public class NodeTypesTemplatesExportResource implements OperationHandler {
           metadata = new NodeTypeTemplatesMetaData();
           metadata.setLabel(templateService.getTemplateLabel(node.getName()));
           metadata.setDocumentTemplate(node.getProperty(TemplateService.DOCUMENT_TEMPLATE_PROP).getBoolean());
+          metadata.setNodeTypeName(node.getName());
 
           // View templates
           if (node.hasNode(TemplateService.VIEWS)) {

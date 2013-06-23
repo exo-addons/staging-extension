@@ -1,0 +1,52 @@
+<%
+  public String computeContent(def tmpNodes, def title, def parentPath) {
+    String content = "<li>";
+    content += "<input type='checkbox' class='list-checkbox' name='selectedResources' id='"+parentPath+"' value='"+parentPath+"'>";
+    content += "<input type='checkbox' class='tree-checkbox' id='tree_"+parentPath+"'>";
+    def parentNodeClass = "parent";
+    if(tmpNodes.size() == 1 && tmpNodes.contains(parentPath)) {
+      parentNodeClass = "leaf";
+    }
+    content += "<label class='"+parentNodeClass+" Clickable' for='tree_"+parentPath+"'>"+title+"</label>";
+    content += "<ul>";
+    tmpNodes.each { node ->
+      if(!node.getPath().equals(parentPath)) {
+        content += "<li>";
+        content += "<input type='checkbox' class='list-checkbox' name='selectedResources' id='"+node.getPath()+"' value='"+node.getPath()+"'>";
+        content += "<label title='"+node.getDescription()+"' class='leaf Clickable' for='"+node.getPath()+"'>"+node.getText()+"</label>";
+        content += "</li>";
+      }
+    }
+    content += "</ul>";
+    content += "</li>";
+    return content;
+  }
+%>
+<div id="extension-genrator-portlet" class='operationBox css-list'>
+  <center><h3>WAR Extension Generator</h3></center>
+  <hr />
+  <ul class='css-list-parent-ul'>
+    <div class="container-fluid generator-portlet-container">
+      <div class="leftColumn">
+        <%=computeContent(portalSiteNodes, "Portal Sites", portalSitePath)%>
+        <%=computeContent(groupSiteNodes, "Group Sites",groupSitePath)%>
+        <%=computeContent(userSiteNodes, "User Sites",userSitePath)%>
+        <%=computeContent(siteContentNodes, "Site JCR Conents",siteContentPath)%>
+        <%=computeContent(applicationCLVTemplatesNodes, "Content List Templates",applicationCLVTemplatesPath)%>
+        <%=computeContent(applicationSearchTemplatesNodes, "Search Templates",applicationSearchTemplatesPath)%>
+        <%=computeContent(documentTypeTemplatesNodes, "Document Type templates",documentTypeTemplatesPath)%>
+        <%=computeContent(metadataTemplatesNodes, "Metadata Templates",metadataTemplatesPath)%>
+        <%=computeContent(taxonomyNodes, "Taxonomy",taxonomyPath)%>
+        <%=computeContent(queryNodes, "JCR Query",queryPath)%>
+        <%=computeContent(driveNodes, "Drives",drivePath)%>
+        <%=computeContent(scriptNodes, "Programming Groovy Script",scriptPath)%>
+        <%=computeContent(actionNodeTypeNodes, "Action JCR NodeType",actionNodeTypePath)%>
+        <%=computeContent(nodeTypeNodes, "JCR NodeType",nodeTypePath)%>
+        <%=computeContent(registryNodes, "Application Registry",registryPath)%>
+      </div>
+      <div class="rightColumn" id="exportImportForm">
+          #{include path=form.gtmpl}#{/include}
+      </div>
+    </div>
+  </ul>
+</div>

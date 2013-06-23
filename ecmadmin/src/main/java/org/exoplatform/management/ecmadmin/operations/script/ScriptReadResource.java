@@ -31,15 +31,12 @@ public class ScriptReadResource implements OperationHandler {
     try {
       SessionProvider systemSessionProvider = SessionProvider.createSystemProvider();
 
-      scriptNames.add("-- ECM Action Scripts --");
       List<Node> ecmActionScripts = scriptService.getECMActionScripts(systemSessionProvider);
       generateScriptNames(scriptNames, ecmActionScripts);
 
-      scriptNames.add("-- ECM Interceptor Scripts --");
       List<Node> ecmInterceptorScripts = scriptService.getECMInterceptorScripts(systemSessionProvider);
       generateScriptNames(scriptNames, ecmInterceptorScripts);
 
-      scriptNames.add("-- ECM Widget Scripts --");
       List<Node> ecmWidgetScripts = scriptService.getECMWidgetScripts(systemSessionProvider);
       generateScriptNames(scriptNames, ecmWidgetScripts);
 

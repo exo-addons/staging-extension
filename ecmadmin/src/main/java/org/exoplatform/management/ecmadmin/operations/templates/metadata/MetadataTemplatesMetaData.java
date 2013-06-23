@@ -10,6 +10,7 @@ import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
 public class MetadataTemplatesMetaData {
 
   private String label;
+  private String nodeTypeName;
   private boolean documentTemplate;
   private Map<String, List<NodeTemplate>> templates;
 
@@ -51,4 +52,11 @@ public class MetadataTemplatesMetaData {
     templates.put(type, typeTemplates);
   }
 
+  public String getNodeTypeName() {
+    return nodeTypeName;
+  }
+
+  public void setNodeTypeName(String nodeTypeName) {
+    this.nodeTypeName = nodeTypeName;
+  }
 }

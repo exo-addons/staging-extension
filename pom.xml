@@ -99,5 +99,6 @@
 		<module>config</module>
 		<module>ear</module>
 		<module>ear-jpp</module>
+		<module>extension-generator</module>
 	</modules>
 </project>
