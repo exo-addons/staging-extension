@@ -39,7 +39,7 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
       configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-IN", "war:") + drivesConfigurationEntry.getName());
       return true;
     } catch (Exception e) {
-      log.error("Error while getting NamespaceConfiguration Entry", e);
+      log.error(e);
       return false;
     }
   }

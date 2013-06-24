@@ -85,7 +85,7 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
             Utils.writeZipEnry(zos, WCM_CONTENT_CONFIGURATION_LOCATION + location, inputStream);
           }
         } catch (Exception e) {
-          log.error("Error while getting NamespaceConfiguration Entry", e);
+          log.error(e);
           return false;
         }
       }

@@ -64,7 +64,7 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
           Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
         }
       } catch (Exception e) {
-        log.error("Error while getting NamespaceConfiguration Entry", e);
+        log.error(e);
         return false;
       }
     }

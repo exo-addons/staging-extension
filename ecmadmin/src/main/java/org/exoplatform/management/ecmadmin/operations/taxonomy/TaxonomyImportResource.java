@@ -16,7 +16,6 @@ import javax.jcr.Session;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
-import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -88,7 +87,6 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
 
           XStream xStream = new XStream();
           xStream.alias("metadata", TaxonomyMetaData.class);
-          xStream.alias("taxonomy", NodeTemplate.class);
           TaxonomyMetaData taxonomyMetaData = (TaxonomyMetaData) xStream.fromXML(fout.toString("UTF-8"));
           metadataMap.put(taxonomyName, taxonomyMetaData);
         }
@@ -113,8 +111,7 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
         Session session = sessionProvider.getSession(metaData.getTaxoTreeWorkspace(), repositoryService.getCurrentRepository());
         int length = metaData.getTaxoTreeHomePath().lastIndexOf("/" + taxonomyName) + 1;
         String absolutePath = metaData.getTaxoTreeHomePath().substring(0, length);
-        session.importXML(absolutePath, new FileInputStream(exportMap.get(taxonomyName)),
-            ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        session.importXML(absolutePath, new FileInputStream(exportMap.get(taxonomyName)), ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         session.save();
 
         Node taxonomyNode = (Node) session.getItem(metaData.getTaxoTreeHomePath());

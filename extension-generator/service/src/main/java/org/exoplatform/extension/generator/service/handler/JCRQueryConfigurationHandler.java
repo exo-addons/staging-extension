@@ -35,7 +35,7 @@ public class JCRQueryConfigurationHandler extends AbstractConfigurationHandler {
         Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
         configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-IN", "war:") + zipEntry.getName());
       } catch (Exception e) {
-        log.error("Error while getting NamespaceConfiguration Entry", e);
+        log.error(e);
         return false;
       }
     }
