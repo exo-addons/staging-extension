@@ -8,7 +8,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.log.ExoLogger;
@@ -20,6 +20,9 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_DRIVE_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -36,7 +39,7 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
     try {
       InputStream inputStream = zipFile.getInputStream(drivesConfigurationEntry);
       Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + drivesConfigurationEntry.getName(), inputStream);
-      configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-IN", "war:") + drivesConfigurationEntry.getName());
+      configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + drivesConfigurationEntry.getName());
       return true;
     } catch (Exception e) {
       log.error(e);
@@ -44,6 +47,9 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected Log getLogger() {
     return log;

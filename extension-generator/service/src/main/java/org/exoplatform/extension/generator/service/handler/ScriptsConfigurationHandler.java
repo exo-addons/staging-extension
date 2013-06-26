@@ -13,7 +13,7 @@ import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.cms.impl.ResourceConfig;
@@ -32,6 +32,9 @@ public class ScriptsConfigurationHandler extends AbstractConfigurationHandler {
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_SCRIPT_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -80,6 +83,9 @@ public class ScriptsConfigurationHandler extends AbstractConfigurationHandler {
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + SCRIPT_CONFIGURATION_NAME, externalComponentPlugins);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

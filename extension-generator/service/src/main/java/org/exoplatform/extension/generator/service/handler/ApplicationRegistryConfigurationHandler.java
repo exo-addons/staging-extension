@@ -15,7 +15,7 @@ import org.exoplatform.application.registry.ApplicationRegistryService;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.log.ExoLogger;
@@ -35,6 +35,9 @@ public class ApplicationRegistryConfigurationHandler extends AbstractConfigurati
     return log;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.REGISTRY_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -62,6 +65,9 @@ public class ApplicationRegistryConfigurationHandler extends AbstractConfigurati
     return Utils.writeConfiguration(zos, APPLICATION_REGISTRY_CONFIGURATION_XML, externalComponentPlugins);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

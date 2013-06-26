@@ -47,6 +47,16 @@ public class Utils {
     return true;
   }
 
+  public static void writeZipEnry(ZipOutputStream zos, String entryName, String content) {
+    try {
+      zos.putNextEntry(new ZipEntry(entryName));
+      zos.write(content.getBytes("UTF-8"));
+      zos.closeEntry();
+    } catch (Exception e) {
+      log.error("Error while writing file " + entryName, e);
+    }
+  }
+
   public static void writeZipEnry(ZipOutputStream zos, String entryName, InputStream inputStream) {
     try {
       zos.putNextEntry(new ZipEntry(entryName));

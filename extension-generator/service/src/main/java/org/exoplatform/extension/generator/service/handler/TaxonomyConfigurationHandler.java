@@ -24,7 +24,7 @@ import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.management.ecmadmin.operations.taxonomy.TaxonomyMetaData;
@@ -65,6 +65,9 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
     repositoryService = (RepositoryService) PortalContainer.getInstance().getComponentInstanceOfType(RepositoryService.class);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_TAXONOMY_PATH);
@@ -218,6 +221,9 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

@@ -1,7 +1,8 @@
-package org.exoplatform.extension.generator.service;
+package org.exoplatform.extension.generator.service.api;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,7 +18,6 @@ import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.Parameter;
 import org.exoplatform.container.xml.ValueParam;
-import org.exoplatform.extension.generator.service.api.ConfigurationHandler;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ContentType;
 import org.gatein.management.api.PathAddress;
@@ -29,33 +29,71 @@ import org.gatein.management.api.operation.OperationNames;
 public abstract class AbstractConfigurationHandler implements ConfigurationHandler {
   protected static final String DMS_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/dms/";
 
+  // GateIN Management Controller
   private ManagementController managementController = null;
 
   protected abstract Log getLogger();
 
+  /**
+   * Call GateIN Management Controller to export selected resource using options
+   * passed in filters
+   * 
+   * @param path
+   *          managed path
+   * @param filters
+   *          passed to GateIN Management SPI
+   * @return archive file exported from GateIN Management Controller call
+   */
   protected ZipFile getExportedFileFromOperation(String path, String... filters) {
     ManagedRequest request = null;
     if (filters != null && filters.length > 0) {
       Map<String, List<String>> attributes = new HashMap<String, List<String>>();
-      List<String> filtersList = Arrays.asList(filters);
-      attributes.put("filter", filtersList);
+      attributes.put("filter", Arrays.asList(filters));
       request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), attributes, ContentType.ZIP);
     } else {
       request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), ContentType.ZIP);
     }
+    FileOutputStream outputStream = null;
+    File tmpFile = null;
     try {
+      // Call GateIN Management SPI
       ManagedResponse response = getManagementController().execute(request);
-      File tmpFile = File.createTempFile("exo", "-extension-generator");
-      FileOutputStream outputStream = new FileOutputStream(tmpFile);
+
+      // Create temp file
+      tmpFile = File.createTempFile("exo", "-extension-generator");
+      outputStream = new FileOutputStream(tmpFile);
+
+      // Create temp file
       response.writeResult(outputStream);
       outputStream.flush();
       outputStream.close();
+
       return new ZipFile(tmpFile);
     } catch (Exception e) {
+      if (outputStream != null) {
+        try {
+          outputStream.flush();
+          outputStream.close();
+        } catch (IOException ioExp) {
+          // nothing to do
+        }
+        // Delete file, not used if an error occurs
+        if (tmpFile != null) {
+          tmpFile.delete();
+        }
+      }
       throw new RuntimeException("Error while handling Response from GateIN Management, export operation", e);
     }
   }
 
+
+  /**
+   * Filters subresources of parentPath. This operation retains only paths that contains parentPath.
+   * 
+   * @param selectedResources Set of managed resources paths
+   * @param parentPath parent resource path
+   * @return Set of sub resources path of type String
+   */
   protected Set<String> filterSelectedResources(Set<String> selectedResources, String parentPath) {
     Set<String> filteredSelectedResources = new HashSet<String>();
     for (String resourcePath : selectedResources) {

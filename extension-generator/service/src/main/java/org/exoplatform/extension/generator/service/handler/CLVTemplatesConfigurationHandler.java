@@ -13,7 +13,7 @@ import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
@@ -23,7 +23,7 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
 public class CLVTemplatesConfigurationHandler extends AbstractConfigurationHandler {
-  private static final String APPLICATION_CLV_CONFIGURATION_LOCATION = DMS_CONFIGURATION_LOCATION + "templates/applications/content-list-viewer";
+  private static final String APPLICATION_CLV_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/wcm/templates/applications/content-list-viewer";
   private static final String APPLICATION_CLV_CONFIGURATION_NAME = "application-clv-templates-configuration.xml";
   private static final List<String> configurationPaths = new ArrayList<String>();
   static {
@@ -32,6 +32,9 @@ public class CLVTemplatesConfigurationHandler extends AbstractConfigurationHandl
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_TEMPLATES_APPLICATION_CLV_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -78,6 +81,9 @@ public class CLVTemplatesConfigurationHandler extends AbstractConfigurationHandl
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + APPLICATION_CLV_CONFIGURATION_NAME, externalComponentPlugins);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected Log getLogger() {
     return log;

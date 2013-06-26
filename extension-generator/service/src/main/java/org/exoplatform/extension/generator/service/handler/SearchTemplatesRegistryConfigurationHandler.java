@@ -13,7 +13,7 @@ import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
@@ -23,7 +23,7 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
 public class SearchTemplatesRegistryConfigurationHandler extends AbstractConfigurationHandler {
-  private static final String APPLICATION_SEARCH_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/dms/templates/applications/search";
+  private static final String APPLICATION_SEARCH_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/wcm/templates/applications/search";
   private static final String APPLICATION_SEARCH_CONFIGURATION_NAME = "application-search-templates-configuration.xml";
   private static final List<String> configurationPaths = new ArrayList<String>();
   static {
@@ -32,6 +32,9 @@ public class SearchTemplatesRegistryConfigurationHandler extends AbstractConfigu
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_TEMPLATES_APPLICATION_SEARCH_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -78,6 +81,9 @@ public class SearchTemplatesRegistryConfigurationHandler extends AbstractConfigu
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + APPLICATION_SEARCH_CONFIGURATION_NAME, externalComponentPlugins);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

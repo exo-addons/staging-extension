@@ -14,7 +14,7 @@ import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
@@ -37,6 +37,9 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
     configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + DOCUMENT_TYPE_CONFIGURATION_NAME);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_TEMPLATES_DOCUMENT_TYPE_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -99,6 +102,9 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + DOCUMENT_TYPE_CONFIGURATION_NAME, externalComponentPlugins);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

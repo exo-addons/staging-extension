@@ -9,7 +9,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.log.ExoLogger;
@@ -20,6 +20,9 @@ public class JCRQueryConfigurationHandler extends AbstractConfigurationHandler {
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_QUERY_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -33,7 +36,7 @@ public class JCRQueryConfigurationHandler extends AbstractConfigurationHandler {
       try {
         InputStream inputStream = zipFile.getInputStream(zipEntry);
         Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
-        configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-IN", "war:") + zipEntry.getName());
+        configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + zipEntry.getName());
       } catch (Exception e) {
         log.error(e);
         return false;
@@ -42,6 +45,9 @@ public class JCRQueryConfigurationHandler extends AbstractConfigurationHandler {
     return true;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

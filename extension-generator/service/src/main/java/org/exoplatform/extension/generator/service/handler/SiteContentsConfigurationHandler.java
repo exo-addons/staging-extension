@@ -18,7 +18,7 @@ import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
 import org.exoplatform.container.xml.ValuesParam;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.management.content.operations.site.SiteConstants;
@@ -45,6 +45,9 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.CONTENT_SITES_PATH);
     if (filteredSelectedResources.isEmpty()) {
@@ -136,6 +139,9 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
     return Utils.writeConfiguration(zos, WCM_CONTENT_CONFIGURATION_LOCATION + WCM_CONTENT_CONFIGURATION_NAME, contentExternalComponentPlugins, ignoreContentComponentPlugin);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

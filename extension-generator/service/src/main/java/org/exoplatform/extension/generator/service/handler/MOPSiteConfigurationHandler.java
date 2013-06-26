@@ -14,7 +14,7 @@ import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.portal.config.NewPortalConfig;
 import org.exoplatform.portal.config.NewPortalConfigListener;
@@ -34,10 +34,13 @@ public class MOPSiteConfigurationHandler extends AbstractConfigurationHandler {
 
   public MOPSiteConfigurationHandler(SiteType portal) {
     this.siteType = portal.getName();
-    siteResourcePath = this.siteType + "sites";
+    siteResourcePath = "/site/" + this.siteType + "sites/";
     configurationPaths.add(SITES_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + this.siteType + SITES_CONFIGURATION_NAME);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, siteResourcePath);
     if (filteredSelectedResources.isEmpty()) {
@@ -45,7 +48,7 @@ public class MOPSiteConfigurationHandler extends AbstractConfigurationHandler {
     }
     HashSet<String> siteNames = new HashSet<String>();
     for (String resourcePath : filteredSelectedResources) {
-      siteNames.add(resourcePath.replace(siteResourcePath + "/", ""));
+      siteNames.add(resourcePath.replace(siteResourcePath, ""));
       ZipFile zipFile = getExportedFileFromOperation(resourcePath);
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
@@ -75,6 +78,9 @@ public class MOPSiteConfigurationHandler extends AbstractConfigurationHandler {
     return Utils.writeConfiguration(zos, SITES_CONFIGURATION_LOCATION + siteType + SITES_CONFIGURATION_NAME, externalComponentPlugins);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

@@ -4,7 +4,7 @@
     content += "<input type='checkbox' class='list-checkbox' name='selectedResources' id='"+parentPath+"' value='"+parentPath+"'>";
     content += "<input type='checkbox' class='tree-checkbox' id='tree_"+parentPath+"'>";
     def parentNodeClass = "parent";
-    if(tmpNodes.size() == 1 && tmpNodes.contains(parentPath)) {
+    if(tmpNodes.size() == 0 || (tmpNodes.size() == 1 && tmpNodes.contains(parentPath))) {
       parentNodeClass = "leaf";
     }
     content += "<label class='"+parentNodeClass+" Clickable' for='tree_"+parentPath+"'>"+title+"</label>";

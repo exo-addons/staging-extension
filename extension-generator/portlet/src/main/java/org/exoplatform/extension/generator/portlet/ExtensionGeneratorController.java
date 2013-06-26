@@ -63,6 +63,7 @@ public class ExtensionGeneratorController {
 
   @View
   public Response.Render index() {
+    selectedResources.clear();
     // NODES
     resources.put(ExtensionGenerator.SITES_PORTAL_PATH, extensionGeneratorService.getPortalSiteNodes());
     resources.put(ExtensionGenerator.SITES_GROUP_PATH, extensionGeneratorService.getGroupSiteNodes());

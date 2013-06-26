@@ -12,7 +12,7 @@ import java.util.zip.ZipOutputStream;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.ValuesParam;
-import org.exoplatform.extension.generator.service.AbstractConfigurationHandler;
+import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -30,6 +30,9 @@ public class ActionNodeTypeConfigurationHandler  extends AbstractConfigurationHa
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * {@inheritDoc}
+   */
   @SuppressWarnings("unchecked")
   public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_ACTION_PATH);
@@ -72,6 +75,9 @@ public class ActionNodeTypeConfigurationHandler  extends AbstractConfigurationHa
     return log;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<String> getConfigurationPaths() {
     return configurationPaths;

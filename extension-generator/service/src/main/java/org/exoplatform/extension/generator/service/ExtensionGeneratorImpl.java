@@ -31,6 +31,7 @@ import org.exoplatform.extension.generator.service.handler.ScriptsConfigurationH
 import org.exoplatform.extension.generator.service.handler.SearchTemplatesRegistryConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.SiteContentsConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.TaxonomyConfigurationHandler;
+import org.exoplatform.extension.generator.service.handler.WebXMLConfigurationHandler;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -54,120 +55,146 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
 
   public ExtensionGeneratorImpl() {
     handlers.add(new ActionNodeTypeConfigurationHandler());
+    handlers.add(new NodeTypeConfigurationHandler());
     handlers.add(new ApplicationRegistryConfigurationHandler());
-    handlers.add(new CLVTemplatesConfigurationHandler());
-    handlers.add(new DrivesConfigurationHandler());
-    handlers.add(new JCRQueryConfigurationHandler());
-    handlers.add(new MetadataTemplatesConfigurationHandler());
     handlers.add(new MOPSiteConfigurationHandler(SiteType.PORTAL));
     handlers.add(new MOPSiteConfigurationHandler(SiteType.GROUP));
     handlers.add(new MOPSiteConfigurationHandler(SiteType.USER));
-    handlers.add(new NodeTypeConfigurationHandler());
-    handlers.add(new NodeTypeTemplatesConfigurationHandler());
     handlers.add(new ScriptsConfigurationHandler());
-    handlers.add(new SearchTemplatesRegistryConfigurationHandler());
-    handlers.add(new SiteContentsConfigurationHandler());
+    handlers.add(new DrivesConfigurationHandler());
+    handlers.add(new JCRQueryConfigurationHandler());
+    handlers.add(new MetadataTemplatesConfigurationHandler());
+    handlers.add(new NodeTypeTemplatesConfigurationHandler());
     handlers.add(new TaxonomyConfigurationHandler());
+    handlers.add(new SearchTemplatesRegistryConfigurationHandler());
+    handlers.add(new CLVTemplatesConfigurationHandler());
+    handlers.add(new SiteContentsConfigurationHandler());
+    handlers.add(new WebXMLConfigurationHandler());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getPortalSiteNodes() {
     return getNodes(SITES_PORTAL_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getGroupSiteNodes() {
     return getNodes(SITES_GROUP_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getUserSiteNodes() {
     return getNodes(SITES_USER_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getSiteContentNodes() {
     return getNodes(CONTENT_SITES_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getApplicationCLVTemplatesNodes() {
     return getNodes(ECM_TEMPLATES_APPLICATION_CLV_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getApplicationSearchTemplatesNodes() {
     return getNodes(ECM_TEMPLATES_APPLICATION_SEARCH_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getDocumentTypeTemplatesNodes() {
     return getNodes(ECM_TEMPLATES_DOCUMENT_TYPE_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getMetadataTemplatesNodes() {
     return getNodes(ECM_TEMPLATES_METADATA_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getTaxonomyNodes() {
     return getNodes(ECM_TAXONOMY_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getQueryNodes() {
     return getNodes(ECM_QUERY_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getDriveNodes() {
     return getNodes(ECM_DRIVE_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getScriptNodes() {
     return getNodes(ECM_SCRIPT_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getActionNodeTypeNodes() {
     return getNodes(ECM_ACTION_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getNodeTypeNodes() {
     return getNodes(ECM_NODETYPE_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Node> getRegistryNodes() {
     return getNodes(REGISTRY_PATH);
   }
 
-  private Set<Node> getNodes(String path) {
-    ManagedRequest request = ManagedRequest.Factory.create(OperationNames.READ_RESOURCE, PathAddress.pathAddress(path), ContentType.JSON);
-    ManagedResponse response = getManagementController().execute(request);
-    if (!response.getOutcome().isSuccess()) {
-      log.error(response.getOutcome().getFailureDescription());
-      throw new RuntimeException(response.getOutcome().getFailureDescription());
-    }
-    ReadResourceModel result = (ReadResourceModel) response.getResult();
-    Set<Node> children = new HashSet<Node>(result.getChildren().size());
-    if (result.getChildren() != null && !result.getChildren().isEmpty()) {
-      for (String childName : result.getChildren()) {
-        String description = result.getChildDescription(childName).getDescription();
-        String childPath = path + "/" + childName;
-        Node child = new Node(childName, description, childPath);
-        children.add(child);
-      }
-    } else {
-      Node parent = new Node(path, result.getDescription(), path);
-      children.add(parent);
-    }
-    return children;
-  }
-
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public InputStream generateWARExtension(Set<String> selectedResources) {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -194,6 +221,29 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
       log.error("Error while closing ZipOutputStream.");
     }
     return new ByteArrayInputStream(out.toByteArray());
+  }
+
+  private Set<Node> getNodes(String path) {
+    ManagedRequest request = ManagedRequest.Factory.create(OperationNames.READ_RESOURCE, PathAddress.pathAddress(path), ContentType.JSON);
+    ManagedResponse response = getManagementController().execute(request);
+    if (!response.getOutcome().isSuccess()) {
+      log.error(response.getOutcome().getFailureDescription());
+      throw new RuntimeException(response.getOutcome().getFailureDescription());
+    }
+    ReadResourceModel result = (ReadResourceModel) response.getResult();
+    Set<Node> children = new HashSet<Node>(result.getChildren().size());
+    if (result.getChildren() != null && !result.getChildren().isEmpty()) {
+      for (String childName : result.getChildren()) {
+        String description = result.getChildDescription(childName).getDescription();
+        String childPath = path + "/" + childName;
+        Node child = new Node(childName, description, childPath);
+        children.add(child);
+      }
+    } else {
+      Node parent = new Node(path, result.getDescription(), path);
+      children.add(parent);
+    }
+    return children;
   }
 
   private ManagementController getManagementController() {
