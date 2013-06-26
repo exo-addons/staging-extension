@@ -47,3 +47,5 @@
 /portlet/src/main/webapp/META-INF/MANIFEST.MF
 /portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-portlet/pom.properties
 /portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-portlet/pom.xml
+
+/ear-jpp/src/main/application/META-INF/application.xml
