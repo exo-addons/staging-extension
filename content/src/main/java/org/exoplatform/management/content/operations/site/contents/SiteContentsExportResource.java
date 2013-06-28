@@ -82,8 +82,7 @@ public class SiteContentsExportResource implements OperationHandler {
       wcmService = operationContext.getRuntimeContext().getRuntimeComponent(WCMService.class);
       Collection<NodeLocation> sitesLocations = wcmConfigurationService.getAllLivePortalsLocation();
       if (sitesLocations == null || sitesLocations.size() != 1) {
-        throw new OperationException(operationName,
-            "Unable to read site locations, expected one location config, site location config found = " + sitesLocations);
+        throw new OperationException(operationName, "Unable to read site locations, expected one location config, site location config found = " + sitesLocations);
       }
       NodeLocation sitesLocation = sitesLocations.iterator().next();
       String sitePath = sitesLocation.getPath();
@@ -101,15 +100,17 @@ public class SiteContentsExportResource implements OperationHandler {
       List<String> filters = attributes.getValues("filter");
 
       boolean exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
+      boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
+      boolean exportVersionHistory = filters.contains("version-hitory:true");
 
       // Validate Site Structure
       validateSiteStructure(siteName);
 
       // Site contents
       if (exportSiteWithSkeleton) {
-        exportTasks.addAll(exportSite(sitesLocation, sitePath));
+        exportTasks.addAll(exportSite(sitesLocation, sitePath, exportVersionHistory));
       } else {
-        exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath));
+        exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath, exportSiteTaxonomy, exportVersionHistory));
       }
 
       // Metadata
@@ -117,8 +118,7 @@ public class SiteContentsExportResource implements OperationHandler {
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : "
-          + e.getMessage());
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage());
     }
   }
 
@@ -127,8 +127,7 @@ public class SiteContentsExportResource implements OperationHandler {
       return;
     }
     // pages
-    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null)
-        .iterator();
+    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null).iterator();
     Set<String> contentSet = new HashSet<String>();
     while (pagesQueryResult.hasNext()) {
       PageContext pageContext = (PageContext) pagesQueryResult.next();
@@ -146,8 +145,7 @@ public class SiteContentsExportResource implements OperationHandler {
     }
 
     if (!contentSet.isEmpty()) {
-      log.warn("Site contents export: There are some contents used in pages that don't belong to <<" + siteName
-          + ">> site's JCR structure: " + contentSet);
+      log.warn("Site contents export: There are some contents used in pages that don't belong to <<" + siteName + ">> site's JCR structure: " + contentSet);
     }
   }
 
@@ -157,8 +155,7 @@ public class SiteContentsExportResource implements OperationHandler {
     if (children != null) {
       for (ModelObject modelObject : children) {
         if (modelObject instanceof Application) {
-          Portlet portlet = (Portlet) dataStorage.load(((Application) modelObject).getState(),
-              ((Application) modelObject).getType());
+          Portlet portlet = (Portlet) dataStorage.load(((Application) modelObject).getState(), ((Application) modelObject).getType());
           if (portlet == null || portlet.getValue(IDENTIFIER) == null) {
             continue;
           }
@@ -167,8 +164,7 @@ public class SiteContentsExportResource implements OperationHandler {
           if (nodeIdentifier == null || nodeIdentifier.isEmpty()) {
             continue;
           }
-          if (workspace.equals(metaData.getOptions().get(SiteMetaData.SITE_WORKSPACE))
-              && nodeIdentifier.startsWith(metaData.getOptions().get(SiteMetaData.SITE_PATH))) {
+          if (workspace.equals(metaData.getOptions().get(SiteMetaData.SITE_WORKSPACE)) && nodeIdentifier.startsWith(metaData.getOptions().get(SiteMetaData.SITE_PATH))) {
             continue;
           }
           String path = nodeIdentifier;
@@ -197,8 +193,7 @@ public class SiteContentsExportResource implements OperationHandler {
     if (children != null) {
       for (ModelObject modelObject : children) {
         if (modelObject instanceof Application) {
-          Portlet portlet = (Portlet) dataStorage.load(((Application) modelObject).getState(),
-              ((Application) modelObject).getType());
+          Portlet portlet = (Portlet) dataStorage.load(((Application) modelObject).getState(), ((Application) modelObject).getType());
           if (portlet == null || portlet.getValue(FOLDER_PATH) == null) {
             continue;
           }
@@ -207,8 +202,7 @@ public class SiteContentsExportResource implements OperationHandler {
             String[] paths = folderPath.split(":");
             String workspace = paths[1];
             String path = paths[2];
-            if (workspace.equals(metaData.getOptions().get(SiteMetaData.SITE_WORKSPACE))
-                && path.startsWith(metaData.getOptions().get(SiteMetaData.SITE_PATH))) {
+            if (workspace.equals(metaData.getOptions().get(SiteMetaData.SITE_WORKSPACE)) && path.startsWith(metaData.getOptions().get(SiteMetaData.SITE_PATH))) {
               continue;
             }
             scvPaths.add(path);
@@ -224,15 +218,21 @@ public class SiteContentsExportResource implements OperationHandler {
   /**
    * @param sitesLocation
    * @param siteRootNodePath
+   * @param exportVersionHistory
    * @param exportTasks
    * @param repositoryService
    */
-  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath) {
+  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory) {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, sitesLocation.getWorkspace(),
-        metaData.getOptions().get(SiteMetaData.SITE_NAME), siteRootNodePath);
+    SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, sitesLocation.getWorkspace(), metaData.getOptions().get(SiteMetaData.SITE_NAME), siteRootNodePath);
     exportTasks.add(siteContentExportTask);
+
+    if (exportVersionHistory) {
+      SiteContentsVersionHistoryExportTask siteContentVersionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, sitesLocation.getWorkspace(), metaData.getOptions().get(
+          SiteMetaData.SITE_NAME), siteRootNodePath);
+      exportTasks.add(siteContentVersionHistoryExportTask);
+    }
 
     metaData.getExportedFiles().put(siteContentExportTask.getEntry(), sitesLocation.getPath());
 
@@ -242,13 +242,14 @@ public class SiteContentsExportResource implements OperationHandler {
   /**
    * @param sitesLocation
    * @param path
+   * @param exportSiteTaxonomy
+   * @param exportVersionHistory
    * @param exportTasks
    * @param repositoryService
    * @throws Exception
    * @throws RepositoryException
    */
-  private List<ExportTask> exportSiteWithoutSkeleton(NodeLocation sitesLocation, String path) throws Exception,
-      RepositoryException {
+  private List<ExportTask> exportSiteWithoutSkeleton(NodeLocation sitesLocation, String path, boolean exportSiteTaxonomy, boolean exportVersionHistory) throws Exception, RepositoryException {
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
@@ -258,43 +259,41 @@ public class SiteContentsExportResource implements OperationHandler {
     PortalFolderSchemaHandler portalFolderSchemaHandler = new PortalFolderSchemaHandler();
 
     // CSS Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getCSSFolder(portalNode), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getCSSFolder(portalNode), null, exportVersionHistory));
 
     // JS Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getJSFolder(portalNode), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getJSFolder(portalNode), null, exportVersionHistory));
 
     // Document Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getDocumentStorage(portalNode),
-        null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getDocumentStorage(portalNode), null, exportVersionHistory));
 
     // Images Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getImagesFolder(portalNode), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getImagesFolder(portalNode), null, exportVersionHistory));
 
     // Audio Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getAudioFolder(portalNode), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getAudioFolder(portalNode), null, exportVersionHistory));
 
     // Video Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getVideoFolder(portalNode), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getVideoFolder(portalNode), null, exportVersionHistory));
 
     // Multimedia Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getMultimediaFolder(portalNode),
-        Arrays.asList("images", "audio", "videos")));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory));
 
     // Link Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getLinkFolder(portalNode), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getLinkFolder(portalNode), null, exportVersionHistory));
 
     // WebContent Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getWebContentStorage(portalNode),
-        Arrays.asList("site artifacts")));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory));
 
     // Site Artifacts Folder
     Node webContentNode = portalFolderSchemaHandler.getWebContentStorage(portalNode);
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), webContentNode.getNode("site artifacts"), null));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), webContentNode.getNode("site artifacts"), null, exportVersionHistory));
 
-    // Categories Folder
-    Node categoriesNode = portalNode.getNode("categories");
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), categoriesNode, null));
-
+    if (exportSiteTaxonomy) {
+      // Categories Folder
+      Node categoriesNode = portalNode.getNode("categories");
+      exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), categoriesNode, null, exportVersionHistory));
+    }
     return exportTasks;
   }
 
@@ -308,8 +307,7 @@ public class SiteContentsExportResource implements OperationHandler {
    * @return
    * @throws RepositoryException
    */
-  protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes)
-      throws RepositoryException {
+  protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory) throws RepositoryException {
 
     List<ExportTask> subNodesExportTask = new ArrayList<ExportTask>();
 
@@ -317,9 +315,12 @@ public class SiteContentsExportResource implements OperationHandler {
     while (childrenNodes.hasNext()) {
       Node childNode = (Node) childrenNodes.next();
       if (excludedNodes == null || !excludedNodes.contains(childNode.getName())) {
-        SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData
-            .getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
+        SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
         subNodesExportTask.add(siteContentExportTask);
+        if (exportVersionHistory) {
+          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
+          subNodesExportTask.add(versionHistoryExportTask);
+        }
         metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
       }
     }

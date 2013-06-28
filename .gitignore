@@ -47,11 +47,12 @@
 /portlet/src/main/webapp/META-INF/MANIFEST.MF
 /portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-portlet/pom.properties
 /portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/staging-extension-portlet/pom.xml
+
 /ear-jpp/src/main/application/META-INF/application.xml
-/extension-generator/ear/src/main/application/META-INF/application.xml
-/extension-generator/ear/target
 /extension-generator/portlet/target
 /extension-generator/service/target
+/extension-generator/ear/target
+/extension-generator/ear/src/main/application/META-INF/application.xml
 /extension-generator/portlet/.classpath
-/extension-generator/service/.classpath
 /extension-generator/portlet/src/main/webapp/META-INF/MANIFEST.MF
+/extension-generator/service/.classpath
