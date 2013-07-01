@@ -55,46 +55,49 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
     }
 
     Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
-    for (String filteredResource : filteredSelectedResources) {
-      String[] filters = new String[3];
-      filters[0] = "no-skeleton:true";
-      filters[1] = "taxonomy:false";
-      filters[2] = "version-hitory:true";
+    try {
+      for (String filteredResource : filteredSelectedResources) {
+        String[] filters = new String[3];
+        filters[0] = "no-skeleton:true";
+        filters[1] = "taxonomy:false";
+        filters[2] = "version-hitory:true";
+        ZipFile zipFile = getExportedFileFromOperation(filteredResource, filters);
 
-      ZipFile zipFile = getExportedFileFromOperation(filteredResource, filters);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+          try {
+            InputStream inputStream = zipFile.getInputStream(zipEntry);
+            String siteName = extractSiteNameFromPath(zipEntry.getName());
+            if (zipEntry.getName().endsWith("metadata.xml")) {
+              // Unmarshall metadata xml file
+              XStream xstream = new XStream();
+              xstream.alias("metadata", SiteMetaData.class);
+              InputStreamReader isr = new InputStreamReader(inputStream, "UTF-8");
+              SiteMetaData siteMetadata = (SiteMetaData) xstream.fromXML(isr);
 
-      Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-        try {
-          InputStream inputStream = zipFile.getInputStream(zipEntry);
-          String siteName = extractSiteNameFromPath(zipEntry.getName());
-          if (zipEntry.getName().endsWith("metadata.xml")) {
-            // Unmarshall metadata xml file
-            XStream xstream = new XStream();
-            xstream.alias("metadata", SiteMetaData.class);
-            InputStreamReader isr = new InputStreamReader(inputStream, "UTF-8");
-            SiteMetaData siteMetadata = (SiteMetaData) xstream.fromXML(isr);
-
-            // Save unmarshalled metadata
-            SiteData siteData = sitesData.get(siteName);
-            if (siteData == null) {
-              siteData = new SiteData();
+              // Save unmarshalled metadata
+              SiteData siteData = sitesData.get(siteName);
+              if (siteData == null) {
+                siteData = new SiteData();
+              }
+              siteData.setSiteMetadata(siteMetadata);
+              sitesData.put(siteName, siteData);
+            } else if (zipEntry.getName().endsWith("seo.xml")) {
+              continue;
+            } else {
+              String location = zipEntry.getName();
+              location = location.substring(location.lastIndexOf("/" + siteName + "/") + 1);
+              Utils.writeZipEnry(zos, WCM_CONTENT_CONFIGURATION_LOCATION + location, inputStream);
             }
-            siteData.setSiteMetadata(siteMetadata);
-            sitesData.put(siteName, siteData);
-          } else if (zipEntry.getName().endsWith("seo.xml")) {
-            continue;
-          } else {
-            String location = zipEntry.getName();
-            location = location.substring(location.lastIndexOf("/" + siteName + "/") + 1);
-            Utils.writeZipEnry(zos, WCM_CONTENT_CONFIGURATION_LOCATION + location, inputStream);
+          } catch (Exception e) {
+            log.error(e);
+            return false;
           }
-        } catch (Exception e) {
-          log.error(e);
-          return false;
         }
       }
+    } finally {
+      clearTempFiles();
     }
 
     ExternalComponentPlugins ignoreContentComponentPlugin = new ExternalComponentPlugins();

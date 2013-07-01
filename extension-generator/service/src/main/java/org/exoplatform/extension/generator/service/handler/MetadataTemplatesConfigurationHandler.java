@@ -51,26 +51,30 @@ public class MetadataTemplatesConfigurationHandler extends AbstractConfiguration
       String metadataName = resourcePath.replace(ExtensionGenerator.ECM_TEMPLATES_METADATA_PATH + "/", "");
       filterMetadatas.add(metadataName);
     }
-    ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_TEMPLATES_METADATA_PATH, filterMetadatas.toArray(new String[0]));
     List<MetadataTemplatesMetaData> metaDatas = new ArrayList<MetadataTemplatesMetaData>();
-    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-      try {
-        InputStream inputStream = zipFile.getInputStream(zipEntry);
-        if (zipEntry.getName().endsWith("metadata.xml")) {
-          XStream xStream = new XStream();
-          xStream.alias("metadata", MetadataTemplatesMetaData.class);
-          xStream.alias("template", NodeTemplate.class);
-          MetadataTemplatesMetaData metadata = (MetadataTemplatesMetaData) xStream.fromXML(new InputStreamReader(inputStream));
-          metaDatas.add(metadata);
-        } else {
-          Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+    try {
+      ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_TEMPLATES_METADATA_PATH, filterMetadatas.toArray(new String[0]));
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+        try {
+          InputStream inputStream = zipFile.getInputStream(zipEntry);
+          if (zipEntry.getName().endsWith("metadata.xml")) {
+            XStream xStream = new XStream();
+            xStream.alias("metadata", MetadataTemplatesMetaData.class);
+            xStream.alias("template", NodeTemplate.class);
+            MetadataTemplatesMetaData metadata = (MetadataTemplatesMetaData) xStream.fromXML(new InputStreamReader(inputStream));
+            metaDatas.add(metadata);
+          } else {
+            Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+          }
+        } catch (Exception e) {
+          log.error(e);
+          return false;
         }
-      } catch (Exception e) {
-        log.error(e);
-        return false;
       }
+    } finally {
+      clearTempFiles();
     }
 
     ExternalComponentPlugins externalComponentPlugins = new ExternalComponentPlugins();

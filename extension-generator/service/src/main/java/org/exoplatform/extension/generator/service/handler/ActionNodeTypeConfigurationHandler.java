@@ -20,7 +20,7 @@ import org.exoplatform.services.jcr.impl.AddNodeTypePlugin;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
-public class ActionNodeTypeConfigurationHandler  extends AbstractConfigurationHandler {
+public class ActionNodeTypeConfigurationHandler extends AbstractConfigurationHandler {
   private static final String ACTION_CONFIGURATION_NAME = "jcr-actions-component-plugins-configuration.xml";
   private static final String JCR_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/jcr/";
   private static final List<String> configurationPaths = new ArrayList<String>();
@@ -47,25 +47,29 @@ public class ActionNodeTypeConfigurationHandler  extends AbstractConfigurationHa
       String actionTypeName = resourcePath.replace(ExtensionGenerator.ECM_ACTION_PATH + "/", "");
       filterActionTypes.add(actionTypeName);
     }
-    ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_ACTION_PATH, filterActionTypes.toArray(new String[0]));
-    ValuesParam valuesParam = new ValuesParam();
-    valuesParam.setName("autoCreatedInNewRepository");
-    valuesParam.setValues(new ArrayList<String>());
-    ComponentPlugin plugin = createComponentPlugin("add.nodetype", AddNodeTypePlugin.class.getName(), "addPlugin", null, valuesParam);
-    addComponentPlugin(externalComponentPlugins, RepositoryService.class.getName(), plugin);
+    try {
+      ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_ACTION_PATH, filterActionTypes.toArray(new String[0]));
+      ValuesParam valuesParam = new ValuesParam();
+      valuesParam.setName("autoCreatedInNewRepository");
+      valuesParam.setValues(new ArrayList<String>());
+      ComponentPlugin plugin = createComponentPlugin("add.nodetype", AddNodeTypePlugin.class.getName(), "addPlugin", null, valuesParam);
+      addComponentPlugin(externalComponentPlugins, RepositoryService.class.getName(), plugin);
 
-    //
-    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-      String actionTypeConfigurationLocation = JCR_CONFIGURATION_LOCATION + zipEntry.getName();
-      valuesParam.getValues().add(actionTypeConfigurationLocation.replace("WEB-INF", "war:"));
-      try {
-        InputStream inputStream = zipFile.getInputStream(zipEntry);
-        Utils.writeZipEnry(zos, actionTypeConfigurationLocation, inputStream);
-      } catch (Exception e) {
-        log.error("Error while marshalling " + zipEntry.getName(), e);
+      //
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+        String actionTypeConfigurationLocation = JCR_CONFIGURATION_LOCATION + zipEntry.getName();
+        valuesParam.getValues().add(actionTypeConfigurationLocation.replace("WEB-INF", "war:"));
+        try {
+          InputStream inputStream = zipFile.getInputStream(zipEntry);
+          Utils.writeZipEnry(zos, actionTypeConfigurationLocation, inputStream);
+        } catch (Exception e) {
+          log.error("Error while marshalling " + zipEntry.getName(), e);
+        }
       }
+    } finally {
+      clearTempFiles();
     }
     return Utils.writeConfiguration(zos, JCR_CONFIGURATION_LOCATION + ACTION_CONFIGURATION_NAME, externalComponentPlugins);
   }

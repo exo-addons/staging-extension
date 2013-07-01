@@ -34,9 +34,9 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
       String driveName = resourcePath.replace(ExtensionGenerator.ECM_DRIVE_PATH + "/", "");
       filterDrives.add(driveName);
     }
-    ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_DRIVE_PATH, filterDrives.toArray(new String[0]));
-    ZipEntry drivesConfigurationEntry = zipFile.getEntry(DRIVE_CONFIGURATION_LOCATION_FROM_EXPORT);
     try {
+      ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_DRIVE_PATH, filterDrives.toArray(new String[0]));
+      ZipEntry drivesConfigurationEntry = zipFile.getEntry(DRIVE_CONFIGURATION_LOCATION_FROM_EXPORT);
       InputStream inputStream = zipFile.getInputStream(drivesConfigurationEntry);
       Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + drivesConfigurationEntry.getName(), inputStream);
       configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + drivesConfigurationEntry.getName());
@@ -44,6 +44,8 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
     } catch (Exception e) {
       log.error(e);
       return false;
+    } finally {
+      clearTempFiles();
     }
   }
 

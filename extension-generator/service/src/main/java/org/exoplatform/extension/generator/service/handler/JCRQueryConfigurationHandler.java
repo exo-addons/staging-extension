@@ -29,18 +29,22 @@ public class JCRQueryConfigurationHandler extends AbstractConfigurationHandler {
       return false;
     }
     configurationPaths.clear();
-    ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_QUERY_PATH);
-    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-      try {
-        InputStream inputStream = zipFile.getInputStream(zipEntry);
-        Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
-        configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + zipEntry.getName());
-      } catch (Exception e) {
-        log.error(e);
-        return false;
+    try {
+      ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_QUERY_PATH);
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+        try {
+          InputStream inputStream = zipFile.getInputStream(zipEntry);
+          Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+          configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + zipEntry.getName());
+        } catch (Exception e) {
+          log.error(e);
+          return false;
+        }
       }
+    } finally {
+      clearTempFiles();
     }
     return true;
   }

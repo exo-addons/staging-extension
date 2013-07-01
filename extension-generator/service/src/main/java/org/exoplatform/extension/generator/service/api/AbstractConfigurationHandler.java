@@ -32,6 +32,8 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
   // GateIN Management Controller
   private ManagementController managementController = null;
 
+  private List<File> tempFiles = new ArrayList<File>();
+
   protected abstract Log getLogger();
 
   /**
@@ -62,6 +64,7 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
       // Create temp file
       tmpFile = File.createTempFile("exo", "-extension-generator");
       outputStream = new FileOutputStream(tmpFile);
+      tempFiles.add(tmpFile);
 
       // Create temp file
       response.writeResult(outputStream);
@@ -86,12 +89,26 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
     }
   }
 
+  /**
+   * Delete temp files created by GateIN management operations
+   * 
+   */
+  protected void clearTempFiles() {
+    for (File tempFile : tempFiles) {
+      if (tempFile != null && tempFile.exists()) {
+        tempFile.delete();
+      }
+    }
+  }
 
   /**
-   * Filters subresources of parentPath. This operation retains only paths that contains parentPath.
+   * Filters subresources of parentPath. This operation retains only paths that
+   * contains parentPath.
    * 
-   * @param selectedResources Set of managed resources paths
-   * @param parentPath parent resource path
+   * @param selectedResources
+   *          Set of managed resources paths
+   * @param parentPath
+   *          parent resource path
    * @return Set of sub resources path of type String
    */
   protected Set<String> filterSelectedResources(Set<String> selectedResources, String parentPath) {

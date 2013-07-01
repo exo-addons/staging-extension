@@ -48,18 +48,23 @@ public class ApplicationRegistryConfigurationHandler extends AbstractConfigurati
     addComponentPlugin(externalComponentPlugins, ApplicationRegistryService.class.getName(), plugin);
 
     for (String resourcePath : filteredSelectedResources) {
-      ZipFile zipFile = getExportedFileFromOperation(resourcePath);
-      Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-        try {
-          InputStream inputStream = zipFile.getInputStream(zipEntry);
-          ObjectParameter objectParameter = Utils.fromXML(IOUtils.toByteArray(inputStream), ObjectParameter.class);
-          objectParameter.setName(zipEntry.getName().replace(".xml", ""));
-          addParameter(plugin, objectParameter);
-        } catch (Exception e) {
-          log.error("Error while marshalling " + zipEntry.getName(), e);
+
+      try {
+        ZipFile zipFile = getExportedFileFromOperation(resourcePath);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+          try {
+            InputStream inputStream = zipFile.getInputStream(zipEntry);
+            ObjectParameter objectParameter = Utils.fromXML(IOUtils.toByteArray(inputStream), ObjectParameter.class);
+            objectParameter.setName(zipEntry.getName().replace(".xml", ""));
+            addParameter(plugin, objectParameter);
+          } catch (Exception e) {
+            log.error("Error while marshalling " + zipEntry.getName(), e);
+          }
         }
+      } finally {
+        clearTempFiles();
       }
     }
     return Utils.writeConfiguration(zos, APPLICATION_REGISTRY_CONFIGURATION_XML, externalComponentPlugins);

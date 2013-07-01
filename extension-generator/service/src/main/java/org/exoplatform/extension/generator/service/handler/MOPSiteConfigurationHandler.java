@@ -47,20 +47,24 @@ public class MOPSiteConfigurationHandler extends AbstractConfigurationHandler {
       return false;
     }
     HashSet<String> siteNames = new HashSet<String>();
-    for (String resourcePath : filteredSelectedResources) {
-      siteNames.add(resourcePath.replace(siteResourcePath, ""));
-      ZipFile zipFile = getExportedFileFromOperation(resourcePath);
-      Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-        try {
-          InputStream inputStream = zipFile.getInputStream(zipEntry);
-          Utils.writeZipEnry(zos, SITES_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
-        } catch (Exception e) {
-          log.error(e);
-          return false;
+    try {
+      for (String resourcePath : filteredSelectedResources) {
+        siteNames.add(resourcePath.replace(siteResourcePath, ""));
+        ZipFile zipFile = getExportedFileFromOperation(resourcePath);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+          try {
+            InputStream inputStream = zipFile.getInputStream(zipEntry);
+            Utils.writeZipEnry(zos, SITES_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+          } catch (Exception e) {
+            log.error(e);
+            return false;
+          }
         }
       }
+    } finally {
+      clearTempFiles();
     }
 
     ExternalComponentPlugins externalComponentPlugins = new ExternalComponentPlugins();

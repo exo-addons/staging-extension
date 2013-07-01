@@ -50,33 +50,37 @@ public class NodeTypeConfigurationHandler extends AbstractConfigurationHandler {
       String nodeTypeName = resourcePath.replace(ExtensionGenerator.ECM_NODETYPE_PATH + "/", "");
       filterNodeTypes.add(nodeTypeName);
     }
-    ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_NODETYPE_PATH, filterNodeTypes.toArray(new String[0]));
-    ZipEntry namespaceConfigurationEntry = zipFile.getEntry(JCR_NAMESPACES_CONFIGURATION_XML);
     try {
-      InputStream inputStream = zipFile.getInputStream(namespaceConfigurationEntry);
-      Configuration configuration = Utils.fromXML(IOUtils.toByteArray(inputStream), Configuration.class);
-      externalComponentPlugins = configuration.getExternalComponentPlugins(RepositoryService.class.getName());
-    } catch (Exception e) {
-      log.error("Error while getting NamespaceConfiguration Entry", e);
-    }
-    ValuesParam valuesParam = new ValuesParam();
-    valuesParam.setName("autoCreatedInNewRepository");
-    valuesParam.setValues(new ArrayList<String>());
-    ComponentPlugin plugin = createComponentPlugin("add.nodetype", AddNodeTypePlugin.class.getName(), "addPlugin", null, valuesParam);
-    addComponentPlugin(externalComponentPlugins, RepositoryService.class.getName(), plugin);
-
-    //
-    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-      String nodeTypeConfigurationLocation = JCR_CONFIGURATION_LOCATION + zipEntry.getName();
-      valuesParam.getValues().add(nodeTypeConfigurationLocation.replace("WEB-INF", "war:"));
+      ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_NODETYPE_PATH, filterNodeTypes.toArray(new String[0]));
+      ZipEntry namespaceConfigurationEntry = zipFile.getEntry(JCR_NAMESPACES_CONFIGURATION_XML);
       try {
-        InputStream inputStream = zipFile.getInputStream(zipEntry);
-        Utils.writeZipEnry(zos, nodeTypeConfigurationLocation, inputStream);
+        InputStream inputStream = zipFile.getInputStream(namespaceConfigurationEntry);
+        Configuration configuration = Utils.fromXML(IOUtils.toByteArray(inputStream), Configuration.class);
+        externalComponentPlugins = configuration.getExternalComponentPlugins(RepositoryService.class.getName());
       } catch (Exception e) {
-        log.error("Error while marshalling " + zipEntry.getName(), e);
+        log.error("Error while getting NamespaceConfiguration Entry", e);
       }
+      ValuesParam valuesParam = new ValuesParam();
+      valuesParam.setName("autoCreatedInNewRepository");
+      valuesParam.setValues(new ArrayList<String>());
+      ComponentPlugin plugin = createComponentPlugin("add.nodetype", AddNodeTypePlugin.class.getName(), "addPlugin", null, valuesParam);
+      addComponentPlugin(externalComponentPlugins, RepositoryService.class.getName(), plugin);
+
+      //
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+        String nodeTypeConfigurationLocation = JCR_CONFIGURATION_LOCATION + zipEntry.getName();
+        valuesParam.getValues().add(nodeTypeConfigurationLocation.replace("WEB-INF", "war:"));
+        try {
+          InputStream inputStream = zipFile.getInputStream(zipEntry);
+          Utils.writeZipEnry(zos, nodeTypeConfigurationLocation, inputStream);
+        } catch (Exception e) {
+          log.error("Error while marshalling " + zipEntry.getName(), e);
+        }
+      }
+    } finally {
+      clearTempFiles();
     }
     return Utils.writeConfiguration(zos, JCR_CONFIGURATION_LOCATION + JCR_CONFIGURATION_NAME, externalComponentPlugins);
   }

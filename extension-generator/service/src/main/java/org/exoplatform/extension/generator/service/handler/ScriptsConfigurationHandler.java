@@ -63,22 +63,25 @@ public class ScriptsConfigurationHandler extends AbstractConfigurationHandler {
       ComponentPlugin plugin = createComponentPlugin("manage.script.plugin", ScriptPlugin.class.getName(), "addPlugin", params);
       addComponentPlugin(externalComponentPlugins, ScriptService.class.getName(), plugin);
     }
-
-    ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_SCRIPT_PATH, filterScripts.toArray(new String[0]));
-    Enumeration<? extends ZipEntry> entries = zipFile.entries();
-    while (entries.hasMoreElements()) {
-      ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-      String scriptConfigurationLocation = DMS_CONFIGURATION_LOCATION + zipEntry.getName();
-      Resource scriptResource = new ResourceConfig.Resource();
-      scriptResource.setName(zipEntry.getName());
-      scriptResource.setDescription(zipEntry.getName());
-      scripts.add(scriptResource);
-      try {
-        InputStream inputStream = zipFile.getInputStream(zipEntry);
-        Utils.writeZipEnry(zos, scriptConfigurationLocation, inputStream);
-      } catch (Exception e) {
-        log.error("Error while marshalling " + zipEntry.getName(), e);
+    try {
+      ZipFile zipFile = getExportedFileFromOperation(ExtensionGenerator.ECM_SCRIPT_PATH, filterScripts.toArray(new String[0]));
+      Enumeration<? extends ZipEntry> entries = zipFile.entries();
+      while (entries.hasMoreElements()) {
+        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+        String scriptConfigurationLocation = DMS_CONFIGURATION_LOCATION + zipEntry.getName();
+        Resource scriptResource = new ResourceConfig.Resource();
+        scriptResource.setName(zipEntry.getName());
+        scriptResource.setDescription(zipEntry.getName());
+        scripts.add(scriptResource);
+        try {
+          InputStream inputStream = zipFile.getInputStream(zipEntry);
+          Utils.writeZipEnry(zos, scriptConfigurationLocation, inputStream);
+        } catch (Exception e) {
+          log.error("Error while marshalling " + zipEntry.getName(), e);
+        }
       }
+    } finally {
+      clearTempFiles();
     }
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + SCRIPT_CONFIGURATION_NAME, externalComponentPlugins);
   }

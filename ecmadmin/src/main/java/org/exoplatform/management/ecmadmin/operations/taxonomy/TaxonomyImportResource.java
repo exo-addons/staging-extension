@@ -72,12 +72,14 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
           continue;
         }
         if (ze.getName().endsWith("tree.xml")) {
+          // Write JCR Content in XML Temp File
           File tempFile = File.createTempFile("jcr", "sysview");
           FileOutputStream fout = new FileOutputStream(tempFile);
           IOUtils.copy(zin, fout);
           zin.closeEntry();
           fout.close();
           String taxonomyName = extractTaxonomyName(ze.getName());
+          // Put temp file location in Map
           exportMap.put(taxonomyName, tempFile);
         } else if (ze.getName().endsWith("metadata.xml")) {
           ByteArrayOutputStream fout = new ByteArrayOutputStream();
@@ -111,8 +113,15 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
         Session session = sessionProvider.getSession(metaData.getTaxoTreeWorkspace(), repositoryService.getCurrentRepository());
         int length = metaData.getTaxoTreeHomePath().lastIndexOf("/" + taxonomyName) + 1;
         String absolutePath = metaData.getTaxoTreeHomePath().substring(0, length);
-        session.importXML(absolutePath, new FileInputStream(exportMap.get(taxonomyName)), ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+        FileInputStream fis = new FileInputStream(exportMap.get(taxonomyName));
+        session.importXML(absolutePath, fis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         session.save();
+
+        // Closes the input stream
+        fis.close();
+
+        // Remove temp file
+        exportMap.get(taxonomyName).delete();
 
         Node taxonomyNode = (Node) session.getItem(metaData.getTaxoTreeHomePath());
         taxonomyService.addTaxonomyTree(taxonomyNode);

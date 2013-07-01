@@ -34,6 +34,8 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   public static final String ROOT_SQL_QUERY = "select * from mix:versionable order by exo:dateCreated DESC";
   public static final String VERSION_SQL_QUERY = "select * from mix:versionable where jcr:path like '$0/%' " + "order by exo:dateCreated DESC";
 
+  private static List<File> tempFiles = new ArrayList<File>();
+
   private final RepositoryService repositoryService;
   private final String workspace;
   private final String absolutePath;
@@ -112,8 +114,24 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
       if (out != null) {
         out.close();
       }
+      if (in != null) {
+        in.close();
+      }
       if (session != null) {
         session.logout();
+      }
+      clearTempFiles();
+    }
+  }
+
+  /**
+   * Delete temp files created by GateIN management operations
+   * 
+   */
+  protected void clearTempFiles() {
+    for (File tempFile : tempFiles) {
+      if (tempFile != null && tempFile.exists()) {
+        tempFile.delete();
       }
     }
   }
@@ -165,7 +183,9 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
    * @return file
    */
   private static File getExportedFile(String prefix, String suffix) throws IOException {
-    return File.createTempFile(prefix.concat(UUID.randomUUID().toString()), suffix);
+    File tempFile = File.createTempFile(prefix.concat(UUID.randomUUID().toString()), suffix);
+    tempFiles.add(tempFile);
+    return tempFile;
   }
 
 }

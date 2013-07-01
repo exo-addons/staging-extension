@@ -18,7 +18,11 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
@@ -28,6 +32,8 @@ import org.exoplatform.extension.generator.service.api.AbstractConfigurationHand
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
 import org.exoplatform.management.ecmadmin.operations.taxonomy.TaxonomyMetaData;
+import org.exoplatform.services.cms.actions.ActionServiceContainer;
+import org.exoplatform.services.cms.actions.impl.ActionConfig;
 import org.exoplatform.services.cms.link.LinkManager;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
 import org.exoplatform.services.cms.taxonomy.impl.TaxonomyConfig;
@@ -49,6 +55,7 @@ import com.thoughtworks.xstream.XStream;
 
 public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
   private static final String EXO_TAXONOMY = "exo:taxonomy";
+  private static final String EXO_TAXONOMY_ACTION = "exo:taxonomyAction";
   private static final String WCM_TAXONOMY_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/wcm/";
   private static final String WCM_TAXONOMY_CONFIGURATION_NAME = "taxonomy-configuration.xml";
   private static final List<String> configurationPaths = new ArrayList<String>();
@@ -57,12 +64,14 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
   }
   private static LinkManager linkManager = null;
   private static RepositoryService repositoryService = null;
+  private static ActionServiceContainer actionServiceContainer = null;
 
   private Log log = ExoLogger.getLogger(this.getClass());
 
   public TaxonomyConfigurationHandler() {
     linkManager = (LinkManager) PortalContainer.getInstance().getComponentInstanceOfType(LinkManager.class);
     repositoryService = (RepositoryService) PortalContainer.getInstance().getComponentInstanceOfType(RepositoryService.class);
+    actionServiceContainer = (ActionServiceContainer) PortalContainer.getInstance().getComponentInstanceOfType(ActionServiceContainer.class);
   }
 
   /**
@@ -76,26 +85,30 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
     }
 
     List<TaxonomyMetaData> taxonomiesMetaData = new ArrayList<TaxonomyMetaData>();
-    for (String filteredResource : filteredSelectedResources) {
-      ZipFile zipFile = getExportedFileFromOperation(filteredResource);
+    try {
+      for (String filteredResource : filteredSelectedResources) {
+        ZipFile zipFile = getExportedFileFromOperation(filteredResource);
 
-      Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-        try {
-          InputStream inputStream = zipFile.getInputStream(zipEntry);
-          if (zipEntry.getName().endsWith("metadata.xml")) {
-            XStream xStream = new XStream();
-            xStream.alias("metadata", TaxonomyMetaData.class);
-            InputStreamReader isr = new InputStreamReader(inputStream, "UTF-8");
-            TaxonomyMetaData taxonomyMetaData = (TaxonomyMetaData) xStream.fromXML(isr);
-            taxonomiesMetaData.add(taxonomyMetaData);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+          try {
+            InputStream inputStream = zipFile.getInputStream(zipEntry);
+            if (zipEntry.getName().endsWith("metadata.xml")) {
+              XStream xStream = new XStream();
+              xStream.alias("metadata", TaxonomyMetaData.class);
+              InputStreamReader isr = new InputStreamReader(inputStream, "UTF-8");
+              TaxonomyMetaData taxonomyMetaData = (TaxonomyMetaData) xStream.fromXML(isr);
+              taxonomiesMetaData.add(taxonomyMetaData);
+            }
+          } catch (Exception e) {
+            log.error(e);
+            return false;
           }
-        } catch (Exception e) {
-          log.error(e);
-          return false;
         }
       }
+    } finally {
+      clearTempFiles();
     }
 
     ExternalComponentPlugins taxonomyExternalComponentPlugin = new ExternalComponentPlugins();
@@ -109,7 +122,14 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
       String treeHomePath = taxonomyMetaData.getTaxoTreeHomePath().replace("/" + taxonomyMetaData.getTaxoTreeName(), "");
       params.addParam(getValueParam("path", treeHomePath));
       params.addParam(getValueParam("treeName", taxonomyMetaData.getTaxoTreeName()));
-
+      {
+        ActionConfig actionConfig = new ActionConfig();
+        actionConfig.setActions(getActions(taxonomyMetaData.getTaxoTreeHomePath(), taxonomyMetaData.getTaxoTreeWorkspace()));
+        ObjectParameter actionObjectParameter = new ObjectParameter();
+        actionObjectParameter.setName("predefined.actions");
+        actionObjectParameter.setObject(actionConfig);
+        addParameter(plugin, actionObjectParameter);
+      }
       {
         TaxonomyConfig permissionConfig = new TaxonomyConfig();
         Taxonomy permissionTaxonomy = new Taxonomy();
@@ -232,6 +252,108 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
   @Override
   protected Log getLogger() {
     return log;
+  }
+
+  @SuppressWarnings("unchecked")
+  private List<ActionConfig.TaxonomyAction> getActions(String rootNodePath, String workspaceName) {
+    List<ActionConfig.TaxonomyAction> taxonomyActions = new ArrayList<ActionConfig.TaxonomyAction>();
+    if (rootNodePath == null) {
+      if (log.isDebugEnabled()) {
+        log.warn("Argument srcNode is null.");
+      }
+      return taxonomyActions;
+    }
+    SessionProvider sessionProvider = SessionProvider.createSystemProvider();
+    List<Node> actionNodes = null;
+    try {
+      Session session = sessionProvider.getSession(workspaceName, repositoryService.getCurrentRepository());
+      Node rootNode = (Node) session.getItem(rootNodePath);
+      actionNodes = actionServiceContainer.getActions(rootNode);
+    } catch (Exception e1) {
+      log.error("Error while retrieving Taxonomy Action informations", e1);
+    }
+    if (actionNodes == null) {
+      return taxonomyActions;
+    }
+    for (Node node : actionNodes) {
+      try {
+        if (!node.isNodeType(EXO_TAXONOMY_ACTION)) {
+          continue;
+        }
+        ActionConfig.TaxonomyAction action = new ActionConfig.TaxonomyAction();
+        action.setName(getProperty(node, "exo:name"));
+        action.setDescription(getProperty(node, "exo:description"));
+        action.setLifecyclePhase(getPropertyValues(node, "exo:lifecyclePhase"));
+        action.setHomePath(getProperty(node, "exo:storeHomePath"));
+        action.setTargetPath(getProperty(node, "exo:targetPath"));
+        action.setTargetWspace(getProperty(node, "exo:targetWorkspace"));
+        List<String> roles = getPropertyValues(node, "exo:roles");
+        action.setRoles(StringUtils.join(roles, ";"));
+        action.setType(node.getPrimaryNodeType().getName());
+        action.setMixins(new ArrayList<ActionConfig.Mixin>());
+        NodeType[] mixinTypes = node.getMixinNodeTypes();
+        for (NodeType mixinType : mixinTypes) {
+          if (mixinType.getName().equals("mix:referenceable")) {
+            continue;
+          }
+          ActionConfig.Mixin mixin = new ActionConfig.Mixin();
+          mixin.setName(mixinType.getName());
+          String properties = getProperties(node, mixinType);
+          mixin.setProperties(properties);
+          action.getMixins().add(mixin);
+        }
+
+        // Addt o list
+        taxonomyActions.add(action);
+      } catch (Exception e) {
+        log.error("Error while retrieving Taxonomy Action informations", e);
+      }
+    }
+    return taxonomyActions;
+  }
+
+  private String getProperties(Node node, NodeType mixinType) throws RepositoryException {
+    StringBuilder builder = new StringBuilder();
+    PropertyDefinition[] propertyDefinitions = mixinType.getPropertyDefinitions();
+    for (PropertyDefinition propertyDefinition : propertyDefinitions) {
+      if (node.hasProperty(propertyDefinition.getName())) {
+        if (builder.length() > 0) {
+          builder.append(";");
+        }
+        builder.append(propertyDefinition.getName());
+        builder.append("=");
+        if (propertyDefinition.isMultiple()) {
+          List<String> values = getPropertyValues(node, propertyDefinition.getName());
+          builder.append(StringUtils.join(values, ","));
+        } else {
+          builder.append(getProperty(node, propertyDefinition.getName()));
+        }
+      }
+    }
+    return builder.toString();
+  }
+
+  private String getProperty(Node node, String propertyName) throws RepositoryException {
+    if (propertyName != null && node != null && node.hasProperty(propertyName)) {
+      return node.getProperty(propertyName).getString();
+    } else {
+      return null;
+    }
+  }
+
+  private List<String> getPropertyValues(Node node, String propertyName) throws RepositoryException {
+    if (propertyName != null && node != null && node.hasProperty(propertyName)) {
+      Value[] values = node.getProperty(propertyName).getValues();
+      List<String> valuesString = new ArrayList<String>();
+      for (Value value : values) {
+        if (value != null) {
+          valuesString.add(value.getString());
+        }
+      }
+      return valuesString;
+    } else {
+      return null;
+    }
   }
 
   private List<Permission> getPermissions(List<AccessControlEntry> aclEntries) {

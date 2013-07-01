@@ -18,6 +18,9 @@ import org.jibx.runtime.impl.UnmarshallingContext;
 
 public class Utils {
   private static Log log = ExoLogger.getLogger(Utils.class);
+  private static final String CONFIGURATION_FILE_XSD = "<configuration " + "\r\n   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      + "\r\n   xsi:schemaLocation=\"http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd\""
+      + "\r\n   xmlns=\"http://www.exoplatform.org/xml/ns/kernel_1_2.xsd\">";
 
   public static boolean writeConfiguration(ZipOutputStream zos, String entryName, Configuration configuration) {
     try {
@@ -73,7 +76,9 @@ public class Utils {
     IMarshallingContext mctx = bfact.createMarshallingContext();
     mctx.setIndent(2);
     mctx.marshalDocument(obj, "UTF-8", null, out);
-    return out.toByteArray();
+    String content = new String(out.toByteArray());
+    content = content.replace("<configuration>", CONFIGURATION_FILE_XSD);
+    return content.getBytes();
   }
 
   public static <T> T fromXML(byte[] bytes, Class<T> clazz) throws Exception {

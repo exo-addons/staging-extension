@@ -35,8 +35,9 @@ public class ECMAdminContentImportResource implements OperationHandler {
 
     InputStream inputStream = operationContext.getAttachment(false).getStream();
     FileOutputStream outputStream = null;
+    File tmpFile = null;
     try {
-      File tmpFile = File.createTempFile("ecmadmin-content-", ".zip");
+      tmpFile = File.createTempFile("ecmadmin-content-", ".zip");
       outputStream = new FileOutputStream(tmpFile);
       IOUtils.copy(inputStream, outputStream);
       outputStream.close();
@@ -79,6 +80,9 @@ public class ECMAdminContentImportResource implements OperationHandler {
         } catch (IOException exception) {
           throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while closing input stream", exception);
         }
+      }
+      if(tmpFile != null) {
+        tmpFile.delete();
       }
     }
     resultHandler.completed(NoResultModel.INSTANCE);

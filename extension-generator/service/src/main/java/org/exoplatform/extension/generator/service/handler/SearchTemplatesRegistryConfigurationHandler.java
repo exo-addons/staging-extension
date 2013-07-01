@@ -40,19 +40,23 @@ public class SearchTemplatesRegistryConfigurationHandler extends AbstractConfigu
     if (filteredSelectedResources.isEmpty()) {
       return false;
     }
-    for (String resourcePath : filteredSelectedResources) {
-      ZipFile zipFile = getExportedFileFromOperation(resourcePath);
-      Enumeration<? extends ZipEntry> entries = zipFile.entries();
-      while (entries.hasMoreElements()) {
-        ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-        try {
-          InputStream inputStream = zipFile.getInputStream(zipEntry);
-          Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
-        } catch (Exception e) {
-          log.error(e);
-          return false;
+    try {
+      for (String resourcePath : filteredSelectedResources) {
+        ZipFile zipFile = getExportedFileFromOperation(resourcePath);
+        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        while (entries.hasMoreElements()) {
+          ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+          try {
+            InputStream inputStream = zipFile.getInputStream(zipEntry);
+            Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+          } catch (Exception e) {
+            log.error(e);
+            return false;
+          }
         }
       }
+    } finally {
+      clearTempFiles();
     }
 
     ExternalComponentPlugins externalComponentPlugins = new ExternalComponentPlugins();
