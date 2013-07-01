@@ -65,7 +65,8 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
             NodeTypeTemplatesMetaData metadata = (NodeTypeTemplatesMetaData) xStream.fromXML(new InputStreamReader(inputStream));
             metaDatas.add(metadata);
           } else {
-            Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+            String location = DMS_CONFIGURATION_LOCATION + zipEntry.getName().replace(":", "_");
+            Utils.writeZipEnry(zos, location, inputStream);
           }
         } catch (Exception e) {
           log.error(e);
@@ -89,7 +90,7 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
       objectParameter.setObject(templateConfig);
       params.addParam(objectParameter);
 
-      ComponentPlugin plugin = createComponentPlugin("addPlugins", TemplatePlugin.class.getName(), "addPlugins", params);
+      ComponentPlugin plugin = createComponentPlugin("addPlugins", TemplatePlugin.class.getName(), "addTemplates", params);
       addComponentPlugin(externalComponentPlugins, TemplateService.class.getName(), plugin);
     }
 
@@ -98,9 +99,9 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
       nodeType.setDocumentTemplate(nodeTypeTemplatesMetaData.isDocumentTemplate());
       nodeType.setLabel(nodeTypeTemplatesMetaData.getLabel());
       nodeType.setNodetypeName(nodeTypeTemplatesMetaData.getNodeTypeName());
-      nodeType.setReferencedDialog(nodeTypeTemplatesMetaData.getTemplates().get("dialogs"));
-      nodeType.setReferencedView(nodeTypeTemplatesMetaData.getTemplates().get("views"));
-      nodeType.setReferencedSkin(nodeTypeTemplatesMetaData.getTemplates().get("skins"));
+      nodeType.setReferencedDialog(Utils.convertTemplateList(nodeTypeTemplatesMetaData.getTemplates().get("dialogs")));
+      nodeType.setReferencedView(Utils.convertTemplateList(nodeTypeTemplatesMetaData.getTemplates().get("views")));
+      nodeType.setReferencedSkin(Utils.convertTemplateList(nodeTypeTemplatesMetaData.getTemplates().get("skins")));
       nodeTypes.add(nodeType);
     }
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + DOCUMENT_TYPE_CONFIGURATION_NAME, externalComponentPlugins);

@@ -66,7 +66,8 @@ public class MetadataTemplatesConfigurationHandler extends AbstractConfiguration
             MetadataTemplatesMetaData metadata = (MetadataTemplatesMetaData) xStream.fromXML(new InputStreamReader(inputStream));
             metaDatas.add(metadata);
           } else {
-            Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
+            String location = DMS_CONFIGURATION_LOCATION + zipEntry.getName().replace(":", "_");
+            Utils.writeZipEnry(zos, location, inputStream);
           }
         } catch (Exception e) {
           log.error(e);
@@ -99,9 +100,9 @@ public class MetadataTemplatesConfigurationHandler extends AbstractConfiguration
       nodeType.setDocumentTemplate(metadataTemplatesMetaData.isDocumentTemplate());
       nodeType.setLabel(metadataTemplatesMetaData.getLabel());
       nodeType.setNodetypeName(metadataTemplatesMetaData.getNodeTypeName());
-      nodeType.setReferencedDialog(metadataTemplatesMetaData.getTemplates().get("dialogs"));
-      nodeType.setReferencedView(metadataTemplatesMetaData.getTemplates().get("views"));
-      nodeType.setReferencedSkin(metadataTemplatesMetaData.getTemplates().get("skins"));
+      nodeType.setReferencedDialog(Utils.convertTemplateList(metadataTemplatesMetaData.getTemplates().get("dialogs")));
+      nodeType.setReferencedView(Utils.convertTemplateList(metadataTemplatesMetaData.getTemplates().get("views")));
+      nodeType.setReferencedSkin(Utils.convertTemplateList(metadataTemplatesMetaData.getTemplates().get("skins")));
       nodeTypes.add(nodeType);
     }
     return Utils.writeConfiguration(zos, DMS_CONFIGURATION_LOCATION + METADATA_CONFIGURATION_NAME, externalComponentPlugins);

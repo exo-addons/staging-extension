@@ -70,6 +70,9 @@ public class NodeTypeConfigurationHandler extends AbstractConfigurationHandler {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+        if (zipEntry.getName().endsWith(JCR_NAMESPACES_CONFIGURATION_XML)) {
+          continue;
+        }
         String nodeTypeConfigurationLocation = JCR_CONFIGURATION_LOCATION + zipEntry.getName();
         valuesParam.getValues().add(nodeTypeConfigurationLocation.replace("WEB-INF", "war:"));
         try {

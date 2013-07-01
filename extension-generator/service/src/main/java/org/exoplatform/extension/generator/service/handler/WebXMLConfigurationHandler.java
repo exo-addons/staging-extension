@@ -15,17 +15,17 @@ public class WebXMLConfigurationHandler implements ConfigurationHandler {
   static {
     StringBuilder builder = new StringBuilder();
     builder.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
-    builder.append("<web-app");
-    builder.append("      version=\"3.0\"");
-    builder.append("      metadata-complete=\"true\"");
-    builder.append("      xmlns=\"http://java.sun.com/xml/ns/javaee\"");
-    builder.append("      xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
-    builder.append("      xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd\">");
-    builder.append("  <display-name>commons-extension</display-name>");
-    builder.append("  <listener>");
-    builder.append("    <listener-class>org.exoplatform.container.web.PortalContainerConfigOwner</listener-class>");
-    builder.append("  </listener>");
-    builder.append("</web-app>");
+    builder.append("\r\n<web-app");
+    builder.append("\r\n      version=\"3.0\"");
+    builder.append("\r\n      metadata-complete=\"true\"");
+    builder.append("\r\n      xmlns=\"http://java.sun.com/xml/ns/javaee\"");
+    builder.append("\r\n      xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"");
+    builder.append("\r\n      xsi:schemaLocation=\"http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd\">");
+    builder.append("\r\n  <display-name>custom-extension</display-name>");
+    builder.append("\r\n  <listener>");
+    builder.append("\r\n    <listener-class>org.exoplatform.container.web.PortalContainerConfigOwner</listener-class>");
+    builder.append("\r\n  </listener>");
+    builder.append("\r\n</web-app>");
     WEB_XML_CONTENT = builder.toString();
   }
 

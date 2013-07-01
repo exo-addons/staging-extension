@@ -3,12 +3,17 @@ package org.exoplatform.extension.generator.service.api;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.xml.Configuration;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
+import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
+import org.exoplatform.services.cms.templates.impl.TemplateConfig;
+import org.exoplatform.services.cms.templates.impl.TemplateConfig.Template;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.jibx.runtime.BindingDirectory;
@@ -78,6 +83,7 @@ public class Utils {
     mctx.marshalDocument(obj, "UTF-8", null, out);
     String content = new String(out.toByteArray());
     content = content.replace("<configuration>", CONFIGURATION_FILE_XSD);
+    content = content.replaceAll("<field name=\"([A-z])*\"/>", "");
     return content.getBytes();
   }
 
@@ -87,6 +93,22 @@ public class Utils {
     UnmarshallingContext uctx = (UnmarshallingContext) bfact.createUnmarshallingContext();
     Object obj = uctx.unmarshalDocument(baos, "UTF-8");
     return clazz.cast(obj);
+  }
+
+  public static List<Template> convertTemplateList(List<NodeTemplate> list) {
+    List<Template> templates = new ArrayList<TemplateConfig.Template>();
+    if (list == null || list.isEmpty()) {
+      return templates;
+    }
+    for (NodeTemplate nodeTemplate : list) {
+      if (nodeTemplate.getTemplateFile() != null) {
+        Template template = new Template();
+        template.setTemplateFile(nodeTemplate.getTemplateFile().replace(":", "_"));
+        template.setRoles(nodeTemplate.getRoles());
+        templates.add(template);
+      }
+    }
+    return templates;
   }
 
 }

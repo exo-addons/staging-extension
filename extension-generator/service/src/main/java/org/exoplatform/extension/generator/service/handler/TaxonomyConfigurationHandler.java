@@ -3,7 +3,6 @@ package org.exoplatform.extension.generator.service.handler;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -133,7 +132,10 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
       {
         TaxonomyConfig permissionConfig = new TaxonomyConfig();
         Taxonomy permissionTaxonomy = new Taxonomy();
-        permissionConfig.setTaxonomies(Arrays.asList(permissionTaxonomy));
+        List<Taxonomy> permissionTaxonomyList = new ArrayList<TaxonomyConfig.Taxonomy>();
+        permissionTaxonomyList.add(permissionTaxonomy);
+
+        permissionConfig.setTaxonomies(permissionTaxonomyList);
         permissionTaxonomy.setPermissions(getPermissions(taxonomyMetaData.getPermissions()));
         ObjectParameter permObjectParameter = new ObjectParameter();
         permObjectParameter.setName("permission.configuration");
@@ -203,6 +205,7 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
         LinkDeploymentDescriptor linkDeploymentDescriptor = new LinkDeploymentDescriptor();
         linkDeploymentDescriptor.setSourcePath(repository + ":" + workspace + ":" + childNode.getParent().getPath());
         linkDeploymentDescriptor.setTargetPath(repository + ":" + workspace + ":" + linkManager.getTarget(childNode, true).getPath());
+        descriptors.add(linkDeploymentDescriptor);
       }
     }
   }
@@ -230,12 +233,14 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
       if (childNode.isNodeType(EXO_TAXONOMY)) {
         String childPath = childNode.getPath();
         childPath = childPath.replace(rootPath, "");
+        childPath = childPath.replace(rootPath, "");
         List<AccessControlEntry> aclEntries = childNode.getACL().getPermissionEntries();
         List<Permission> permissionsList = getPermissions(aclEntries);
         Taxonomy taxonomy = new Taxonomy();
         taxonomy.setName(childPath);
         taxonomy.setPath(childPath);
         taxonomy.setPermissions(permissionsList);
+        taxonomies.add(taxonomy);
         computeTaxonomyTreeNodes(taxonomies, childNode, rootPath);
       }
     }
@@ -293,12 +298,15 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
         action.setMixins(new ArrayList<ActionConfig.Mixin>());
         NodeType[] mixinTypes = node.getMixinNodeTypes();
         for (NodeType mixinType : mixinTypes) {
-          if (mixinType.getName().equals("mix:referenceable")) {
+          if (mixinType.getName().equals("mix:referenceable") || mixinType.getName().equals("exo:owneable")) {
             continue;
           }
           ActionConfig.Mixin mixin = new ActionConfig.Mixin();
           mixin.setName(mixinType.getName());
           String properties = getProperties(node, mixinType);
+          if (properties.isEmpty()) {
+            continue;
+          }
           mixin.setProperties(properties);
           action.getMixins().add(mixin);
         }
@@ -316,7 +324,7 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
     StringBuilder builder = new StringBuilder();
     PropertyDefinition[] propertyDefinitions = mixinType.getPropertyDefinitions();
     for (PropertyDefinition propertyDefinition : propertyDefinitions) {
-      if (node.hasProperty(propertyDefinition.getName())) {
+      if (node.hasProperty(propertyDefinition.getName()) && !propertyDefinition.isProtected()) {
         if (builder.length() > 0) {
           builder.append(";");
         }

@@ -65,10 +65,10 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
     handlers.add(new JCRQueryConfigurationHandler());
     handlers.add(new MetadataTemplatesConfigurationHandler());
     handlers.add(new NodeTypeTemplatesConfigurationHandler());
-    handlers.add(new TaxonomyConfigurationHandler());
+    handlers.add(new SiteContentsConfigurationHandler());
     handlers.add(new SearchTemplatesRegistryConfigurationHandler());
     handlers.add(new CLVTemplatesConfigurationHandler());
-    handlers.add(new SiteContentsConfigurationHandler());
+    handlers.add(new TaxonomyConfigurationHandler());
     handlers.add(new WebXMLConfigurationHandler());
   }
 

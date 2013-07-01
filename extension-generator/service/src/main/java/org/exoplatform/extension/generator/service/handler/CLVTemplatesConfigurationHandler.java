@@ -23,7 +23,7 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
 public class CLVTemplatesConfigurationHandler extends AbstractConfigurationHandler {
-  private static final String APPLICATION_CLV_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/wcm/templates/applications/content-list-viewer";
+  private static final String APPLICATION_CLV_CONFIGURATION_LOCATION = DMS_CONFIGURATION_LOCATION + "templates/applications/content-list-viewer";
   private static final String APPLICATION_CLV_CONFIGURATION_NAME = "application-clv-templates-configuration.xml";
   private static final List<String> configurationPaths = new ArrayList<String>();
   static {
