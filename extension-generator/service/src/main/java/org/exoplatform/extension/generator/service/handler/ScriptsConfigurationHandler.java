@@ -52,7 +52,10 @@ public class ScriptsConfigurationHandler extends AbstractConfigurationHandler {
     {
       InitParams params = new InitParams();
       params.addParam(getValueParam("autoCreateInNewRepository", "true"));
-      params.addParam(getValueParam("predefinedScriptsLocation", DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:")));
+      String location = DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:");
+      // Delete last '/'
+      location = location.substring(0, location.length() - 1);
+      params.addParam(getValueParam("predefinedScriptsLocation", location));
       ObjectParameter objectParameter = new ObjectParameter();
       objectParameter.setName("predefined.scripts");
       ResourceConfig resourceConfig = new ResourceConfig();
@@ -60,7 +63,7 @@ public class ScriptsConfigurationHandler extends AbstractConfigurationHandler {
       objectParameter.setObject(resourceConfig);
       params.addParam(objectParameter);
 
-      ComponentPlugin plugin = createComponentPlugin("manage.script.plugin", ScriptPlugin.class.getName(), "addPlugin", params);
+      ComponentPlugin plugin = createComponentPlugin("manage.script.plugin", ScriptPlugin.class.getName(), "addScriptPlugin", params);
       addComponentPlugin(externalComponentPlugins, ScriptService.class.getName(), plugin);
     }
     try {
@@ -68,10 +71,11 @@ public class ScriptsConfigurationHandler extends AbstractConfigurationHandler {
       Enumeration<? extends ZipEntry> entries = zipFile.entries();
       while (entries.hasMoreElements()) {
         ZipEntry zipEntry = (ZipEntry) entries.nextElement();
-        String scriptConfigurationLocation = DMS_CONFIGURATION_LOCATION + zipEntry.getName();
+        String relatifLocation = zipEntry.getName().replaceFirst("script/", "");
+        String scriptConfigurationLocation = DMS_CONFIGURATION_LOCATION + "scripts/" + relatifLocation;
         Resource scriptResource = new ResourceConfig.Resource();
-        scriptResource.setName(zipEntry.getName());
-        scriptResource.setDescription(zipEntry.getName());
+        scriptResource.setName(relatifLocation);
+        scriptResource.setDescription(relatifLocation);
         scripts.add(scriptResource);
         try {
           InputStream inputStream = zipFile.getInputStream(zipEntry);

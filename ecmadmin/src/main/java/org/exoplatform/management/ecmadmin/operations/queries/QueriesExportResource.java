@@ -38,100 +38,100 @@ public class QueriesExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
       QueryService queryService = operationContext.getRuntimeContext().getRuntimeComponent(QueryService.class);
-      OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(
-          OrganizationService.class);
+      OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
       // shared queries
       List<Node> sharedQueries = queryService.getSharedQueries(WCMCoreUtils.getSystemSessionProvider());
 
-      Configuration configurationSharedQueries = null;
-      ExternalComponentPlugins externalComponentPlugins = new ExternalComponentPlugins();
-      externalComponentPlugins.setTargetComponent(QueryService.class.getName());
-      ArrayList<ComponentPlugin> componentPluginsList = new ArrayList<ComponentPlugin>();
-      externalComponentPlugins.setComponentPlugins(componentPluginsList);
+      Configuration configurationSharedQueries = new Configuration();
+      if (sharedQueries != null && !sharedQueries.isEmpty()) {
+        ExternalComponentPlugins externalComponentPlugins = new ExternalComponentPlugins();
+        externalComponentPlugins.setTargetComponent(QueryService.class.getName());
+        ArrayList<ComponentPlugin> componentPluginsList = new ArrayList<ComponentPlugin>();
+        externalComponentPlugins.setComponentPlugins(componentPluginsList);
 
-      ComponentPlugin queriesComponentPlugin = new ComponentPlugin();
-      queriesComponentPlugin.setName("query.plugin");
-      queriesComponentPlugin.setSetMethod("setQueryPlugin");
-      queriesComponentPlugin.setType(QueryPlugin.class.getName());
+        ComponentPlugin queriesComponentPlugin = new ComponentPlugin();
+        queriesComponentPlugin.setName("query.plugin");
+        queriesComponentPlugin.setSetMethod("setQueryPlugin");
+        queriesComponentPlugin.setType(QueryPlugin.class.getName());
 
-      InitParams queriesPluginInitParams = new InitParams();
-      queriesComponentPlugin.setInitParams(queriesPluginInitParams);
-      componentPluginsList.add(queriesComponentPlugin);
+        InitParams queriesPluginInitParams = new InitParams();
+        queriesComponentPlugin.setInitParams(queriesPluginInitParams);
+        componentPluginsList.add(queriesComponentPlugin);
 
-      // Queries API returns Node object instead of QueryData, so we need
-      // to convert them...
-      for (Node sharedQueryNode : sharedQueries) {
-        QueryData queryData = new QueryData();
-        queryData.setName(sharedQueryNode.getProperty("exo:name").getString());
-        queryData.setStatement(sharedQueryNode.getProperty("jcr:statement").getString());
-        queryData.setLanguage(sharedQueryNode.getProperty("jcr:language").getString());
-        queryData.setCacheResult(sharedQueryNode.getProperty("exo:cachedResult").getBoolean());
-        Value[] permissionsValues = sharedQueryNode.getProperty("exo:accessPermissions").getValues();
-        List<String> permissions = new ArrayList<String>();
-        for (Value permissionValue : permissionsValues) {
-          permissions.add(permissionValue.getString());
+        // Queries API returns Node object instead of QueryData, so we need
+        // to convert them...
+        for (Node sharedQueryNode : sharedQueries) {
+          QueryData queryData = new QueryData();
+          queryData.setName(sharedQueryNode.getProperty("exo:name").getString());
+          queryData.setStatement(sharedQueryNode.getProperty("jcr:statement").getString());
+          queryData.setLanguage(sharedQueryNode.getProperty("jcr:language").getString());
+          queryData.setCacheResult(sharedQueryNode.getProperty("exo:cachedResult").getBoolean());
+          Value[] permissionsValues = sharedQueryNode.getProperty("exo:accessPermissions").getValues();
+          List<String> permissions = new ArrayList<String>();
+          for (Value permissionValue : permissionsValues) {
+            permissions.add(permissionValue.getString());
+          }
+          queryData.setPermissions(permissions);
+
+          ObjectParameter objectParam = new ObjectParameter();
+          objectParam.setName(queryData.getName());
+          objectParam.setObject(queryData);
+          queriesPluginInitParams.addParam(objectParam);
         }
-        queryData.setPermissions(permissions);
-
-        ObjectParameter objectParam = new ObjectParameter();
-        objectParam.setName(queryData.getName());
-        objectParam.setObject(queryData);
-        queriesPluginInitParams.addParam(objectParam);
+        configurationSharedQueries.addExternalComponentPlugins(externalComponentPlugins);
       }
-
-      configurationSharedQueries = new Configuration();
-      configurationSharedQueries.addExternalComponentPlugins(externalComponentPlugins);
-
       exportTasks.add(new QueriesExportTask(configurationSharedQueries, null));
 
       // users queries
       ListAccess<User> usersListAccess = organizationService.getUserHandler().findAllUsers();
       User[] users = usersListAccess.load(0, usersListAccess.getSize());
       for (User user : users) {
-        Configuration configurationUserQueries = new Configuration();
-
-        ExternalComponentPlugins userQueriesExternalComponentPlugins = new ExternalComponentPlugins();
-        userQueriesExternalComponentPlugins.setTargetComponent(QueryService.class.getName());
-        ArrayList<ComponentPlugin> userQueriesComponentPluginsList = new ArrayList<ComponentPlugin>();
-        userQueriesExternalComponentPlugins.setComponentPlugins(userQueriesComponentPluginsList);
-
-        ComponentPlugin userQueriesComponentPlugin = new ComponentPlugin();
-        userQueriesComponentPlugin.setName("query.plugin");
-        userQueriesComponentPlugin.setSetMethod("setQueryPlugin");
-        userQueriesComponentPlugin.setType(QueryPlugin.class.getName());
-
-        InitParams userQueriesPluginInitParams = new InitParams();
-        userQueriesComponentPlugin.setInitParams(userQueriesPluginInitParams);
-        userQueriesComponentPluginsList.add(userQueriesComponentPlugin);
-
         List<Query> userQueries = queryService.getQueries(user.getUserName(), WCMCoreUtils.getSystemSessionProvider());
-        for (Query query : userQueries) {
-          QueryData queryData = new QueryData();
-          String queryPath = query.getStoredQueryPath();
-          queryData.setName(queryPath.substring(queryPath.lastIndexOf("/") + 1));
-          queryData.setStatement(query.getStatement());
-          queryData.setLanguage(query.getLanguage());
-          queryData.setCacheResult(false);
-          // no permissions are set on users' queries
-          queryData.setPermissions(null);
 
-          ObjectParameter objectParam = new ObjectParameter();
-          objectParam.setName(queryData.getName());
-          objectParam.setObject(queryData);
-          userQueriesPluginInitParams.addParam(objectParam);
+        if (userQueries != null && !userQueries.isEmpty()) {
+          Configuration configurationUserQueries = new Configuration();
+
+          ExternalComponentPlugins userQueriesExternalComponentPlugins = new ExternalComponentPlugins();
+          userQueriesExternalComponentPlugins.setTargetComponent(QueryService.class.getName());
+          ArrayList<ComponentPlugin> userQueriesComponentPluginsList = new ArrayList<ComponentPlugin>();
+          userQueriesExternalComponentPlugins.setComponentPlugins(userQueriesComponentPluginsList);
+
+          ComponentPlugin userQueriesComponentPlugin = new ComponentPlugin();
+          userQueriesComponentPlugin.setName("query.plugin");
+          userQueriesComponentPlugin.setSetMethod("setQueryPlugin");
+          userQueriesComponentPlugin.setType(QueryPlugin.class.getName());
+
+          InitParams userQueriesPluginInitParams = new InitParams();
+          userQueriesComponentPlugin.setInitParams(userQueriesPluginInitParams);
+          userQueriesComponentPluginsList.add(userQueriesComponentPlugin);
+
+          for (Query query : userQueries) {
+            QueryData queryData = new QueryData();
+            String queryPath = query.getStoredQueryPath();
+            queryData.setName(queryPath.substring(queryPath.lastIndexOf("/") + 1));
+            queryData.setStatement(query.getStatement());
+            queryData.setLanguage(query.getLanguage());
+            queryData.setCacheResult(false);
+            // no permissions are set on users' queries
+            queryData.setPermissions(null);
+
+            ObjectParameter objectParam = new ObjectParameter();
+            objectParam.setName(queryData.getName());
+            objectParam.setObject(queryData);
+            userQueriesPluginInitParams.addParam(objectParam);
+          }
+
+          configurationUserQueries.addExternalComponentPlugins(userQueriesExternalComponentPlugins);
+          exportTasks.add(new QueriesExportTask(configurationUserQueries, user.getUserName()));
         }
-
-        configurationUserQueries.addExternalComponentPlugins(userQueriesExternalComponentPlugins);
-        exportTasks.add(new QueriesExportTask(configurationUserQueries, user.getUserName()));
       }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : "
-          + e.getMessage());
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage());
     }
   }
 }

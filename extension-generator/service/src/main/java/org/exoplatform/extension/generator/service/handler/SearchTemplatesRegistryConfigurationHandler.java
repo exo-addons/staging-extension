@@ -23,7 +23,7 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
 public class SearchTemplatesRegistryConfigurationHandler extends AbstractConfigurationHandler {
-  private static final String APPLICATION_SEARCH_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/wcm/templates/applications/search";
+  private static final String APPLICATION_SEARCH_CONFIGURATION_LOCATION = DMS_CONFIGURATION_LOCATION + "templates/applications/search";
   private static final String APPLICATION_SEARCH_CONFIGURATION_NAME = "application-search-templates-configuration.xml";
   private static final List<String> configurationPaths = new ArrayList<String>();
   static {

@@ -137,7 +137,7 @@ public class ExtensionGeneratorController {
       InputStream inputStream = extensionGeneratorService.generateWARExtension(selectedResources);
       return Response.ok(inputStream).withMimeType("application/zip").withHeader("Content-Disposition", "filename=\"custom-extension.war\"");
     } catch (Exception e) {
-      log.error(e);
+      log.error("Error while generationg WAR file, ", e);
       return Response.content(500, "Error occured while importing resource. See full stack trace in log file");
     }
   }

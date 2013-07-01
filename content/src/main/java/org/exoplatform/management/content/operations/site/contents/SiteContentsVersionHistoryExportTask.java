@@ -184,6 +184,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
    */
   private static File getExportedFile(String prefix, String suffix) throws IOException {
     File tempFile = File.createTempFile(prefix.concat(UUID.randomUUID().toString()), suffix);
+    tempFile.deleteOnExit();
     tempFiles.add(tempFile);
     return tempFile;
   }

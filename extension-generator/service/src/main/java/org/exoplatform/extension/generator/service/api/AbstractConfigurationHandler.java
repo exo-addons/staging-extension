@@ -63,6 +63,7 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
 
       // Create temp file
       tmpFile = File.createTempFile("exo", "-extension-generator");
+      tmpFile.deleteOnExit();
       outputStream = new FileOutputStream(tmpFile);
       tempFiles.add(tmpFile);
 

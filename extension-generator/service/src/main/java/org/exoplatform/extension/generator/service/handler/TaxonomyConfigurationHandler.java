@@ -118,7 +118,13 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
 
       params.addParam(getValueParam("autoCreateInNewRepository", "false"));
       params.addParam(getValueParam("workspace", taxonomyMetaData.getTaxoTreeWorkspace()));
-      String treeHomePath = taxonomyMetaData.getTaxoTreeHomePath().replace("/" + taxonomyMetaData.getTaxoTreeName(), "");
+      String treeHomePath = taxonomyMetaData.getTaxoTreeHomePath();
+      int lastindex = treeHomePath.lastIndexOf("/" + taxonomyMetaData.getTaxoTreeName());
+      if(lastindex > 0) {
+        if(treeHomePath.length() == (lastindex + taxonomyMetaData.getTaxoTreeName().length() + 1)) {
+          treeHomePath = treeHomePath.substring(0, lastindex);
+        }
+      }
       params.addParam(getValueParam("path", treeHomePath));
       params.addParam(getValueParam("treeName", taxonomyMetaData.getTaxoTreeName()));
       {

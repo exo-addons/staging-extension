@@ -74,6 +74,7 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
         if (ze.getName().endsWith("tree.xml")) {
           // Write JCR Content in XML Temp File
           File tempFile = File.createTempFile("jcr", "sysview");
+          tempFile.deleteOnExit();
           FileOutputStream fout = new FileOutputStream(tempFile);
           IOUtils.copy(zin, fout);
           zin.closeEntry();

@@ -38,6 +38,7 @@ public class ECMAdminContentImportResource implements OperationHandler {
     File tmpFile = null;
     try {
       tmpFile = File.createTempFile("ecmadmin-content-", ".zip");
+      tmpFile.deleteOnExit();
       outputStream = new FileOutputStream(tmpFile);
       IOUtils.copy(inputStream, outputStream);
       outputStream.close();

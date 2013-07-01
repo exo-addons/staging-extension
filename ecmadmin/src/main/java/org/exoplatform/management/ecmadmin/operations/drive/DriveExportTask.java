@@ -1,20 +1,19 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
 import org.exoplatform.container.xml.Configuration;
 import org.gatein.management.api.operation.model.ExportTask;
-import org.jibx.runtime.BindingDirectory;
-import org.jibx.runtime.IBindingFactory;
-import org.jibx.runtime.IMarshallingContext;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class DriveExportTask implements ExportTask {
+  private static final String CONFIGURATION_FILE_XSD = "<configuration " + "\r\n   xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
+      + "\r\n   xsi:schemaLocation=\"http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd\""
+      + "\r\n   xmlns=\"http://www.exoplatform.org/xml/ns/kernel_1_2.xsd\">";
 
   private String basepath = null;
   private Configuration configuration = null;
@@ -32,16 +31,10 @@ public class DriveExportTask implements ExportTask {
   @Override
   public void export(OutputStream outputStream) throws IOException {
     try {
-      ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
-
-      IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
-      IMarshallingContext mctx = bfact.createMarshallingContext();
-      mctx.setIndent(2);
-      mctx.marshalDocument(configuration, "UTF-8", false, arrayOutputStream);
-
-      // Use ByteArrayOutputStream because the outputStream have to be
-      // open, but 'marshalDocument' closes automatically the stream
-      outputStream.write(arrayOutputStream.toByteArray());
+      String content = configuration.toXML();
+      content = content.replace("<configuration>", CONFIGURATION_FILE_XSD);
+      content = content.replaceAll("<field name=\"([A-z])*\"/>", "");
+      outputStream.write(content.getBytes());
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }
