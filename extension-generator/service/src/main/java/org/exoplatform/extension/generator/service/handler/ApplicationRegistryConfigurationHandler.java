@@ -2,6 +2,7 @@ package org.exoplatform.extension.generator.service.handler;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
@@ -38,7 +39,7 @@ public class ApplicationRegistryConfigurationHandler extends AbstractConfigurati
   /**
    * {@inheritDoc}
    */
-  public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
+  public boolean writeData(ZipOutputStream zos, Collection<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.REGISTRY_PATH);
     if (filteredSelectedResources.isEmpty()) {
       return false;

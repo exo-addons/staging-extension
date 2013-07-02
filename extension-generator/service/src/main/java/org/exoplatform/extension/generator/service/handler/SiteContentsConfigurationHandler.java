@@ -3,6 +3,7 @@ package org.exoplatform.extension.generator.service.handler;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -48,7 +49,7 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
   /**
    * {@inheritDoc}
    */
-  public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
+  public boolean writeData(ZipOutputStream zos, Collection<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.CONTENT_SITES_PATH);
     if (filteredSelectedResources.isEmpty()) {
       return false;
@@ -91,7 +92,7 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
               Utils.writeZipEnry(zos, WCM_CONTENT_CONFIGURATION_LOCATION + location, inputStream);
             }
           } catch (Exception e) {
-            log.error(e);
+            log.error("Exception while writing Data", e);
             return false;
           }
         }

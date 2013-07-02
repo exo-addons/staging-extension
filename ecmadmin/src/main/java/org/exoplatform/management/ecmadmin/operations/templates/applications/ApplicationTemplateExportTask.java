@@ -5,9 +5,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.jcr.Node;
+import javax.jcr.Value;
 
 import org.apache.commons.io.IOUtils;
+import org.exoplatform.ecm.webui.utils.Utils;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
+import org.exoplatform.services.wcm.core.NodetypeConstant;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
@@ -23,18 +26,20 @@ public class ApplicationTemplateExportTask implements ExportTask {
   private String templatePath;
   private final String templateCategory;
   private final String templateName;
+  private ApplicationTemplatesMetadata metadata;
 
-  public ApplicationTemplateExportTask(ApplicationTemplateManagerService applicationTemplateManagerService,
-      String applicationName, String templateCategory, String templateName) {
+  public ApplicationTemplateExportTask(ApplicationTemplateManagerService applicationTemplateManagerService, String applicationName, String templateCategory, String templateName,
+      ApplicationTemplatesMetadata metadata) {
     this.applicationTemplateManagerService = applicationTemplateManagerService;
     this.applicationName = applicationName;
     this.templateCategory = templateCategory;
     this.templateName = templateName;
-    templatePath = "";
+    this.templatePath = "";
     if (templateCategory != null && !templateCategory.isEmpty()) {
-      templatePath += templateCategory + "/";
+      this.templatePath += templateCategory + "/";
     }
-    templatePath += templateName;
+    this.templatePath += templateName;
+    this.metadata = metadata;
   }
 
   @Override
@@ -46,14 +51,22 @@ public class ApplicationTemplateExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     InputStream templateFileIS = null;
     try {
-      Node templateNode = applicationTemplateManagerService.getTemplateByName(this.applicationName, this.templateCategory,
-          this.templateName, WCMCoreUtils.getSystemSessionProvider());
+      Node templateNode = applicationTemplateManagerService.getTemplateByName(this.applicationName, this.templateCategory, this.templateName, WCMCoreUtils.getSystemSessionProvider());
 
-      templateFileIS = templateNode.getNode("jcr:content").getProperty("jcr:data").getStream();
+      Node contentNode = templateNode.getNode(Utils.JCR_CONTENT);
+
+      templateFileIS = contentNode.getProperty("jcr:data").getStream();
       IOUtils.copy(templateFileIS, outputStream);
+
+      if (contentNode.hasProperty(NodetypeConstant.DC_TITLE)) {
+        Value[] values = contentNode.getProperty(NodetypeConstant.DC_TITLE).getValues();
+        if (values != null && values.length > 0) {
+          String title = values[0].getString();
+          metadata.addTitle(getEntry(), title);
+        }
+      }
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export template " + this.applicationName + "/"
-          + this.templatePath, e);
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export template " + this.applicationName + "/" + this.templatePath, e);
     } finally {
       if (templateFileIS != null) {
         templateFileIS.close();

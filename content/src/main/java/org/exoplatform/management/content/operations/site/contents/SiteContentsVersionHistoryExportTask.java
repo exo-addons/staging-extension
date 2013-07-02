@@ -31,6 +31,7 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ExportTask;
 
 public class SiteContentsVersionHistoryExportTask implements ExportTask {
+  public static final String VERSION_HISTORY_FILE_SUFFIX = "_VersionHistory.zip";
   public static final String ROOT_SQL_QUERY = "select * from mix:versionable order by exo:dateCreated DESC";
   public static final String VERSION_SQL_QUERY = "select * from mix:versionable where jcr:path like '$0/%' " + "order by exo:dateCreated DESC";
 
@@ -50,7 +51,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return SiteUtil.getSiteContentsBasePath(siteName) + absolutePath + "_VersionHistory.zip";
+    return SiteUtil.getSiteContentsBasePath(siteName) + absolutePath + VERSION_HISTORY_FILE_SUFFIX;
   }
 
   @Override

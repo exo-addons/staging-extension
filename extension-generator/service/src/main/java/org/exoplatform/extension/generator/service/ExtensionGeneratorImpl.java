@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
 import java.util.zip.ZipOutputStream;
 
 import javax.inject.Singleton;
@@ -28,7 +29,7 @@ import org.exoplatform.extension.generator.service.handler.MetadataTemplatesConf
 import org.exoplatform.extension.generator.service.handler.NodeTypeConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.NodeTypeTemplatesConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.ScriptsConfigurationHandler;
-import org.exoplatform.extension.generator.service.handler.SearchTemplatesRegistryConfigurationHandler;
+import org.exoplatform.extension.generator.service.handler.SearchTemplatesConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.SiteContentsConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.TaxonomyConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.WebXMLConfigurationHandler;
@@ -66,7 +67,7 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
     handlers.add(new MetadataTemplatesConfigurationHandler());
     handlers.add(new NodeTypeTemplatesConfigurationHandler());
     handlers.add(new SiteContentsConfigurationHandler());
-    handlers.add(new SearchTemplatesRegistryConfigurationHandler());
+    handlers.add(new SearchTemplatesConfigurationHandler());
     handlers.add(new CLVTemplatesConfigurationHandler());
     handlers.add(new TaxonomyConfigurationHandler());
     handlers.add(new WebXMLConfigurationHandler());
@@ -199,10 +200,11 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
   public InputStream generateWARExtension(Set<String> selectedResources) {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     ZipOutputStream zos = new ZipOutputStream(out);
+    Vector<String> tempSelectedResources = new Vector<String>(selectedResources);
 
     Configuration configuration = new Configuration();
     for (ConfigurationHandler configurationHandler : handlers) {
-      boolean extracted = configurationHandler.writeData(zos, selectedResources);
+      boolean extracted = configurationHandler.writeData(zos, tempSelectedResources);
       if (extracted) {
         List<String> configurationPaths = configurationHandler.getConfigurationPaths();
         if (configurationPaths != null) {

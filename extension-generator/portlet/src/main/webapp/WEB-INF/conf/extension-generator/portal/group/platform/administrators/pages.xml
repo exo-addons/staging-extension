@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<page-set
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.gatein.org/xml/ns/gatein_objects_1_3 http://www.gatein.org/xml/ns/gatein_objects_1_3"
+    xmlns="http://www.gatein.org/xml/ns/gatein_objects_1_3">
+  <page>
+    <name>generator</name>
+    <title>Extension Generator</title>
+    <access-permissions>manager:/platform/administrators</access-permissions>
+    <edit-permission>manager:/platform/administrators</edit-permission>
+    <portlet-application>
+      <portlet>
+        <application-ref>extension-generator-portlet</application-ref>
+        <portlet-ref>ExtensionGeneratorPortlet</portlet-ref>
+      </portlet>
+      <title>Extension Generator</title>
+      <access-permissions>manager:/platform/administrators</access-permissions>
+      <show-info-bar>false</show-info-bar>
+    </portlet-application>
+  </page>
+</page-set>

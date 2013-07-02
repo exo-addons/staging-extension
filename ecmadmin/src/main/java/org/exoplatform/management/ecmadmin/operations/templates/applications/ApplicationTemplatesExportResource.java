@@ -39,24 +39,27 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
     try {
       Node templatesHome = applicationTemplateManagerService.getApplicationTemplateHome(applicationName, SessionProvider.createSystemProvider());
       if (templatesHome != null) {
+        ApplicationTemplatesMetadata metadata = new ApplicationTemplatesMetadata();
         if (applicationName.endsWith(".gtmpl")) {
-          exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, templatesHome.getParent().getParent().getName(), templatesHome.getParent().getName(), templatesHome.getName()));
+          exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, templatesHome.getParent().getParent().getName(), templatesHome.getParent().getName(), templatesHome
+              .getName(), metadata));
         } else {
           NodeIterator nodeIterator = templatesHome.getNodes();
           while (nodeIterator.hasNext()) {
             Node categoryNode = nodeIterator.nextNode();
             if (categoryNode.getName().endsWith(".gtmpl")) {
               Node templateNode = categoryNode;
-              exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName()));
+              exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName(), metadata));
             } else {
               NodeIterator templatesIterator = categoryNode.getNodes();
               while (templatesIterator.hasNext()) {
                 Node templateNode = templatesIterator.nextNode();
-                exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName()));
+                exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName(), metadata));
               }
             }
           }
         }
+        exportTasks.add(new ApplicationTemplatesMetaDataExportTask(metadata));
       }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));

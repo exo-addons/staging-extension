@@ -2,6 +2,7 @@ package org.exoplatform.extension.generator.service.handler;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
@@ -41,7 +42,7 @@ public class MOPSiteConfigurationHandler extends AbstractConfigurationHandler {
   /**
    * {@inheritDoc}
    */
-  public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
+  public boolean writeData(ZipOutputStream zos, Collection<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, siteResourcePath);
     if (filteredSelectedResources.isEmpty()) {
       return false;

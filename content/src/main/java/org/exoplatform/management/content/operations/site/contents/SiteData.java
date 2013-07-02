@@ -5,6 +5,7 @@ import java.util.Map;
 public class SiteData {
   private SiteMetaData siteMetadata;
   private Map<String, String> nodeExportFiles;
+  private Map<String, String> nodeExportHistoryFiles;
 
   public SiteMetaData getSiteMetadata() {
     return siteMetadata;
@@ -21,4 +22,13 @@ public class SiteData {
   public void setNodeExportFiles(Map<String, String> nodeExportFiles) {
     this.nodeExportFiles = nodeExportFiles;
   }
+
+  public Map<String, String> getNodeExportHistoryFiles() {
+    return nodeExportHistoryFiles;
+  }
+
+  public void setNodeExportHistoryFiles(Map<String, String> nodeExportHistoryFiles) {
+    this.nodeExportHistoryFiles = nodeExportHistoryFiles;
+  }
+
 }

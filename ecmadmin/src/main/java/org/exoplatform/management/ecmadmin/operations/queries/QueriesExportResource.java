@@ -82,8 +82,8 @@ public class QueriesExportResource implements OperationHandler {
           queriesPluginInitParams.addParam(objectParam);
         }
         configurationSharedQueries.addExternalComponentPlugins(externalComponentPlugins);
+        exportTasks.add(new QueriesExportTask(configurationSharedQueries, null));
       }
-      exportTasks.add(new QueriesExportTask(configurationSharedQueries, null));
 
       // users queries
       ListAccess<User> usersListAccess = organizationService.getUserHandler().findAllUsers();
@@ -116,7 +116,7 @@ public class QueriesExportResource implements OperationHandler {
             queryData.setLanguage(query.getLanguage());
             queryData.setCacheResult(false);
             // no permissions are set on users' queries
-            queryData.setPermissions(null);
+            queryData.setPermissions(new ArrayList<String>());
 
             ObjectParameter objectParam = new ObjectParameter();
             objectParam.setName(queryData.getName());

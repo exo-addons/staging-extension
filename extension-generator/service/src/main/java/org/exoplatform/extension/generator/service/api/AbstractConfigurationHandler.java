@@ -3,13 +3,17 @@ package org.exoplatform.extension.generator.service.api;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.exoplatform.container.PortalContainer;
@@ -18,6 +22,7 @@ import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.Parameter;
 import org.exoplatform.container.xml.ValueParam;
+import org.exoplatform.management.ecmadmin.operations.templates.applications.ApplicationTemplatesMetadata;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ContentType;
 import org.gatein.management.api.PathAddress;
@@ -25,6 +30,8 @@ import org.gatein.management.api.controller.ManagedRequest;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.operation.OperationNames;
+
+import com.thoughtworks.xstream.XStream;
 
 public abstract class AbstractConfigurationHandler implements ConfigurationHandler {
   protected static final String DMS_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/dms/";
@@ -112,7 +119,7 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
    *          parent resource path
    * @return Set of sub resources path of type String
    */
-  protected Set<String> filterSelectedResources(Set<String> selectedResources, String parentPath) {
+  protected Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
     Set<String> filteredSelectedResources = new HashSet<String>();
     for (String resourcePath : selectedResources) {
       if (resourcePath.contains(parentPath)) {
@@ -158,6 +165,21 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
     valueParam.setName(name);
     valueParam.setValue(value);
     return valueParam;
+  }
+
+  protected ApplicationTemplatesMetadata getApplicationTemplatesMetadata(ZipFile zipFile) {
+    ZipEntry applicationTemplateMetadataEntry = zipFile.getEntry("templates/applications/metadata.xml");
+    if (applicationTemplateMetadataEntry != null) {
+      try {
+        InputStream inputStream = zipFile.getInputStream(applicationTemplateMetadataEntry);
+        XStream xStream = new XStream();
+        xStream.alias("metadata", ApplicationTemplatesMetadata.class);
+        return (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(inputStream));
+      } catch (IOException e) {
+        getLogger().error("Error while gettin Application Template Metadata", e);
+      }
+    }
+    return null;
   }
 
   protected ManagementController getManagementController() {

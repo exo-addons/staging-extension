@@ -1,5 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
+import java.io.InputStreamReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -18,6 +19,8 @@ import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
+
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -44,8 +47,7 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
     super.execute(operationContext, resultHandler);
 
     if (applicationTemplateManagerService == null) {
-      applicationTemplateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(
-          ApplicationTemplateManagerService.class);
+      applicationTemplateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(ApplicationTemplateManagerService.class);
       if (applicationTemplateManagerService == null) {
         throw new OperationException(OperationNames.IMPORT_RESOURCE, "ApplicationTemplateManagerService doesn't exist.");
       }
@@ -58,6 +60,7 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
     }
 
     try {
+      ApplicationTemplatesMetadata metadata = null;
       final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
@@ -65,6 +68,14 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
         if (!filePath.startsWith("templates/applications/")) {
           continue;
         }
+        if (filePath.endsWith("metadata.xml")) {
+          // read NT Templates Metadata
+          XStream xStream = new XStream();
+          xStream.alias("metadata", ApplicationTemplatesMetadata.class);
+          metadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
+          continue;
+        }
+
         // Skip directories
         // & Skip empty entries
         // & Skip entries not in sites/zip
@@ -81,12 +92,10 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
         String categoryName = matcher.group(2);
         String templateName = matcher.group(3) + ".gtmpl";
 
-        Node category = applicationTemplateManagerService.getApplicationTemplateHome(applicationName,
-            SessionProvider.createSystemProvider()).getNode(categoryName);
+        Node category = applicationTemplateManagerService.getApplicationTemplateHome(applicationName, SessionProvider.createSystemProvider()).getNode(categoryName);
         if (category.hasNode(templateName)) {
           if (replaceExisting) {
-            log.info("Overwrite existing application template '" + applicationName + "/" + categoryName + "/" + templateName
-                + "'.");
+            log.info("Overwrite existing application template '" + applicationName + "/" + categoryName + "/" + templateName + "'.");
             Node templateNode = category.getNode(templateName);
             templateNode.remove();
             category.getSession().save();
@@ -95,7 +104,11 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
             continue;
           }
         }
-        templateService.createTemplate(category, templateName, templateName, zis, new String[] { "*" });
+        String templateTitle = templateName;
+        if (metadata != null) {
+          templateTitle = metadata.getTitle(filePath);
+        }
+        templateService.createTemplate(category, templateTitle, templateName, zis, new String[] { "*" });
         zis.closeEntry();
       }
       zis.close();

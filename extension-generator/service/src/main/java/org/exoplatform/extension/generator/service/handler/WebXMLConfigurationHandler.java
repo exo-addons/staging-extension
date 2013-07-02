@@ -1,8 +1,8 @@
 package org.exoplatform.extension.generator.service.handler;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.zip.ZipOutputStream;
 
 import org.exoplatform.extension.generator.service.api.ConfigurationHandler;
@@ -30,7 +30,7 @@ public class WebXMLConfigurationHandler implements ConfigurationHandler {
   }
 
   @Override
-  public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
+  public boolean writeData(ZipOutputStream zos, Collection<String> selectedResources) {
     Utils.writeZipEnry(zos, WEB_XML_LOCATION, WEB_XML_CONTENT);
     return false;
   }

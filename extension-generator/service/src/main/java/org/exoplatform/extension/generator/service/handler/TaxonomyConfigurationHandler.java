@@ -3,6 +3,7 @@ package org.exoplatform.extension.generator.service.handler;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -77,7 +78,7 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
    * {@inheritDoc}
    */
   @Override
-  public boolean writeData(ZipOutputStream zos, Set<String> selectedResources) {
+  public boolean writeData(ZipOutputStream zos, Collection<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, ExtensionGenerator.ECM_TAXONOMY_PATH);
     if (filteredSelectedResources.isEmpty()) {
       return false;
@@ -209,8 +210,8 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
         computeLinkTreeNodes(repository, workspace, descriptors, childNode);
       } else if (linkManager.isLink(childNode)) {
         LinkDeploymentDescriptor linkDeploymentDescriptor = new LinkDeploymentDescriptor();
-        linkDeploymentDescriptor.setSourcePath(repository + ":" + workspace + ":" + childNode.getParent().getPath());
-        linkDeploymentDescriptor.setTargetPath(repository + ":" + workspace + ":" + linkManager.getTarget(childNode, true).getPath());
+        linkDeploymentDescriptor.setSourcePath(repository + ":" + workspace + ":" + linkManager.getTarget(childNode, true).getPath());
+        linkDeploymentDescriptor.setTargetPath(repository + ":" + workspace + ":" + childNode.getParent().getPath());
         descriptors.add(linkDeploymentDescriptor);
       }
     }
