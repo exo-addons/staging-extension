@@ -1,11 +1,12 @@
 package org.exoplatform.management.content.operations.site.contents;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class SiteData {
   private SiteMetaData siteMetadata;
-  private Map<String, String> nodeExportFiles;
-  private Map<String, String> nodeExportHistoryFiles;
+  private Map<String, String> nodeExportFiles = new HashMap<String, String>();
+  private Map<String, String> nodeExportHistoryFiles = new HashMap<String, String>();
 
   public SiteMetaData getSiteMetadata() {
     return siteMetadata;
@@ -19,16 +20,8 @@ public class SiteData {
     return nodeExportFiles;
   }
 
-  public void setNodeExportFiles(Map<String, String> nodeExportFiles) {
-    this.nodeExportFiles = nodeExportFiles;
-  }
-
   public Map<String, String> getNodeExportHistoryFiles() {
     return nodeExportHistoryFiles;
-  }
-
-  public void setNodeExportHistoryFiles(Map<String, String> nodeExportHistoryFiles) {
-    this.nodeExportHistoryFiles = nodeExportHistoryFiles;
   }
 
 }

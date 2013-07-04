@@ -66,7 +66,7 @@ public class StagingExtensionController {
       stagingExtensionService.importResource(selectedNode, file);
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
-      log.error(e);
+      log.error("Error occured while importing content", e);
       return Response.content(500, "Error occured while importing resource. See full stack trace in log file");
     }
   }

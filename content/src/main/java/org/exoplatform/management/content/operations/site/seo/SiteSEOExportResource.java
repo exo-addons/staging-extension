@@ -27,6 +27,8 @@ import org.gatein.management.api.operation.model.ExportTask;
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
+ * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
+ *         Khanfir</a>
  * @version $Revision$
  */
 public class SiteSEOExportResource implements OperationHandler {
@@ -53,8 +55,7 @@ public class SiteSEOExportResource implements OperationHandler {
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
       if (!wcmConfigurationService.getSharedPortalName().equals(siteName)) {
-        LocaleConfigService localeConfigService = operationContext.getRuntimeContext().getRuntimeComponent(
-            LocaleConfigService.class);
+        LocaleConfigService localeConfigService = operationContext.getRuntimeContext().getRuntimeComponent(LocaleConfigService.class);
         Collection<LocaleConfig> localeConfigs = localeConfigService.getLocalConfigs();
         for (LocaleConfig localeConfig : localeConfigs) {
           exportTasks.add(getSEOExportTask(operationContext, siteName, localeConfig.getLanguage()));
@@ -73,14 +74,17 @@ public class SiteSEOExportResource implements OperationHandler {
     List<PageMetadataModel> pageMetadataModels = new ArrayList<PageMetadataModel>();
 
     // pages
-    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null)
-        .iterator();
+    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null).iterator();
     while (pagesQueryResult.hasNext()) {
       PageContext pageContext = (PageContext) pagesQueryResult.next();
       Page page = dataStorage.getPage(pageContext.getKey().format());
 
-      // TODO: Bug ECMS-4030
-      PageMetadataModel pageMetadataModel = null ; //seoService.getPageMetadata(page.getPageId(), lang);
+      PageMetadataModel pageMetadataModel = null;
+      try {
+        pageMetadataModel = seoService.getPageMetadata(page.getPageId(), lang);
+      } catch (Exception e) {
+        // TODO: Bug ECMS-4030
+      }
       if (pageMetadataModel != null && pageMetadataModel.getKeywords() != null && !pageMetadataModel.getKeywords().isEmpty()) {
         pageMetadataModels.add(pageMetadataModel);
       }

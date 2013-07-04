@@ -101,7 +101,7 @@ public class SiteContentsExportResource implements OperationHandler {
 
       boolean exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
-      boolean exportVersionHistory = filters.contains("version-hitory:true");
+      boolean exportVersionHistory = !filters.contains("no-hitory:true");
 
       // Validate Site Structure
       validateSiteStructure(siteName);
@@ -232,6 +232,8 @@ public class SiteContentsExportResource implements OperationHandler {
       SiteContentsVersionHistoryExportTask siteContentVersionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, sitesLocation.getWorkspace(), metaData.getOptions().get(
           SiteMetaData.SITE_NAME), siteRootNodePath);
       exportTasks.add(siteContentVersionHistoryExportTask);
+
+      metaData.getExportedHistoryFiles().put(siteContentExportTask.getEntry(), siteContentVersionHistoryExportTask.getEntry());
     }
 
     metaData.getExportedFiles().put(siteContentExportTask.getEntry(), sitesLocation.getPath());
@@ -318,7 +320,8 @@ public class SiteContentsExportResource implements OperationHandler {
         SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
         subNodesExportTask.add(siteContentExportTask);
         if (exportVersionHistory) {
-          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
+          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
+              childNode.getPath());
           subNodesExportTask.add(versionHistoryExportTask);
         }
         metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
