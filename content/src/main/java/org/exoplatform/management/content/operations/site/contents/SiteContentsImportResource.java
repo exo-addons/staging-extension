@@ -1,8 +1,10 @@
 package org.exoplatform.management.content.operations.site.contents;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -16,7 +18,6 @@ import java.util.zip.ZipInputStream;
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
-import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
@@ -45,6 +46,8 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:soren.schmidt@exoplatform.com">Soren Schmidt</a>
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
+ * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
+ *         Khanfir</a>
  * @version $Revision$ usage: ssh -p 2000 john@localhost mgmt connect ls cd
  *          content import -f /acmeTest.zip
  */
@@ -65,7 +68,6 @@ public class SiteContentsImportResource implements OperationHandler {
     this.filePath = filePath;
   }
 
-  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
     if (importedSiteName == null) {
@@ -77,6 +79,9 @@ public class SiteContentsImportResource implements OperationHandler {
 
     // "uuidBehavior" attribute
     int uuidBehaviorValue = extractUuidBehavior(operationContext.getAttributes().getValue("uuidBehavior"));
+    // "cleanPublication" attribute
+    String cleanPublication = operationContext.getAttributes().getValue("cleanPublication");
+    boolean isCleanPublication = !StringUtils.isEmpty(cleanPublication) && cleanPublication.equals("true");
 
     InputStream attachmentInputStream = null;
     if (filePath != null) {
@@ -113,8 +118,8 @@ public class SiteContentsImportResource implements OperationHandler {
       log.info("Reading metadata options for import: workspace: " + workspace);
 
       try {
-        importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(), workspace,
-            uuidBehaviorValue);
+        importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(),
+            siteData.getNodeExportHistoryFiles(), workspace, uuidBehaviorValue, isCleanPublication);
         log.info("Content import has been finished");
         resultHandler.completed(NoResultModel.INSTANCE);
       } catch (Exception e) {
@@ -129,12 +134,14 @@ public class SiteContentsImportResource implements OperationHandler {
    * @param operationContext
    * @param metaData
    * @param nodes
+   * @param historyFiles
    * @param workspace
    * @param uuidBehaviorValue
+   * @param isCleanPublication
    * @throws Exception
    */
   private void importContentNodes(OperationContext operationContext, SiteMetaData metaData, Map<String, String> nodes,
-      String workspace, int uuidBehaviorValue) throws Exception {
+      Map<String, String> historyFiles, String workspace, int uuidBehaviorValue, boolean isCleanPublication) throws Exception {
 
     RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     Session session = repositoryService.getCurrentRepository().getSystemSession(workspace);
@@ -143,25 +150,18 @@ public class SiteContentsImportResource implements OperationHandler {
       String name = (String) it.next();
       String path = metaData.getExportedFiles().get(name);
 
-      String relPath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
+      String targetNodePath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
 
-      if (log.isInfoEnabled()) {
-        log.info("Deleting the node " + workspace + ":" + relPath);
-      }
-
-      if (relPath.startsWith("/")) {
-        relPath = relPath.substring(1);
-      }
+      log.info("Deleting the node " + workspace + ":" + targetNodePath);
 
       try {
-        if (session.itemExists(relPath)) {
-          Node oldNode = (Node) session.getItem(relPath);
+        if (session.itemExists(targetNodePath)) {
+          Node oldNode = (Node) session.getItem(targetNodePath);
           oldNode.remove();
         }
-      } catch (PathNotFoundException e) {
-        log.error("Error when trying to find and delete the node: " + relPath, e);
-      } catch (RepositoryException e) {
-        log.error("Error when trying to find and delete the node: " + relPath, e);
+      } catch (Exception e) {
+        log.error("Error when trying to find and delete the node: " + targetNodePath, e);
+        continue;
       }
 
       if (log.isInfoEnabled()) {
@@ -169,13 +169,30 @@ public class SiteContentsImportResource implements OperationHandler {
       }
 
       // Create the parent path
-      createJCRPath(session, path);
+      Node currentNode = createJCRPath(session, path);
 
-      session.importXML(path, new ByteArrayInputStream(nodes.get(name).getBytes("UTF-8")), uuidBehaviorValue);
-      session.save();
+      try {
+        session.importXML(path, new ByteArrayInputStream(nodes.get(name).getBytes("UTF-8")), uuidBehaviorValue);
+        session.save();
 
-      // Clean publication information
-      cleanPublication(path, session);
+        if (historyFiles.containsKey(name)) {
+          log.info("Importing history of the node " + path);
+          String historyFilePath = historyFiles.get(name);
+
+          Map<String, String> mapHistoryValue = org.exoplatform.services.cms.impl.Utils.getMapImportHistory(new FileInputStream(
+              historyFilePath));
+          org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, new FileInputStream(historyFilePath),
+              mapHistoryValue);
+        } else if (isCleanPublication) {
+          // Clean publication information
+          cleanPublication(path, session);
+        }
+      } catch (Exception e) {
+        // Revert changes
+        session.refresh(false);
+        throw e;
+      }
+
       session.save();
     }
     // save at the end
@@ -200,7 +217,7 @@ public class SiteContentsImportResource implements OperationHandler {
 
   }
 
-  private void createJCRPath(Session session, String path) throws RepositoryException {
+  private Node createJCRPath(Session session, String path) throws RepositoryException {
 
     String[] ancestors = path.split("/");
     Node current = session.getRootNode();
@@ -216,6 +233,7 @@ public class SiteContentsImportResource implements OperationHandler {
         }
       }
     }
+    return current;
 
   }
 
@@ -329,7 +347,7 @@ public class SiteContentsImportResource implements OperationHandler {
           }
         }
         // sysview file ?
-        else {
+        else if (filePath.endsWith(".xml")) {
           // Unmarshall sysview xml file to String
           log.info("Collecting the node " + filePath);
           String nodeContent = IOUtils.toString(zis, "UTF-8");
@@ -339,13 +357,19 @@ public class SiteContentsImportResource implements OperationHandler {
           if (siteData == null) {
             siteData = new SiteData();
           }
-          Map<String, String> siteNodes = siteData.getNodeExportFiles();
-          if (siteNodes == null) {
-            siteNodes = new HashMap<String, String>();
-          }
-          siteNodes.put(filePath, nodeContent);
-          siteData.setNodeExportFiles(siteNodes);
+          siteData.getNodeExportFiles().put(filePath, nodeContent);
           sitesData.put(siteName, siteData);
+        } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
+          // Put Version History file in temp folder
+          File tempFile = File.createTempFile("JCR", "-VersionHistory.zip");
+          FileOutputStream outputStream = new FileOutputStream(tempFile);
+          IOUtils.copy(zis, outputStream);
+          outputStream.flush();
+          outputStream.close();
+          SiteData siteData = sitesData.get(siteName);
+          siteData.getNodeExportHistoryFiles().put(
+              filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"),
+              tempFile.getAbsolutePath());
         }
       }
 
@@ -381,12 +405,12 @@ public class SiteContentsImportResource implements OperationHandler {
   // ZipInputStream.
   // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
   // information.
-  private static class NonCloseableZipInputStream extends ZipInputStream {
-    private NonCloseableZipInputStream(InputStream inputStream) {
+  public static class NonCloseableZipInputStream extends ZipInputStream {
+    public NonCloseableZipInputStream(InputStream inputStream) {
       super(inputStream);
     }
 
-    
+    @Override
     public void close() throws IOException {}
 
     private void reallyClose() throws IOException {

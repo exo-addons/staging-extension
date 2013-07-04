@@ -47,3 +47,8 @@
 /ear-epp/.project
 /ear-epp/.settings
 /ear-epp/target
+/cli/src/main/webapp/META-INF
+.settings
+/ear-epp/src/main/application/META-INF/application.xml
+/ear/src/main/application/META-INF/application.xml
+MANIFEST.MF

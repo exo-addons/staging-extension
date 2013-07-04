@@ -14,7 +14,6 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class SiteContentsReadResource implements OperationHandler {
-  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     resultHandler.completed(new ReadResourceModel("Available sites.", new HashSet<String>()));
   }

@@ -11,6 +11,7 @@ public class SiteMetaData {
 
   Map<String, String> options = new HashMap<String, String>();
   Map<String, String> exportedFiles = new HashMap<String, String>();
+  Map<String, String> exportedHistoryFiles = new HashMap<String, String>();
 
   public Map<String, String> getExportedFiles() {
     return this.exportedFiles;
@@ -26,6 +27,14 @@ public class SiteMetaData {
 
   public void setOptions(Map<String, String> options) {
     this.options = options;
+  }
+
+  public Map<String, String> getExportedHistoryFiles() {
+    return exportedHistoryFiles;
+  }
+
+  public void setExportedHistoryFiles(Map<String, String> exportedHistoryFiles) {
+    this.exportedHistoryFiles = exportedHistoryFiles;
   }
 
 }
