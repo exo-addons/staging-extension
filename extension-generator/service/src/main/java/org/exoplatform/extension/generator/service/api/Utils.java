@@ -2,10 +2,12 @@ package org.exoplatform.extension.generator.service.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -29,6 +31,9 @@ public class Utils {
 
   public static boolean writeConfiguration(ZipOutputStream zos, String entryName, Configuration configuration) {
     try {
+      if(entryName.startsWith("/")) {
+        entryName = entryName.substring(1);
+      }
       zos.putNextEntry(new ZipEntry(entryName));
       zos.write(toXML(configuration));
       zos.closeEntry();
@@ -45,6 +50,9 @@ public class Utils {
       configuration.addExternalComponentPlugins(externalComponentPlugin);
     }
     try {
+      if(entryName.startsWith("/")) {
+        entryName = entryName.substring(1);
+      }
       zos.putNextEntry(new ZipEntry(entryName));
       zos.write(toXML(configuration));
       zos.closeEntry();
@@ -57,6 +65,9 @@ public class Utils {
 
   public static void writeZipEnry(ZipOutputStream zos, String entryName, String content) {
     try {
+      if(entryName.startsWith("/")) {
+        entryName = entryName.substring(1);
+      }
       zos.putNextEntry(new ZipEntry(entryName));
       zos.write(content.getBytes("UTF-8"));
       zos.closeEntry();
@@ -67,6 +78,9 @@ public class Utils {
 
   public static void writeZipEnry(ZipOutputStream zos, String entryName, InputStream inputStream) {
     try {
+      if(entryName.startsWith("/")) {
+        entryName = entryName.substring(1);
+      }
       zos.putNextEntry(new ZipEntry(entryName));
       zos.write(IOUtils.toByteArray(inputStream));
       zos.closeEntry();
@@ -109,6 +123,28 @@ public class Utils {
       }
     }
     return templates;
+  }
+
+  public static void copyZipEnries(ZipInputStream zin, ZipOutputStream zos, String rootPathInTarget) throws IOException {
+    if (rootPathInTarget == null) {
+      rootPathInTarget = "";
+    }
+    ZipEntry entry;
+    while ((entry = zin.getNextEntry()) != null) {
+      if(entry.isDirectory() || !entry.getName().contains(".")) {
+        continue;
+      }
+      String targetEntryName = rootPathInTarget + ("/") + entry.getName();
+      while (targetEntryName.contains("//")) {
+        targetEntryName = targetEntryName.replace("//", "/");
+      }
+      if(targetEntryName.startsWith("/")) {
+        targetEntryName = targetEntryName.substring(1);
+      }
+      zos.putNextEntry(new ZipEntry(targetEntryName));
+      IOUtils.copy(zin, zos);
+    }
+    zos.flush();
   }
 
 }

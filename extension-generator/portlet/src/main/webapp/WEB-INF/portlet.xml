@@ -7,6 +7,10 @@
 		<portlet-name>ExtensionGeneratorPortlet</portlet-name>
 		<display-name xml:lang="EN">Extension Generator Portlet</display-name>
 		<portlet-class>org.exoplatform.extension.generator.portlet.ExtensionGeneratorPortlet</portlet-class>
+		<init-param>
+			<name>juzu.run_mode</name>
+			<value>dev</value>
+		</init-param>
 		<supports>
 			<mime-type>text/html</mime-type>
 		</supports>

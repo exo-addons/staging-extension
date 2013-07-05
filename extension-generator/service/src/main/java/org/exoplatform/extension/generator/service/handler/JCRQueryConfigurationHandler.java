@@ -40,7 +40,7 @@ public class JCRQueryConfigurationHandler extends AbstractConfigurationHandler {
           Utils.writeZipEnry(zos, DMS_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
           configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + zipEntry.getName());
         } catch (Exception e) {
-          log.error(e);
+          log.error("Error while serializing JCR Query data", e);
           return false;
         }
       }

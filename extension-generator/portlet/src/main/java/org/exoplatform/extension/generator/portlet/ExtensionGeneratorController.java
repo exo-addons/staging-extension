@@ -99,6 +99,23 @@ public class ExtensionGeneratorController {
     parameters.put("registryNodes", resources.get(ExtensionGenerator.REGISTRY_PATH));
 
     parameters.put("selectedResources", selectedResources);
+
+    parameters.put("portalSiteSelectedNodes", getSelectedResources(ExtensionGenerator.SITES_PORTAL_PATH));
+    parameters.put("groupSiteSelectedNodes", getSelectedResources(ExtensionGenerator.SITES_GROUP_PATH));
+    parameters.put("userSiteSelectedNodes", getSelectedResources(ExtensionGenerator.SITES_USER_PATH));
+    parameters.put("siteContentSelectedNodes", getSelectedResources(ExtensionGenerator.CONTENT_SITES_PATH));
+    parameters.put("applicationCLVTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+    parameters.put("applicationSearchTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
+    parameters.put("documentTypeTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+    parameters.put("metadataTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_METADATA_PATH));
+    parameters.put("taxonomySelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TAXONOMY_PATH));
+    parameters.put("querySelectedNodes", getSelectedResources(ExtensionGenerator.ECM_QUERY_PATH));
+    parameters.put("driveSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_DRIVE_PATH));
+    parameters.put("scriptSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_SCRIPT_PATH));
+    parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_ACTION_PATH));
+    parameters.put("nodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_NODETYPE_PATH));
+    parameters.put("registrySelectedNodes", getSelectedResources(ExtensionGenerator.REGISTRY_PATH));
+
     return index.ok(parameters);
   }
 
@@ -128,6 +145,23 @@ public class ExtensionGeneratorController {
     } else {
       log.warn("displayForm: Selection not considered.");
     }
+
+    parameters.put("portalSiteSelectedNodes", getSelectedResources(ExtensionGenerator.SITES_PORTAL_PATH));
+    parameters.put("groupSiteSelectedNodes", getSelectedResources(ExtensionGenerator.SITES_GROUP_PATH));
+    parameters.put("userSiteSelectedNodes", getSelectedResources(ExtensionGenerator.SITES_USER_PATH));
+    parameters.put("siteContentSelectedNodes", getSelectedResources(ExtensionGenerator.CONTENT_SITES_PATH));
+    parameters.put("applicationCLVTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+    parameters.put("applicationSearchTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
+    parameters.put("documentTypeTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+    parameters.put("metadataTemplatesSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TEMPLATES_METADATA_PATH));
+    parameters.put("taxonomySelectedNodes", getSelectedResources(ExtensionGenerator.ECM_TAXONOMY_PATH));
+    parameters.put("querySelectedNodes", getSelectedResources(ExtensionGenerator.ECM_QUERY_PATH));
+    parameters.put("driveSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_DRIVE_PATH));
+    parameters.put("scriptSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_SCRIPT_PATH));
+    parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_ACTION_PATH));
+    parameters.put("nodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_NODETYPE_PATH));
+    parameters.put("registrySelectedNodes", getSelectedResources(ExtensionGenerator.REGISTRY_PATH));
+
     form.render(parameters);
   }
 
@@ -141,4 +175,36 @@ public class ExtensionGeneratorController {
       return Response.content(500, "Error occured while importing resource. See full stack trace in log file");
     }
   }
+
+  @Resource
+  public Response.Content<?> exportExtensionEAR() throws IOException {
+    try {
+      InputStream inputStream = extensionGeneratorService.generateExtensionEAR(selectedResources);
+      return Response.ok(inputStream).withMimeType("application/zip").withHeader("Content-Disposition", "filename=\"custom-extension.ear\"");
+    } catch (Exception e) {
+      log.error("Error while generationg EAR file, ", e);
+      return Response.content(500, "Error occured while importing resource. See full stack trace in log file");
+    }
+  }
+
+  @Resource
+  public Response.Content<?> exportExtensionMavenProject() throws IOException {
+    try {
+      InputStream inputStream = extensionGeneratorService.generateExtensionMavenProject(selectedResources);
+      return Response.ok(inputStream).withMimeType("application/zip").withHeader("Content-Disposition", "filename=\"custom-extension-project.zip\"");
+    } catch (Exception e) {
+      log.error("Error while generationg Maven Project, ", e);
+      return Response.content(500, "Error occured while importing resource. See full stack trace in log file");
+    }
+  }
+
+  private Set<String> getSelectedResources(String parentPath) {
+    Set<String> resources = extensionGeneratorService.filterSelectedResources(selectedResources, parentPath);
+    Set<String> selectedResources = new HashSet<String>();
+    for (String resource : resources) {
+      selectedResources.add(resource.replace("/"+parentPath, "").replace(parentPath, ""));
+    }
+    return selectedResources;
+  }
+
 }

@@ -1,5 +1,5 @@
 <%
-  public String computeContent(def tmpNodes, def title, def parentPath) {
+  public String computeContent(def tmpNodes, def name, def title, def parentPath) {
     String content = "<li>";
     content += "<input type='checkbox' class='list-checkbox' name='selectedResources' id='"+parentPath+"' value='"+parentPath+"'>";
     content += "<input type='checkbox' class='tree-checkbox' id='tree_"+parentPath+"'>";
@@ -9,14 +9,20 @@
     }
     content += "<label class='"+parentNodeClass+" Clickable' for='tree_"+parentPath+"'>"+title+"</label>";
     content += "<ul>";
+    content += "<li>";
+    content += "<table cellpadding='0' cellspacing='0' border='0' class='display dataTable tree_datatable' id='"+name+"'>";
+    content += "<tbody>";
     tmpNodes.each { node ->
       if(!node.getPath().equals(parentPath)) {
-        content += "<li>";
-        content += "<input type='checkbox' class='list-checkbox' name='selectedResources' id='"+node.getPath()+"' value='"+node.getPath()+"'>";
-        content += "<label title='"+node.getDescription()+"' class='leaf Clickable' for='"+node.getPath()+"'>"+node.getText()+"</label>";
-        content += "</li>";
+        content += "<tr class='gradeA'>";
+        content += "<td class='gradeA'><input type='checkbox' class='list-checkbox' name='selectedResources' id='"+node.getPath()+"' value='"+node.getPath()+"'>";
+        content += "<label title='"+node.getDescription()+"' class='leaf Clickable' for='"+node.getPath()+"'>"+node.getText()+"</label></td>";
+        content += "</tr>";
       }
     }
+    content += "</tbody>";
+    content += "</table>";
+    content += "</li>";
     content += "</ul>";
     content += "</li>";
     return content;
@@ -28,21 +34,21 @@
   <ul class='css-list-parent-ul'>
     <div class="container-fluid generator-portlet-container">
       <div class="leftColumn">
-        <%=computeContent(portalSiteNodes, "Portal Sites", portalSitePath)%>
-        <%=computeContent(groupSiteNodes, "Group Sites",groupSitePath)%>
-        <%=computeContent(userSiteNodes, "User Sites",userSitePath)%>
-        <%=computeContent(siteContentNodes, "Site JCR Conents",siteContentPath)%>
-        <%=computeContent(applicationCLVTemplatesNodes, "Content List Templates",applicationCLVTemplatesPath)%>
-        <%=computeContent(applicationSearchTemplatesNodes, "Search Templates",applicationSearchTemplatesPath)%>
-        <%=computeContent(documentTypeTemplatesNodes, "Document Type templates",documentTypeTemplatesPath)%>
-        <%=computeContent(metadataTemplatesNodes, "Metadata Templates",metadataTemplatesPath)%>
-        <%=computeContent(taxonomyNodes, "Taxonomy",taxonomyPath)%>
-        <%=computeContent(queryNodes, "JCR Query",queryPath)%>
-        <%=computeContent(driveNodes, "Drives",drivePath)%>
-        <%=computeContent(scriptNodes, "Programming Groovy Script",scriptPath)%>
-        <%=computeContent(actionNodeTypeNodes, "Action JCR NodeType",actionNodeTypePath)%>
-        <%=computeContent(nodeTypeNodes, "JCR NodeType",nodeTypePath)%>
-        <%=computeContent(registryNodes, "Application Registry",registryPath)%>
+        <%=computeContent(portalSiteNodes,"portalsites", "Portal Sites", portalSitePath)%>
+        <%=computeContent(groupSiteNodes,"groupsites", "Group Sites",groupSitePath)%>
+        <%=computeContent(userSiteNodes,"usersites", "User Sites",userSitePath)%>
+        <%=computeContent(siteContentNodes,"contentsites", "Site JCR Conents",siteContentPath)%>
+        <%=computeContent(applicationCLVTemplatesNodes,"clv_templates", "Content List Templates",applicationCLVTemplatesPath)%>
+        <%=computeContent(applicationSearchTemplatesNodes,"search_templates", "Search Templates",applicationSearchTemplatesPath)%>
+        <%=computeContent(documentTypeTemplatesNodes,"document_templates", "Document Type templates",documentTypeTemplatesPath)%>
+        <%=computeContent(metadataTemplatesNodes,"metadata_templates", "Metadata Templates",metadataTemplatesPath)%>
+        <%=computeContent(taxonomyNodes,"taxonomy", "Taxonomy",taxonomyPath)%>
+        <%=computeContent(queryNodes,"jcrquery", "JCR Query",queryPath)%>
+        <%=computeContent(driveNodes,"drives", "Drives",drivePath)%>
+        <%=computeContent(scriptNodes,"scripts", "Programming Groovy Script",scriptPath)%>
+        <%=computeContent(actionNodeTypeNodes,"actions", "Action JCR NodeType",actionNodeTypePath)%>
+        <%=computeContent(nodeTypeNodes,"nodetypes", "JCR NodeType",nodeTypePath)%>
+        <%=computeContent(registryNodes,"registry", "Application Registry",registryPath)%>
       </div>
       <div class="rightColumn" id="exportImportForm">
           #{include path=form.gtmpl}#{/include}

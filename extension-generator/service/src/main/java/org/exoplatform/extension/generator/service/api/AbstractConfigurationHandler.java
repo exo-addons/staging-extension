@@ -119,7 +119,7 @@ public abstract class AbstractConfigurationHandler implements ConfigurationHandl
    *          parent resource path
    * @return Set of sub resources path of type String
    */
-  protected Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
+  public static Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
     Set<String> filteredSelectedResources = new HashSet<String>();
     for (String resourcePath : selectedResources) {
       if (resourcePath.contains(parentPath)) {

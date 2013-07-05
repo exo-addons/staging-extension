@@ -59,7 +59,7 @@ public class MOPSiteConfigurationHandler extends AbstractConfigurationHandler {
             InputStream inputStream = zipFile.getInputStream(zipEntry);
             Utils.writeZipEnry(zos, SITES_CONFIGURATION_LOCATION + zipEntry.getName(), inputStream);
           } catch (Exception e) {
-            log.error(e);
+            log.error("Error while serializing MOP data", e);
             return false;
           }
         }

@@ -70,7 +70,7 @@ public class NodeTypeTemplatesConfigurationHandler extends AbstractConfiguration
             Utils.writeZipEnry(zos, location, inputStream);
           }
         } catch (Exception e) {
-          log.error(e);
+          log.error("Error while serializing NodeType Templates data", e);
           return false;
         }
       }

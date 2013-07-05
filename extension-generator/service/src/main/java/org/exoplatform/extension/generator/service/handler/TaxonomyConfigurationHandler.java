@@ -102,7 +102,7 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
               taxonomiesMetaData.add(taxonomyMetaData);
             }
           } catch (Exception e) {
-            log.error(e);
+            log.error("Error while serializing Taxonomy Configuration data", e);
             return false;
           }
         }
@@ -154,7 +154,7 @@ public class TaxonomyConfigurationHandler extends AbstractConfigurationHandler {
         try {
           subNodes = getTaxonomyTreeNodes(taxonomyMetaData.getTaxoTreeHomePath(), taxonomyMetaData.getTaxoTreeWorkspace());
         } catch (Exception e) {
-          log.error(e);
+          log.error("Error while serializing Taxonomy data", e);
           continue;
         }
         TaxonomyConfig taxonomyConfig = new TaxonomyConfig();

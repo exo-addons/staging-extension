@@ -43,7 +43,7 @@ public class DrivesConfigurationHandler extends AbstractConfigurationHandler {
       configurationPaths.add(DMS_CONFIGURATION_LOCATION.replace("WEB-INF", "war:") + drivesConfigurationEntry.getName());
       return true;
     } catch (Exception e) {
-      log.error(e);
+      log.error("Error while serializing drives data", e);
       return false;
     } finally {
       clearTempFiles();

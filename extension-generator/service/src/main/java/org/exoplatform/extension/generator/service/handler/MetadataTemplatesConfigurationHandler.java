@@ -71,7 +71,7 @@ public class MetadataTemplatesConfigurationHandler extends AbstractConfiguration
             Utils.writeZipEnry(zos, location, inputStream);
           }
         } catch (Exception e) {
-          log.error(e);
+          log.error("Error while serializing Metadata templates data", e);
           return false;
         }
       }

@@ -62,3 +62,5 @@
 rebel.xml
 
 rebel-remote.xml
+
+/ear/src/main/application/META-INF/application.xml

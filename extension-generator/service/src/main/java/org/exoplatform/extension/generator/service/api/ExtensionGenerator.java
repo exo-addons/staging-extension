@@ -1,6 +1,8 @@
 package org.exoplatform.extension.generator.service.api;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Set;
 
 public interface ExtensionGenerator {
@@ -148,8 +150,41 @@ public interface ExtensionGenerator {
   /**
    * Generates the WAR Extension by including seleted managed paths to export
    * 
-   * @return WAR Extension archive inputstream
+   * @param selectedResources
+   * @return InputStream pointing to a ZipFile
+   * @throws IOException
    */
-  InputStream generateWARExtension(Set<String> selectedResources);
+  InputStream generateWARExtension(Set<String> selectedResources) throws IOException;
+
+  /**
+   * Generates EAR containing WAR Extension and Activation JAR by including seleted managed paths to export
+   * 
+   * @param selectedResources
+   * @return InputStream pointing to a ZipFile
+   * @throws IOException
+   */
+  InputStream generateExtensionEAR(Set<String> selectedResources) throws IOException;
+
+  /**
+   * Generates Maven Project containing modules for WAR Extension and Activation JAR.
+   * This operation is done by including seleted managed paths to export.
+   * 
+   * @param selectedResources Selected Managed Resources Paths.
+   * @return InputStream pointing to a ZipFile
+   * @throws IOException
+   */
+  InputStream generateExtensionMavenProject(Set<String> selectedResources) throws IOException;
+
+  /**
+   * Filters subresources of parentPath. This operation retains only paths that
+   * contains parentPath.
+   * 
+   * @param selectedResources
+   *          Set of managed resources paths
+   * @param parentPath
+   *          parent resource path
+   * @return Set of sub resources path of type String
+   */
+  Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath);
 
 }

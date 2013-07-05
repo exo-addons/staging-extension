@@ -35,6 +35,7 @@ public abstract class ApplicationTemplatesConfigurationHandler extends AbstractC
   /**
    * {@inheritDoc}
    */
+  @Override
   public boolean writeData(ZipOutputStream zos, Collection<String> selectedResources) {
     Set<String> filteredSelectedResources = filterSelectedResources(selectedResources, stagingExtensionPath);
     if (filteredSelectedResources.isEmpty()) {
