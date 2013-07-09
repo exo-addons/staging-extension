@@ -59,6 +59,8 @@ public class ExtensionGeneratorController {
     parameters.put("actionNodeTypePath", ExtensionGenerator.ECM_ACTION_PATH);
     parameters.put("nodeTypePath", ExtensionGenerator.ECM_NODETYPE_PATH);
     parameters.put("registryPath", ExtensionGenerator.REGISTRY_PATH);
+    parameters.put("viewTemplatePath", ExtensionGenerator.ECM_VIEW_TEMPLATES_PATH);
+    parameters.put("viewConfigurationPath", ExtensionGenerator.ECM_VIEW_CONFIGURATION_PATH);
   }
 
   @View
@@ -80,6 +82,8 @@ public class ExtensionGeneratorController {
     resources.put(ExtensionGenerator.ECM_ACTION_PATH, extensionGeneratorService.getActionNodeTypeNodes());
     resources.put(ExtensionGenerator.ECM_NODETYPE_PATH, extensionGeneratorService.getNodeTypeNodes());
     resources.put(ExtensionGenerator.REGISTRY_PATH, extensionGeneratorService.getRegistryNodes());
+    resources.put(ExtensionGenerator.ECM_VIEW_TEMPLATES_PATH, extensionGeneratorService.getViewTemplatesNodes());
+    resources.put(ExtensionGenerator.ECM_VIEW_CONFIGURATION_PATH, extensionGeneratorService.getViewConfigurationNodes());
 
     // Set Nodes in parameters
     parameters.put("portalSiteNodes", resources.get(ExtensionGenerator.SITES_PORTAL_PATH));
@@ -97,6 +101,8 @@ public class ExtensionGeneratorController {
     parameters.put("actionNodeTypeNodes", resources.get(ExtensionGenerator.ECM_ACTION_PATH));
     parameters.put("nodeTypeNodes", resources.get(ExtensionGenerator.ECM_NODETYPE_PATH));
     parameters.put("registryNodes", resources.get(ExtensionGenerator.REGISTRY_PATH));
+    parameters.put("viewTemplateNodes", resources.get(ExtensionGenerator.ECM_VIEW_TEMPLATES_PATH));
+    parameters.put("viewConfigurationNodes", resources.get(ExtensionGenerator.ECM_VIEW_CONFIGURATION_PATH));
 
     parameters.put("selectedResources", selectedResources);
 
@@ -115,6 +121,8 @@ public class ExtensionGeneratorController {
     parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_ACTION_PATH));
     parameters.put("nodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_NODETYPE_PATH));
     parameters.put("registrySelectedNodes", getSelectedResources(ExtensionGenerator.REGISTRY_PATH));
+    parameters.put("viewTemplateSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_VIEW_TEMPLATES_PATH));
+    parameters.put("viewConfigurationSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_VIEW_CONFIGURATION_PATH));
 
     return index.ok(parameters);
   }
@@ -161,6 +169,8 @@ public class ExtensionGeneratorController {
     parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_ACTION_PATH));
     parameters.put("nodeTypeSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_NODETYPE_PATH));
     parameters.put("registrySelectedNodes", getSelectedResources(ExtensionGenerator.REGISTRY_PATH));
+    parameters.put("viewTemplateSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_VIEW_TEMPLATES_PATH));
+    parameters.put("viewConfigurationSelectedNodes", getSelectedResources(ExtensionGenerator.ECM_VIEW_CONFIGURATION_PATH));
 
     form.render(parameters);
   }
@@ -202,7 +212,11 @@ public class ExtensionGeneratorController {
     Set<String> resources = extensionGeneratorService.filterSelectedResources(selectedResources, parentPath);
     Set<String> selectedResources = new HashSet<String>();
     for (String resource : resources) {
-      selectedResources.add(resource.replace("/"+parentPath, "").replace(parentPath, ""));
+      resource = resource.replace(parentPath, "");
+      if (resource.startsWith("/")) {
+        resource = resource.substring(1);
+      }
+      selectedResources.add(resource);
     }
     return selectedResources;
   }

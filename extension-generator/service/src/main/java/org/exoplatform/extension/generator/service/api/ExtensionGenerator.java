@@ -21,6 +21,8 @@ public interface ExtensionGenerator {
   public static final String ECM_SCRIPT_PATH = "/ecmadmin/script";
   public static final String ECM_ACTION_PATH = "/ecmadmin/action";
   public static final String ECM_NODETYPE_PATH = "/ecmadmin/nodetype";
+  public static final String ECM_VIEW_CONFIGURATION_PATH = "/ecmadmin/view/configuration";
+  public static final String ECM_VIEW_TEMPLATES_PATH = "/ecmadmin/view/templates";
   public static final String REGISTRY_PATH = "/registry";
 
   /**
@@ -148,6 +150,22 @@ public interface ExtensionGenerator {
   Set<Node> getRegistryNodes();
 
   /**
+   * Returns the list of sub resources of /ecmadmin/view/templates managed resources
+   * computed from GateIN Management SPI
+   * 
+   * @return list of ECMS View Templates managed paths.
+   */
+  Set<Node> getViewTemplatesNodes();
+
+  /**
+   * Returns the list of sub resources of /ecmadmin/view managed resources
+   * computed from GateIN Management SPI
+   * 
+   * @return list of ECMS View Configuration managed paths.
+   */
+  Set<Node> getViewConfigurationNodes();
+
+  /**
    * Generates the WAR Extension by including seleted managed paths to export
    * 
    * @param selectedResources
@@ -157,7 +175,8 @@ public interface ExtensionGenerator {
   InputStream generateWARExtension(Set<String> selectedResources) throws IOException;
 
   /**
-   * Generates EAR containing WAR Extension and Activation JAR by including seleted managed paths to export
+   * Generates EAR containing WAR Extension and Activation JAR by including
+   * seleted managed paths to export
    * 
    * @param selectedResources
    * @return InputStream pointing to a ZipFile
@@ -166,10 +185,11 @@ public interface ExtensionGenerator {
   InputStream generateExtensionEAR(Set<String> selectedResources) throws IOException;
 
   /**
-   * Generates Maven Project containing modules for WAR Extension and Activation JAR.
-   * This operation is done by including seleted managed paths to export.
+   * Generates Maven Project containing modules for WAR Extension and Activation
+   * JAR. This operation is done by including seleted managed paths to export.
    * 
-   * @param selectedResources Selected Managed Resources Paths.
+   * @param selectedResources
+   *          Selected Managed Resources Paths.
    * @return InputStream pointing to a ZipFile
    * @throws IOException
    */

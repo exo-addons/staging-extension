@@ -1,6 +1,4 @@
-@import "jquery.dataTables_themeroller.css";
 @import "jquery.dataTables.css";
-
 .generator-portlet-container {
 	background-color: #fefefe;
 	padding: 12px;
@@ -120,12 +118,20 @@
 		.labelRadius;
 	}
 
-	label::before {
+	.labelBeforeMixin {
 		.labelAMixin;
 		content: "";
 		width: 16px;
+	}
+
+	label.parent::before {
+		.labelBeforeMixin;
 		margin: 0 22px 0 0;
-		vertical-align: middle;
+	}
+
+	label.leaf::before {
+		.labelBeforeMixin;
+		margin: 0 8px;
 	}
 
 	.parent {
@@ -211,8 +217,12 @@
 	display: block;
 	float: left;
 	margin: 0 2%;
-	padding: 0 2%;
+	padding: 0 2% 30px 2%;
 	.blockStyle (#FBFBFB);
+	li {
+		list-style: inside;
+		list-style-type: disc;
+	}
 }
 
 .resources-list {
@@ -232,3 +242,41 @@
 .resources-list li {
 	list-style-type: circle;
 }
+
+div.dataTables_length label {
+	width: 460px;
+	float: left;
+	text-align: left;
+}
+
+div.dataTables_length select {
+	width: 75px;
+}
+
+div.dataTables_filter label {
+	float: right;
+	width: 460px;
+}
+
+div.dataTables_info {
+	padding-top: 8px;
+}
+
+div.dataTables_paginate {
+	float: right;
+	margin: 0;
+}
+
+table {
+	margin: 1em 0;
+	clear: both;
+}
+
+.form-actions {
+	background-color: gray;
+}
+
+.css-list-parent-ul .form-actions button.btn , input[type="submit"].btn {
+	margin-left: 28px;
+}
+

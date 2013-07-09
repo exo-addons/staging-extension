@@ -27,6 +27,7 @@ public class ECMAdminContentReadResource implements OperationHandler {
     children.add("script");
     children.add("action");
     children.add("nodetype");
+    children.add("view");
     resultHandler.completed(new ReadResourceModel("ECM Administration Content", children));
   }
 

@@ -3,172 +3,41 @@
   <button type="button" onclick="location.href='@{ExtensionGeneratorController.exportExtensionEAR()}'" class="btn btn-primary" id="button-download-ear">Export EAR Extension</button>
   <button type="button" onclick="location.href='@{ExtensionGeneratorController.exportExtensionMavenProject()}'" class="btn btn-primary" id="button-download-maven">Export Extension Maven project</button>
 </div>
-<% if(!portalSiteSelectedNodes.isEmpty()) {%>
-  <h4>Selected Portal Sites</h4>
-  <table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='portalSitesSelectedResources'>
-      <% portalSiteSelectedNodes.each { selectedResource -> %>
-        <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-
-      <%}%>
-  </table>
-<%}%>
-<% if(!groupSiteSelectedNodes.isEmpty()) {%>
-<h4>Selected Group Sites</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='groupSitesSelectedResources'>
-    <% groupSiteSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!userSiteSelectedNodes.isEmpty()) {%>
-<h4>Selected User Sites</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='userSitesSelectedResources'>
-    <% userSiteSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-
-    <%}%>
-</table>
-<%}%>
-<% if(!siteContentSelectedNodes.isEmpty()) {%>
-<h4>Selected Sites Content</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='siteContentSelectedResources'>
-    <% siteContentSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!applicationCLVTemplatesSelectedNodes.isEmpty()) {%>
-<h4>Selected CLV Templated</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='CLVTemplatesSelectedResources'>
-    <% applicationCLVTemplatesSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!applicationSearchTemplatesSelectedNodes.isEmpty()) {%>
-<h4>Selected Search Templates</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='SearchTemplatesSelectedResources'>
-    <% applicationSearchTemplatesSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!documentTypeTemplatesSelectedNodes.isEmpty()) {%>
-<h4>Selected Documen Types Templates</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='documentTypeTemplatesSelectedResources'>
-    <% documentTypeTemplatesSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!metadataTemplatesSelectedNodes.isEmpty()) {%>
-<h4>Selected Metadata Templates</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='metadataTemplatesSelectedResources'>
-    <% metadataTemplatesSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!taxonomySelectedNodes.isEmpty()) {%>
-<h4>Selected Taxonomies</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='taxonomySelectedResources'>
-    <% taxonomySelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-
-    <%}%>
-</table>
-<%}%>
-<% if(!querySelectedNodes.isEmpty()) {%>
-<h4>Selected JCR Queries</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='querySelectedResources'>
-    <% querySelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!driveSelectedNodes.isEmpty()) {%>
-<h4>Selected Drives</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='driveSelectedResources'>
-    <% driveSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!scriptSelectedNodes.isEmpty()) {%>
-<h4>Selected ECMS Scripts</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='scriptSelectedResources'>
-    <% scriptSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-
-    <%}%>
-</table>
-<%}%>
-<% if(!actionNodeTypeSelectedNodes.isEmpty()) {%>
-<h4>Selected Action NodeTypes</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='actionNodeTypeSelectedResources'>
-    <% actionNodeTypeSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!nodeTypeSelectedNodes.isEmpty()) {%>
-<h4>Selected NodeTypes</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='nodeTypeSelectedResources'>
-    <% nodeTypeSelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<% if(!registrySelectedNodes.isEmpty()) {%>
-<h4>Selected Application Registry Categories</h4>
-<table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='registrySelectedResources'>
-    <% registrySelectedNodes.each { selectedResource -> %>
-      <tr class='gradeB'>
-          <td class='gradeB'><%=selectedResource%></td>
-      </tr>
-    <%}%>
-</table>
-<%}%>
-<script>
-  $('.grid_datatable').each(function() {
-    $(this).dataTable({
-      "aoColumns": [{ "asSorting": [ "asc" ] }],
-      "bPaginate" : true,
-      "bFilter" : false,
-      "bPaginate": false,
-      "bInfo": false,
-      "oLanguage": {
-        "sSearch": "",
-        "oSearch": false
-      }
-    });
-  });
-</script>
+<%
+  public String addSelectedContent(def selectedResourcesList, def name, def title) {
+   if(!selectedResourcesList.isEmpty()) {%>
+    <li><h4><%=title%></h4></li>
+    <table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='<%=name%>'>
+        <% selectedResourcesList.each { selectedResource -> 
+          if(selectedResource != null && !selectedResource.isEmpty()) {%>
+            <tr class='gradeB'>
+             <td class='gradeB'><%=selectedResource%></td>
+            </tr>
+        <% }
+        }%>
+    </table>
+  <%}
+  }
+  addSelectedContent(portalSiteSelectedNodes, "portalSitesSelectedResources", "Selected Portal Sites");
+  addSelectedContent(groupSiteSelectedNodes, "groupSitesSelectedResources", "Selected Group Sites");
+  addSelectedContent(userSiteSelectedNodes, "userSitesSelectedResources", "Selected User Sites");
+  addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources", "Selected Sites Content");
+  addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources", "Selected CLV Templates");
+  addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources", "Selected Search Templates");
+  addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources", "Selected Document Types Templates");
+  addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources", "Selected Metadata Templates");
+  addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources", "Selected Taxonomies");
+  addSelectedContent(querySelectedNodes, "querySelectedResources", "Selected JCR Queries");
+  addSelectedContent(driveSelectedNodes, "driveSelectedResources", "Selected Drives");
+  addSelectedContent(scriptSelectedNodes, "scriptSelectedResources", "Selected ECMS Scripts");
+  addSelectedContent(actionNodeTypeSelectedNodes, "actionNodeTypeSelectedResources", "Selected Action NodeTypes");
+  addSelectedContent(nodeTypeSelectedNodes, "nodeTypeSelectedResources", "Selected NodeTypes");
+  addSelectedContent(registrySelectedNodes, "registrySelectedResources", "Selected Application Registry Categories");
+  addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources", "Selected View Templates");
+  addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources", "Selected View Configuration");
+%>
+<% if(!selectedResources.isEmpty()){%>
+  <script>
+    paintTables();
+  </script>
+<% } %>

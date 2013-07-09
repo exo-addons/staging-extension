@@ -37,6 +37,8 @@ import org.exoplatform.extension.generator.service.handler.NodeTypeTemplatesConf
 import org.exoplatform.extension.generator.service.handler.ScriptsConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.SearchTemplatesConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.SiteContentsConfigurationHandler;
+import org.exoplatform.extension.generator.service.handler.SiteExplorerTemplatesConfigurationHandler;
+import org.exoplatform.extension.generator.service.handler.SiteExplorerViewConfigurationHandler;
 import org.exoplatform.extension.generator.service.handler.TaxonomyConfigurationHandler;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.services.log.ExoLogger;
@@ -77,6 +79,8 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
     handlers.add(new SearchTemplatesConfigurationHandler());
     handlers.add(new CLVTemplatesConfigurationHandler());
     handlers.add(new TaxonomyConfigurationHandler());
+    handlers.add(new SiteExplorerTemplatesConfigurationHandler());
+    handlers.add(new SiteExplorerViewConfigurationHandler());
   }
 
   /**
@@ -199,6 +203,21 @@ public class ExtensionGeneratorImpl implements ExtensionGenerator {
     return getNodes(REGISTRY_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<Node> getViewTemplatesNodes() {
+    return getNodes(ECM_VIEW_TEMPLATES_PATH);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<Node> getViewConfigurationNodes() {
+    return getNodes(ECM_VIEW_CONFIGURATION_PATH);
+  }
   /**
    * {@inheritDoc}
    * 

@@ -22,7 +22,6 @@
 
 /*jslint evil: true, undef: true, browser: true */
 /*globals $, jQuery,define,_fnExternApiFunc,_fnInitialise,_fnInitComplete,_fnLanguageCompat,_fnAddColumn,_fnColumnOptions,_fnAddData,_fnCreateTr,_fnGatherData,_fnBuildHead,_fnDrawHead,_fnDraw,_fnReDraw,_fnAjaxUpdate,_fnAjaxParameters,_fnAjaxUpdateDraw,_fnServerParams,_fnAddOptionsHtml,_fnFeatureHtmlTable,_fnScrollDraw,_fnAdjustColumnSizing,_fnFeatureHtmlFilter,_fnFilterComplete,_fnFilterCustom,_fnFilterColumn,_fnFilter,_fnBuildSearchArray,_fnBuildSearchRow,_fnFilterCreateSearch,_fnDataToSearch,_fnSort,_fnSortAttachListener,_fnSortingClasses,_fnFeatureHtmlPaginate,_fnPageChange,_fnFeatureHtmlInfo,_fnUpdateInfo,_fnFeatureHtmlLength,_fnFeatureHtmlProcessing,_fnProcessingDisplay,_fnVisibleToColumnIndex,_fnColumnIndexToVisible,_fnNodeToDataIndex,_fnVisbleColumns,_fnCalculateEnd,_fnConvertToWidth,_fnCalculateColumnWidths,_fnScrollingWidthAdjust,_fnGetWidestNode,_fnGetMaxLenString,_fnStringToCss,_fnDetectType,_fnSettingsFromNode,_fnGetDataMaster,_fnGetTrNodes,_fnGetTdNodes,_fnEscapeRegex,_fnDeleteIndex,_fnReOrderIndex,_fnColumnOrdering,_fnLog,_fnClearTable,_fnSaveState,_fnLoadState,_fnCreateCookie,_fnReadCookie,_fnDetectHeader,_fnGetUniqueThs,_fnScrollBarWidth,_fnApplyToChildren,_fnMap,_fnGetRowData,_fnGetCellData,_fnSetCellData,_fnGetObjectDataFn,_fnSetObjectDataFn,_fnApplyColumnDefs,_fnBindAction,_fnCallbackReg,_fnCallbackFire,_fnJsonString,_fnRender,_fnNodeToColumnIndex,_fnInfoMacros,_fnBrowserDetect,_fnGetColumns*/
-
 (/** @lends <global> */function( window, document, undefined ) {
 
 (function( factory ) {
@@ -3142,7 +3141,7 @@
 			/* When yscrolling, add the height */
 			if ( oSettings.oScroll.sY !== "" )
 			{
-				nScrollBody.style.height = _fnStringToCss( oSettings.oScroll.sY );
+				nScrollBody.style.maxHeight = _fnStringToCss( oSettings.oScroll.sY );
 			}
 			
 			/* Redraw - align columns across the tables */
@@ -3267,7 +3266,7 @@
 			// then hide it (end of this function), so add the header height to the body scroller.
 			if ( o.oScroll.bCollapse && o.oScroll.sY !== "" )
 			{
-				nScrollBody.style.height = (nScrollBody.offsetHeight + o.nTHead.offsetHeight)+"px";
+				nScrollBody.style.maxHeight = (nScrollBody.offsetHeight + o.nTHead.offsetHeight)+"px";
 			}
 			
 			/* Size the table as a whole */
@@ -3444,13 +3443,13 @@
 			
 			if ( o.oScroll.sY !== "" && o.oScroll.bCollapse )
 			{
-				nScrollBody.style.height = _fnStringToCss( o.oScroll.sY );
+				nScrollBody.style.maxHeight = _fnStringToCss( o.oScroll.sY );
 				
 				var iExtra = (o.oScroll.sX !== "" && o.nTable.offsetWidth > nScrollBody.offsetWidth) ?
 				 	o.oScroll.iBarWidth : 0;
 				if ( o.nTable.offsetHeight < nScrollBody.offsetHeight )
 				{
-					nScrollBody.style.height = _fnStringToCss( o.nTable.offsetHeight+iExtra );
+					nScrollBody.style.maxHeight = _fnStringToCss( o.nTable.offsetHeight+iExtra );
 				}
 			}
 			
@@ -11980,7 +11979,6 @@
 	$.fn.dataTableSettings = DataTable.settings;
 	$.fn.dataTableExt = DataTable.ext;
 
-
 	// Information about events fired by DataTables - for documentation.
 	/**
 	 * Draw event, fired whenever the table is redrawn on the page, at the same point as
@@ -12094,6 +12092,5 @@
 	 *  @param {object} o DataTables settings object {@link DataTable.models.oSettings}
 	 */
 }));
-
 }(window, document));
 
