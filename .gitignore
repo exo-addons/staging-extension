@@ -64,3 +64,7 @@ rebel.xml
 rebel-remote.xml
 
 /ear/src/main/application/META-INF/application.xml
+
+/extension-generator/portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/extension-generator-portlet/pom.properties
+/extension-generator/portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/extension-generator-portlet/pom.xml
+/extension-generator/portlet/src/main/webapp/skin/css/extensiongenerator.css
