@@ -1,0 +1,329 @@
+<% public void addSelectedContent(def selectedResourcesList, def name, def title) { %>
+    <table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='<%=name%>'>
+        <% selectedResourcesList.each { selectedResource ->
+          if(selectedResource != null && !selectedResource.isEmpty()) { %>
+            <tr class='gradeB'>
+             <td class='gradeB'><%=selectedResource%></td>
+            </tr>
+        <% }
+        } %>
+    </table>
+<% } %>
+<div class="form-actions">
+  <button type="button" class="btn btn-primary" id="button-synchronize">Synchronize Data</button>
+</div>
+<form class="form-horizontal">
+  <div id="sync_message"></div>
+  <div class="control-group">
+    <label class="control-label" for="inputHost">Host</label>
+    <div class="controls">
+      <input type="text"name="inputHost" id="inputHost" placeholder="Host">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputPort">Port</label>
+    <div class="controls">
+      <input type="text"name="inputPort" id="inputPort" placeholder="Port">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputUsername">Username</label>
+    <div class="controls">
+      <input type="text"name="inputUsername" id="inputUsername" placeholder="Username">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputPassword">Password</label>
+    <div class="controls">
+      <input type="text"name="inputPassword" id="inputPassword" placeholder="Password">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label" for="inputSSL">Is SSL</label>
+    <div class="controls">
+      <input type="checkbox" name="inputSSL" id="inputSSL">
+    </div>
+  </div>
+  <fieldset>
+    <legend>Options</legend>
+    
+    <% if(!portalSiteSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/site/portalsites">
+        <label class="parent Clickable" for="selected_/site/portalsites">Portal Sites</label>
+        <ul>
+          <li>
+            <% addSelectedContent(portalSiteSelectedNodes, "portalSitesSelectedResources", "Selected Portal Sites"); %>
+            <br />
+            <hr />
+            <label class="checkbox">Import Mode
+              <select class="option" name="/site/portalsites/importMode">
+                <option value="merge">Merge</option>
+                <option value="conserve">Conserve</option>
+                <option value="insert">Insert</option>
+                <option value="overwrite">Overwrite</option>
+              </select>
+            </label>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+  
+    <% if(!groupSiteSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/site/groupsites">
+        <label class="parent Clickable" for="selected_/site/groupsites">Group Sites</label>
+        <ul>
+          <li>
+            <% addSelectedContent(groupSiteSelectedNodes, "groupSitesSelectedResources", "Selected Group Sites"); %>
+            <br />
+            <hr />
+            <label class="checkbox">Import Mode
+              <select class="option" name="/site/groupsites/importMode">
+                <option value="merge">Merge</option>
+                <option value="conserve">Conserve</option>
+                <option value="insert">Insert</option>
+                <option value="overwrite">Overwrite</option>
+              </select>
+            </label>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+  
+    <% if(!userSiteSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/site/usersites">
+        <label class="parent Clickable" for="selected_/site/usersites">User Sites</label>
+        <ul>
+          <li>
+            <% addSelectedContent(userSiteSelectedNodes, "userSitesSelectedResources", "Selected User Sites"); %>
+            <br />
+            <hr />
+            <label class="checkbox">Import Mode
+              <select class="option" name="/site/usersites/importMode">
+                <option value="merge">Merge</option>
+                <option value="conserve">Conserve</option>
+                <option value="insert">Insert</option>
+                <option value="overwrite">Overwrite</option>
+              </select>
+            </label>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+  
+    <% if(!siteContentSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/content/sites">
+        <label class="parent Clickable" for="selected_/content/sites">Contents</label>
+        <ul>
+          <li>
+            <hr />
+            <% addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources", "Selected Sites Content");%>
+            <br />
+            <hr />
+            <label class="checkbox"><input class="option" type="radio" name="/content/sites/no-skeleton:true" value=" ">the whole site</label>
+            <label class="checkbox"><input class="option" type="radio" name="/content/sites/no-skeleton:true" value="true">Without Site Skeleton</label>
+            <label class="checkbox"><input class="option" type="radio" name="/content/sites/no-skeleton:true" value="true">With JCR Query</label>
+
+            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/taxonomy:false" value="true">Without taxonomy nodes</label>
+            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/no-hitory:true" value="true">Without Version history</label>
+            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/cleanPublication:true" value="true">Cleanup publication (used if Version history isn't exported)</label>
+            <label class="checkbox">JCR UUID Behavior
+              <select class="option" name="/content/sites/uuidBehavior">
+                <option value="0">Create new</option>
+                <option value="1">Remove existing</option>
+                <option value="2">Replace existing</option>
+                <option value="3">Throw Exception when collision</option>
+              </select>
+            </label>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!applicationCLVTemplatesSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/applications/content-list-viewer">
+        <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/content-list-viewer">CLV Templates</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/replaceExisting:true" value="/ecmadmin/templates/applications/content-list-viewer/replaceExisting:true">Replace Existing</label>
+            <% addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources", "Selected CLV Templates");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!applicationSearchTemplatesSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/applications/search">
+        <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/search">Search Templates</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources", "Selected Search Templates");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!documentTypeTemplatesSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/nodetype">
+        <label class="parent Clickable" for="selected_/ecmadmin/templates/nodetype">NodeType Templates</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetype/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources", "Selected Document Types Templates");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!metadataTemplatesSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/metadata">
+        <label class="parent Clickable" for="selected_/ecmadmin/templates/metadata">Metadata Templates</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources", "Selected Metadata Templates");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!taxonomySelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/taxonomy">
+        <label class="parent Clickable" for="selected_/ecmadmin/taxonomy">Taxonomy</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources", "Selected Taxonomies");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!querySelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/query">
+        <label class="parent Clickable" for="selected_/ecmadmin/query">JCR Queries</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/query/replaceExisting:true" value="true">Replace Existing</label>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!driveSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/drive">
+        <label class="parent Clickable" for="selected_/ecmadmin/drive">Drives</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(driveSelectedNodes, "driveSelectedResources", "Selected Drives");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!scriptSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/script">
+        <label class="parent Clickable" for="selected_/ecmadmin/script">ECMS Groovy Scripts</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(scriptSelectedNodes, "scriptSelectedResources", "Selected ECMS Scripts");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!viewTemplateSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/view/templates">
+        <label class="parent Clickable" for="selected_/ecmadmin/view/templates">ECMS View Templates</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources", "Selected View Templates");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!viewConfigurationSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/view/configuration">
+        <label class="parent Clickable" for="selected_/ecmadmin/view/configuration">ECMS View Configuration</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources", "Selected View Configuration");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!actionNodeTypeSelectedNodes.isEmpty()) {%>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/action">
+        <label class="parent Clickable" for="selected_/ecmadmin/action">Action NodeTypes</label>
+        <ul>
+          <li>
+            <hr />
+            <% addSelectedContent(actionNodeTypeSelectedNodes, "actionNodeTypeSelectedResources", "Selected Action NodeTypes");%>
+          </li>
+        </ul>
+      </div>
+    <%}%>
+
+    <% if(!nodeTypeSelectedNodes.isEmpty()) {%>
+    <div class="css-list">
+      <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/nodetype">
+      <label class="parent Clickable" for="selected_/ecmadmin/nodetype">NodeTypes</label>
+      <ul>
+        <li>
+            <hr />
+            <% addSelectedContent(nodeTypeSelectedNodes, "nodeTypeSelectedResources", "Selected NodeTypes");%>
+        </li>
+      </ul>
+    </div>
+    <%}%>
+
+    <% if(!registrySelectedNodes.isEmpty()) { %>
+      <div class="css-list">
+        <input type="checkbox" class="tree-checkbox" id="selected_/registry">
+        <label class="parent Clickable" for="selected_/registry">Application Registry Categories</label>
+        <ul>
+          <li>
+            <hr />
+            <label class="checkbox"><input class="option" type="checkbox" name="/registry/replaceExisting:true" value="true">Replace Existing</label>
+            <% addSelectedContent(registrySelectedNodes, "registrySelectedResources", "Selected Application Registry Categories");%>
+          </li>
+        </ul>
+      </div>
+    <% } %>
+</form>
+<% if(!selectedResources.isEmpty()){ %>
+  <script>
+    initSynchronizationForm();
+  </script>
+<% } %>

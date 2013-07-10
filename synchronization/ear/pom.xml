@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.exoplatform.extensions.staging</groupId>
+		<artifactId>synchronization</artifactId>
+		<version>2.1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>synchronization-ear</artifactId>
+	<packaging>ear</packaging>
+	<name>Data synchronization - EAR</name>
+	<description>eXo Staging - Data synchronization - EAR</description>
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>synchronization-portlet</artifactId>
+			<version>${project.version}</version>
+			<type>war</type>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>synchronization-service</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+	</dependencies>
+	<build>
+		<finalName>synchronization</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ear-plugin</artifactId>
+				<configuration>
+					<displayName>synchronization.ear</displayName>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+						</manifest>
+						<manifestEntries>
+							<Dependencies>org.gatein,org.gatein.lib</Dependencies>
+						</manifestEntries>
+					</archive>
+					<modules>
+						<jarModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>synchronization-service</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<webModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>synchronization-portlet</artifactId>
+							<contextRoot>synchronization-portlet</contextRoot>
+							<bundleFileName>synchronization-portlet.war</bundleFileName>
+						</webModule>
+					</modules>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
