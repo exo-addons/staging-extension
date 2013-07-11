@@ -125,7 +125,7 @@
             <hr />
             <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value=" " id="contentWholeSite"><label for="contentEntireSite">The entire site</label><br />
             <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="true" id="contentWithoutSkeleton"><label for="contentWithoutSkeleton">Without Site Skeleton</label><br />
-            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label><br />
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label>
             <div class="SitesContentSQL">
               <input class="option" type="text" name="/content/sites/EXPORT/query" placeholder="JCR SQL Query">
               <button type="button" class="btn" id="SitesContentSQLButton">Validate Query</button>
