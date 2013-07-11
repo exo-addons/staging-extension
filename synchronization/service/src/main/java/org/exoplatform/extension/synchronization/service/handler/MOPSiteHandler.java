@@ -27,10 +27,10 @@ public class MOPSiteHandler extends AbstractResourceHandler {
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    filterOptions(options, false);
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedOptions.keySet().toArray(new String[0]));
-      synhronizeData(file, isSSL, host, port, SynchronizationService.SITES_PARENT_PATH, username, password, selectedOptions);
+      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(file, isSSL, host, port, SynchronizationService.SITES_PARENT_PATH, username, password, selectedImportOptions);
     }
     clearTempFiles();
     return true;

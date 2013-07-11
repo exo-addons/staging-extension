@@ -191,14 +191,32 @@ public class SynchronizationController {
 
   @Ajax
   @Resource
-  public void synchronize(String isSSLString, String host, String port, String username, String password) throws IOException {
+  public Response synchronize(String isSSLString, String host, String port, String username, String password) throws IOException {
     try {
       synchronizationService.synchronize(selectedResources, selectedOptions, isSSLString, host, port, username, password);
-      // return Response.ok("Successfully proceeded.");
+      return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);
-      // return Response.content(500,
-      // "Error occured while synchronizing Managed Resources.");
+      return Response.ok("Error occured while synchronizing Managed Resources: " + e.getMessage());
+    }
+  }
+
+  @Ajax
+  @Resource
+  public Response executeSQL(String sql) throws IOException {
+    try {
+      Set<String> resultedNodePaths = synchronizationService.executeSQL(sql, selectedResources);
+      StringBuilder builder = new StringBuilder("<ul>");
+      for (String path : resultedNodePaths) {
+        builder.append("<li>");
+        builder.append(path);
+        builder.append("</li>");
+      }
+      builder.append("</ul>");
+      return Response.ok(builder.toString());
+    } catch (Exception e) {
+      log.error("Error while executing request: " + sql, e);
+      return Response.ok("Error while executing request: " + e.getMessage());
     }
   }
 

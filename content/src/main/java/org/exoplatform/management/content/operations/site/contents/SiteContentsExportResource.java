@@ -2,7 +2,6 @@ package org.exoplatform.management.content.operations.site.contents;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -11,7 +10,10 @@ import java.util.Set;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
 
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.Application;
 import org.exoplatform.portal.config.model.Container;
@@ -23,6 +25,7 @@ import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.pom.spi.portlet.Portlet;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -80,11 +83,7 @@ public class SiteContentsExportResource implements OperationHandler {
       dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
       pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
       wcmService = operationContext.getRuntimeContext().getRuntimeComponent(WCMService.class);
-      Collection<NodeLocation> sitesLocations = wcmConfigurationService.getAllLivePortalsLocation();
-      if (sitesLocations == null || sitesLocations.size() != 1) {
-        throw new OperationException(operationName, "Unable to read site locations, expected one location config, site location config found = " + sitesLocations);
-      }
-      NodeLocation sitesLocation = sitesLocations.iterator().next();
+      NodeLocation sitesLocation = wcmConfigurationService.getLivePortalsLocation();
       String sitePath = sitesLocation.getPath();
       if (!sitePath.endsWith("/")) {
         sitePath += "/";
@@ -98,6 +97,12 @@ public class SiteContentsExportResource implements OperationHandler {
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
       List<String> filters = attributes.getValues("filter");
+      String jcrQuery = null;
+      for (String filterValue : filters) {
+        if (filterValue.startsWith("query:")) {
+          jcrQuery = filterValue.replace("query:", "");
+        }
+      }
 
       boolean exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
@@ -107,7 +112,9 @@ public class SiteContentsExportResource implements OperationHandler {
       validateSiteStructure(siteName);
 
       // Site contents
-      if (exportSiteWithSkeleton) {
+      if (!StringUtils.isEmpty(jcrQuery)) {
+        exportTasks.addAll(exportQueryResult(sitesLocation, sitePath, jcrQuery, exportVersionHistory));
+      } else if (exportSiteWithSkeleton) {
         exportTasks.addAll(exportSite(sitesLocation, sitePath, exportVersionHistory));
       } else {
         exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath, exportSiteTaxonomy, exportVersionHistory));
@@ -216,11 +223,11 @@ public class SiteContentsExportResource implements OperationHandler {
   }
 
   /**
+   * 
    * @param sitesLocation
    * @param siteRootNodePath
    * @param exportVersionHistory
-   * @param exportTasks
-   * @param repositoryService
+   * @return
    */
   private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory) {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
@@ -242,12 +249,49 @@ public class SiteContentsExportResource implements OperationHandler {
   }
 
   /**
+   * 
+   * @param sitesLocation
+   * @param siteRootNodePath
+   * @param exportVersionHistory
+   * @return
+   */
+  private List<ExportTask> exportQueryResult(NodeLocation sitesLocation, String siteRootNodePath, String jcrQuery, boolean exportVersionHistory) throws Exception {
+    List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+
+    String queryPath = "jcr:path = '" + siteRootNodePath + "/%'";
+    queryPath.replace("//", "/");
+    if (jcrQuery.contains("where")) {
+      int startIndex = jcrQuery.indexOf("where");
+      int endIndex = startIndex + "where".length();
+
+      String condition = jcrQuery.substring(endIndex);
+      condition = queryPath + " AND (" + condition + ")";
+
+      jcrQuery = jcrQuery.substring(0, startIndex) + " where " + condition;
+    } else {
+      jcrQuery += " where " + queryPath;
+    }
+
+    SessionProvider provider = SessionProvider.createSystemProvider();
+    ManageableRepository repository = repositoryService.getCurrentRepository();
+    Session session = provider.getSession(sitesLocation.getWorkspace(), repository);
+
+    Query query = session.getWorkspace().getQueryManager().createQuery(jcrQuery, Query.SQL);
+    NodeIterator nodeIterator = query.execute().getNodes();
+    while (nodeIterator.hasNext()) {
+      Node node = nodeIterator.nextNode();
+      exportNode(sitesLocation.getWorkspace(), node.getParent(), null, exportVersionHistory, exportTasks, node);
+    }
+    return exportTasks;
+  }
+
+  /**
+   * 
    * @param sitesLocation
    * @param path
    * @param exportSiteTaxonomy
    * @param exportVersionHistory
-   * @param exportTasks
-   * @param repositoryService
+   * @return
    * @throws Exception
    * @throws RepositoryException
    */
@@ -310,25 +354,26 @@ public class SiteContentsExportResource implements OperationHandler {
    * @throws RepositoryException
    */
   protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory) throws RepositoryException {
-
     List<ExportTask> subNodesExportTask = new ArrayList<ExportTask>();
-
     NodeIterator childrenNodes = parentNode.getNodes();
     while (childrenNodes.hasNext()) {
       Node childNode = (Node) childrenNodes.next();
-      if (excludedNodes == null || !excludedNodes.contains(childNode.getName())) {
-        SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
-        subNodesExportTask.add(siteContentExportTask);
-        if (exportVersionHistory) {
-          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
-              childNode.getPath());
-          subNodesExportTask.add(versionHistoryExportTask);
-        }
-        metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
-      }
+      exportNode(workspace, parentNode, excludedNodes, exportVersionHistory, subNodesExportTask, childNode);
     }
-
     return subNodesExportTask;
+  }
+
+  private void exportNode(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, List<ExportTask> subNodesExportTask, Node childNode) throws RepositoryException {
+    if (excludedNodes == null || !excludedNodes.contains(childNode.getName())) {
+      SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
+      subNodesExportTask.add(siteContentExportTask);
+      if (exportVersionHistory) {
+        SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
+            childNode.getPath());
+        subNodesExportTask.add(versionHistoryExportTask);
+      }
+      metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
+    }
   }
 
   private SiteMetaDataExportTask getMetaDataExportTask() {

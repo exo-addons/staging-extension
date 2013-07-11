@@ -19,15 +19,15 @@ public class NodeTypeHandler extends AbstractResourceHandler {
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    filterOptions(options, true);
 
     for (String resourcePath : selectedResources) {
       String actionTypeName = resourcePath.replace(getParentPath() + "/", "");
-      selectedOptions.put(actionTypeName, "true");
+      selectedExportOptions.put(actionTypeName, "filter");
     }
 
-    File file = getExportedFileFromOperation(getParentPath(), selectedOptions.keySet().toArray(new String[0]));
-    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedOptions);
+    File file = getExportedFileFromOperation(getParentPath(), selectedExportOptions);
+    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     return true;
   }
 }

@@ -7,7 +7,7 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class TaxonomyConfigurationHandler extends AbstractResourceHandler {
+public class SiteExplorerViewHandler extends AbstractResourceHandler {
   @Override
   public String getParentPath() {
     return SynchronizationService.ECM_VIEW_CONFIGURATION_PATH;
@@ -19,10 +19,10 @@ public class TaxonomyConfigurationHandler extends AbstractResourceHandler {
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    filterOptions(options, true);
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedOptions.keySet().toArray(new String[0]));
-      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedOptions);
+      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     }
     clearTempFiles();
     return true;

@@ -19,15 +19,15 @@ public class CLVTemplatesHandler extends AbstractResourceHandler {
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    filterOptions(options, true);
 
     for (String resourcePath : selectedResources) {
       resourcePath = resourcePath.replace(getParentPath() + "/", "");
-      selectedOptions.put(resourcePath, "true");
+      selectedExportOptions.put(resourcePath, "filter");
     }
 
-    File file = getExportedFileFromOperation(getParentPath(), selectedOptions.keySet().toArray(new String[0]));
-    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedOptions);
+    File file = getExportedFileFromOperation(getParentPath(), selectedExportOptions);
+    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     return true;
   }
 }

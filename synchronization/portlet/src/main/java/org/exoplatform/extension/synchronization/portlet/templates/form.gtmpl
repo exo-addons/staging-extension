@@ -1,4 +1,4 @@
-<% public void addSelectedContent(def selectedResourcesList, def name, def title) { %>
+<% public void addSelectedContent(def selectedResourcesList, def name) { %>
     <table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='<%=name%>'>
         <% selectedResourcesList.each { selectedResource ->
           if(selectedResource != null && !selectedResource.isEmpty()) { %>
@@ -9,11 +9,7 @@
         } %>
     </table>
 <% } %>
-<div class="form-actions">
-  <button type="button" class="btn btn-primary" id="button-synchronize">Synchronize Data</button>
-</div>
 <form class="form-horizontal">
-  <div id="sync_message"></div>
   <div class="control-group">
     <label class="control-label" for="inputHost">Host</label>
     <div class="controls">
@@ -44,6 +40,10 @@
       <input type="checkbox" name="inputSSL" id="inputSSL">
     </div>
   </div>
+  <div class="form-actions">
+    <button type="button" class="btn btn-primary" id="button-synchronize">Synchronize Data</button>
+    <div id="sync_message"></div>
+  </div>
   <fieldset>
     <legend>Options</legend>
     
@@ -57,7 +57,7 @@
             <br />
             <hr />
             <label class="checkbox">Import Mode
-              <select class="option" name="/site/portalsites/importMode">
+              <select class="option" name="/site/portalsites/IMPORT/importMode">
                 <option value="merge">Merge</option>
                 <option value="conserve">Conserve</option>
                 <option value="insert">Insert</option>
@@ -79,7 +79,7 @@
             <br />
             <hr />
             <label class="checkbox">Import Mode
-              <select class="option" name="/site/groupsites/importMode">
+              <select class="option" name="/site/groupsites/IMPORT/importMode">
                 <option value="merge">Merge</option>
                 <option value="conserve">Conserve</option>
                 <option value="insert">Insert</option>
@@ -101,7 +101,7 @@
             <br />
             <hr />
             <label class="checkbox">Import Mode
-              <select class="option" name="/site/usersites/importMode">
+              <select class="option" name="/site/usersites/IMPORT/importMode">
                 <option value="merge">Merge</option>
                 <option value="conserve">Conserve</option>
                 <option value="insert">Insert</option>
@@ -120,18 +120,23 @@
         <ul>
           <li>
             <hr />
-            <% addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources", "Selected Sites Content");%>
+            <% addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources");%>
             <br />
             <hr />
-            <label class="checkbox"><input class="option" type="radio" name="/content/sites/no-skeleton:true" value=" ">the whole site</label>
-            <label class="checkbox"><input class="option" type="radio" name="/content/sites/no-skeleton:true" value="true">Without Site Skeleton</label>
-            <label class="checkbox"><input class="option" type="radio" name="/content/sites/no-skeleton:true" value="true">With JCR Query</label>
-
-            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/taxonomy:false" value="true">Without taxonomy nodes</label>
-            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/no-hitory:true" value="true">Without Version history</label>
-            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/cleanPublication:true" value="true">Cleanup publication (used if Version history isn't exported)</label>
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value=" " id="contentWholeSite"><label for="contentEntireSite">The entire site</label><br />
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="true" id="contentWithoutSkeleton"><label for="contentWithoutSkeleton">Without Site Skeleton</label><br />
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label><br />
+            <div class="SitesContentSQL">
+              <input class="option" type="text" name="/content/sites/EXPORT/query" placeholder="JCR SQL Query">
+              <button type="button" class="btn" id="SitesContentSQLButton">Validate Query</button>
+              <div id="SitesContentSQLResult" class="SitesContentSQLResult">
+              </div>
+            </div>
+            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/taxonomy:false" value="true">Without taxonomy nodes</label>
+            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/no-hitory:true" value="true">Without Version history</label>
+            <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/IMPORT/cleanPublication:true" value="true">Cleanup publication (used if Version history isn't exported)</label>
             <label class="checkbox">JCR UUID Behavior
-              <select class="option" name="/content/sites/uuidBehavior">
+              <select class="option" name="/content/sites/IMPORT/uuidBehavior">
                 <option value="0">Create new</option>
                 <option value="1">Remove existing</option>
                 <option value="2">Replace existing</option>
@@ -150,8 +155,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/replaceExisting:true" value="/ecmadmin/templates/applications/content-list-viewer/replaceExisting:true">Replace Existing</label>
-            <% addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources", "Selected CLV Templates");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/IMPORT/replaceExisting:false" value="/ecmadmin/templates/applications/content-list-viewer/replaceExisting:false">Do not replace existing</label>
+            <% addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -164,8 +169,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources", "Selected Search Templates");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -178,8 +183,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetype/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources", "Selected Document Types Templates");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetype/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -192,8 +197,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources", "Selected Metadata Templates");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -206,8 +211,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources", "Selected Taxonomies");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources");%>
           </li>
         </ul>
       </div>
@@ -220,7 +225,7 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/query/replaceExisting:true" value="true">Replace Existing</label>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/query/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
           </li>
         </ul>
       </div>
@@ -233,8 +238,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(driveSelectedNodes, "driveSelectedResources", "Selected Drives");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(driveSelectedNodes, "driveSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -247,8 +252,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(scriptSelectedNodes, "scriptSelectedResources", "Selected ECMS Scripts");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(scriptSelectedNodes, "scriptSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -261,8 +266,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources", "Selected View Templates");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -275,8 +280,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources", "Selected View Configuration");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -289,7 +294,7 @@
         <ul>
           <li>
             <hr />
-            <% addSelectedContent(actionNodeTypeSelectedNodes, "actionNodeTypeSelectedResources", "Selected Action NodeTypes");%>
+            <% addSelectedContent(actionNodeTypeSelectedNodes, "actionNodeTypeSelectedResources");%>
           </li>
         </ul>
       </div>
@@ -302,7 +307,7 @@
       <ul>
         <li>
             <hr />
-            <% addSelectedContent(nodeTypeSelectedNodes, "nodeTypeSelectedResources", "Selected NodeTypes");%>
+            <% addSelectedContent(nodeTypeSelectedNodes, "nodeTypeSelectedResources");%>
         </li>
       </ul>
     </div>
@@ -315,8 +320,8 @@
         <ul>
           <li>
             <hr />
-            <label class="checkbox"><input class="option" type="checkbox" name="/registry/replaceExisting:true" value="true">Replace Existing</label>
-            <% addSelectedContent(registrySelectedNodes, "registrySelectedResources", "Selected Application Registry Categories");%>
+            <label class="checkbox"><input class="option" type="checkbox" name="/registry/IMPORT/replaceExisting:false" value="true">Do not replace existing</label>
+            <% addSelectedContent(registrySelectedNodes, "registrySelectedResources");%>
           </li>
         </ul>
       </div>

@@ -81,9 +81,9 @@ public class SiteContentsImportResource implements OperationHandler {
 
     // "uuidBehavior" attribute
     int uuidBehaviorValue = extractUuidBehavior(operationContext.getAttributes().getValue("uuidBehavior"));
-    // "cleanPublication" attribute
-    String cleanPublication = operationContext.getAttributes().getValue("cleanPublication");
-    boolean isCleanPublication = !StringUtils.isEmpty(cleanPublication) && cleanPublication.equals("true");
+    List<String> filters = operationContext.getAttributes().getValues("filter");
+
+    boolean isCleanPublication = filters.contains("cleanPublication:true");
 
     InputStream attachmentInputStream = null;
     if (filePath != null) {
@@ -122,11 +122,11 @@ public class SiteContentsImportResource implements OperationHandler {
       try {
         importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(), siteData.getNodeExportHistoryFiles(), workspace, uuidBehaviorValue, isCleanPublication);
         log.info("Content import has been finished");
-        resultHandler.completed(NoResultModel.INSTANCE);
       } catch (Exception e) {
         throw new OperationException(operationName, "Unable to create import task", e);
       }
     }
+    resultHandler.completed(NoResultModel.INSTANCE);
   }
 
   /**

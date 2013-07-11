@@ -7,10 +7,10 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class SiteExplorerTemplatesConfigurationHandler extends AbstractResourceHandler {
+public class ApplicationRegistryHandler extends AbstractResourceHandler {
   @Override
   public String getParentPath() {
-    return SynchronizationService.ECM_VIEW_TEMPLATES_PATH;
+    return SynchronizationService.REGISTRY_PATH;
   }
 
   @Override
@@ -19,10 +19,10 @@ public class SiteExplorerTemplatesConfigurationHandler extends AbstractResourceH
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    filterOptions(options, true);
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedOptions.keySet().toArray(new String[0]));
-      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedOptions);
+      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     }
     clearTempFiles();
     return true;

@@ -7,10 +7,10 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class MetadataTemplatesConfigurationHandler extends AbstractResourceHandler {
+public class SearchTemplatesHandler extends AbstractResourceHandler {
   @Override
   public String getParentPath() {
-    return SynchronizationService.ECM_TEMPLATES_METADATA_PATH;
+    return SynchronizationService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH;
   }
 
   @Override
@@ -19,13 +19,15 @@ public class MetadataTemplatesConfigurationHandler extends AbstractResourceHandl
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    filterOptions(options, true);
+
     for (String resourcePath : selectedResources) {
       resourcePath = resourcePath.replace(getParentPath() + "/", "");
-      selectedOptions.put(resourcePath, "true");
+      selectedExportOptions.put(resourcePath, "filter");
     }
-    File file = getExportedFileFromOperation(getParentPath(), selectedOptions.keySet().toArray(new String[0]));
-    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedOptions);
+
+    File file = getExportedFileFromOperation(getParentPath(), selectedExportOptions);
+    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     return true;
   }
 }

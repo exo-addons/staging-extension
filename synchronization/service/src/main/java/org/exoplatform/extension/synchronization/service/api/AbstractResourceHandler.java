@@ -7,11 +7,12 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
@@ -32,8 +33,11 @@ import org.gatein.management.api.operation.OperationNames;
 public abstract class AbstractResourceHandler implements ResourceHandler {
 
   protected static final String MANAGED_COMPONENT_REST_URI = "/rest/private/managed-components";
+  protected static final String OPERATION_IMPORT_PREFIX = "IMPORT";
+  protected static final String OPERATION_EXPORT_PREFIX = "EXPORT";
   protected Set<String> selectedResources = null;
-  protected Map<String, String> selectedOptions = null;
+  protected Map<String, String> selectedImportOptions = new HashMap<String, String>();
+  protected Map<String, String> selectedExportOptions = new HashMap<String, String>();
 
   private List<File> tempFiles = new ArrayList<File>();
 
@@ -61,15 +65,36 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * {@inheritDoc}
    */
   @Override
-  public Map<String, String> filterOptions(Map<String, String> resources) {
-    Map<String, String> filteredOptions = new HashMap<String, String>();
-    for (String optionPath : resources.keySet()) {
+  public void filterOptions(Map<String, String> options, boolean allFilter) {
+    selectedImportOptions.clear();
+    selectedExportOptions.clear();
+    for (String optionPath : options.keySet()) {
       if (optionPath.contains(getParentPath())) {
-        filteredOptions.put(optionPath, resources.get(optionPath));
+        String optionKey = optionPath.replace(getParentPath(), "");
+        if (optionKey.startsWith("/")) {
+          optionKey = optionKey.substring(1);
+        }
+        String[] optionKeys = optionKey.split("/", 2);
+        if (optionKeys.length != 2) {
+          throw new RuntimeException("Option '" + optionKey + "' is not valid.");
+        }
+        String optionValue;
+        if (allFilter) {
+          optionValue = "filter";
+        } else {
+          optionValue = options.get(optionPath);
+        }
+        if (optionKeys[0].equals(OPERATION_IMPORT_PREFIX)) {
+          optionKey = optionKeys[1];
+          selectedImportOptions.put(optionKey, optionValue);
+        } else if (optionKeys[0].equals(OPERATION_EXPORT_PREFIX)) {
+          optionKey = optionKeys[1];
+          selectedExportOptions.put(optionKey, optionValue);
+        } else {
+          throw new RuntimeException("Option '" + optionKey + "' is not valid.");
+        }
       }
     }
-    selectedOptions = filteredOptions;
-    return filteredOptions;
   }
 
   protected ManagementController getManagementController() {
@@ -98,6 +123,8 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       inputFileStream = new FileInputStream(inputFile);
       conn.setRequestProperty("Content-Length", String.valueOf(inputFileStream.available()));
       IOUtils.copy(inputFileStream, conn.getOutputStream());
+      inputFileStream.close();
+      inputFileStream = null;
       if (conn.getResponseCode() != 200) {
         getLogger().error("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
         return false;
@@ -124,15 +151,14 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * 
    * @param path
    *          managed path
-   * @param filters
+   * @param selectedOptions
    *          passed to GateIN Management SPI
    * @return archive file exported from GateIN Management Controller call
    */
-  protected File getExportedFileFromOperation(String path, String... filters) {
+  protected File getExportedFileFromOperation(String path, Map<String, String> selectedOptions) {
     ManagedRequest request = null;
-    if (filters != null && filters.length > 0) {
-      Map<String, List<String>> attributes = new HashMap<String, List<String>>();
-      attributes.put("filter", Arrays.asList(filters));
+    if (!selectedOptions.isEmpty()) {
+      Map<String, List<String>> attributes = extractAttributes(selectedOptions);
       request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), attributes, ContentType.ZIP);
     } else {
       request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), ContentType.ZIP);
@@ -203,16 +229,41 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   }
 
   private String encodeURLParameters(Map<String, String> options) {
+    Map<String, List<String>> attributes = extractAttributes(options);
     List<NameValuePair> parameters = new ArrayList<NameValuePair>();
-    Set<Map.Entry<String, String>> optionsEntrySet = options.entrySet();
-    for (Map.Entry<String, String> entry : optionsEntrySet) {
-      if (entry.getValue().equals("true")) {
-        parameters.add(new BasicNameValuePair("filter", entry.getKey()));
-      } else {
-        parameters.add(new BasicNameValuePair(entry.getKey(), entry.getValue()));
+    Iterator<Entry<String, List<String>>> entryIterator = attributes.entrySet().iterator();
+    while (entryIterator.hasNext()) {
+      Map.Entry<String, List<String>> entry = entryIterator.next();
+      String parameterName = entry.getKey();
+      List<String> parameterValues = entry.getValue();
+      for (String parameterValue : parameterValues) {
+        parameters.add(new BasicNameValuePair(parameterName, parameterValue));
       }
     }
     return URLEncodedUtils.format(parameters, null);
+  }
+
+  private Map<String, List<String>> extractAttributes(Map<String, String> selectedOptions) {
+    Map<String, List<String>> attributes = new HashMap<String, List<String>>();
+    Set<Map.Entry<String, String>> optionsEntrySet = selectedOptions.entrySet();
+    for (Map.Entry<String, String> entry : optionsEntrySet) {
+      if (entry.getValue().equals("filter")) {
+        List<String> filters = attributes.get("filter");
+        if (filters == null) {
+          filters = new ArrayList<String>();
+          attributes.put("filter", filters);
+        }
+        filters.add(entry.getKey());
+      } else {
+        List<String> parameterValues = attributes.get(entry.getKey());
+        if (parameterValues == null) {
+          parameterValues = new ArrayList<String>();
+          attributes.put(entry.getKey(), parameterValues);
+        }
+        parameterValues.add(entry.getValue());
+      }
+    }
+    return attributes;
   }
 
   private Log log = ExoLogger.getLogger(this.getClass());

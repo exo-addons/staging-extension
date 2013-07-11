@@ -121,5 +121,6 @@
 		<module>ear</module>
 		<module>ear-jpp</module>
 		<module>extension-generator</module>
+		<module>synchronization</module>
 	</modules>
 </project>

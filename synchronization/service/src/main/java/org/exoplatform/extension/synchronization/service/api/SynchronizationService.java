@@ -190,4 +190,13 @@ public interface SynchronizationService {
    */
   Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath);
 
+  /**
+   * Execute an SQL JCR Query
+   * 
+   * @param sql
+   * @param selectedResources 
+   * @throws Exception 
+   */
+  Set<String> executeSQL(String sql, Set<String> selectedResources) throws Exception;
+
 }

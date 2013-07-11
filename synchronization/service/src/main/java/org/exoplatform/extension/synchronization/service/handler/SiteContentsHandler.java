@@ -7,7 +7,9 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class SiteContentsConfigurationHandler extends AbstractResourceHandler {
+public class SiteContentsHandler extends AbstractResourceHandler {
+  private static final String JCR_QUERY_ID = SynchronizationService.CONTENT_SITES_PATH + "/" + OPERATION_EXPORT_PREFIX + "/query";
+
   @Override
   public String getParentPath() {
     return SynchronizationService.CONTENT_SITES_PATH;
@@ -19,10 +21,18 @@ public class SiteContentsConfigurationHandler extends AbstractResourceHandler {
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options);
+    String sqlQuery = null;
+    if (options.containsKey(JCR_QUERY_ID)) {
+      sqlQuery = options.get(JCR_QUERY_ID);
+    }
+    filterOptions(options, true);
+    if (selectedExportOptions.containsKey("query")) {
+      selectedExportOptions.remove("query");
+      selectedExportOptions.put("query:" + sqlQuery, "filter");
+    }
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedOptions.keySet().toArray(new String[0]));
-      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedOptions);
+      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     }
     clearTempFiles();
     return true;

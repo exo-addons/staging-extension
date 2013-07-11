@@ -66,7 +66,7 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
           .getNodeTypeManager();
 
       if (replaceExisting) {
-        log.info("Overwiting '" + pathPrefix.substring(0, pathPrefix.length() - 1)
+        log.info("Overwrite '" + pathPrefix.substring(0, pathPrefix.length() - 1)
             + "' behavior isn't safe, ignoring existing nodetypes.");
       }
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);

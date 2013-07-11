@@ -99,6 +99,7 @@
 			var password = $('#inputPassword').attr("value");
 			var isSSLString = $('#inputSSL').attr("checked");
 			isSSLString = (isSSLString ? 'true':'');
+			$('#sync_message').html("Proceeding...");
 			$('#sync_message').jzLoad("SynchronizationController.synchronize()", {
 						"host" : host,
 						"port" : port,
@@ -107,5 +108,30 @@
 						"isSSLString" : isSSLString
 					});
 		});
+		
+		if($('.SitesContentSQL button')) {
+			$('.SitesContentSQL button').on("click", function() {
+				var sql = $('.SitesContentSQL input[type=text]').attr("value");
+				$('#sync_message').jzLoad("SynchronizationController.selectOption()", {
+					"name" : "/content/sites/EXPORT/query",
+					"value" : sql
+				});
+				$('#SitesContentSQLResult').html("Processing...");
+				$('#SitesContentSQLResult').jzLoad("SynchronizationController.executeSQL()", {
+							"sql" : sql
+				});
+			});
+			$('.SitesContentSQL input[type=text]').on("blur", function() {
+				var sql = $('.SitesContentSQL input[type=text]').attr("value");
+				$('#sync_message').jzLoad("SynchronizationController.selectOption()", {
+					"name" : "/content/sites/EXPORT/query",
+					"value" : sql
+				});
+				$('#SitesContentSQLResult').html("Processing...");
+				$('#SitesContentSQLResult').jzLoad("SynchronizationController.executeSQL()", {
+							"sql" : sql
+				});
+			});
+		}
 	};
 })($);

@@ -7,6 +7,7 @@
   public String addSelectedContent(def selectedResourcesList, def name, def title) {
    if(!selectedResourcesList.isEmpty()) {%>
     <li><h4><%=title%></h4></li>
+    <% if(!(selectedResourcesList.size() == 1 && !selectedResourcesList.iterator().next().isEmpty())) { %>
     <table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='<%=name%>'>
         <% selectedResourcesList.each { selectedResource -> 
           if(selectedResource != null && !selectedResource.isEmpty()) {%>
@@ -16,7 +17,8 @@
         <% }
         }%>
     </table>
-  <%}
+    <% }
+   }
   }
   addSelectedContent(portalSiteSelectedNodes, "portalSitesSelectedResources", "Selected Portal Sites");
   addSelectedContent(groupSiteSelectedNodes, "groupSitesSelectedResources", "Selected Group Sites");
@@ -36,7 +38,7 @@
   addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources", "Selected View Templates");
   addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources", "Selected View Configuration");
 %>
-<% if(!selectedResources.isEmpty()){%>
+<% if(!selectedResources.isEmpty()){ %>
   <script>
     paintTables();
   </script>

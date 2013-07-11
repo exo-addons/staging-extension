@@ -1,10 +1,12 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
+import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.Configuration;
@@ -12,6 +14,7 @@ import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
+import org.exoplatform.management.ecmadmin.operations.queries.QueriesExportTask;
 import org.exoplatform.services.cms.drives.DriveData;
 import org.exoplatform.services.cms.drives.ManageDriveService;
 import org.exoplatform.services.cms.drives.impl.ManageDrivePlugin;
@@ -62,14 +65,15 @@ public class DriveImportResource extends ECMAdminImportResource {
         if (ze.getName().endsWith("drives-configuration.xml")) {
           IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
           IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-          Configuration configuration = (Configuration) uctx.unmarshalDocument(zin, "UTF-8");
-          ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(ManageDriveService.class
-              .getName());
+          String content = IOUtils.toString(zin);
+          content = content.replace(QueriesExportTask.CONFIGURATION_FILE_XSD, "<configuration>");
+          Configuration configuration = (Configuration) uctx.unmarshalDocument(new StringReader(content), "UTF-8");
+
+          ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(ManageDriveService.class.getName());
           List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
           for (ComponentPlugin componentPlugin : componentPlugins) {
             Class<?> pluginClass = Class.forName(componentPlugin.getType());
-            ManageDrivePlugin cplugin = (ManageDrivePlugin) PortalContainer.getInstance().createComponent(pluginClass,
-                componentPlugin.getInitParams());
+            ManageDrivePlugin cplugin = (ManageDrivePlugin) PortalContainer.getInstance().createComponent(pluginClass, componentPlugin.getInitParams());
             cplugin.setName(componentPlugin.getName());
             cplugin.setDescription(componentPlugin.getDescription());
 

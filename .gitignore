@@ -68,3 +68,8 @@ rebel-remote.xml
 /extension-generator/portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/extension-generator-portlet/pom.properties
 /extension-generator/portlet/src/main/webapp/META-INF/maven/org.exoplatform.extensions.staging/extension-generator-portlet/pom.xml
 /extension-generator/portlet/src/main/webapp/skin/css/extensiongenerator.css
+/synchronization/ear/src/main/application/META-INF/application.xml
+target
+.classpath
+.project
+/synchronization/portlet/src/main/webapp/META-INF

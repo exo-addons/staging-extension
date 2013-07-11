@@ -31,7 +31,7 @@ public class Utils {
 
   public static boolean writeConfiguration(ZipOutputStream zos, String entryName, Configuration configuration) {
     try {
-      if(entryName.startsWith("/")) {
+      if (entryName.startsWith("/")) {
         entryName = entryName.substring(1);
       }
       zos.putNextEntry(new ZipEntry(entryName));
@@ -50,7 +50,7 @@ public class Utils {
       configuration.addExternalComponentPlugins(externalComponentPlugin);
     }
     try {
-      if(entryName.startsWith("/")) {
+      if (entryName.startsWith("/")) {
         entryName = entryName.substring(1);
       }
       zos.putNextEntry(new ZipEntry(entryName));
@@ -65,7 +65,7 @@ public class Utils {
 
   public static void writeZipEnry(ZipOutputStream zos, String entryName, String content) {
     try {
-      if(entryName.startsWith("/")) {
+      if (entryName.startsWith("/")) {
         entryName = entryName.substring(1);
       }
       zos.putNextEntry(new ZipEntry(entryName));
@@ -78,7 +78,7 @@ public class Utils {
 
   public static void writeZipEnry(ZipOutputStream zos, String entryName, InputStream inputStream) {
     try {
-      if(entryName.startsWith("/")) {
+      if (entryName.startsWith("/")) {
         entryName = entryName.substring(1);
       }
       zos.putNextEntry(new ZipEntry(entryName));
@@ -131,14 +131,14 @@ public class Utils {
     }
     ZipEntry entry;
     while ((entry = zin.getNextEntry()) != null) {
-      if(entry.isDirectory() || !entry.getName().contains(".")) {
+      if (entry.isDirectory() || !entry.getName().contains(".")) {
         continue;
       }
       String targetEntryName = rootPathInTarget + ("/") + entry.getName();
       while (targetEntryName.contains("//")) {
         targetEntryName = targetEntryName.replace("//", "/");
       }
-      if(targetEntryName.startsWith("/")) {
+      if (targetEntryName.startsWith("/")) {
         targetEntryName = targetEntryName.substring(1);
       }
       zos.putNextEntry(new ZipEntry(targetEntryName));

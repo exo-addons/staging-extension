@@ -1,5 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
+import java.io.StringReader;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -9,6 +10,7 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 
+import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.Configuration;
@@ -89,17 +91,16 @@ public class QueriesImportResource extends ECMAdminImportResource {
         if (!zipEntryName.startsWith("queries/")) {
           continue;
         }
-
-        Configuration configuration = (Configuration) uctx.unmarshalDocument(zin, "UTF-8");
-        ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(QueryService.class
-            .getName());
+        String content = IOUtils.toString(zin);
+        content = content.replace(QueriesExportTask.CONFIGURATION_FILE_XSD, "<configuration>");
+        Configuration configuration = (Configuration) uctx.unmarshalDocument(new StringReader(content), "UTF-8");
+        ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(QueryService.class.getName());
         List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
 
         // Users' queries
         if (zipEntryName.startsWith("queries/users/") && zipEntryName.endsWith("-queries-configuration.xml")) {
           // extract username from filename
-          String username = zipEntryName.substring(zipEntryName.lastIndexOf("/") + 1,
-              zipEntryName.indexOf("-queries-configuration.xml"));
+          String username = zipEntryName.substring(zipEntryName.lastIndexOf("/") + 1, zipEntryName.indexOf("-queries-configuration.xml"));
 
           List<Query> queries = queryService.getQueries(username, WCMCoreUtils.getSystemSessionProvider());
 
@@ -116,12 +117,10 @@ public class QueriesImportResource extends ECMAdminImportResource {
                 QueryData queryData = (QueryData) object;
                 boolean alreadyExists = false;
                 for (Query query : queries) {
-                  if (queryData.getName().equals(
-                      query.getStoredQueryPath().substring(query.getStoredQueryPath().lastIndexOf("/") + 1))) {
+                  if (queryData.getName().equals(query.getStoredQueryPath().substring(query.getStoredQueryPath().lastIndexOf("/") + 1))) {
                     if (replaceExisting) {
                       log.info("Overwrite query '" + queryData.getName() + "' already exists for user '" + username + "'.");
-                      Node queriesNode = nodeHierarchyCreator.getUserNode(WCMCoreUtils.getSystemSessionProvider(), username)
-                          .getNode(queryService.getRelativePath());
+                      Node queriesNode = nodeHierarchyCreator.getUserNode(WCMCoreUtils.getSystemSessionProvider(), username).getNode(queryService.getRelativePath());
                       Node queryNode = queriesNode.getNode(queryData.getName());
                       queryNode.remove();
                       queriesNode.getSession().save();
@@ -162,8 +161,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
                 }
               }
             }
-            QueryPlugin cplugin = (QueryPlugin) PortalContainer.getInstance().createComponent(pluginClass,
-                componentPlugin.getInitParams());
+            QueryPlugin cplugin = (QueryPlugin) PortalContainer.getInstance().createComponent(pluginClass, componentPlugin.getInitParams());
             cplugin.setName(componentPlugin.getName());
             cplugin.setDescription(componentPlugin.getDescription());
             // TODO add setQueryPlugin in Interface QueryService

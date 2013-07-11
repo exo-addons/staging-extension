@@ -166,6 +166,18 @@
 	.NotClickable {
 		cursor: default;
 	}
+
+	input[type=radio][value=query].option + label + .SitesContentSQL {
+		display: none;
+	}
+
+	input[type=radio][value=query].option:checked + label + .SitesContentSQL {
+		display: block;
+	}
+
+	input[type=radio].option {
+		display: block;
+	}
 }
 
 .messageStyle (@textColor) {
@@ -220,7 +232,7 @@
 	padding: 0 2% 30px 2%;
 	.blockStyle (#FBFBFB);
 	.css-list {
-  		background: white;
+		background: white;
 		.parent {
 			background: transparent;
 			font-size: 18px;
@@ -243,6 +255,27 @@
 
 		ul li hr {
 			margin: -7px 0 10px 0;
+		}
+
+		.SitesContentSQLResult {
+			padding: 3px 6px;
+			color: #333333;
+			-webkit-box-shadow: inset 0 2px 1px rgba(0, 0, 0, 0.075);
+			-moz-box-shadow: inset 0 2px 1px rgba(0, 0, 0, 0.075);
+			box-shadow: inset 0 2px 1px rgba(0, 0, 0, 0.075);
+			font-size: 13px;
+			-webkit-box-sizing: border-box;
+			-moz-box-sizing: border-box;
+			box-sizing: border-box;
+			max-height: 150px;
+			border: 1px solid #c7c7c7;
+			margin: 10px 0;
+			li {
+				list-style-type: circle !important;
+				list-style: initial !important;
+				list-style-position: inside !important;
+				padding: 0;
+			}
 		}
 	}
 }

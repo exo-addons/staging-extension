@@ -9,29 +9,37 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.jcr.NodeIterator;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
 
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.extension.synchronization.service.api.Node;
 import org.exoplatform.extension.synchronization.service.api.ResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 import org.exoplatform.extension.synchronization.service.handler.ActionNodeTypeHandler;
-import org.exoplatform.extension.synchronization.service.handler.ApplicationRegistryConfigurationHandler;
+import org.exoplatform.extension.synchronization.service.handler.ApplicationRegistryHandler;
 import org.exoplatform.extension.synchronization.service.handler.CLVTemplatesHandler;
 import org.exoplatform.extension.synchronization.service.handler.DrivesHandler;
 import org.exoplatform.extension.synchronization.service.handler.JCRQueryHandler;
 import org.exoplatform.extension.synchronization.service.handler.MOPSiteHandler;
-import org.exoplatform.extension.synchronization.service.handler.MetadataTemplatesConfigurationHandler;
+import org.exoplatform.extension.synchronization.service.handler.MetadataTemplatesHandler;
 import org.exoplatform.extension.synchronization.service.handler.NodeTypeHandler;
 import org.exoplatform.extension.synchronization.service.handler.NodeTypeTemplatesHandler;
 import org.exoplatform.extension.synchronization.service.handler.ScriptsHandler;
-import org.exoplatform.extension.synchronization.service.handler.SearchTemplatesConfigurationHandler;
-import org.exoplatform.extension.synchronization.service.handler.SiteContentsConfigurationHandler;
-import org.exoplatform.extension.synchronization.service.handler.SiteExplorerTemplatesConfigurationHandler;
-import org.exoplatform.extension.synchronization.service.handler.SiteExplorerViewConfigurationHandler;
-import org.exoplatform.extension.synchronization.service.handler.TaxonomyConfigurationHandler;
+import org.exoplatform.extension.synchronization.service.handler.SearchTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.SiteContentsHandler;
+import org.exoplatform.extension.synchronization.service.handler.SiteExplorerTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.SiteExplorerViewHandler;
+import org.exoplatform.extension.synchronization.service.handler.TaxonomyHandler;
 import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.wcm.core.NodeLocation;
+import org.exoplatform.services.wcm.core.WCMConfigurationService;
 import org.gatein.management.api.ContentType;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.controller.ManagedRequest;
@@ -46,27 +54,29 @@ public class SynchronizationServiceImpl implements SynchronizationService {
   private Log log = ExoLogger.getLogger(this.getClass());
 
   private ManagementController managementController = null;
+  private WCMConfigurationService wcmConfigurationService = null;
+  private RepositoryService repositoryService = null;
 
   private List<ResourceHandler> handlers = new ArrayList<ResourceHandler>();
 
   public SynchronizationServiceImpl() {
     handlers.add(new ActionNodeTypeHandler());
     handlers.add(new NodeTypeHandler());
-    handlers.add(new ApplicationRegistryConfigurationHandler());
+    handlers.add(new ApplicationRegistryHandler());
     handlers.add(new MOPSiteHandler(SiteType.PORTAL));
     handlers.add(new MOPSiteHandler(SiteType.GROUP));
     handlers.add(new MOPSiteHandler(SiteType.USER));
     handlers.add(new ScriptsHandler());
     handlers.add(new DrivesHandler());
     handlers.add(new JCRQueryHandler());
-    handlers.add(new MetadataTemplatesConfigurationHandler());
+    handlers.add(new MetadataTemplatesHandler());
     handlers.add(new NodeTypeTemplatesHandler());
-    handlers.add(new SiteContentsConfigurationHandler());
-    handlers.add(new SearchTemplatesConfigurationHandler());
+    handlers.add(new SiteContentsHandler());
+    handlers.add(new SearchTemplatesHandler());
     handlers.add(new CLVTemplatesHandler());
-    handlers.add(new TaxonomyConfigurationHandler());
-    handlers.add(new SiteExplorerTemplatesConfigurationHandler());
-    handlers.add(new SiteExplorerViewConfigurationHandler());
+    handlers.add(new TaxonomyHandler());
+    handlers.add(new SiteExplorerTemplatesHandler());
+    handlers.add(new SiteExplorerViewHandler());
   }
 
   /**
@@ -219,6 +229,48 @@ public class SynchronizationServiceImpl implements SynchronizationService {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<String> executeSQL(String sql, Set<String> selectedResources) throws Exception {
+    NodeLocation sitesLocation = getWCMConfigurationService().getLivePortalsLocation();
+    Set<String> sites = filterSelectedResources(selectedResources, CONTENT_SITES_PATH);
+    Set<String> paths = new HashSet<String>();
+    for (String sitePath : sites) {
+      String realSQL = sql;
+      sitePath = sitesLocation.getPath() + sitePath.replace(CONTENT_SITES_PATH, "") + "/";
+      sitePath = sitePath.replaceAll("//", "/");
+      String queryPath = "jcr:path = '" + sitePath + "%'";
+      if (realSQL.contains("where")) {
+        int startIndex = realSQL.indexOf("where");
+        int endIndex = startIndex + "where".length();
+
+        String condition = realSQL.substring(endIndex);
+        condition = queryPath + " AND (" + condition + ")";
+
+        realSQL = realSQL.substring(0, startIndex) + " where " + condition;
+      } else {
+        realSQL += " where " + queryPath;
+      }
+
+      SessionProvider provider = SessionProvider.createSystemProvider();
+      ManageableRepository repository = getRepositoryService().getCurrentRepository();
+      Session session = provider.getSession(sitesLocation.getWorkspace(), repository);
+
+      Query query = session.getWorkspace().getQueryManager().createQuery(realSQL, Query.SQL);
+      NodeIterator nodeIterator = query.execute().getNodes();
+      while (nodeIterator.hasNext()) {
+        javax.jcr.Node node = nodeIterator.nextNode();
+        paths.add(node.getPath());
+      }
+    }
+    return paths;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
     Set<String> filteredSelectedResources = new HashSet<String>();
@@ -260,4 +312,17 @@ public class SynchronizationServiceImpl implements SynchronizationService {
     return managementController;
   }
 
+  private WCMConfigurationService getWCMConfigurationService() {
+    if (wcmConfigurationService == null) {
+      wcmConfigurationService = (WCMConfigurationService) PortalContainer.getInstance().getComponentInstanceOfType(WCMConfigurationService.class);
+    }
+    return wcmConfigurationService;
+  }
+
+  private RepositoryService getRepositoryService() {
+    if (repositoryService == null) {
+      repositoryService = (RepositoryService) PortalContainer.getInstance().getComponentInstanceOfType(RepositoryService.class);
+    }
+    return repositoryService;
+  }
 }

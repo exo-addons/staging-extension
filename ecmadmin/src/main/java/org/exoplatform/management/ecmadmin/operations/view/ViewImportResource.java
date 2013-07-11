@@ -4,6 +4,8 @@ import java.util.Iterator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.jcr.Node;
+
 import org.apache.tika.io.IOUtils;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
@@ -73,14 +75,16 @@ public class ViewImportResource extends ECMAdminImportResource {
           log.debug("Reading Stream for template: " + templateName);
           String content = IOUtils.toString(zin);
           try {
-            viewService.updateTemplate(templateName, content, templatesHomePath, provider);
-            log.debug("Template updated: " + templateName);
+            log.debug("Adding Template, seems not existing: " + templateName);
+            viewService.addTemplate(templateName, content, templatesHomePath, provider);
           } catch (Exception e) {
-            try {
-              log.debug("Adding Template, seems not existing: " + templateName);
-              viewService.addTemplate(templateName, content, templatesHomePath, provider);
-            } catch (Exception e1) {
-              throw new OperationException(OperationNames.IMPORT_RESOURCE, "Operation cannot finish, error occured while importing templates.", e);
+            if (replaceExisting) {
+              try {
+                viewService.updateTemplate(templateName, content, templatesHomePath, provider);
+                log.debug("Template updated: " + templateName);
+              } catch (Exception e1) {
+                throw new OperationException(OperationNames.IMPORT_RESOURCE, "Operation cannot finish, error occured while importing templates.", e);
+              }
             }
           }
         } else if (filePath.endsWith(".xml")) {
@@ -95,6 +99,13 @@ public class ViewImportResource extends ECMAdminImportResource {
               continue;
             }
             ViewConfig config = (ViewConfig) objectParameter.getObject();
+            if (!replaceExisting) {
+              Node node = viewService.getViewByName(config.getName(), provider);
+              if (node != null) {
+                log.debug("ViewConfig: " + config.getName() + " already exists, ignoring.");
+                continue;
+              }
+            }
             log.debug("Parsing ViewConfig: " + config.getName());
             // Adds or updates by versionning
             viewService.addView(config.getName(), config.getPermissions(), config.getTemplate(), config.getTabList());

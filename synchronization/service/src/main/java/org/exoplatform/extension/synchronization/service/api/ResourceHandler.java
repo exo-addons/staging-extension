@@ -21,15 +21,17 @@ public interface ResourceHandler {
   public abstract Set<String> filterSubResources(Set<String> resources);
 
   /**
-   * Filters options of current resources.
+   * Filters options of current resource. Turn on "filter" value for all options
+   * if parameter allFilter=true
    * 
-   * @param resources
-   * @return Map of options compatible with curent operation
+   * @param options
+   * @param allFilter
    */
-  public abstract Map<String, String> filterOptions(Map<String, String> resources);
+  public abstract void filterOptions(Map<String, String> options, boolean allFilter);
 
   /**
-   * Synchronise selected resources with host identified by host and port, by using the selected options.
+   * Synchronise selected resources with host identified by host and port, by
+   * using the selected options.
    * 
    * @param selectedSubResources
    * @param options

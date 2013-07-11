@@ -78,6 +78,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     ManagedResource.Registration applicationTemplates = applicationsTemplates.registerSubResource("{application-name: .*}", description("ECMS Groovy templates for {application-name} Portlet."));
     applicationTemplates.registerOperationHandler(OperationNames.READ_RESOURCE, new ApplicationTemplatesReadResource(), description("Lists available templates of an application"));
     applicationTemplates.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ApplicationTemplatesExportResource(), description("Exports available templates of an application"));
+    applicationTemplates.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ApplicationsTemplatesImportResource(), description("Import applications templates"));
 
     // /ecmadmin/templates/nodetypes
     ManagedResource.Registration nodetypesTemplates = templates.registerSubResource("nodetypes", description("ECMS Groovy templates for nodetypes."));
@@ -140,6 +141,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     ManagedResource.Registration viewsConfiguration = views.registerSubResource("configuration", description("Sites Explorer Views configuration."));
     viewsConfiguration.registerOperationHandler(OperationNames.READ_RESOURCE, new ViewConfigurationReadResource(), description("Lists available Views."));
     viewsConfiguration.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ViewConfigurationExportResource(), description("Exports selected views."));
+    viewsConfiguration.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ViewImportResource(), description("Import Sites Explorer Views."));
 
     // /ecmadmin/view/configuration/<configuration_name>
     ManagedResource.Registration viewConfiguration = viewsConfiguration.registerSubResource("{configuration-name: .*}", description("Sites Explorer {configuration-name} View configuration."));
@@ -150,6 +152,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     ManagedResource.Registration viewsTemplate = views.registerSubResource("templates", description("Sites Explorer Views templates."));
     viewsTemplate.registerOperationHandler(OperationNames.READ_RESOURCE, new ViewTemplatesReadResource(), description("Lists available templates of Sites Explorer Portlet"));
     viewsTemplate.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ViewTemplatesExportResource(), description("Exports available templates of Sites Explorer Portlet"));
+    viewsTemplate.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ViewImportResource(), description("Import Sites Explorer Views."));
 
     // /ecmadmin/view/templates/<template-name>
     ManagedResource.Registration viewTemplate = viewsTemplate.registerSubResource("{template-name: .*}", description("Sites Explorer {template-name} View template."));
