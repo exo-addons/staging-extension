@@ -158,6 +158,7 @@ public class SiteContentsImportResource implements OperationHandler {
         if (session.itemExists(targetNodePath)) {
           Node oldNode = (Node) session.getItem(targetNodePath);
           oldNode.remove();
+          session.save();
         }
       } catch (Exception e) {
         log.error("Error when trying to find and delete the node: " + targetNodePath, e);
