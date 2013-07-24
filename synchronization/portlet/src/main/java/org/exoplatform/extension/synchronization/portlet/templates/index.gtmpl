@@ -42,6 +42,9 @@
         <%=computeContent(portalSiteNodes,"portalsites", "Portal Sites", portalSitePath)%>
         <%=computeContent(groupSiteNodes,"groupsites", "Group Sites",groupSitePath)%>
         <%=computeContent(userSiteNodes,"usersites", "User Sites",userSitePath)%>
+        <%=computeContent(userNodes,"user", "Users", userPath)%>
+        <%=computeContent(groupNodes,"group", "Groups", groupPath)%>
+        <%=computeContent(roleNodes,"role", "Roles", rolePath)%>
         <%=computeContent(siteContentNodes,"contentsites", "Site JCR Conents",siteContentPath)%>
         <%=computeContent(applicationCLVTemplatesNodes,"clv_templates", "Content List Templates",applicationCLVTemplatesPath)%>
         <%=computeContent(applicationSearchTemplatesNodes,"search_templates", "Search Templates",applicationSearchTemplatesPath)%>
@@ -57,8 +60,49 @@
         <%=computeContent(nodeTypeNodes,"nodetypes", "JCR NodeType",nodeTypePath)%>
         <%=computeContent(registryNodes,"registry", "Application Registry",registryPath)%>
       </div>
-      <div class="rightColumn" id="exportImportForm">
-          #{include path=form.gtmpl}#{/include}
+      <div class="rightColumn">
+        <form class="form-horizontal">
+          <div class="control-group">
+            <label class="control-label" for="inputHost">Host</label>
+            <div class="controls">
+              <input type="text"name="inputHost" id="inputHost" placeholder="Host">
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="inputPort">Port</label>
+            <div class="controls">
+              <input type="text"name="inputPort" id="inputPort" placeholder="Port">
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="inputUsername">Username</label>
+            <div class="controls">
+              <input type="text"name="inputUsername" id="inputUsername" placeholder="Username">
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="inputPassword">Password</label>
+            <div class="controls">
+              <input type="text"name="inputPassword" id="inputPassword" placeholder="Password">
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="inputSSL">Is SSL</label>
+            <div class="controls">
+              <input type="checkbox" name="inputSSL" id="inputSSL">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-primary" id="button-synchronize">Synchronize Data</button>
+            <div id="sync_message"></div>
+          </div>
+          <fieldset>
+            <legend>Options</legend>
+            <div id="exportImportForm">
+              #{include path=form.gtmpl}#{/include}
+            </div>
+          </fieldset>
+        </form>
       </div>
     </div>
   </ul>

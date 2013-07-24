@@ -115,6 +115,7 @@
 		<module>ecmadmin</module>
 		<module>gadget</module>
 		<module>registry</module>
+		<module>organization</module>
 		<module>portlet</module>
 		<module>mop-packaging</module>
 		<module>config</module>

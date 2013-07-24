@@ -126,12 +126,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       inputFileStream.close();
       inputFileStream = null;
       if (conn.getResponseCode() != 200) {
-        getLogger().error("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
-        return false;
+        throw new IllegalStateException("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
       }
     } catch (Exception e) {
       getLogger().error("Error while synchronizing the content", e);
-      return false;
+      throw new RuntimeException(e);
     } finally {
       if (inputFileStream != null) {
         try {
@@ -205,7 +204,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   protected void clearTempFiles() {
     for (File tempFile : tempFiles) {
       if (tempFile != null && tempFile.exists()) {
-        tempFile.delete();
+        try {
+          tempFile.delete();
+        } catch (Exception e) {
+          tempFile.deleteOnExit();
+        }
       }
     }
     tempFiles.clear();

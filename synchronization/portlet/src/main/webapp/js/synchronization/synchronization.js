@@ -55,6 +55,28 @@
 		});
 	});
 
+	$('#button-synchronize').on("click", function() {
+		var host = $('#inputHost').attr("value");
+		var port = $('#inputPort').attr("value");
+		var username = $('#inputUsername').attr("value");
+		var password = $('#inputPassword').attr("value");
+		var isSSLString = $('#inputSSL').attr("checked");
+		isSSLString = (isSSLString ? 'true' : '');
+		if (!host || !port || !username || !password) {
+			alert("Please fill in form.");
+			$('#inputHost').focus();
+			return;
+		}
+		$('#sync_message').html("Proceeding...");
+		$('#sync_message').jzLoad("SynchronizationController.synchronize()", {
+			"host" : host,
+			"port" : port,
+			"username" : username,
+			"password" : password,
+			"isSSLString" : isSSLString
+		});
+	});
+
 	window.initSynchronizationForm = function() {
 		$('.grid_datatable').each(function() {
 			$(this).dataTable({
@@ -73,65 +95,75 @@
 			});
 		});
 
-		if($('#synchronization-portlet .rightColumn .option')) {
-			$('#synchronization-portlet .rightColumn .option').each(function() {
-				$(this).on("change", function() {
-					var name = $(this).attr("name");
-					var value = $(this).attr("value");
-					if($(this).attr("type") && $(this).attr("type") == 'checkbox') {
-						var checkboxId = $(this).attr("id");
-						var checked = $(this).attr('checked')
-								&& ($(this).attr('checked') == 'checked');
-						value = (checked ? 'true':'');
-					}
-					$('#sync_message').jzLoad("SynchronizationController.selectOption()", {
-								"name" : name,
-								"value" : value
+		if ($('#synchronization-portlet .rightColumn .option')) {
+			$('#synchronization-portlet .rightColumn .option')
+					.each(
+							function() {
+								$(this)
+										.on(
+												"change",
+												function() {
+													var name = $(this).attr(
+															"name");
+													var value = $(this).attr(
+															"value");
+													if ($(this).attr("type")
+															&& $(this).attr(
+																	"type") == 'checkbox') {
+														var checkboxId = $(this)
+																.attr("id");
+														var checked = $(this)
+																.attr('checked')
+																&& ($(this)
+																		.attr(
+																				'checked') == 'checked');
+														value = (checked ? 'true'
+																: '');
+													}
+													$('#sync_message')
+															.jzLoad(
+																	"SynchronizationController.selectOption()",
+																	{
+																		"name" : name,
+																		"value" : value
+																	});
+												});
 							});
-				});
-			});
 		}
 
-		$('#button-synchronize').on("click", function() {
-			var host = $('#inputHost').attr("value");
-			var port = $('#inputPort').attr("value");
-			var username = $('#inputUsername').attr("value");
-			var password = $('#inputPassword').attr("value");
-			var isSSLString = $('#inputSSL').attr("checked");
-			isSSLString = (isSSLString ? 'true':'');
-			$('#sync_message').html("Proceeding...");
-			$('#sync_message').jzLoad("SynchronizationController.synchronize()", {
-						"host" : host,
-						"port" : port,
-						"username" : username,
-						"password" : password,
-						"isSSLString" : isSSLString
+		if ($('.SitesContentSQL button')) {
+			$('.SitesContentSQL button').on(
+					"click",
+					function() {
+						var sql = $('.SitesContentSQL input[type=text]').attr(
+								"value");
+						$('#sync_message').jzLoad(
+								"SynchronizationController.selectOption()", {
+									"name" : "/content/sites/EXPORT/query",
+									"value" : sql
+								});
+						$('#SitesContentSQLResult').html("Processing...");
+						$('#SitesContentSQLResult').jzLoad(
+								"SynchronizationController.executeSQL()", {
+									"sql" : sql
+								});
 					});
-		});
-		
-		if($('.SitesContentSQL button')) {
-			$('.SitesContentSQL button').on("click", function() {
-				var sql = $('.SitesContentSQL input[type=text]').attr("value");
-				$('#sync_message').jzLoad("SynchronizationController.selectOption()", {
-					"name" : "/content/sites/EXPORT/query",
-					"value" : sql
-				});
-				$('#SitesContentSQLResult').html("Processing...");
-				$('#SitesContentSQLResult').jzLoad("SynchronizationController.executeSQL()", {
-							"sql" : sql
-				});
-			});
-			$('.SitesContentSQL input[type=text]').on("blur", function() {
-				var sql = $('.SitesContentSQL input[type=text]').attr("value");
-				$('#sync_message').jzLoad("SynchronizationController.selectOption()", {
-					"name" : "/content/sites/EXPORT/query",
-					"value" : sql
-				});
-				$('#SitesContentSQLResult').html("Processing...");
-				$('#SitesContentSQLResult').jzLoad("SynchronizationController.executeSQL()", {
-							"sql" : sql
-				});
-			});
+			$('.SitesContentSQL input[type=text]').on(
+					"blur",
+					function() {
+						var sql = $('.SitesContentSQL input[type=text]').attr(
+								"value");
+						$('#sync_message').jzLoad(
+								"SynchronizationController.selectOption()", {
+									"name" : "/content/sites/EXPORT/query",
+									"value" : sql
+								});
+						$('#SitesContentSQLResult').html("Processing...");
+						$('#SitesContentSQLResult').jzLoad(
+								"SynchronizationController.executeSQL()", {
+									"sql" : sql
+								});
+					});
 		}
 	};
 })($);

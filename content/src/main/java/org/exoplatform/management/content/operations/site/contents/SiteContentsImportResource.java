@@ -104,26 +104,48 @@ public class SiteContentsImportResource implements OperationHandler {
       }
     }
 
-    // extract data from zip
-    Map<String, SiteData> sitesData = extractDataFromZip(attachmentInputStream);
+    Map<String, SiteData> sitesData = null;
+    try {
+      // extract data from zip
+      sitesData = extractDataFromZip(attachmentInputStream);
 
-    // import data of each site
-    for (String site : sitesData.keySet()) {
-      SiteData siteData = sitesData.get(site);
-      if (siteData.getNodeExportFiles() == null || siteData.getNodeExportFiles().isEmpty()) {
-        log.info("No data available to import for site: " + site);
-        continue;
+      // import data of each site
+      for (String site : sitesData.keySet()) {
+        SiteData siteData = sitesData.get(site);
+        if (siteData.getNodeExportFiles() == null || siteData.getNodeExportFiles().isEmpty()) {
+          log.info("No data available to import for site: " + site);
+          continue;
+        }
+
+        Map<String, String> metaDataOptions = siteData.getSiteMetadata().getOptions();
+        String workspace = metaDataOptions.get("site-workspace");
+        log.info("Reading metadata options for import: workspace: " + workspace);
+
+        try {
+          importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(), siteData.getNodeExportHistoryFiles(), workspace, uuidBehaviorValue, isCleanPublication);
+          log.info("Content import has been finished");
+        } catch (Exception e) {
+          throw new OperationException(operationName, "Unable to create import task", e);
+        }
       }
-
-      Map<String, String> metaDataOptions = siteData.getSiteMetadata().getOptions();
-      String workspace = metaDataOptions.get("site-workspace");
-      log.info("Reading metadata options for import: workspace: " + workspace);
-
-      try {
-        importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(), siteData.getNodeExportHistoryFiles(), workspace, uuidBehaviorValue, isCleanPublication);
-        log.info("Content import has been finished");
-      } catch (Exception e) {
-        throw new OperationException(operationName, "Unable to create import task", e);
+    } finally {
+      if (sitesData != null && !sitesData.isEmpty()) {
+        // import data of each site
+        for (String site : sitesData.keySet()) {
+          SiteData siteData = sitesData.get(site);
+          if (siteData.getNodeExportHistoryFiles() != null && !siteData.getNodeExportHistoryFiles().isEmpty()) {
+            for (String tempAbsPath : siteData.getNodeExportHistoryFiles().values()) {
+              File file = new File(tempAbsPath);
+              if (file.exists() && !file.isDirectory()) {
+                try {
+                  file.delete();
+                } catch (Exception e) {
+                  // Nothing to do, deleteOnExit is called
+                }
+              }
+            }
+          }
+        }
       }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
@@ -362,6 +384,7 @@ public class SiteContentsImportResource implements OperationHandler {
         } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
           // Put Version History file in temp folder
           File tempFile = File.createTempFile("JCR", "-VersionHistory.zip");
+          tempFile.deleteOnExit();
           FileOutputStream outputStream = new FileOutputStream(tempFile);
           IOUtils.copy(zis, outputStream);
           outputStream.flush();

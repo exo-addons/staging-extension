@@ -1,4 +1,4 @@
-package org.exoplatform.extension.synchronization.service.handler;
+package org.exoplatform.extension.synchronization.service.handler.mop;
 
 import java.io.File;
 import java.util.Map;

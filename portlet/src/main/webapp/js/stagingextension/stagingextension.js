@@ -16,26 +16,26 @@
 		form.append('file', importFile.files[0]);
 		var actionURL = $("#importForm").attr("action");
 		$.ajax(
-        {
-            url : actionURL,
-            type: 'POST',
-            data :  form,
-            cache: false,
-            processData: false,
-			contentType: false,
-			beforeSend: function(){
-				importMessageSpan.attr("class", "progressBar");
-				importMessageSpan.html("processing ...");
-		    },
-			success: function(data){
-		        importMessageSpan.attr("class", "success");
-		        importMessageSpan.html(data);
-			},
-			error: function (xhr, ajaxOptions, thrownError) {
-				importMessageSpan.attr("class", "error");
-				importMessageSpan.html(xhr.responseText);
-			}
-        }
+	        {
+	            url : actionURL,
+	            type: 'POST',
+	            data :  form,
+	            cache: false,
+	            processData: false,
+				contentType: false,
+				beforeSend: function(){
+					importMessageSpan.attr("class", "progressBar");
+					importMessageSpan.html("processing ...");
+			    },
+				success: function(data){
+			        importMessageSpan.attr("class", "success");
+			        importMessageSpan.html(data);
+				},
+				error: function (xhr, ajaxOptions, thrownError) {
+					importMessageSpan.attr("class", "error");
+					importMessageSpan.html(xhr.responseText);
+				}
+	        }
         );
   	});
 })($);

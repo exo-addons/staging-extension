@@ -62,6 +62,9 @@ public class SynchronizationController {
     parameters.put("actionNodeTypePath", SynchronizationService.ECM_ACTION_PATH);
     parameters.put("nodeTypePath", SynchronizationService.ECM_NODETYPE_PATH);
     parameters.put("registryPath", SynchronizationService.REGISTRY_PATH);
+    parameters.put("userPath", SynchronizationService.USERS_PATH);
+    parameters.put("groupPath", SynchronizationService.GROUPS_PATH);
+    parameters.put("rolePath", SynchronizationService.ROLE_PATH);
   }
 
   @View
@@ -88,6 +91,9 @@ public class SynchronizationController {
     resources.put(SynchronizationService.REGISTRY_PATH, synchronizationService.getRegistryNodes());
     resources.put(SynchronizationService.ECM_VIEW_TEMPLATES_PATH, synchronizationService.getViewTemplatesNodes());
     resources.put(SynchronizationService.ECM_VIEW_CONFIGURATION_PATH, synchronizationService.getViewConfigurationNodes());
+    resources.put(SynchronizationService.USERS_PATH, synchronizationService.getUserNodes());
+    resources.put(SynchronizationService.GROUPS_PATH, synchronizationService.getGroupNodes());
+    resources.put(SynchronizationService.ROLE_PATH, synchronizationService.getRoleNodes());
 
     // Set Nodes in parameters
     parameters.put("portalSiteNodes", resources.get(SynchronizationService.SITES_PORTAL_PATH));
@@ -107,6 +113,9 @@ public class SynchronizationController {
     parameters.put("registryNodes", resources.get(SynchronizationService.REGISTRY_PATH));
     parameters.put("viewTemplateNodes", resources.get(SynchronizationService.ECM_VIEW_TEMPLATES_PATH));
     parameters.put("viewConfigurationNodes", resources.get(SynchronizationService.ECM_VIEW_CONFIGURATION_PATH));
+    parameters.put("userNodes", resources.get(SynchronizationService.USERS_PATH));
+    parameters.put("groupNodes", resources.get(SynchronizationService.GROUPS_PATH));
+    parameters.put("roleNodes", resources.get(SynchronizationService.ROLE_PATH));
 
     parameters.put("selectedResources", selectedResources);
 
@@ -127,6 +136,9 @@ public class SynchronizationController {
     parameters.put("registrySelectedNodes", getSelectedResources(SynchronizationService.REGISTRY_PATH));
     parameters.put("viewTemplateSelectedNodes", getSelectedResources(SynchronizationService.ECM_VIEW_TEMPLATES_PATH));
     parameters.put("viewConfigurationSelectedNodes", getSelectedResources(SynchronizationService.ECM_VIEW_CONFIGURATION_PATH));
+    parameters.put("userSelectedNodes", getSelectedResources(SynchronizationService.USERS_PATH));
+    parameters.put("groupSelectedNodes", getSelectedResources(SynchronizationService.GROUPS_PATH));
+    parameters.put("roleSelectedNodes", getSelectedResources(SynchronizationService.ROLE_PATH));
 
     return index.ok(parameters);
   }
@@ -175,6 +187,11 @@ public class SynchronizationController {
     parameters.put("registrySelectedNodes", getSelectedResources(SynchronizationService.REGISTRY_PATH));
     parameters.put("viewTemplateSelectedNodes", getSelectedResources(SynchronizationService.ECM_VIEW_TEMPLATES_PATH));
     parameters.put("viewConfigurationSelectedNodes", getSelectedResources(SynchronizationService.ECM_VIEW_CONFIGURATION_PATH));
+    parameters.put("userSelectedNodes", getSelectedResources(SynchronizationService.USERS_PATH));
+    parameters.put("groupSelectedNodes", getSelectedResources(SynchronizationService.GROUPS_PATH));
+    parameters.put("roleSelectedNodes", getSelectedResources(SynchronizationService.ROLE_PATH));
+
+    parameters.put("selectedResources", selectedResources);
 
     form.render(parameters);
   }

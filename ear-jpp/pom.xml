@@ -44,6 +44,12 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>staging-extension-organization</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>staging-extension-mop-packaging</artifactId>
 			<version>${project.version}</version>
 			<scope>provided</scope>
@@ -115,6 +121,11 @@
 						<jarModule>
 							<groupId>${project.groupId}</groupId>
 							<artifactId>staging-extension-registry</artifactId>
+							<bundleDir>lib</bundleDir>
+						</jarModule>
+						<jarModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>staging-extension-organization</artifactId>
 							<bundleDir>lib</bundleDir>
 						</jarModule>
 						<jarModule>

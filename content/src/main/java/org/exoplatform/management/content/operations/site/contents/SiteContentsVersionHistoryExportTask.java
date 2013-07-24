@@ -58,7 +58,6 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     OutputStream out = null;
     InputStream in = null;
-    List<File> lstExporedFile = new ArrayList<File>();
     File exportedFile = null;
     File zipFile = null;
     File propertiesFile = getExportedFile("mapping", ".properties");
@@ -74,7 +73,6 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
       NodeIterator queryIter = queryResult.getNodes();
       while (queryIter.hasNext()) {
         exportedFile = getExportedFile("data", ".xml");
-        lstExporedFile.add(exportedFile);
         out = new BufferedOutputStream(new FileOutputStream(exportedFile));
         in = new BufferedInputStream(new TempFileInputStream(exportedFile));
         Node node = queryIter.nextNode();
@@ -87,7 +85,6 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
       }
       if (currentNode.isNodeType(Utils.MIX_VERSIONABLE)) {
         exportedFile = getExportedFile("data", ".xml");
-        lstExporedFile.add(exportedFile);
         out = new BufferedOutputStream(new FileOutputStream(exportedFile));
         in = new BufferedInputStream(new TempFileInputStream(exportedFile));
         String historyValue = getHistoryValue(currentNode);

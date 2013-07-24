@@ -25,6 +25,10 @@ public interface SynchronizationService {
   public static final String ECM_VIEW_CONFIGURATION_PATH = "/ecmadmin/view/configuration";
   public static final String ECM_VIEW_TEMPLATES_PATH = "/ecmadmin/view/templates";
   public static final String REGISTRY_PATH = "/registry";
+  public static final String GADGET_PATH = "/gadget";
+  public static final String USERS_PATH = "/organization/user";
+  public static final String GROUPS_PATH = "/organization/group";
+  public static final String ROLE_PATH = "/organization/role";
 
   /**
    * Returns the list of sub resources of MOP of type portalsites computed from
@@ -165,6 +169,38 @@ public interface SynchronizationService {
    * @return list of ECMS View Configuration managed paths.
    */
   Set<Node> getViewConfigurationNodes();
+
+  /**
+   * Returns the list of sub resources of /gadget managed resources
+   * computed from GateIN Management SPI
+   * 
+   * @return list of Gadgets managed paths.
+   */
+  Set<Node> getGadgetNodes();
+
+  /**
+   * Returns the list of sub resources of /organization/user managed resources
+   * computed from GateIN Management SPI
+   * 
+   * @return list of Users managed paths.
+   */
+  Set<Node> getUserNodes();
+
+  /**
+   * Returns the list of sub resources of /organization/group managed resources
+   * computed from GateIN Management SPI
+   * 
+   * @return list of Groups managed paths.
+   */
+  Set<Node> getGroupNodes();
+
+  /**
+   * Returns the list of sub resources of /organization/role managed resources
+   * computed from GateIN Management SPI
+   * 
+   * @return list of MembershipTypes/Roles managed paths.
+   */
+  Set<Node> getRoleNodes();
 
   /**
    * Synchronize Managed Resources

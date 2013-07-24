@@ -1,4 +1,4 @@
-package org.exoplatform.extension.synchronization.service.handler;
+package org.exoplatform.extension.synchronization.service.handler.ecmadmin;
 
 import java.io.File;
 import java.util.Map;
@@ -7,10 +7,10 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class JCRQueryHandler extends AbstractResourceHandler {
+public class NodeTypeTemplatesHandler extends AbstractResourceHandler {
   @Override
   public String getParentPath() {
-    return SynchronizationService.ECM_QUERY_PATH;
+    return SynchronizationService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH;
   }
 
   @Override
@@ -20,12 +20,10 @@ public class JCRQueryHandler extends AbstractResourceHandler {
       return false;
     }
     filterOptions(options, true);
-
     for (String resourcePath : selectedResources) {
       resourcePath = resourcePath.replace(getParentPath() + "/", "");
       selectedExportOptions.put(resourcePath, "filter");
     }
-
     File file = getExportedFileFromOperation(getParentPath(), selectedExportOptions);
     synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     return true;

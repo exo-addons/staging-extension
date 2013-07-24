@@ -17,21 +17,25 @@ import org.exoplatform.container.PortalContainer;
 import org.exoplatform.extension.synchronization.service.api.Node;
 import org.exoplatform.extension.synchronization.service.api.ResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
-import org.exoplatform.extension.synchronization.service.handler.ActionNodeTypeHandler;
-import org.exoplatform.extension.synchronization.service.handler.ApplicationRegistryHandler;
-import org.exoplatform.extension.synchronization.service.handler.CLVTemplatesHandler;
-import org.exoplatform.extension.synchronization.service.handler.DrivesHandler;
-import org.exoplatform.extension.synchronization.service.handler.JCRQueryHandler;
-import org.exoplatform.extension.synchronization.service.handler.MOPSiteHandler;
-import org.exoplatform.extension.synchronization.service.handler.MetadataTemplatesHandler;
-import org.exoplatform.extension.synchronization.service.handler.NodeTypeHandler;
-import org.exoplatform.extension.synchronization.service.handler.NodeTypeTemplatesHandler;
-import org.exoplatform.extension.synchronization.service.handler.ScriptsHandler;
-import org.exoplatform.extension.synchronization.service.handler.SearchTemplatesHandler;
-import org.exoplatform.extension.synchronization.service.handler.SiteContentsHandler;
-import org.exoplatform.extension.synchronization.service.handler.SiteExplorerTemplatesHandler;
-import org.exoplatform.extension.synchronization.service.handler.SiteExplorerViewHandler;
-import org.exoplatform.extension.synchronization.service.handler.TaxonomyHandler;
+import org.exoplatform.extension.synchronization.service.handler.content.SiteContentsHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.ActionNodeTypeHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.CLVTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.DrivesHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.JCRQueryHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.MetadataTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.NodeTypeHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.NodeTypeTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.ScriptsHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.SearchTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.SiteExplorerTemplatesHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.SiteExplorerViewHandler;
+import org.exoplatform.extension.synchronization.service.handler.ecmadmin.TaxonomyHandler;
+import org.exoplatform.extension.synchronization.service.handler.gadget.GadgetHandler;
+import org.exoplatform.extension.synchronization.service.handler.mop.MOPSiteHandler;
+import org.exoplatform.extension.synchronization.service.handler.organization.GroupsHandler;
+import org.exoplatform.extension.synchronization.service.handler.organization.RolesHandler;
+import org.exoplatform.extension.synchronization.service.handler.organization.UsersHandler;
+import org.exoplatform.extension.synchronization.service.handler.registry.ApplicationRegistryHandler;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -60,23 +64,38 @@ public class SynchronizationServiceImpl implements SynchronizationService {
   private List<ResourceHandler> handlers = new ArrayList<ResourceHandler>();
 
   public SynchronizationServiceImpl() {
-    handlers.add(new ActionNodeTypeHandler());
+    // Organization Handlers
+    handlers.add(new UsersHandler());
+    handlers.add(new GroupsHandler());
+    handlers.add(new RolesHandler());
+
+    // Gadget Handler
+    handlers.add(new GadgetHandler());
+    
+    // ECM Admin Handlers
     handlers.add(new NodeTypeHandler());
-    handlers.add(new ApplicationRegistryHandler());
-    handlers.add(new MOPSiteHandler(SiteType.PORTAL));
-    handlers.add(new MOPSiteHandler(SiteType.GROUP));
-    handlers.add(new MOPSiteHandler(SiteType.USER));
+    handlers.add(new ActionNodeTypeHandler());
     handlers.add(new ScriptsHandler());
     handlers.add(new DrivesHandler());
     handlers.add(new JCRQueryHandler());
     handlers.add(new MetadataTemplatesHandler());
     handlers.add(new NodeTypeTemplatesHandler());
-    handlers.add(new SiteContentsHandler());
     handlers.add(new SearchTemplatesHandler());
     handlers.add(new CLVTemplatesHandler());
     handlers.add(new TaxonomyHandler());
     handlers.add(new SiteExplorerTemplatesHandler());
     handlers.add(new SiteExplorerViewHandler());
+
+    // Aplication Registry Handler
+    handlers.add(new ApplicationRegistryHandler());
+    
+    // Sites JCR Content Handler
+    handlers.add(new SiteContentsHandler());
+    
+    // MOP Handlers
+    handlers.add(new MOPSiteHandler(SiteType.PORTAL));
+    handlers.add(new MOPSiteHandler(SiteType.GROUP));
+    handlers.add(new MOPSiteHandler(SiteType.USER));
   }
 
   /**
@@ -219,6 +238,38 @@ public class SynchronizationServiceImpl implements SynchronizationService {
    * {@inheritDoc}
    */
   @Override
+  public Set<Node> getGadgetNodes() {
+    return getNodes(GADGET_PATH);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<Node> getUserNodes() {
+    return getNodes(USERS_PATH);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<Node> getGroupNodes() {
+    return getNodes(GROUPS_PATH);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<Node> getRoleNodes() {
+    return getNodes(ROLE_PATH);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public void synchronize(Set<String> selectedResources, Map<String, String> options, String isSSLString, String host, String port, String username, String password) throws IOException {
     boolean isSSL = false;
     if (isSSLString != null && isSSLString.equals("true")) {
@@ -325,4 +376,5 @@ public class SynchronizationServiceImpl implements SynchronizationService {
     }
     return repositoryService;
   }
+
 }

@@ -1,4 +1,4 @@
-package org.exoplatform.extension.synchronization.service.handler;
+package org.exoplatform.extension.synchronization.service.handler.ecmadmin;
 
 import java.io.File;
 import java.util.Map;
@@ -7,11 +7,10 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class ActionNodeTypeHandler extends AbstractResourceHandler {
-
+public class SiteExplorerViewHandler extends AbstractResourceHandler {
   @Override
   public String getParentPath() {
-    return SynchronizationService.ECM_ACTION_PATH;
+    return SynchronizationService.ECM_VIEW_CONFIGURATION_PATH;
   }
 
   @Override
@@ -21,14 +20,11 @@ public class ActionNodeTypeHandler extends AbstractResourceHandler {
       return false;
     }
     filterOptions(options, true);
-
     for (String resourcePath : selectedResources) {
-      resourcePath = resourcePath.replace(getParentPath() + "/", "");
-      selectedExportOptions.put(resourcePath, "filter");
+      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     }
-
-    File file = getExportedFileFromOperation(getParentPath(), selectedExportOptions);
-    synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
+    clearTempFiles();
     return true;
   }
 }

@@ -1,4 +1,4 @@
-package org.exoplatform.extension.synchronization.service.handler;
+package org.exoplatform.extension.synchronization.service.handler.organization;
 
 import java.io.File;
 import java.util.Map;
@@ -7,10 +7,11 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class SiteExplorerTemplatesHandler extends AbstractResourceHandler {
+public class UsersHandler extends AbstractResourceHandler {
+
   @Override
   public String getParentPath() {
-    return SynchronizationService.ECM_VIEW_TEMPLATES_PATH;
+    return SynchronizationService.USERS_PATH;
   }
 
   @Override

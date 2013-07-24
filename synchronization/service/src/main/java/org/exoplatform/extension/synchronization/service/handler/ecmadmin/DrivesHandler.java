@@ -1,4 +1,4 @@
-package org.exoplatform.extension.synchronization.service.handler;
+package org.exoplatform.extension.synchronization.service.handler.ecmadmin;
 
 import java.io.File;
 import java.util.Map;
@@ -7,10 +7,10 @@ import java.util.Set;
 import org.exoplatform.extension.synchronization.service.api.AbstractResourceHandler;
 import org.exoplatform.extension.synchronization.service.api.SynchronizationService;
 
-public class SearchTemplatesHandler extends AbstractResourceHandler {
+public class DrivesHandler extends AbstractResourceHandler {
   @Override
   public String getParentPath() {
-    return SynchronizationService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH;
+    return SynchronizationService.ECM_DRIVE_PATH;
   }
 
   @Override
