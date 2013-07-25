@@ -1,6 +1,7 @@
 package org.exoplatform.extension.synchronization.service.api;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -188,10 +190,8 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         } catch (IOException ioExp) {
           // nothing to do
         }
-        // Delete file, not used if an error occurs
-        if (tmpFile != null) {
-          tmpFile.delete();
-        }
+        // Delete temp file in case of error
+        deleteFile(tmpFile);
       }
       throw new RuntimeException("Error while handling Response from GateIN Management, export operation", e);
     }
@@ -203,15 +203,10 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    */
   protected void clearTempFiles() {
     for (File tempFile : tempFiles) {
-      if (tempFile != null && tempFile.exists()) {
-        try {
-          tempFile.delete();
-        } catch (Exception e) {
-          tempFile.deleteOnExit();
-        }
-      }
+      deleteFile(tempFile);
     }
     tempFiles.clear();
+    deleteTempFilesStartingWith("gatein-export");
   }
 
   private String getServerURL(boolean isSSL, String host, String port, String uri, Map<String, String> options) {
@@ -274,4 +269,26 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   protected Log getLogger() {
     return log;
   }
+
+  protected void deleteTempFilesStartingWith(String prefix) {
+    String tempDirPath = System.getProperty("java.io.tmpdir");
+    File file = new File(tempDirPath);
+    log.info("Delete files '" + prefix + "*' under " + tempDirPath);
+    File[] listFiles = file.listFiles((FileFilter) new PrefixFileFilter(prefix));
+    for (File tempFile : listFiles) {
+      deleteFile(tempFile);
+    }
+  }
+
+  protected void deleteFile(File tempFile) {
+    if (tempFile != null && tempFile.exists() && !tempFile.isDirectory()) {
+      try {
+        tempFile.delete();
+      } catch (Exception exception) {
+        // Cannot delete file, plan to delete it when JVM stops.
+        tempFile.deleteOnExit();
+      }
+    }
+  }
+
 }

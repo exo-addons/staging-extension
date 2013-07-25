@@ -162,7 +162,7 @@ public class GroupImportResource implements OperationHandler {
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading group from Stream.", e);
     } finally {
-      if (tempFile != null) {
+      if (tempFile != null && tempFile.exists()) {
         try {
           tempFile.delete();
         } catch (Exception e) {
