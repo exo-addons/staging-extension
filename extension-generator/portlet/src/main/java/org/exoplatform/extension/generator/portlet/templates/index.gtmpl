@@ -34,7 +34,7 @@
   }
 %>
 <div id="extension-genrator-portlet" class='operationBox css-list'>
-  <center><h3>WAR Extension Generator</h3></center>
+  <center><h3>Extension Generator</h3></center>
   <hr />
   <ul class='css-list-parent-ul'>
     <div class="container-fluid generator-portlet-container">
