@@ -21,23 +21,57 @@
      }
     return " AND (" + condition + ")";
    }
-%>
-<% if(!userSelectedNodes.isEmpty()) {%>
+   public String getOptionValue(String name, String type, String value, String defaultValue) {
+     String savedValue = "";
+     if(selectedOptions.containsKey(name)) {
+       savedValue = selectedOptions.get(name);
+     }
+     if(type.equals("checkbox")) {
+       if(savedValue != null && !savedValue.isEmpty()) {
+         if(savedValue.equals("true")) {
+           return "checked";
+         }
+       } else {
+         savedValue = defaultValue;
+       }
+     } else if(type.equals("radio")) {
+       if(savedValue != null && !savedValue.isEmpty()) {
+         if(savedValue.equals(value)) {
+           return "checked";
+         }
+       } else {
+         savedValue = defaultValue;
+       }
+     } else if(type.equals("select")) {
+       if(savedValue != null && !savedValue.isEmpty()) {
+         if(savedValue.equals(value)) {
+           return "selected";
+         }
+       } else {
+         savedValue = defaultValue;
+       }
+     } else if(type.equals("text")) {
+       if(savedValue != null && !savedValue.isEmpty()) {
+         return "value='"+savedValue+"'";
+       }
+     }
+     return savedValue;
+   }
+  if(!userSelectedNodes.isEmpty()) { %>
   <div class="css-list">
     <input type="checkbox" class="tree-checkbox" id="selected_/organization/user">
     <label class="parent Clickable" for="selected_/organization/user">Users</label>
     <ul>
       <li>
         <hr />
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/EXPORT/with-jcr-content:true">With Personel JCR Content</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/EXPORT/with-membership:true">With memberships</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/IMPORT/replaceExisting:false">Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/EXPORT/with-jcr-content:true" <%=getOptionValue("/organization/user/EXPORT/with-jcr-content:true","checkbox","", "")%>>With Personel JCR Content</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/EXPORT/with-membership:true" <%=getOptionValue("/organization/user/EXPORT/with-membership:true","checkbox","", "")%>>With memberships</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/IMPORT/replaceExisting:false" <%=getOptionValue("/organization/user/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(userSelectedNodes, "userSelectedNodes");%>
       </li>
     </ul>
   </div>
-<%}%>
-
+<% } %>
 <% if(!groupSelectedNodes.isEmpty()) {%>
   <div class="css-list">
     <input type="checkbox" class="tree-checkbox" id="selected_/organization/group">
@@ -45,9 +79,9 @@
     <ul>
       <li>
         <hr />
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/EXPORT/with-jcr-content:true">With Personel JCR Content</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/EXPORT/with-membership:true">With memberships</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/IMPORT/replaceExisting:false">Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/EXPORT/with-jcr-content:true" <%=getOptionValue("/organization/group/EXPORT/with-jcr-content:true","checkbox","", "")%>>With Group JCR Content</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/EXPORT/with-membership:true" <%=getOptionValue("/organization/group/EXPORT/with-membership:true","checkbox","", "")%>>With memberships</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/IMPORT/replaceExisting:false" <%=getOptionValue("/organization/group/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(groupSelectedNodes, "groupSelectedNodes");%>
       </li>
     </ul>
@@ -61,7 +95,7 @@
     <ul>
       <li>
         <hr />
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/role/IMPORT/replaceExisting:false">Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/role/IMPORT/replaceExisting:false" <%=getOptionValue("/organization/role/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(roleSelectedNodes, "roleSelectedNodes");%>
       </li>
     </ul>
@@ -79,10 +113,10 @@
         <hr />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/portalsites/IMPORT/importMode">
-            <option value="merge">Merge</option>
-            <option value="conserve">Conserve</option>
-            <option value="insert">Insert</option>
-            <option value="overwrite">Overwrite</option>
+            <option value="merge" <%=getOptionValue("/site/portalsites/IMPORT/importMode","select","merge", "")%>>Merge</option>
+            <option value="conserve" <%=getOptionValue("/site/portalsites/IMPORT/importMode","select","conserve", "")%>>Conserve</option>
+            <option value="insert" <%=getOptionValue("/site/portalsites/IMPORT/importMode","select","insert", "")%>>Insert</option>
+            <option value="overwrite" <%=getOptionValue("/site/portalsites/IMPORT/importMode","select","overwrite", "")%>>Overwrite</option>
           </select>
         </label>
       </li>
@@ -101,10 +135,10 @@
       <hr />
       <label class="checkbox">Import Mode
         <select class="option" name="/site/groupsites/IMPORT/importMode">
-          <option value="merge">Merge</option>
-          <option value="conserve">Conserve</option>
-          <option value="insert">Insert</option>
-          <option value="overwrite">Overwrite</option>
+            <option value="merge" <%=getOptionValue("/site/groupsites/IMPORT/importMode","select","merge", "")%>>Merge</option>
+            <option value="conserve" <%=getOptionValue("/site/groupsites/IMPORT/importMode","select","conserve", "")%>>Conserve</option>
+            <option value="insert" <%=getOptionValue("/site/groupsites/IMPORT/importMode","select","insert", "")%>>Insert</option>
+            <option value="overwrite" <%=getOptionValue("/site/groupsites/IMPORT/importMode","select","overwrite", "")%>>Overwrite</option>
           </select>
         </label>
       </li>
@@ -123,10 +157,10 @@
       <hr />
       <label class="checkbox">Import Mode
         <select class="option" name="/site/usersites/IMPORT/importMode">
-          <option value="merge">Merge</option>
-          <option value="conserve">Conserve</option>
-          <option value="insert">Insert</option>
-          <option value="overwrite">Overwrite</option>
+            <option value="merge" <%=getOptionValue("/site/usersites/IMPORT/importMode","select","merge", "")%>>Merge</option>
+            <option value="conserve" <%=getOptionValue("/site/usersites/IMPORT/importMode","select","conserve", "")%>>Conserve</option>
+            <option value="insert" <%=getOptionValue("/site/usersites/IMPORT/importMode","select","insert", "")%>>Insert</option>
+            <option value="overwrite" <%=getOptionValue("/site/usersites/IMPORT/importMode","select","overwrite", "")%>>Overwrite</option>
           </select>
         </label>
       </li>
@@ -144,28 +178,28 @@
       <% addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources");%>
       <br />
       <hr />
-      <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value=" " id="contentWholeSite"><label for="contentEntireSite">The entire site</label><br />
-      <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="true" id="contentWithoutSkeleton"><label for="contentWithoutSkeleton">Without Site Skeleton</label><br />
-      <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label>
+      <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value=" " <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio"," ", "checked")%> id="contentWholeSite"><label for="contentEntireSite">The entire site</label><br />
+      <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="true" <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio","true", "")%> id="contentWithoutSkeleton"><label for="contentWithoutSkeleton">Without Site Skeleton</label><br />
+      <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio","query", "")%> id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label>
       <div class="SitesContentSQL">
         <div class="input-append">
-          <input name="/content/sites/EXPORT/query" placeholder="JCR SQL Query" class="span2 option" id="appendedInput" type="text">
+          <input name="/content/sites/EXPORT/query" placeholder="JCR SQL Query" class="span2 option" id="appendedInput" type="text" <%=getOptionValue("/content/sites/EXPORT/query","text","", "")%>>
           <span class="add-on"><%=getSQLContentCondition()%></span>
         </div>
         <button type="button" class="btn" id="SitesContentSQLButton">Validate Query</button>
         <div id="SitesContentSQLResult" class="SitesContentSQLResult">
         </div>
       </div>
-      <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/taxonomy:false" value="true">Without taxonomy nodes</label>
-      <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/no-hitory:true" value="true">Without Version history</label>
-      <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/IMPORT/cleanPublication:true" value="true">Cleanup publication (used if Version history isn't exported)</label>
-      <label class="checkbox">JCR UUID Behavior
-        <select class="option" name="/content/sites/IMPORT/uuidBehavior">
-          <option value="0">Create new</option>
-          <option value="1">Remove existing</option>
-          <option value="2">Replace existing</option>
-          <option value="3">Throw Exception when collision</option>
-          </select>
+        <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/taxonomy:false" <%=getOptionValue("/content/sites/EXPORT/taxonomy:false","checkbox","", "")%> value="true">Without taxonomy nodes</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/no-hitory:true" <%=getOptionValue("/content/sites/EXPORT/no-hitory:true","checkbox","", "")%> value="true">Without Version history</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/IMPORT/cleanPublication:true" <%=getOptionValue("/content/sites/IMPORT/cleanPublication:true","checkbox","", "")%> value="true">Cleanup publication (used if Version history isn't exported)</label>
+        <label class="checkbox">JCR UUID Behavior
+         <select class="option" name="/content/sites/IMPORT/uuidBehavior">
+          <option value="0" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","0", "")%>>Create new</option>
+          <option value="1" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","1", "")%>>Remove existing</option>
+          <option value="2" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","2", "")%>>Replace existing</option>
+          <option value="3" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","3", "")%>>Throw Exception when collision</option>
+         </select>
         </label>
       </li>
     </ul>
@@ -179,7 +213,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/templates/applications/content-list-viewer/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -193,7 +227,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/templates/applications/search/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -207,7 +241,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetype/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetype/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/templates/nodetype/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -221,7 +255,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/templates/metadata/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -235,7 +269,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/taxonomy/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources");%>
       </li>
     </ul>
@@ -249,7 +283,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/query/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/query/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/query/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       </li>
     </ul>
   </div>
@@ -262,7 +296,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/drive/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(driveSelectedNodes, "driveSelectedResources");%>
       </li>
     </ul>
@@ -276,7 +310,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/script/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(scriptSelectedNodes, "scriptSelectedResources");%>
       </li>
     </ul>
@@ -290,7 +324,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/view/templates/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -304,7 +338,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/IMPORT/replaceExisting:false" <%=getOptionValue("/ecmadmin/view/configuration/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources");%>
       </li>
     </ul>
@@ -344,7 +378,7 @@
   <ul>
     <li>
       <hr />
-      <label class="checkbox"><input class="option" type="checkbox" name="/registry/IMPORT/replaceExisting:false">Do not replace existing</label>
+      <label class="checkbox"><input class="option" type="checkbox" name="/registry/IMPORT/replaceExisting:false" <%=getOptionValue("/registry/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
       <% addSelectedContent(registrySelectedNodes, "registrySelectedResources");%>
       </li>
     </ul>

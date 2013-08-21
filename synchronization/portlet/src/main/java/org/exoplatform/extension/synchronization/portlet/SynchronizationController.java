@@ -140,6 +140,8 @@ public class SynchronizationController {
     parameters.put("groupSelectedNodes", getSelectedResources(SynchronizationService.GROUPS_PATH));
     parameters.put("roleSelectedNodes", getSelectedResources(SynchronizationService.ROLE_PATH));
 
+    parameters.put("selectedOptions", selectedOptions);
+
     return index.ok(parameters);
   }
 
@@ -192,6 +194,7 @@ public class SynchronizationController {
     parameters.put("roleSelectedNodes", getSelectedResources(SynchronizationService.ROLE_PATH));
 
     parameters.put("selectedResources", selectedResources);
+    parameters.put("selectedOptions", selectedOptions);
 
     form.render(parameters);
   }

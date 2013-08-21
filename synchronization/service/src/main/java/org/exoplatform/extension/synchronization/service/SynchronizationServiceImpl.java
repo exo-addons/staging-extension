@@ -102,6 +102,96 @@ public class SynchronizationServiceImpl implements SynchronizationService {
    * {@inheritDoc}
    */
   @Override
+  public void synchronize(Set<String> selectedResources, Map<String, String> options, String isSSLString, String host, String port, String username, String password) throws IOException {
+    boolean isSSL = false;
+    if (isSSLString != null && isSSLString.equals("true")) {
+      isSSL = true;
+    }
+    for (ResourceHandler handler : handlers) {
+      handler.synchronizeData(selectedResources, isSSL, host, port, username, password, options);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<String> executeSQL(String sql, Set<String> selectedResources) throws Exception {
+    NodeLocation sitesLocation = getWCMConfigurationService().getLivePortalsLocation();
+    Set<String> sites = filterSelectedResources(selectedResources, CONTENT_SITES_PATH);
+    Set<String> paths = new HashSet<String>();
+    for (String sitePath : sites) {
+      String realSQL = sql;
+      sitePath = sitesLocation.getPath() + sitePath.replace(CONTENT_SITES_PATH, "") + "/";
+      sitePath = sitePath.replaceAll("//", "/");
+      String queryPath = "jcr:path = '" + sitePath + "%'";
+      if (realSQL.contains("where")) {
+        int startIndex = realSQL.indexOf("where");
+        int endIndex = startIndex + "where".length();
+
+        String condition = realSQL.substring(endIndex);
+        condition = queryPath + " AND (" + condition + ")";
+
+        realSQL = realSQL.substring(0, startIndex) + " where " + condition;
+      } else {
+        realSQL += " where " + queryPath;
+      }
+
+      SessionProvider provider = SessionProvider.createSystemProvider();
+      ManageableRepository repository = getRepositoryService().getCurrentRepository();
+      Session session = provider.getSession(sitesLocation.getWorkspace(), repository);
+
+      Query query = session.getWorkspace().getQueryManager().createQuery(realSQL, Query.SQL);
+      NodeIterator nodeIterator = query.execute().getNodes();
+      while (nodeIterator.hasNext()) {
+        javax.jcr.Node node = nodeIterator.nextNode();
+        paths.add(node.getPath());
+      }
+    }
+    return paths;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
+    Set<String> filteredSelectedResources = new HashSet<String>();
+    for (String resourcePath : selectedResources) {
+      if (resourcePath.contains(parentPath)) {
+        filteredSelectedResources.add(resourcePath);
+      }
+    }
+    return filteredSelectedResources;
+  }
+
+  public Set<Node> getNodes(String path) {
+    ManagedRequest request = ManagedRequest.Factory.create(OperationNames.READ_RESOURCE, PathAddress.pathAddress(path), ContentType.JSON);
+    ManagedResponse response = getManagementController().execute(request);
+    if (!response.getOutcome().isSuccess()) {
+      log.error(response.getOutcome().getFailureDescription());
+      throw new RuntimeException(response.getOutcome().getFailureDescription());
+    }
+    ReadResourceModel result = (ReadResourceModel) response.getResult();
+    Set<Node> children = new HashSet<Node>(result.getChildren().size());
+    if (result.getChildren() != null && !result.getChildren().isEmpty()) {
+      for (String childName : result.getChildren()) {
+        String description = result.getChildDescription(childName).getDescription();
+        String childPath = path + "/" + childName;
+        Node child = new Node(childName, description, childPath);
+        children.add(child);
+      }
+    } else {
+      Node parent = new Node(path, result.getDescription(), path);
+      children.add(parent);
+    }
+    return children;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public Set<Node> getPortalSiteNodes() {
     return getNodes(SITES_PORTAL_PATH);
   }
@@ -264,96 +354,6 @@ public class SynchronizationServiceImpl implements SynchronizationService {
   @Override
   public Set<Node> getRoleNodes() {
     return getNodes(ROLE_PATH);
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public void synchronize(Set<String> selectedResources, Map<String, String> options, String isSSLString, String host, String port, String username, String password) throws IOException {
-    boolean isSSL = false;
-    if (isSSLString != null && isSSLString.equals("true")) {
-      isSSL = true;
-    }
-    for (ResourceHandler handler : handlers) {
-      handler.synchronizeData(selectedResources, isSSL, host, port, username, password, options);
-    }
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Set<String> executeSQL(String sql, Set<String> selectedResources) throws Exception {
-    NodeLocation sitesLocation = getWCMConfigurationService().getLivePortalsLocation();
-    Set<String> sites = filterSelectedResources(selectedResources, CONTENT_SITES_PATH);
-    Set<String> paths = new HashSet<String>();
-    for (String sitePath : sites) {
-      String realSQL = sql;
-      sitePath = sitesLocation.getPath() + sitePath.replace(CONTENT_SITES_PATH, "") + "/";
-      sitePath = sitePath.replaceAll("//", "/");
-      String queryPath = "jcr:path = '" + sitePath + "%'";
-      if (realSQL.contains("where")) {
-        int startIndex = realSQL.indexOf("where");
-        int endIndex = startIndex + "where".length();
-
-        String condition = realSQL.substring(endIndex);
-        condition = queryPath + " AND (" + condition + ")";
-
-        realSQL = realSQL.substring(0, startIndex) + " where " + condition;
-      } else {
-        realSQL += " where " + queryPath;
-      }
-
-      SessionProvider provider = SessionProvider.createSystemProvider();
-      ManageableRepository repository = getRepositoryService().getCurrentRepository();
-      Session session = provider.getSession(sitesLocation.getWorkspace(), repository);
-
-      Query query = session.getWorkspace().getQueryManager().createQuery(realSQL, Query.SQL);
-      NodeIterator nodeIterator = query.execute().getNodes();
-      while (nodeIterator.hasNext()) {
-        javax.jcr.Node node = nodeIterator.nextNode();
-        paths.add(node.getPath());
-      }
-    }
-    return paths;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
-    Set<String> filteredSelectedResources = new HashSet<String>();
-    for (String resourcePath : selectedResources) {
-      if (resourcePath.contains(parentPath)) {
-        filteredSelectedResources.add(resourcePath);
-      }
-    }
-    return filteredSelectedResources;
-  }
-
-  private Set<Node> getNodes(String path) {
-    ManagedRequest request = ManagedRequest.Factory.create(OperationNames.READ_RESOURCE, PathAddress.pathAddress(path), ContentType.JSON);
-    ManagedResponse response = getManagementController().execute(request);
-    if (!response.getOutcome().isSuccess()) {
-      log.error(response.getOutcome().getFailureDescription());
-      throw new RuntimeException(response.getOutcome().getFailureDescription());
-    }
-    ReadResourceModel result = (ReadResourceModel) response.getResult();
-    Set<Node> children = new HashSet<Node>(result.getChildren().size());
-    if (result.getChildren() != null && !result.getChildren().isEmpty()) {
-      for (String childName : result.getChildren()) {
-        String description = result.getChildDescription(childName).getDescription();
-        String childPath = path + "/" + childName;
-        Node child = new Node(childName, description, childPath);
-        children.add(child);
-      }
-    } else {
-      Node parent = new Node(path, result.getDescription(), path);
-      children.add(parent);
-    }
-    return children;
   }
 
   private ManagementController getManagementController() {
