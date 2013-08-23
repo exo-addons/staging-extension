@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.exoplatform.extensions.staging</groupId>
 		<artifactId>synchronization</artifactId>
-		<version>2.1.0</version>
+		<version>2.1.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>synchronization-portlet</artifactId>
 	<packaging>war</packaging>
