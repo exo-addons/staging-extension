@@ -368,6 +368,9 @@ public class SiteContentsImportResource implements OperationHandler {
           outputStream.flush();
           outputStream.close();
           SiteData siteData = sitesData.get(siteName);
+          if (siteData == null) {
+            siteData = new SiteData();
+          }
           siteData.getNodeExportHistoryFiles().put(
               filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"),
               tempFile.getAbsolutePath());
