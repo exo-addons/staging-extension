@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.exoplatform.platform</groupId>
 		<artifactId>platform</artifactId>
-		<version>4.0.0</version>
+		<version>4.0.2</version>
 	</parent>
 	<groupId>org.exoplatform.extensions.staging</groupId>
 	<artifactId>staging-extension-parent</artifactId>
@@ -19,7 +19,7 @@
 	</scm>
 	<properties>
 		<gatein.management.version>1.1.0.Final</gatein.management.version>
-		<org.exoplatform.platform.version>4.0.0</org.exoplatform.platform.version>
+		<org.exoplatform.platform.version>4.0.2</org.exoplatform.platform.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -73,6 +73,11 @@
 				<groupId>org.exoplatform.platform</groupId>
 				<artifactId>exo.platform.component.organization</artifactId>
 				<version>${org.exoplatform.platform.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.exoplatform.ks</groupId>
+				<artifactId>exo.ks.eXoApplication.forum.service</artifactId>
+				<version>${org.exoplatform.forum.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>junit</groupId>
