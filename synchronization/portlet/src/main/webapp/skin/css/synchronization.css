@@ -175,7 +175,7 @@
 .css-list .NotClickable {
   cursor: default;
 }
-.error {
+.errorMessage {
   background-color: #f2dede;
   padding: 8px;
   line-height: 32px;
@@ -183,7 +183,7 @@
   vertical-align: top;
   border-top: 1px solid #dddddd;
 }
-.success {
+.successMessage {
   background-color: #dff0d8;
   padding: 8px;
   line-height: 32px;
@@ -295,8 +295,23 @@ table {
   margin: 1em 0;
   clear: both;
 }
+
+.form-horizontal {
+  font-size: 13px;
+}
+
+.form-horizontal .help-inline {
+  display: none;
+}
+
+.form-horizontal .error .help-inline {
+  display: inline;
+}
+
 .form-actions {
-  background-color: gray;
+  background-color: #FFFFFF;
+  border-top: medium none;
+  padding-top: 0;
 }
 .css-list-parent-ul .form-actions button.btn,
 input[type="submit"].btn {

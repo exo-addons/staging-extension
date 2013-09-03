@@ -56,24 +56,62 @@
 	});
 
 	$('#button-synchronize').on("click", function() {
-		var host = $('#inputHost').attr("value");
-		var port = $('#inputPort').attr("value");
-		var username = $('#inputUsername').attr("value");
-		var password = $('#inputPassword').attr("value");
-		var isSSLString = $('#inputSSL').attr("checked");
-		isSSLString = (isSSLString ? 'true' : '');
-		if (!host || !port || !username || !password) {
-			alert("Please fill in form.");
-			$('#inputHost').focus();
+		var host = $('#inputHost');
+		var port = $('#inputPort');
+		var username = $('#inputUsername');
+		var password = $('#inputPassword');
+		var ssl = $('#inputSSL');
+
+		var hostValue = host.attr("value");
+		var portValue = port.attr("value");
+		var usernameValue = username.attr("value");
+		var passwordValue = password.attr("value");
+		var isSSLValue = (ssl.attr("checked")? 'true' : '');
+
+		var firstErrorField = null;
+		if(!hostValue) {
+      host.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = host;
+      }
+		} else {
+		  host.closest('.control-group').removeClass('error');
+		}
+		if(!portValue) {
+      port.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = port;
+      }
+		} else {
+		  port.closest('.control-group').removeClass('error');
+		}
+		if(!usernameValue) {
+      username.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = username;
+      }
+		} else {
+		  username.closest('.control-group').removeClass('error');
+		}
+		if(!passwordValue) {
+      password.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = password;
+      }
+		} else {
+		  password.closest('.control-group').removeClass('error');
+		}
+		if (!hostValue || !portValue || !usernameValue || !passwordValue) {
+		  firstErrorField.focus();
 			return;
 		}
 		$('#sync_message').html("Proceeding...");
 		$('#sync_message').jzLoad("SynchronizationController.synchronize()", {
-			"host" : host,
-			"port" : port,
-			"username" : username,
-			"password" : password,
-			"isSSLString" : isSSLString
+			"host" : hostValue,
+			"port" : portValue,
+			"username" : usernameValue,
+			"password" : passwordValue,
+			"isSSLString" : isSSLValue
 		});
 	});
 
