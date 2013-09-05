@@ -1,10 +1,8 @@
 package org.exoplatform.extension.synchronization.portlet;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,9 +36,8 @@ public class SynchronizationController {
   @Path("index.gtmpl")
   Template index;
 
-  Set<String> selectedResources = Collections.synchronizedSet(new HashSet<String>());
-  Map<String, String> selectedOptions = new Hashtable<String, String>();
-  Map<String, Set<Node>> resources = new HashMap<String, Set<Node>>();
+  private Settings settings = new Settings();
+  private Map<String, Set<Node>> resources = new HashMap<String, Set<Node>>();
 
   static Map<String, Object> parameters = new HashMap<String, Object>();
   static {
@@ -70,8 +67,11 @@ public class SynchronizationController {
   @View
   public Response.Render index() {
     // Clear selection
-    selectedResources.clear();
-    selectedOptions.clear();
+    settings.clear();
+
+    // set default settings
+    settings.getOptions().put("/organization/user/EXPORT/with-membership:true", "true");
+    settings.getOptions().put("/organization/group/EXPORT/with-membership:true", "true");
 
     // NODES
     resources.put(SynchronizationService.SITES_PORTAL_PATH, synchronizationService.getPortalSiteNodes());
@@ -117,7 +117,7 @@ public class SynchronizationController {
     parameters.put("groupNodes", resources.get(SynchronizationService.GROUPS_PATH));
     parameters.put("roleNodes", resources.get(SynchronizationService.ROLE_PATH));
 
-    parameters.put("selectedResources", selectedResources);
+    parameters.put("selectedResources", settings.getResources());
 
     parameters.put("portalSiteSelectedNodes", getSelectedResources(SynchronizationService.SITES_PORTAL_PATH));
     parameters.put("groupSiteSelectedNodes", getSelectedResources(SynchronizationService.SITES_GROUP_PATH));
@@ -140,7 +140,7 @@ public class SynchronizationController {
     parameters.put("groupSelectedNodes", getSelectedResources(SynchronizationService.GROUPS_PATH));
     parameters.put("roleSelectedNodes", getSelectedResources(SynchronizationService.ROLE_PATH));
 
-    parameters.put("selectedOptions", selectedOptions);
+    parameters.put("selectedOptions", settings.getOptions());
 
     return index.ok(parameters);
   }
@@ -153,19 +153,19 @@ public class SynchronizationController {
         if (resources.containsKey(path)) {
           Set<Node> children = resources.get(path);
           for (Node node : children) {
-            selectedResources.add(node.getPath());
+            settings.getResources().add(node.getPath());
           }
         } else {
-          selectedResources.add(path);
+          settings.getResources().add(path);
         }
       } else {
         if (resources.containsKey(path)) {
           Set<Node> children = resources.get(path);
           for (Node node : children) {
-            selectedResources.remove(node.getPath());
+            settings.getResources().remove(node.getPath());
           }
         } else {
-          selectedResources.remove(path);
+          settings.getResources().remove(path);
         }
       }
     } else {
@@ -193,8 +193,8 @@ public class SynchronizationController {
     parameters.put("groupSelectedNodes", getSelectedResources(SynchronizationService.GROUPS_PATH));
     parameters.put("roleSelectedNodes", getSelectedResources(SynchronizationService.ROLE_PATH));
 
-    parameters.put("selectedResources", selectedResources);
-    parameters.put("selectedOptions", selectedOptions);
+    parameters.put("selectedResources", settings.getResources());
+    parameters.put("selectedOptions", settings.getOptions());
 
     form.render(parameters);
   }
@@ -203,9 +203,9 @@ public class SynchronizationController {
   @Resource
   public void selectOption(String name, String value) {
     if (value == null || value.trim().isEmpty()) {
-      selectedOptions.remove(name);
+      settings.getOptions().remove(name);
     } else {
-      selectedOptions.put(name, value);
+      settings.getOptions().put(name, value);
     }
   }
 
@@ -213,7 +213,7 @@ public class SynchronizationController {
   @Resource
   public Response synchronize(String isSSLString, String host, String port, String username, String password) throws IOException {
     try {
-      synchronizationService.synchronize(selectedResources, selectedOptions, isSSLString, host, port, username, password);
+      synchronizationService.synchronize(settings.getResources(), settings.getOptions(), isSSLString, host, port, username, password);
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);
@@ -225,7 +225,7 @@ public class SynchronizationController {
   @Resource
   public Response executeSQL(String sql) throws IOException {
     try {
-      Set<String> resultedNodePaths = synchronizationService.executeSQL(sql, selectedResources);
+      Set<String> resultedNodePaths = synchronizationService.executeSQL(sql, settings.getResources());
       StringBuilder builder = new StringBuilder("<ul>");
       for (String path : resultedNodePaths) {
         builder.append("<li>");
@@ -241,7 +241,7 @@ public class SynchronizationController {
   }
 
   private Set<String> getSelectedResources(String parentPath) {
-    Set<String> resources = synchronizationService.filterSelectedResources(selectedResources, parentPath);
+    Set<String> resources = synchronizationService.filterSelectedResources(settings.getResources(), parentPath);
     Set<String> selectedResources = new HashSet<String>();
     for (String resource : resources) {
       resource = resource.replace(parentPath, "");
