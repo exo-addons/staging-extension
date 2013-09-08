@@ -1,9 +1,5 @@
 package org.exoplatform.management.organization.role;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.OrganizationService;
@@ -15,6 +11,10 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -45,9 +45,10 @@ public class RoleExportResource implements OperationHandler {
         exportRole(membershipType, exportTasks);
       } else {
         // If all roles will be exported
-        Collection<?> groups = organizationService.getGroupHandler().getAllGroups();
-        for (Object object : groups) {
-          exportRole(((MembershipType) object), exportTasks);
+        @SuppressWarnings("unchecked")
+        Collection<MembershipType> roles = organizationService.getMembershipTypeHandler().findMembershipTypes();
+        for (MembershipType role : roles) {
+          exportRole(role, exportTasks);
         }
       }
       resultHandler.completed(new ExportResourceModel(exportTasks));
