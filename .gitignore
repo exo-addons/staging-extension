@@ -49,3 +49,4 @@ rebel-remote.xml
 /extension-generator/portlet/src/main/webapp/skin/css/extensiongenerator.css
 /synchronization/ear/src/main/application/META-INF/application.xml
 /synchronization/portlet/src/main/webapp/META-INF
+/synchronization/portlet/src/main/webapp/skin/css/synchronization.css

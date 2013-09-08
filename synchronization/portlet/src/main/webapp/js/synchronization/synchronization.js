@@ -186,22 +186,6 @@
 									"sql" : sql
 								});
 					});
-			$('.SitesContentSQL input[type=text]').on(
-					"blur",
-					function() {
-						var sql = $('.SitesContentSQL input[type=text]').attr(
-								"value");
-						$('#sync_message').jzLoad(
-								"SynchronizationController.selectOption()", {
-									"name" : "/content/sites/EXPORT/query",
-									"value" : sql
-								});
-						$('#SitesContentSQLResult').html("Processing...");
-						$('#SitesContentSQLResult').jzLoad(
-								"SynchronizationController.executeSQL()", {
-									"sql" : sql
-								});
-					});
 		}
 	};
 })($);
