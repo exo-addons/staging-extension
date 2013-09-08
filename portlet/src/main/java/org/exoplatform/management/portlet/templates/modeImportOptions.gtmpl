@@ -1,0 +1,8 @@
+<div class="mode-import-options">
+  <div>
+    <form class="form-horizontal">
+      Import file : <input title="Upload file" type="file" id="filteToImport" accept=".zip" name="filteToImport" />
+    </form>
+  </div>
+</div>
+

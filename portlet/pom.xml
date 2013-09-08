@@ -9,7 +9,7 @@
 	</parent>
 	<artifactId>staging-extension-portlet</artifactId>
 	<packaging>war</packaging>
-	<name>Staging Extension - Juzu Portlet</name>
+	<name>Staging Extension - Portlet</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.gatein.management</groupId>
@@ -19,6 +19,36 @@
 			<groupId>javax.portlet</groupId>
 			<artifactId>portlet-api</artifactId>
 		</dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-content</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-ecmadmin</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-site</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-gadget</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-registry</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
 		<dependency>
 			<groupId>org.exoplatform.commons</groupId>
 			<artifactId>commons-juzu</artifactId>
@@ -79,6 +109,24 @@
 			<type>war</type>
 			<scope>provided</scope>
 		</dependency>
+    <dependency>
+      <groupId>org.exoplatform.ecms</groupId>
+      <artifactId>ecms-core-services</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.exoplatform.ecms</groupId>
+      <artifactId>ecms-core-webui</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>xmlunit</groupId>
+      <artifactId>xmlunit</artifactId>
+      <scope>test</scope>
+    </dependency>
 	</dependencies>
 	<build>
 		<finalName>staging-extension-portlet</finalName>

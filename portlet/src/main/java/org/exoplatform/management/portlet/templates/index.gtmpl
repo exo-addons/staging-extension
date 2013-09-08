@@ -1,45 +1,89 @@
 <%
-  public String computeChildContent(def node) {
-    String content = "<li>";
-    String classContent = "NotClickable";
-    String onclickContent = "";
-    String checkedNode = "";
-    if(node.isImportable() || node.isExportable()) {
-      classContent = "Clickable";
-      if(selectedPath!= null && selectedPath.startsWith(node.getPath())) {
-      if(selectedPath.equals(node.getPath())) {
-          classContent += " SelectedNode";
-        }
-        checkedNode = "checked='checked'";
-      }
-    }
-    if(!node.getChildren().isEmpty()) {
-        content += "<input type='checkbox' "+checkedNode+" id='"+node.getPath()+"'><label title='"+node.getPath()+"' class='parent "+classContent+"' for='"+node.getPath()+"'>"+node.getText()+"</label>";
+  public String renderResourceCategory(def resourceCategory) {
+    String content = null;
+
+    if(!resourceCategory.getSubResourceCategories().isEmpty()) {
+      content = "<li class='resource-category'>";
+      //content += "<input type='checkbox' id='"+resourceCategory.getId()+"'><label class='parent' for='"+resourceCategory.getId()+"'>"+resourceCategory.getLabel()+"</label>";
+      content += "<label class='parent' for='"+resourceCategory.getId()+"'>"+resourceCategory.getLabel()+"</label>";
       content += "<ul>";
-			node.getChildren().each { child ->
-			    content += computeChildContent(child);
+			resourceCategory.getSubResourceCategories().each { subResourceCategory ->
+			    content += renderResourceCategory(subResourceCategory);
       }
       content += "</ul>";
     } else {
-      content += "<input type='checkbox' id='"+node.getPath()+"'><label title='"+node.getPath()+"' class='leaf "+classContent+"' for='"+node.getPath()+"'>"+node.getText()+"</label>";
+      content = "<li class='leaf'>";
+      content += "<input type='checkbox' id='"+resourceCategory.getPath()+"' class='resource-category-checkbox'><label for='"+resourceCategory.getPath()+"'>"+resourceCategory.getLabel()+"</label>";
+      content += "<table cellpadding='0' cellspacing='0' border='0' class='display dataTable tree_datatable' id='table_"+resourceCategory.getId()+"'>";
+      content += "<tbody>";
+      availableResources.get(resourceCategory.getPath()).each { node ->
+        content += "<tr class='gradeA'>";
+        content += "<td class='gradeA'><input type='checkbox' class='resource-checkbox' name='selectedResources' id='"+node.getPath()+"' value='"+node.getPath()+"'>";
+        content += "<label title='"+node.getDescription()+"' class='leaf' for='"+node.getPath()+"'>"+node.getText()+"</label></td>";
+        content += "</tr>";
+      }
+      content += "</tbody>";
+      content += "</table>";
     }
+
     content += "</li>";
+
     return content;
   }
 %>
-<div class="container-fluid staging-portlet-container">
-  <div class="tableContent">
-    <div class="leftColumn css-treeview">
-      <center><h3>Staging resources </h3></center>
-      <hr />
-      <ul class="css-treeview-parent-ul">
-        <%nodes.each { node -> %>
-          <%=computeChildContent(node)%>
-        <%}%>
-      </ul>
+
+
+
+<div class="staging">
+  <div class="well modes">
+    <div class="mode-items">
+      <input type="radio" name="mode" value="export" checked="checked">Export</input>
+      <input type="radio" name="mode" value="import">Import</input>
+      <input type="radio" name="mode" value="synchronization">Synchronize</input>
     </div>
-    <div class="rightColumn" id="exportImportForm">
-        #{include path=form.gtmpl}#{/include}
+    <div class="mode-options clearfix">
+      #{include path=modeImportOptions.gtmpl}#{/include}
+      #{include path=modeSyncOptions.gtmpl}#{/include}
     </div>
   </div>
-</div>
+
+  <div class="buttons">
+    <button type="button" class="btn btn-primary button-export">Export</button>
+    <button type="button" class="btn btn-primary button-import">Import</button>
+    <button type="button" class="btn btn-primary button-synchronize">Synchronize</button>
+  </div>
+
+  <div id="resultMessage" class="result-message alert alert-info"></div>
+
+  <div class="resources-panel">
+    <div class="well left-column">
+      <div class="treeview">
+        <ul>
+          <%resourceCategories.each { resourceCategory -> %>
+            <%=renderResourceCategory(resourceCategory)%>
+          <%}%>
+        </ul>
+      </div>
+    </div>
+    <div class="right-column">
+      <form class="form-horizontal">
+        <fieldset>
+          <legend>Selected resources</legend>
+          <div id="selectedResourcesForm">
+            #{include path=selectedResources.gtmpl}#{/include}
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+
+  <div class="buttons">
+    <button type="button" class="btn btn-primary button-export">Export</button>
+    <button type="button" class="btn btn-primary button-import">Import</button>
+    <button type="button" class="btn btn-primary button-synchronize">Synchronize</button>
+  </div>
+<div>
+
+
+
+
