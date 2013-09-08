@@ -1,0 +1,86 @@
+/*
+ * Table
+ */
+table.dataTable {
+	margin: 0 auto;
+	clear: both;
+	width: 100%;
+}
+
+table.dataTable thead th {
+	padding: 3px 18px 3px 10px;
+	border-bottom: 1px solid black;
+	font-weight: bold;
+	cursor: pointer;
+	*cursor: hand;
+	border: 0;
+}
+
+table.dataTable tfoot th {
+	padding: 3px 18px 3px 10px;
+	border-top: 1px solid black;
+	font-weight: bold;
+}
+
+table.dataTable td {
+	padding: 3px 10px;
+	width: auto;
+	white-space: nowrap;
+}
+
+table.dataTable td.center,table.dataTable td.dataTables_empty {
+	text-align: center;
+}
+
+table.dataTable tr.odd {
+	background-color: #E2E4FF;
+}
+
+table.dataTable tr.even {
+	background-color: white;
+}
+
+/*
+ * Table wrapper
+ */
+.dataTables_wrapper {
+	position: relative;
+	clear: both;
+	*zoom: 1;
+}
+
+/*
+ * Page length menu
+ */
+.dataTables_length {
+	float: left;
+}
+
+/*
+ * Filter
+ */
+.dataTables_filter {
+	float: left;
+	text-align: left;
+}
+
+/*
+ * Table information
+ */
+.dataTables_info {
+	clear: both;
+	float: left;
+}
+
+/*
+ * Scrolling
+ */
+.dataTables_scroll {
+	clear: both;
+}
+
+.dataTables_scrollBody {
+	*margin-top: -1px;
+	border: 1px gray solid;
+	-webkit-overflow-scrolling: touch;
+}

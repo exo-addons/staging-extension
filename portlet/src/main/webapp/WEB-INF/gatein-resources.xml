@@ -2,25 +2,28 @@
 <gatein-resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.gatein.org/xml/ns/gatein_resources_1_3 http://www.gatein.org/xml/ns/gatein_resources_1_3"
 	xmlns="http://www.gatein.org/xml/ns/gatein_resources_1_3">
-	<portlet-skin>
+
+  <portlet-skin>
 		<application-name>staging-extension-portlet</application-name>
 		<portlet-name>StagingExtensionPortlet</portlet-name>
 		<skin-name>Default</skin-name>
-		<css-path>/skin/css/stagingextension.css</css-path>
+		<css-path>/skin/css/staging.css</css-path>
 		<css-priority>1</css-priority>
 	</portlet-skin>
-	<portlet>
+
+  <portlet>
 		<name>StagingExtensionPortlet</name>
 		<module>
 			<depends>
-				<module>jQueryStagingExtension</module>
+				<module>jsStagingExtension</module>
 			</depends>
 		</module>
 	</portlet>
-	<module>
-		<name>jQueryStagingExtension</name>
+
+  <module>
+		<name>jsStagingExtension</name>
 		<script>
-			<path>/js/stagingextension/stagingextension.js</path>
+			<path>/js/staging.js</path>
 		</script>
 		<depends>
 			<module>juzu-ajax</module>
@@ -28,5 +31,17 @@
 		<depends>
 			<module>jquery</module>
 		</depends>
+    <depends>
+      <module>jQueryDataTable</module>
+    </depends>
 	</module>
+  <module>
+    <name>jQueryDataTable</name>
+    <script>
+      <path>/js/jquery.dataTables.js</path>
+    </script>
+    <depends>
+      <module>jquery</module>
+    </depends>
+  </module>
 </gatein-resources>
