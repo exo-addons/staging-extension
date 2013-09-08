@@ -169,7 +169,7 @@
 <%}%>
 
 <% if(!siteContentSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
+  <div class="selected-resource sites-content">
     <a onclick="unselectResourceCategory('/content/sites')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/content/sites">
     <label class="parent Clickable" for="selected_/content/sites">Contents</label>
@@ -177,31 +177,35 @@
       <li>
         <% addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources");%>
         <br />
-        <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value=" " <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio"," ", "checked")%> id="contentWholeSite"><label for="contentEntireSite">The entire site</label><br />
-        <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="true" <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio","true", "")%> id="contentWithoutSkeleton"><label for="contentWithoutSkeleton">Without Site Skeleton</label><br />
-        <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio","query", "")%> id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label>
-        <div class="sites-content-sql">
-          <div class="input-append">
-            <input name="/content/sites/EXPORT/query" placeholder="JCR SQL Query" class="span2 option" id="appendedInput" type="text" <%=getOptionValue("/content/sites/EXPORT/query","text","", "")%>>
-            <span class="add-on"><%=getSQLContentCondition()%></span>
-          </div>
-          <button type="button" class="btn" id="sitesContentSQLButton">Validate Query</button>
-          <div id="sitesContentSQLResult" class="sites-content-sql-result">
+        <div class="sites-content-filter">
+          <div class="sites-content-filter-title">Filter:</div>
+          <div class="sites-content-filter-options">
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value=" " <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio"," ", "checked")%> id="contentEntireSite"><label for="contentEntireSite">The entire site</label>
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="true" <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio","true", "")%> id="contentWithoutSkeleton"><label for="contentWithoutSkeleton">Without Site Skeleton</label>
+            <input class="option" type="radio" name="/content/sites/EXPORT/no-skeleton:true" value="query" <%=getOptionValue("/content/sites/EXPORT/no-skeleton:true","radio","query", "")%> id="contentWithQuery"><label for="contentWithQuery">With JCR Query</label>
+            <div class="sites-content-sql">
+              <div class="input-append">
+                <input name="/content/sites/EXPORT/query" placeholder="JCR SQL Query" class="span2 option" id="appendedInput" type="text" <%=getOptionValue("/content/sites/EXPORT/query","text","", "")%>>
+                <span class="add-on"><%=getSQLContentCondition()%></span>
+              </div>
+              <button type="button" class="btn" id="sitesContentSQLButton">Validate Query</button>
+              <div id="sitesContentSQLResult" class="sites-content-sql-result">
+              </div>
+            </div>
           </div>
         </div>
-          <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/taxonomy:false" <%=getOptionValue("/content/sites/EXPORT/taxonomy:false","checkbox","", "")%> value="true">Without taxonomy nodes</label>
-          <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/EXPORT/no-hitory:true" <%=getOptionValue("/content/sites/EXPORT/no-hitory:true","checkbox","", "")%> value="true">Without Version history</label>
-          <label class="checkbox"><input class="option" type="checkbox" name="/content/sites/IMPORT/cleanPublication:true" <%=getOptionValue("/content/sites/IMPORT/cleanPublication:true","checkbox","", "")%> value="true">Cleanup publication (used if Version history isn't exported)</label>
-          <label class="checkbox">JCR UUID Behavior
-           <select class="option" name="/content/sites/IMPORT/uuidBehavior">
-            <option value="0" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","0", "")%>>Create new</option>
-            <option value="1" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","1", "")%>>Remove existing</option>
-            <option value="2" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","2", "")%>>Replace existing</option>
-            <option value="3" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","3", "")%>>Throw Exception when collision</option>
-           </select>
-          </label>
-        </li>
-      </ul>
+        <input id="withoutTaxonomy" class="option" type="checkbox" name="/content/sites/EXPORT/taxonomy:false" <%=getOptionValue("/content/sites/EXPORT/taxonomy:false","checkbox","", "")%> value="true" /><label for="withoutTaxonomy" class="checkbox">Without taxonomy nodes</label>
+        <input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites/EXPORT/no-hitory:true" <%=getOptionValue("/content/sites/EXPORT/no-hitory:true","checkbox","", "")%> value="true"/><label for="withoutVersionHistory" class="checkbox">Without Version history</label>
+        <input id="cleanupPublication" class="option" type="checkbox" name="/content/sites/IMPORT/cleanPublication:true" <%=getOptionValue("/content/sites/IMPORT/cleanPublication:true","checkbox","", "")%> value="true"/><label for="cleanupPublication" class="checkbox">Cleanup publication (used if Version history isn't exported)</label>
+        JCR UUID Behavior
+        <select class="option" name="/content/sites/IMPORT/uuidBehavior">
+          <option value="0" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","0", "")%>>Create new</option>
+          <option value="1" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","1", "")%>>Remove existing</option>
+          <option value="2" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","2", "")%>>Replace existing</option>
+          <option value="3" <%=getOptionValue("/content/sites/IMPORT/uuidBehavior","select","3", "")%>>Throw Exception when collision</option>
+        </select>
+      </li>
+    </ul>
   </div>
 <%}%>
 
