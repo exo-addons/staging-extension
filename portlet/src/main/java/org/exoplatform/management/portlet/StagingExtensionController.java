@@ -93,6 +93,9 @@ public class StagingExtensionController {
     selectedResources.clear();
     selectedOptions.clear();
 
+    selectedOptions.put("/organization/user/EXPORT/with-membership:true", "true");
+    selectedOptions.put("/organization/group/EXPORT/with-membership:true", "true");
+
     // NODES
     availableResources.put(StagingService.SITES_PORTAL_PATH, stagingService.getPortalSiteResources());
     availableResources.put(StagingService.SITES_GROUP_PATH, stagingService.getGroupSiteResources());
