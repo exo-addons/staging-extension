@@ -309,22 +309,6 @@
 									"sql" : sql
 								});
 					});
-			$('.sites-content-sql input[type=text]').on(
-					"blur",
-					function() {
-						var sql = $('.sites-content-sql input[type=text]').attr(
-								"value");
-						$('#resultMessage').jzLoad(
-								"StagingExtensionController.selectOption()", {
-									"name" : "/content/sites/EXPORT/query",
-									"value" : sql
-								});
-						$('#sitesContentSQLResult').html("Processing...");
-						$('#sitesContentSQLResult').jzLoad(
-								"StagingExtensionController.executeSQL()", {
-									"sql" : sql
-								});
-					});
 		}
 	};
 })($);
