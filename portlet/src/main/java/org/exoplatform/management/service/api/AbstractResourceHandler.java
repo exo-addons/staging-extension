@@ -27,11 +27,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   protected static final String MANAGED_COMPONENT_REST_URI = "/rest/private/managed-components";
   protected static final String OPERATION_IMPORT_PREFIX = "IMPORT";
   protected static final String OPERATION_EXPORT_PREFIX = "EXPORT";
-  protected Set<String> selectedResources = null;
-  protected Map<String, String> selectedImportOptions = new HashMap<String, String>();
-  protected Map<String, String> selectedExportOptions = new HashMap<String, String>();
-
-  private List<File> tempFiles = new ArrayList<File>();
 
   /**
    * GateIN Management Controller
@@ -49,7 +44,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         filteredSelectedResources.add(resourcePath);
       }
     }
-    selectedResources = filteredSelectedResources;
+
     return filteredSelectedResources;
   }
 
@@ -57,9 +52,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * {@inheritDoc}
    */
   @Override
-  public void filterOptions(Map<String, String> options, boolean allFilter) {
-    selectedImportOptions.clear();
-    selectedExportOptions.clear();
+  public Map<String, String> filterOptions(Map<String, String> options, String type, boolean allFilter) {
+    Map<String, String> selectedOptions =  new HashMap<String, String>();
+
     for (String optionPath : options.keySet()) {
       if (optionPath.contains(getParentPath())) {
         String optionKey = optionPath.replace(getParentPath(), "");
@@ -76,17 +71,14 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         } else {
           optionValue = options.get(optionPath);
         }
-        if (optionKeys[0].equals(OPERATION_IMPORT_PREFIX)) {
+        if(optionKeys[0].equals(type)) {
           optionKey = optionKeys[1];
-          selectedImportOptions.put(optionKey, optionValue);
-        } else if (optionKeys[0].equals(OPERATION_EXPORT_PREFIX)) {
-          optionKey = optionKeys[1];
-          selectedExportOptions.put(optionKey, optionValue);
-        } else {
-          throw new RuntimeException("Option '" + optionKey + "' is not valid.");
+          selectedOptions.put(optionKey, optionValue);
         }
       }
     }
+
+    return selectedOptions;
   }
 
   protected ManagementController getManagementController() {
@@ -131,6 +123,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
           // Nothing here
         }
       }
+      deleteFile(inputFile);
       clearTempFiles();
     }
     return true;
@@ -164,7 +157,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       tmpFile = File.createTempFile("exo", "-extension-generator");
       tmpFile.deleteOnExit();
       outputStream = new FileOutputStream(tmpFile);
-      tempFiles.add(tmpFile);
 
       // Create temp file
       response.writeResult(outputStream);
@@ -192,10 +184,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * 
    */
   protected void clearTempFiles() {
-    for (File tempFile : tempFiles) {
-      deleteFile(tempFile);
-    }
-    tempFiles.clear();
     deleteTempFilesStartingWith("gatein-export");
   }
 
@@ -263,7 +251,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   protected void deleteTempFilesStartingWith(String prefix) {
     String tempDirPath = System.getProperty("java.io.tmpdir");
     File file = new File(tempDirPath);
-    log.info("Delete files '" + prefix + "*' under " + tempDirPath);
+
+    if(log.isDebugEnabled()) {
+      log.debug("Delete files '" + prefix + "*' under " + tempDirPath);
+    }
+
     File[] listFiles = file.listFiles((FileFilter) new PrefixFileFilter(prefix));
     for (File tempFile : listFiles) {
       deleteFile(tempFile);

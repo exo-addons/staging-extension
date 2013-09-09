@@ -25,18 +25,22 @@ public interface ResourceHandler {
    * if parameter allFilter=true
    * 
    * @param options
+   * @param type
    * @param allFilter
    */
-  public abstract void filterOptions(Map<String, String> options, boolean allFilter);
+  public abstract Map<String, String> filterOptions(Map<String, String> options, String type, boolean allFilter);
 
   /**
    * Synchronise selected resources with host identified by host and port, by
    * using the selected options.
    * 
    * @param resources
-   * @param options
-   * @param path
+   * @param isSSL
+   * @param host
    * @param port
+   * @param username
+   * @param password
+   * @param options
    * @return
    */
   public boolean synchronizeData(Set<String> resources, boolean isSSL, String host, String port, String username, String password, Map<String, String> options);

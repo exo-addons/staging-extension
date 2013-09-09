@@ -16,14 +16,14 @@ public class UsersHandler extends AbstractResourceHandler {
 
   @Override
   public boolean synchronizeData(Set<String> resources, boolean isSSL, String host, String port, String username, String password, Map<String, String> options) {
-    filterSubResources(resources);
+    Set<String> selectedResources = filterSubResources(resources);
     if (selectedResources == null || selectedResources.isEmpty()) {
       return false;
     }
-    filterOptions(options, true);
+
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
-      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
+      File file = getExportedFileFromOperation(resourcePath, filterOptions(options, OPERATION_EXPORT_PREFIX, true));
+      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, true));
     }
     clearTempFiles();
     return true;
