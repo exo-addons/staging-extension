@@ -26,6 +26,7 @@ import javax.jcr.query.QueryManager;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.content.operations.site.SiteConstants;
+import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.seo.PageMetadataModel;
@@ -325,7 +326,7 @@ public class SiteContentsImportResource implements OperationHandler {
         String filePath = entry.getName();
         // Skip empty entries (this allows empty zip files to not cause
         // exceptions).
-        if (filePath.equals("") || !filePath.startsWith(SiteConstants.SITE_CONTENTS_ROOT_PATH + "/")) {
+        if (filePath.equals("") || !filePath.startsWith(SiteUtil.getSitesBasePath() + "/")) {
           continue;
         }
 
@@ -416,7 +417,7 @@ public class SiteContentsImportResource implements OperationHandler {
   private String extractSiteNameFromPath(String path) {
     String siteName = null;
 
-    int beginIndex = SiteConstants.SITE_CONTENTS_ROOT_PATH.length() + 1;
+    int beginIndex = SiteUtil.getSitesBasePath().length() + 1;
     siteName = path.substring(beginIndex, path.indexOf("/", beginIndex));
 
     return siteName;

@@ -1,6 +1,20 @@
 package org.exoplatform.management.content.operations.site;
 
+import org.exoplatform.management.content.ContentManagementExtension;
+
 public class SiteUtil {
+
+  /**
+   * Builds the base path for content sites in the exported zip
+   *
+   * @return
+   */
+  public static final String getSitesBasePath() {
+    return new StringBuilder(20).append(ContentManagementExtension.PATH_CONTENT)
+            .append("/")
+            .append(ContentManagementExtension.PATH_CONTENT_SITES)
+            .toString();
+  }
 
   /**
    * Builds the base path of the site in the exported zip
@@ -10,7 +24,10 @@ public class SiteUtil {
    * @return
    */
   public static final String getSiteBasePath(String site) {
-    return SiteConstants.SITE_CONTENTS_ROOT_PATH + "/" + site;
+    return new StringBuilder(30).append(getSitesBasePath())
+            .append("/")
+            .append(site)
+            .toString();
   }
 
   /**
@@ -21,7 +38,10 @@ public class SiteUtil {
    * @return
    */
   public static final String getSiteContentsBasePath(String site) {
-    return getSiteBasePath(site) + "/" + SiteConstants.SITE_CONTENTS_REL_PATH;
+    return new StringBuilder(30).append(getSiteBasePath(site))
+            .append("/")
+            .append(ContentManagementExtension.PATH_CONTENT_SITES_CONTENTS)
+            .toString();
   }
 
 }

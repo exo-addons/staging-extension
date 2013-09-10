@@ -21,9 +21,15 @@ import org.gatein.management.spi.ManagementExtension;
  * @version $Revision$
  */
 public class ContentManagementExtension implements ManagementExtension {
+
+  public final static String PATH_CONTENT = "content";
+  public final static String PATH_CONTENT_SITES = "sites";
+  public final static String PATH_CONTENT_SITES_CONTENTS = "contents";
+  public final static String PATH_CONTENT_SITES_SEO = "seo";
+
   @Override
   public void initialize(ExtensionContext context) {
-    ComponentRegistration contentRegistration = context.registerManagedComponent("content");
+    ComponentRegistration contentRegistration = context.registerManagedComponent(PATH_CONTENT);
 
     ManagedResource.Registration content = contentRegistration
         .registerManagedResource(description("Content Managed Resource, responsible for handling management operations on contents."));
@@ -31,7 +37,7 @@ public class ContentManagementExtension implements ManagementExtension {
         description("Lists available contents data"));
 
     // /content/sites
-    ManagedResource.Registration sites = content.registerSubResource("sites",
+    ManagedResource.Registration sites = content.registerSubResource(PATH_CONTENT_SITES,
         description("Sites Managed Resource, responsible for handling management operations on sites contents."));
     sites.registerOperationHandler(OperationNames.READ_RESOURCE, new LiveSitesReadResource(),
         description("Lists available sites"));
@@ -46,7 +52,7 @@ public class ContentManagementExtension implements ManagementExtension {
         description("Import site data"));
 
     // /content/sites/<site_name>/contents
-    ManagedResource.Registration siteContents = site.registerSubResource("contents",
+    ManagedResource.Registration siteContents = site.registerSubResource(PATH_CONTENT_SITES_CONTENTS,
         description("Management resource responsible for handling management operations on contents of a specific site."));
     siteContents.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteContentsReadResource(),
         description("Read site contents"));
@@ -54,7 +60,7 @@ public class ContentManagementExtension implements ManagementExtension {
         description("Export site contents"));
 
     // /content/sites/<site_name>/seo
-    ManagedResource.Registration seo = site.registerSubResource("seo",
+    ManagedResource.Registration seo = site.registerSubResource(PATH_CONTENT_SITES_SEO,
         description("Management resource responsible for handling management operations on SEO of a specific site."));
     seo.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteSEOReadResource(), description("Read site SEO data"));
     seo.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteSEOExportResource(), description("Export site SEO data"));

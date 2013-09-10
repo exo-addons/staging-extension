@@ -1,28 +1,11 @@
 package org.exoplatform.extension.generator.service.handler;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-
-import org.exoplatform.container.xml.ComponentPlugin;
-import org.exoplatform.container.xml.ExternalComponentPlugins;
-import org.exoplatform.container.xml.InitParams;
-import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.container.xml.ValuesParam;
+import com.thoughtworks.xstream.XStream;
+import org.exoplatform.container.xml.*;
 import org.exoplatform.extension.generator.service.api.AbstractConfigurationHandler;
 import org.exoplatform.extension.generator.service.api.ExtensionGenerator;
 import org.exoplatform.extension.generator.service.api.Utils;
-import org.exoplatform.management.content.operations.site.SiteConstants;
+import org.exoplatform.management.content.ContentManagementExtension;
 import org.exoplatform.management.content.operations.site.contents.SiteData;
 import org.exoplatform.management.content.operations.site.contents.SiteMetaData;
 import org.exoplatform.services.deployment.DeploymentDescriptor;
@@ -34,7 +17,13 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.services.wcm.portal.artifacts.CreatePortalArtifactsService;
 import org.exoplatform.services.wcm.portal.artifacts.IgnorePortalPlugin;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 
 public class SiteContentsConfigurationHandler extends AbstractConfigurationHandler {
   private static final String WCM_CONTENT_CONFIGURATION_LOCATION = "WEB-INF/conf/custom-extension/wcm/content/";
@@ -166,10 +155,8 @@ public class SiteContentsConfigurationHandler extends AbstractConfigurationHandl
   }
 
   protected String extractSiteNameFromPath(String path) {
-    String siteName = null;
-
-    int beginIndex = SiteConstants.SITE_CONTENTS_ROOT_PATH.length() + 1;
-    siteName = path.substring(beginIndex, path.indexOf("/", beginIndex));
+    int beginIndex = (ContentManagementExtension.PATH_CONTENT + "/" + ContentManagementExtension.PATH_CONTENT_SITES).length() + 1;
+    String siteName = path.substring(beginIndex, path.indexOf("/", beginIndex));
 
     return siteName;
   }
