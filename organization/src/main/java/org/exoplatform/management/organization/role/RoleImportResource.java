@@ -1,25 +1,20 @@
 package org.exoplatform.management.organization.role;
 
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
+import com.thoughtworks.xstream.XStream;
+import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.impl.MembershipTypeImpl;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -61,7 +56,7 @@ public class RoleImportResource implements OperationHandler {
     try {
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (!filePath.startsWith("roles/")) {
+        if (!filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_ROLE + "/")) {
           continue;
         }
         if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
@@ -94,7 +89,7 @@ public class RoleImportResource implements OperationHandler {
       oldMembershipType = null;
     }
     if (oldMembershipType == null) {
-      organizationService.getMembershipTypeHandler().saveMembershipType(membershipType, true);
+      organizationService.getMembershipTypeHandler().createMembershipType(membershipType, true);
     } else {
       log.info("ReplaceExisting is Off: Ignoring role '" + membershipType.getName() + "'");
     }

@@ -1,26 +1,9 @@
 package org.exoplatform.management.organization.group;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Session;
-
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
+import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -31,22 +14,24 @@ import org.exoplatform.services.jcr.ext.distribution.DataDistributionType;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.Membership;
-import org.exoplatform.services.organization.MembershipType;
-import org.exoplatform.services.organization.OrganizationService;
-import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.*;
 import org.exoplatform.services.organization.impl.UserImpl;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Session;
+import java.io.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -72,7 +57,6 @@ public class GroupImportResource implements OperationHandler {
       groupsPath = hierarchyCreator.getJcrPath(OrganizationModelJCRContentExportTask.GROUPS_PATH);
     }
 
-    InputStream attachmentInputStream = null;
     Boolean replaceExisting = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -95,7 +79,7 @@ public class GroupImportResource implements OperationHandler {
 
     // get attachement input stream
     OperationAttachment attachment = operationContext.getAttachment(false);
-    attachmentInputStream = attachment.getStream();
+    InputStream attachmentInputStream = attachment.getStream();
     File tempFile = null;
     try {
       tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
@@ -108,7 +92,7 @@ public class GroupImportResource implements OperationHandler {
       Set<String> newlyCreatedGroups = new HashSet<String>();
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (filePath.endsWith("group.xml")) {
+        if (filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/") && filePath.endsWith("group.xml")) {
           log.debug("Parsing : " + filePath);
           String groupId = createGroup(zin, replaceExisting);
           if (groupId != null) {
@@ -139,7 +123,7 @@ public class GroupImportResource implements OperationHandler {
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (!filePath.startsWith("groups/")) {
+        if (!filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/")) {
           continue;
         }
         if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
@@ -295,7 +279,7 @@ public class GroupImportResource implements OperationHandler {
   }
 
   private String extractGroupName(String filePath) {
-    Pattern pattern = Pattern.compile("groups(.*)/g_content.xml");
+    Pattern pattern = Pattern.compile(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/(.*)/g_content.xml");
     Matcher matcher = pattern.matcher(filePath);
     if (matcher.find()) {
       return matcher.group(1);

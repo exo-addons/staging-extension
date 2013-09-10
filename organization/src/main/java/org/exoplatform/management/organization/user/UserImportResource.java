@@ -1,45 +1,29 @@
 package org.exoplatform.management.organization.user;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.thoughtworks.xstream.XStream;
+import org.apache.poi.util.IOUtils;
+import org.exoplatform.management.organization.OrganizationManagementExtension;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.*;
+import org.exoplatform.services.organization.impl.UserImpl;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.*;
+import org.gatein.management.api.operation.model.NoResultModel;
+
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.Session;
+import java.io.*;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.Session;
-
-import org.apache.poi.util.IOUtils;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.Membership;
-import org.exoplatform.services.organization.MembershipType;
-import org.exoplatform.services.organization.OrganizationService;
-import org.exoplatform.services.organization.User;
-import org.exoplatform.services.organization.UserProfile;
-import org.exoplatform.services.organization.impl.UserImpl;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
-import org.gatein.management.api.operation.model.NoResultModel;
-
-import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -50,6 +34,8 @@ public class UserImportResource implements OperationHandler {
   private OrganizationService organizationService = null;
   private RepositoryService repositoryService = null;
   private NodeHierarchyCreator hierarchyCreator = null;
+
+  private String usersBasePath = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/";
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
@@ -94,7 +80,7 @@ public class UserImportResource implements OperationHandler {
       ZipEntry entry;
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (filePath.endsWith("user.xml")) {
+        if (filePath.startsWith(usersBasePath) && filePath.endsWith("user.xml")) {
           log.debug("Parsing : " + filePath);
           createUser(zin, replaceExisting);
         }
@@ -108,7 +94,7 @@ public class UserImportResource implements OperationHandler {
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (filePath.endsWith("profile.xml")) {
+        if (filePath.startsWith(usersBasePath) && filePath.endsWith("profile.xml")) {
           log.debug("Parsing : " + filePath);
           createUserProfile(zin);
         }
@@ -122,7 +108,7 @@ public class UserImportResource implements OperationHandler {
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (filePath.endsWith("_membership.xml")) {
+        if (filePath.startsWith(usersBasePath) && filePath.endsWith("_membership.xml")) {
           log.debug("Parsing : " + filePath);
           createMembership(zin);
         }
@@ -136,7 +122,7 @@ public class UserImportResource implements OperationHandler {
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (filePath.endsWith("u_content.xml")) {
+        if (filePath.startsWith(usersBasePath) && filePath.endsWith("u_content.xml")) {
           log.debug("Parsing : " + filePath);
           String userName = extractUserName(filePath);
           createContent(zin, userName, replaceExisting);
@@ -193,7 +179,7 @@ public class UserImportResource implements OperationHandler {
   }
 
   private String extractUserName(String filePath) {
-    Pattern pattern = Pattern.compile("users/(.*)/");
+    Pattern pattern = Pattern.compile(usersBasePath + "(.*)/");
     Matcher matcher = pattern.matcher(filePath);
     if (matcher.find()) {
       return matcher.group(1);
