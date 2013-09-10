@@ -5,7 +5,6 @@ import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.poi.util.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -16,7 +15,8 @@ import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.operation.OperationNames;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileFilter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -88,8 +88,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     return managementController;
   }
 
-  protected boolean synhronizeData(File inputFile, boolean isSSL, String host, String port, String uri, String username, String password, Map<String, String> options) {
-    FileInputStream inputFileStream = null;
+  protected boolean synhronizeData(ManagedResponse response, boolean isSSL, String host, String port, String uri, String username, String password, Map<String, String> options) {
     try {
       String targetServerURL = getServerURL(isSSL, host, port, uri, options);
       URL url = new URL(targetServerURL);
@@ -104,11 +103,8 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       conn.setDoOutput(true);
       conn.setRequestProperty("Content-Type", "application/zip");
 
-      inputFileStream = new FileInputStream(inputFile);
-      conn.setRequestProperty("Content-Length", String.valueOf(inputFileStream.available()));
-      IOUtils.copy(inputFileStream, conn.getOutputStream());
-      inputFileStream.close();
-      inputFileStream = null;
+      response.writeResult(conn.getOutputStream());
+
       if (conn.getResponseCode() != 200) {
         throw new IllegalStateException("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
       }
@@ -116,14 +112,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       getLogger().error("Error while synchronizing the content", e);
       throw new RuntimeException(e);
     } finally {
-      if (inputFileStream != null) {
-        try {
-          inputFileStream.close();
-        } catch (IOException e) {
-          // Nothing here
-        }
-      }
-      deleteFile(inputFile);
       clearTempFiles();
     }
     return true;
@@ -139,7 +127,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    *          passed to GateIN Management SPI
    * @return archive file exported from GateIN Management Controller call
    */
-  protected File getExportedFileFromOperation(String path, Map<String, String> selectedOptions) {
+  protected ManagedResponse getExportedResourceFromOperation(String path, Map<String, String> selectedOptions) {
     ManagedRequest request = null;
     if (!selectedOptions.isEmpty()) {
       Map<String, List<String>> attributes = extractAttributes(selectedOptions);
@@ -147,34 +135,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     } else {
       request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), ContentType.ZIP);
     }
-    FileOutputStream outputStream = null;
-    File tmpFile = null;
+
     try {
       // Call GateIN Management SPI
-      ManagedResponse response = getManagementController().execute(request);
-
-      // Create temp file
-      tmpFile = File.createTempFile("exo", "-extension-generator");
-      tmpFile.deleteOnExit();
-      outputStream = new FileOutputStream(tmpFile);
-
-      // Create temp file
-      response.writeResult(outputStream);
-      outputStream.flush();
-      outputStream.close();
-
-      return tmpFile;
+      return getManagementController().execute(request);
     } catch (Exception e) {
-      if (outputStream != null) {
-        try {
-          outputStream.flush();
-          outputStream.close();
-        } catch (IOException ioExp) {
-          // nothing to do
-        }
-        // Delete temp file in case of error
-        deleteFile(tmpFile);
-      }
       throw new RuntimeException("Error while handling Response from GateIN Management, export operation", e);
     }
   }

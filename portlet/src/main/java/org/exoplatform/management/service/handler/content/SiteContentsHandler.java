@@ -2,8 +2,8 @@ package org.exoplatform.management.service.handler.content;
 
 import org.exoplatform.management.service.api.AbstractResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
+import org.gatein.management.api.controller.ManagedResponse;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,10 +31,9 @@ public class SiteContentsHandler extends AbstractResourceHandler {
       selectedExportOptions.put("query:" + sqlQuery, "filter");
     }
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
-      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, true));
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, true));
     }
-    clearTempFiles();
     return true;
   }
 }

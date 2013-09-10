@@ -3,8 +3,8 @@ package org.exoplatform.management.service.handler.mop;
 import org.exoplatform.management.service.api.AbstractResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.portal.mop.SiteType;
+import org.gatein.management.api.controller.ManagedResponse;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,10 +31,9 @@ public class MOPSiteHandler extends AbstractResourceHandler {
     Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX, false);
 
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
-      synhronizeData(file, isSSL, host, port, StagingService.SITES_PARENT_PATH, username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, false));
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(managedResponse, isSSL, host, port, StagingService.SITES_PARENT_PATH, username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, false));
     }
-    clearTempFiles();
     return true;
   }
 }

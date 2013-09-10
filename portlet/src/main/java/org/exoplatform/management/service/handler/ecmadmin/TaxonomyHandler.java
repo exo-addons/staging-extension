@@ -2,8 +2,8 @@ package org.exoplatform.management.service.handler.ecmadmin;
 
 import org.exoplatform.management.service.api.AbstractResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
+import org.gatein.management.api.controller.ManagedResponse;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,10 +23,9 @@ public class TaxonomyHandler extends AbstractResourceHandler {
     Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX, true);
 
     for (String resourcePath : selectedResources) {
-      File file = getExportedFileFromOperation(resourcePath, selectedExportOptions);
-      synhronizeData(file, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_EXPORT_PREFIX, true));
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_EXPORT_PREFIX, true));
     }
-    clearTempFiles();
     return true;
   }
 }
