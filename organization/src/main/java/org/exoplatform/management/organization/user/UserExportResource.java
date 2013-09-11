@@ -1,11 +1,5 @@
 package org.exoplatform.management.organization.user;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.jcr.Node;
-
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
@@ -17,13 +11,14 @@ import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserProfile;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import javax.jcr.Node;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -57,12 +52,21 @@ public class UserExportResource implements OperationHandler {
 
       boolean withContent = filters.contains("with-jcr-content:true");
       boolean withMemberships = filters.contains("with-membership:true");
+      String newPassword = null;
+
+      for(String filter : attributes.getValues("filter")) {
+        if (filter.startsWith("new-password:")) {
+          newPassword = filter.substring("new-password:".length());
+          break;
+        }
+      }
 
       if (userName != null && !userName.trim().isEmpty()) {
         User user = organizationService.getUserHandler().findUserByName(userName);
         if (user == null) {
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "User with name '" + userName + "' doesn't exist");
         }
+        user.setPassword(newPassword);
         exportUser(user, withContent, withMemberships, exportTasks);
       } else {
         ListAccess<User> allUsers = organizationService.getUserHandler().findAllUsers();
@@ -73,6 +77,7 @@ public class UserExportResource implements OperationHandler {
           int length = (size - i >= pageSize) ? pageSize : size - i;
           User[] users = allUsers.load(0, length);
           for (User user : users) {
+            user.setPassword(newPassword);
             exportUser(user, withContent, withMemberships, exportTasks);
           }
           i += pageSize;

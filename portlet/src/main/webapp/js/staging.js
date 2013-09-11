@@ -257,39 +257,25 @@
 		});
 
 		if ($('.staging .right-column .option')) {
-			$('.staging .right-column .option')
-					.each(
-							function() {
-								$(this)
-										.on(
-												"change",
-												function() {
-													var name = $(this).attr(
-															"name");
-													var value = $(this).attr(
-															"value");
-													if ($(this).attr("type")
-															&& $(this).attr(
-																	"type") == 'checkbox') {
-														var checkboxId = $(this)
-																.attr("id");
-														var checked = $(this)
-																.attr('checked')
-																&& ($(this)
-																		.attr(
-																				'checked') == 'checked');
-														value = (checked ? 'true'
-																: '');
-													}
-													$('#resultMessage')
-															.jzLoad(
-																	"StagingExtensionController.selectOption()",
-																	{
-																		"name" : name,
-																		"value" : value
-																	});
-												});
-							});
+			$('.staging .right-column .option').each(function() {
+			  $(this).on("change", function() {
+          var name = $(this).attr("name");
+          var value = $(this).attr("value");
+          if ($(this).attr("type")&& $(this).attr("type") == 'checkbox') {
+            var checkboxId = $(this).attr("id");
+            var checked = $(this).attr('checked')	&& ($(this).attr('checked') == 'checked');
+            value = (checked ? 'true'	: '');
+          } else if ($(this).attr("type") && $(this).attr("type") == 'text') {
+            name += ":" + value;
+          }
+          $('#resultMessage')
+              .jzLoad("StagingExtensionController.selectOption()",
+                  {
+                    "name" : name,
+                    "value" : value
+                  });
+        });
+			});
 		}
 
 		if ($('.sites-content-sql button')) {

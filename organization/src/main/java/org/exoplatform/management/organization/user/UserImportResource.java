@@ -19,7 +19,6 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import java.io.*;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -53,12 +52,11 @@ public class UserImportResource implements OperationHandler {
     Boolean replaceExisting = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext() && replaceExisting == null) {
-        String filter = filters.next();
+    if (attributes != null && attributes.getValues("filter") != null) {
+      for(String filter : attributes.getValues("filter")) {
         if (filter.startsWith("replaceExisting:")) {
           replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+          break;
         }
       }
     }

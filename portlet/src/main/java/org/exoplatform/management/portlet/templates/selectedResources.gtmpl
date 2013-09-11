@@ -64,9 +64,10 @@
     <label class="parent Clickable" for="selected_/organization/user">Users</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/EXPORT/with-jcr-content:true" <%=getOptionValue("/organization/user/EXPORT/with-jcr-content:true","checkbox","", "")%>>With Personel JCR Content</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/EXPORT/with-membership:true" <%=getOptionValue("/organization/user/EXPORT/with-membership:true","checkbox","", "")%>>With memberships</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/user/IMPORT/replaceExisting:false" <%=getOptionValue("/organization/user/IMPORT/replaceExisting:false","checkbox","", "")%>>Do not replace existing</label>
+        <input class="option" type="checkbox" name="/organization/user/EXPORT/with-jcr-content:true" <%=getOptionValue("/organization/user/EXPORT/with-jcr-content:true","checkbox","", "")%> /><label for="/organization/user/EXPORT/with-jcr-content:true" class="checkbox">With Personel JCR Content</label>
+        <input class="option" type="checkbox" name="/organization/user/EXPORT/with-membership:true" <%=getOptionValue("/organization/user/EXPORT/with-membership:true","checkbox","", "")%> /><label for="/organization/user/EXPORT/with-membership:true" class="checkbox">With memberships</label>
+        <input class="option" type="checkbox" name="/organization/user/IMPORT/replaceExisting:false" <%=getOptionValue("/organization/user/IMPORT/replaceExisting:false","checkbox","", "")%> /><label for="/organization/user/IMPORT/replaceExisting:false" class="checkbox">Do not replace existing</label>
+        New password: <input class="option" type="text" name="/organization/user/EXPORT/new-password" <%=getOptionValue("/organization/user/EXPORT/new-password","text","", "")%> />
         <% addSelectedContent(userSelectedNodes, "userSelectedNodes");%>
       </li>
     </ul>
