@@ -26,9 +26,8 @@ public interface ResourceHandler {
    * 
    * @param options
    * @param type
-   * @param allFilter
    */
-  public abstract Map<String, String> filterOptions(Map<String, String> options, String type, boolean allFilter);
+  public abstract Map<String, String> filterOptions(Map<String, String> options, String type);
 
   /**
    * Synchronise selected resources with host identified by host and port, by

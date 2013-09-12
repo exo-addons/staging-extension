@@ -20,15 +20,15 @@ public class JCRQueryHandler extends AbstractResourceHandler {
       return false;
     }
 
-    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX, true);
+    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX);
 
     for (String resourcePath : selectedResources) {
       resourcePath = resourcePath.replace(getParentPath() + "/", "");
-      selectedExportOptions.put(resourcePath, "filter");
+      selectedExportOptions.put("filter/" + resourcePath, null);
     }
 
     ManagedResponse managedResponse = getExportedResourceFromOperation(getParentPath(), selectedExportOptions);
-    synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, true));
+    synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX));
     return true;
   }
 }

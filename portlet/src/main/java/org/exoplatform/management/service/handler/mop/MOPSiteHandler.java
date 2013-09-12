@@ -28,11 +28,12 @@ public class MOPSiteHandler extends AbstractResourceHandler {
       return false;
     }
 
-    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX, false);
+    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX);
+    Map<String, String> selectedImportOptions = filterOptions(options, OPERATION_IMPORT_PREFIX);
 
     for (String resourcePath : selectedResources) {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, selectedExportOptions);
-      synhronizeData(managedResponse, isSSL, host, port, StagingService.SITES_PARENT_PATH, username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, false));
+      synhronizeData(managedResponse, isSSL, host, port, StagingService.SITES_PARENT_PATH, username, password, selectedImportOptions);
     }
     return true;
   }

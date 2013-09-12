@@ -265,8 +265,6 @@
             var checkboxId = $(this).attr("id");
             var checked = $(this).attr('checked')	&& ($(this).attr('checked') == 'checked');
             value = (checked ? 'true'	: '');
-          } else if ($(this).attr("type") && $(this).attr("type") == 'text') {
-            name += ":" + value;
           }
           $('#resultMessage')
               .jzLoad("StagingExtensionController.selectOption()",

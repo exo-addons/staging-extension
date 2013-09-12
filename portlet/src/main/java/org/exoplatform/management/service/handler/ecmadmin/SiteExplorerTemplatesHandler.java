@@ -20,13 +20,13 @@ public class SiteExplorerTemplatesHandler extends AbstractResourceHandler {
       return false;
     }
 
-    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX, true);
+    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX);
+    Map<String, String> selectedImportOptions = filterOptions(options, OPERATION_IMPORT_PREFIX);
 
     for (String resourcePath : selectedResources) {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, selectedExportOptions);
-      synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, true));
+      synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     }
-    clearTempFiles();
     return true;
   }
 }

@@ -52,28 +52,22 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * {@inheritDoc}
    */
   @Override
-  public Map<String, String> filterOptions(Map<String, String> options, String type, boolean allFilter) {
+  public Map<String, String> filterOptions(Map<String, String> options, String type) {
     Map<String, String> selectedOptions =  new HashMap<String, String>();
 
     for (String optionPath : options.keySet()) {
-      if (optionPath.contains(getParentPath())) {
-        String optionKey = optionPath.replace(getParentPath(), "");
+      if (optionPath.startsWith(getParentPath())) {
+        // Remove the path of the resource
+        String optionKey = optionPath.substring(getParentPath().length());
         if (optionKey.startsWith("/")) {
           optionKey = optionKey.substring(1);
         }
+
         String[] optionKeys = optionKey.split("/", 2);
-        if (optionKeys.length != 2) {
-          throw new RuntimeException("Option '" + optionKey + "' is not valid.");
-        }
-        String optionValue;
-        if (allFilter) {
-          optionValue = "filter";
-        } else {
-          optionValue = options.get(optionPath);
-        }
+
         if(optionKeys[0].equals(type)) {
           optionKey = optionKeys[1];
-          selectedOptions.put(optionKey, optionValue);
+          selectedOptions.put(optionKey, options.get(optionPath));
         }
       }
     }
@@ -184,26 +178,47 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     return URLEncodedUtils.format(parameters, null);
   }
 
+  /**
+   * Convert map of option to a map of attributes for the export operation.
+   * Example :
+   * * filter/with-membership -> true
+   * * filter/replace-existing -> true
+   * * importMode -> merge
+   * is converted to
+   * * filter -> {with-membership:true, replace-existing}
+   * * importMode -> {merge}
+   * @param selectedOptions
+   * @return
+   */
   private Map<String, List<String>> extractAttributes(Map<String, String> selectedOptions) {
     Map<String, List<String>> attributes = new HashMap<String, List<String>>();
+
     Set<Entry<String, String>> optionsEntrySet = selectedOptions.entrySet();
-    for (Entry<String, String> entry : optionsEntrySet) {
-      if (entry.getValue().equals("filter")) {
-        List<String> filters = attributes.get("filter");
-        if (filters == null) {
-          filters = new ArrayList<String>();
-          attributes.put("filter", filters);
+    for (Entry<String, String> option : optionsEntrySet) {
+      String optionName;
+      String optionValue;
+      String[] optionParts = option.getKey().split("/", 2);
+      if(optionParts.length == 1) {
+        optionName = option.getKey();
+        optionValue = option.getValue();
+      } else if(optionParts.length == 2) {
+        optionName = optionParts[0];
+        optionValue = optionParts[1];
+        if(option.getValue() != null) {
+          optionValue += ":" + option.getValue();
         }
-        filters.add(entry.getKey());
       } else {
-        List<String> parameterValues = attributes.get(entry.getKey());
-        if (parameterValues == null) {
-          parameterValues = new ArrayList<String>();
-          attributes.put(entry.getKey(), parameterValues);
-        }
-        parameterValues.add(entry.getValue());
+        throw new RuntimeException("Option '" + option.getKey() + "' is not valid.");
       }
+
+      List<String> attribute = attributes.get(optionName);
+      if (attribute == null) {
+        attribute = new ArrayList<String>();
+        attributes.put(optionName, attribute);
+      }
+      attribute.add(optionValue);
     }
+
     return attributes;
   }
 

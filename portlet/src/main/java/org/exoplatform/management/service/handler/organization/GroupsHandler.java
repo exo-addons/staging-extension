@@ -21,10 +21,13 @@ public class GroupsHandler extends AbstractResourceHandler {
       return false;
     }
 
+    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX);
+    Map<String, String> selectedImportOptions = filterOptions(options, OPERATION_IMPORT_PREFIX);
+
     for (String resourcePath : selectedResources) {
       resourcePath.replaceAll("//", "/");
-      ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, filterOptions(options, OPERATION_EXPORT_PREFIX, true));
-      synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_IMPORT_PREFIX, true));
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resourcePath, selectedExportOptions);
+      synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, selectedImportOptions);
     }
     return true;
   }
