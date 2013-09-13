@@ -122,13 +122,22 @@
 		}
 
 		// Launch synchronization...
-		$('#resultMessage').html("Proceeding...");
-		$('#resultMessage').jzLoad("StagingExtensionController.synchronize()", {
+		var resultMessage = $('#resultMessage');
+		resultMessage.html("Proceeding...");
+		resultMessage.removeClass("alert-success alert-error").addClass("alert-info");
+		resultMessage.jzLoad("StagingExtensionController.synchronize()", {
 			"host" : hostValue,
 			"port" : portValue,
 			"username" : usernameValue,
 			"password" : passwordValue,
 			"isSSLString" : isSSLValue
+		}, function (response, status, xhr) {
+		  if(status == "success") {
+		    resultMessage.removeClass("alert-info alert-error").addClass("alert-success");
+		  } else if(status == "error") {
+		    resultMessage.removeClass("alert-success alert-info").addClass("alert-error");
+		  }
+		  resultMessage.html(xhr.responseText);
 		});
 	});
 

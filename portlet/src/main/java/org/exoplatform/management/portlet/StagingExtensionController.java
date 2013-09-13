@@ -243,7 +243,7 @@ public class StagingExtensionController {
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);
-      return Response.ok("Error occured while synchronizing Managed Resources: " + e.getMessage());
+      return Response.content(500, "Error occured while synchronizing Managed Resources: " + e.getMessage());
     }
   }
 
