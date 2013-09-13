@@ -101,9 +101,8 @@
 		<module>organization</module>
 		<module>portlet</module>
 		<module>config</module>
-		<module>ear</module>
-		<module>ear-jpp</module>
 		<module>extension-generator</module>
 		<module>synchronization</module>
+    <module>packaging</module>
 	</modules>
 </project>
