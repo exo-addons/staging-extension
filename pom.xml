@@ -92,15 +92,10 @@
 		</dependencies>
 	</dependencyManagement>
 	<modules>
-		<module>cli</module>
-		<module>site</module>
-		<module>content</module>
-		<module>ecmadmin</module>
-		<module>gadget</module>
-		<module>registry</module>
-		<module>organization</module>
-		<module>portlet</module>
+    <module>component</module>
 		<module>config</module>
+    <module>cli</module>		
+		<module>portlet</module>		
 		<module>extension-generator</module>
 		<module>synchronization</module>
     <module>packaging</module>
