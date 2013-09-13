@@ -97,7 +97,6 @@
     <module>cli</module>		
 		<module>portlet</module>		
 		<module>extension-generator</module>
-		<module>synchronization</module>
     <module>packaging</module>
 	</modules>
 </project>
