@@ -38,8 +38,8 @@ public class RoleImportResource implements OperationHandler {
       Iterator<String> filters = attributes.getValues("filter").iterator();
       while (filters.hasNext() && replaceExisting == null) {
         String filter = filters.next();
-        if (filter.startsWith("replaceExisting:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+        if (filter.startsWith("replace-existing:")) {
+          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
         }
       }
     }

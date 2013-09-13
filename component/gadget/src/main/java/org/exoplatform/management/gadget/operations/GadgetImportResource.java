@@ -1,14 +1,5 @@
 package org.exoplatform.management.gadget.operations;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Session;
-
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.application.gadget.Gadget;
 import org.exoplatform.application.gadget.GadgetRegistryService;
@@ -22,13 +13,16 @@ import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.NoResultModel;
+
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Session;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -78,8 +72,8 @@ public class GadgetImportResource implements OperationHandler {
             jcrPath += "/";
           }
         }
-        if (filter.startsWith("replaceExisting:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+        if (filter.startsWith("replace-existing:")) {
+          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
         }
       }
     }
@@ -118,7 +112,7 @@ public class GadgetImportResource implements OperationHandler {
 
         if (gadget != null) {
           if (replaceExisting) {
-            log.info(gadgetName + " already exists. filter used 'replaceExisting:true' (default filter value is true).");
+            log.info(gadgetName + " already exists. filter used 'replace-existing:true' (default filter value is true).");
             gadgetRegistryService.removeGadget(gadgetName);
 
             // commit changes

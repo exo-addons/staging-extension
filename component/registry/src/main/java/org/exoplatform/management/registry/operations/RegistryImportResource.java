@@ -1,14 +1,5 @@
 package org.exoplatform.management.registry.operations;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.Session;
-
 import org.exoplatform.application.registry.Application;
 import org.exoplatform.application.registry.ApplicationCategory;
 import org.exoplatform.application.registry.ApplicationRegistryService;
@@ -18,16 +9,19 @@ import org.exoplatform.management.registry.tasks.CategoryExportTask;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.NoResultModel;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
+
+import javax.jcr.Session;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -52,8 +46,8 @@ public class RegistryImportResource implements OperationHandler {
       Iterator<String> filters = attributes.getValues("filter").iterator();
       while (filters.hasNext()) {
         String filter = filters.next();
-        if (filter.startsWith("replaceExisting:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+        if (filter.startsWith("replace-existing:")) {
+          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
         }
       }
     }
@@ -92,7 +86,7 @@ public class RegistryImportResource implements OperationHandler {
               applicationRegistryService.remove(categoryFromRepo);
               applicationRegistryService.save(category);
             } else {
-              log.info("Category already exists:  " + category.getName() + ", set replaceExisting=true if you want to override it.");
+              log.info("Category already exists:  " + category.getName() + ", set replace-existing=true if you want to override it.");
             }
           } else {
             applicationRegistryService.save(category);
@@ -135,7 +129,7 @@ public class RegistryImportResource implements OperationHandler {
         applicationRegistryService.remove(applicationFromRepo);
         applicationRegistryService.save(category, application);
       } else {
-        log.info("Application already exists:  " + category.getName() + "/" + application.getApplicationName() + ", set replaceExisting=true if you want to override it.");
+        log.info("Application already exists:  " + category.getName() + "/" + application.getApplicationName() + ", set replace-existing=true if you want to override it.");
       }
     } else {
       applicationRegistryService.save(category, application);

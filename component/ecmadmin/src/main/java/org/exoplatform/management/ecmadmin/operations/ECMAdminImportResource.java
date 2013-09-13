@@ -1,16 +1,11 @@
 package org.exoplatform.management.ecmadmin.operations;
 
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.*;
+
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Iterator;
-
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -41,8 +36,8 @@ public abstract class ECMAdminImportResource implements OperationHandler {
       Iterator<String> filters = attributes.getValues("filter").iterator();
       while (filters.hasNext() && replaceExisting == null) {
         String filter = filters.next();
-        if (filter.startsWith("replaceExisting:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+        if (filter.startsWith("replace-existing:")) {
+          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
         }
       }
     }

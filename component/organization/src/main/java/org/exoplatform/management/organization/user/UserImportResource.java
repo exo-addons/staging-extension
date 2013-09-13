@@ -54,8 +54,8 @@ public class UserImportResource implements OperationHandler {
     OperationAttributes attributes = operationContext.getAttributes();
     if (attributes != null && attributes.getValues("filter") != null) {
       for(String filter : attributes.getValues("filter")) {
-        if (filter.startsWith("replaceExisting:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+        if (filter.startsWith("replace-existing:")) {
+          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
           break;
         }
       }

@@ -64,9 +64,9 @@ public class GroupImportResource implements OperationHandler {
       Iterator<String> filters = attributes.getValues("filter").iterator();
       while (filters.hasNext() && replaceExisting == null) {
         String filter = filters.next();
-        if (filter.startsWith("replaceExisting:")) {
+        if (filter.startsWith("replace-existing:")) {
           try {
-            replaceExisting = Boolean.parseBoolean(filter.substring("replaceExisting:".length()));
+            replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
           } catch (Exception e) {
             log.warn(filter + " filter expression is not valid.");
           }

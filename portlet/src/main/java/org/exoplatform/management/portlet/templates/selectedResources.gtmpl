@@ -66,7 +66,7 @@
       <li>
         <input class="option" type="checkbox" name="/organization/user/EXPORT/filter/with-jcr-content" <%=getOptionValue("/organization/user/EXPORT/filter/with-jcr-content","checkbox","", "")%> /><label for="/organization/user/EXPORT/with-jcr-content" class="checkbox">With Personel JCR Content</label>
         <input class="option" type="checkbox" name="/organization/user/EXPORT/filter/with-membership" <%=getOptionValue("/organization/user/EXPORT/filter/with-membership","checkbox","", "")%> /><label for="/organization/user/EXPORT/with-membership" class="checkbox">With memberships</label>
-        <input class="option" type="checkbox" name="/organization/user/IMPORT/filter/replaceExisting" <%=getOptionValue("/organization/user/IMPORT/filter/replaceExisting","checkbox","", "")%> /><label for="/organization/user/IMPORT/replaceExisting" class="checkbox">Do not replace existing</label>
+        <input class="option" type="checkbox" name="/organization/user/IMPORT/filter/replace-existing" <%=getOptionValue("/organization/user/IMPORT/filter/replace-existing","checkbox","", "")%> /><label for="/organization/user/IMPORT/replace-existing" class="checkbox">Do not replace existing</label>
         New password: <input class="option" type="text" name="/organization/user/EXPORT/filter/new-password" <%=getOptionValue("/organization/user/EXPORT/filter/new-password","text","", "")%> />
         <% addSelectedContent(userSelectedNodes, "userSelectedNodes");%>
       </li>
@@ -82,7 +82,7 @@
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/EXPORT/filter/with-jcr-content" <%=getOptionValue("/organization/group/EXPORT/filter/with-jcr-content","checkbox","", "")%>>With Group JCR Content</label>
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/EXPORT/filter/with-membership" <%=getOptionValue("/organization/group/EXPORT/filter/with-membership","checkbox","", "")%>>With memberships</label>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/IMPORT/filter/replaceExisting" <%=getOptionValue("/organization/group/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/group/IMPORT/filter/replace-existing" <%=getOptionValue("/organization/group/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(groupSelectedNodes, "groupSelectedNodes");%>
       </li>
     </ul>
@@ -96,7 +96,7 @@
     <label class="parent Clickable" for="selected_/organization/role">Roles</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/organization/role/IMPORT/filter/replaceExisting" <%=getOptionValue("/organization/role/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/organization/role/IMPORT/filter/replace-existing" <%=getOptionValue("/organization/role/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(roleSelectedNodes, "roleSelectedNodes");%>
       </li>
     </ul>
@@ -217,7 +217,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/content-list-viewer">CLV Templates</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/templates/applications/content-list-viewer/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/applications/content-list-viewer/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -231,7 +231,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/search">Search Templates</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/templates/applications/search/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/applications/search/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -245,7 +245,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/templates/nodetypes">NodeType Templates</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetypes/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/templates/nodetypes/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetypes/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/nodetypes/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -259,7 +259,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/templates/metadata">Metadata Templates</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/templates/metadata/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/metadata/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -273,7 +273,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/taxonomy">Taxonomy</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/taxonomy/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/taxonomy/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources");%>
       </li>
     </ul>
@@ -287,7 +287,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/queries">JCR Queries</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/queries/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/queries/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/queries/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/queries/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
       </li>
     </ul>
   </div>
@@ -300,7 +300,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/drive">Drives</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/drive/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/drive/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(driveSelectedNodes, "driveSelectedResources");%>
       </li>
     </ul>
@@ -314,7 +314,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/script">ECMS Groovy Scripts</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/script/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/script/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(scriptSelectedNodes, "scriptSelectedResources");%>
       </li>
     </ul>
@@ -328,7 +328,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/view/templates">ECMS View Templates</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/view/templates/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/view/templates/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources");%>
       </li>
     </ul>
@@ -342,7 +342,7 @@
     <label class="parent Clickable" for="selected_/ecmadmin/view/configuration">ECMS View Configuration</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/IMPORT/filter/replaceExisting" <%=getOptionValue("/ecmadmin/view/configuration/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration/IMPORT/filter/replace-existing" <%=getOptionValue("/ecmadmin/view/configuration/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources");%>
       </li>
     </ul>
@@ -382,7 +382,7 @@
     <label class="parent Clickable" for="selected_/registry">Application Registry Categories</label>
     <ul>
       <li>
-        <label class="checkbox"><input class="option" type="checkbox" name="/registry/IMPORT/filter/replaceExisting" <%=getOptionValue("/registry/IMPORT/filter/replaceExisting","checkbox","", "")%>>Do not replace existing</label>
+        <label class="checkbox"><input class="option" type="checkbox" name="/registry/IMPORT/filter/replace-existing" <%=getOptionValue("/registry/IMPORT/filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
         <% addSelectedContent(registrySelectedNodes, "registrySelectedResources");%>
       </li>
     </ul>
