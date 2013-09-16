@@ -17,6 +17,9 @@ import java.util.*;
 public class StagingExtensionController {
   private static Log log = ExoLogger.getLogger(StagingExtensionController.class);
 
+  public static final String OPERATION_IMPORT_PREFIX = "IMPORT";
+  public static final String OPERATION_EXPORT_PREFIX = "EXPORT";
+
   @Inject
   StagingService stagingService;
 
@@ -48,40 +51,40 @@ public class StagingExtensionController {
 
   static {
     // RESOURCES CATEGORIES
-    ResourceCategory contents = new ResourceCategory("contents", "Contents", null);
-    contents.getSubResourceCategories().add(new ResourceCategory("siteContentPath", "Sites Contents", StagingService.CONTENT_SITES_PATH));
+    ResourceCategory contents = new ResourceCategory("Contents", null);
+    contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
     resourceCategories.add(contents);
 
-    ResourceCategory sites = new ResourceCategory("sites", "Sites", null);
-    sites.getSubResourceCategories().add(new ResourceCategory("portalSitePath", "Portal Sites", StagingService.SITES_PORTAL_PATH));
-    sites.getSubResourceCategories().add(new ResourceCategory("groupSitePath", "Group Sites", StagingService.SITES_GROUP_PATH));
-    sites.getSubResourceCategories().add(new ResourceCategory("userSitePath", "User Sites", StagingService.SITES_USER_PATH));
+    ResourceCategory sites = new ResourceCategory("Sites", null);
+    sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
+    sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
+    sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
     resourceCategories.add(sites);
 
-    ResourceCategory organization = new ResourceCategory("organization", "Organization", null);
-    organization.getSubResourceCategories().add(new ResourceCategory("userPath", "Users", StagingService.USERS_PATH));
-    organization.getSubResourceCategories().add(new ResourceCategory("groupPath", "Groups", StagingService.GROUPS_PATH));
-    organization.getSubResourceCategories().add(new ResourceCategory("rolePath", "Roles", StagingService.ROLE_PATH));
+    ResourceCategory organization = new ResourceCategory("Organization", null);
+    organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));
+    organization.getSubResourceCategories().add(new ResourceCategory("Groups", StagingService.GROUPS_PATH));
+    organization.getSubResourceCategories().add(new ResourceCategory("Roles", StagingService.ROLE_PATH));
     resourceCategories.add(organization);
 
-    ResourceCategory applications = new ResourceCategory("applications", "Applications", null);
+    ResourceCategory applications = new ResourceCategory("Applications", null);
     //organization.getSubResourceCategories().add(new ResourceCategory("gadgetPath", "Gadgets", SynchronizationService.GADGET_PATH));
-    applications.getSubResourceCategories().add(new ResourceCategory("applicationRegistryPath", "Applications Registry", StagingService.REGISTRY_PATH));
+    applications.getSubResourceCategories().add(new ResourceCategory("Applications Registry", StagingService.REGISTRY_PATH));
     resourceCategories.add(applications);
 
-    ResourceCategory ecmAdmin = new ResourceCategory("ecmAdmin", "ECM Admin", null);
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("applicationCLVTemplatesPath", "Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("applicationSearchTemplatesPath", "Search Templates", StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("documentTypeTemplatesPath", "Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("metadataTemplatesPath", "Metadata Templates", StagingService.ECM_TEMPLATES_METADATA_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("taxonomyPath", "Taxonomies", StagingService.ECM_TAXONOMY_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("queryPath", "Queries", StagingService.ECM_QUERY_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("drivePath", "Drives", StagingService.ECM_DRIVE_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("scriptPath", "Programming Groovy Script", StagingService.ECM_SCRIPT_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("viewTemplatePath", "Sites Explorer View Templates", StagingService.ECM_VIEW_TEMPLATES_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("viewConfigurationPath", "Sites Explorer View Configuration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("actionNodeTypePath", "Action JCR NodeType", StagingService.ECM_ACTION_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("nodeTypePath", "JCR NodeType", StagingService.ECM_NODETYPE_PATH));
+    ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", null);
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Search Templates", StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Metadata Templates", StagingService.ECM_TEMPLATES_METADATA_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Taxonomies", StagingService.ECM_TAXONOMY_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Queries", StagingService.ECM_QUERY_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Drives", StagingService.ECM_DRIVE_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("ECMS Groovy Script", StagingService.ECM_SCRIPT_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Templates", StagingService.ECM_VIEW_TEMPLATES_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Configuration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
+    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
     resourceCategories.add(ecmAdmin);
 
     parameters.put("resourceCategories", resourceCategories);
@@ -93,8 +96,8 @@ public class StagingExtensionController {
     selectedResources.clear();
     selectedOptions.clear();
 
-    selectedOptions.put("/organization/user/EXPORT/filter/with-membership", "true");
-    selectedOptions.put("/organization/group/EXPORT/filter/with-membership", "true");
+    selectedOptions.put("/organization/user_EXPORT_filter/with-membership", "true");
+    selectedOptions.put("/organization/group_EXPORT_filter/with-membership", "true");
 
     // NODES
     availableResources.put(StagingService.SITES_PORTAL_PATH, stagingService.getPortalSiteResources());
@@ -238,8 +241,42 @@ public class StagingExtensionController {
   @Ajax
   @juzu.Resource
   public Response synchronize(String isSSLString, String host, String port, String username, String password) throws IOException {
+    TargetServer targetServer = new TargetServer(host, port, username, password, "true".equals(isSSLString));
+
+    // Create selected resources categories
+    List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
+    for(String selectedResourcesCategory : selectedResourcesCategories) {
+      ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
+      resourceCategories.add(resourceCategory);
+    }
+
+    // Dispatch selected resources in resources categories
+    for(String selectedResource : selectedResources) {
+      for(ResourceCategory resourceCategory : resourceCategories) {
+        if(selectedResource.startsWith(resourceCategory.getPath())) {
+          resourceCategory.getResources().add(new Resource(selectedResource, null, null));
+          break;
+        }
+      }
+    }
+
+    // Dispatch selected options in resources categories
+    for(String selectedOption : selectedOptions.keySet()) {
+      String optionParts[] = selectedOption.split("_");
+      for(ResourceCategory resourceCategory : resourceCategories) {
+        if(optionParts[0].equals(resourceCategory.getPath())) {
+          if(optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
+            resourceCategory.getExportOptions().put(optionParts[2], selectedOptions.get(selectedOption));
+          } else if(optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
+            resourceCategory.getImportOptions().put(optionParts[2], selectedOptions.get(selectedOption));
+          }
+          break;
+        }
+      }
+    }
+
     try {
-      synchronizationService.synchronize(selectedResources, selectedOptions, isSSLString, host, port, username, password);
+      synchronizationService.synchronize(resourceCategories, targetServer);
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);

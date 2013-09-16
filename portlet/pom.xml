@@ -18,6 +18,7 @@
 		<dependency>
 			<groupId>javax.portlet</groupId>
 			<artifactId>portlet-api</artifactId>
+      <scope>provided</scope>
 		</dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -52,18 +53,22 @@
 		<dependency>
 			<groupId>org.exoplatform.commons</groupId>
 			<artifactId>commons-juzu</artifactId>
+      <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.gatein.portal</groupId>
 			<artifactId>exo.portal.component.web.api</artifactId>
+      <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.gatein.shindig</groupId>
 			<artifactId>shindig-social-api</artifactId>
+      <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.juzu</groupId>
 			<artifactId>juzu-bom-core</artifactId>
+      <scope>provided</scope>
 			<exclusions>
 				<exclusion>
 					<artifactId>weld-core</artifactId>
@@ -98,10 +103,12 @@
 		<dependency>
 			<groupId>org.juzu</groupId>
 			<artifactId>juzu-plugins-less</artifactId>
+      <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.juzu</groupId>
 			<artifactId>juzu-plugins-portlet</artifactId>
+      <scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.platform-ui</groupId>
@@ -112,10 +119,12 @@
     <dependency>
       <groupId>org.exoplatform.ecms</groupId>
       <artifactId>ecms-core-services</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.exoplatform.ecms</groupId>
       <artifactId>ecms-core-webui</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

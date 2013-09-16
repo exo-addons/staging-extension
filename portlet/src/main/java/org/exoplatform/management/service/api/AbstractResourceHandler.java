@@ -25,55 +25,17 @@ import java.util.Map.Entry;
 public abstract class AbstractResourceHandler implements ResourceHandler {
 
   protected static final String MANAGED_COMPONENT_REST_URI = "/rest/private/managed-components";
-  protected static final String OPERATION_IMPORT_PREFIX = "IMPORT";
-  protected static final String OPERATION_EXPORT_PREFIX = "EXPORT";
+
+  private Log log = ExoLogger.getLogger(this.getClass());
+
+  protected Log getLogger() {
+    return log;
+  }
 
   /**
    * GateIN Management Controller
    */
   private ManagementController managementController = null;
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Set<String> filterSubResources(Set<String> resources) {
-    Set<String> filteredSelectedResources = new HashSet<String>();
-    for (String resourcePath : resources) {
-      if (resourcePath.contains(getParentPath())) {
-        filteredSelectedResources.add(resourcePath);
-      }
-    }
-
-    return filteredSelectedResources;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Map<String, String> filterOptions(Map<String, String> options, String type) {
-    Map<String, String> selectedOptions =  new HashMap<String, String>();
-
-    for (String optionPath : options.keySet()) {
-      if (optionPath.startsWith(getParentPath())) {
-        // Remove the path of the resource
-        String optionKey = optionPath.substring(getParentPath().length());
-        if (optionKey.startsWith("/")) {
-          optionKey = optionKey.substring(1);
-        }
-
-        String[] optionKeys = optionKey.split("/", 2);
-
-        if(optionKeys[0].equals(type)) {
-          optionKey = optionKeys[1];
-          selectedOptions.put(optionKey, options.get(optionPath));
-        }
-      }
-    }
-
-    return selectedOptions;
-  }
 
   protected ManagementController getManagementController() {
     if (managementController == null) {
@@ -82,14 +44,28 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     return managementController;
   }
 
-  protected boolean synhronizeData(ManagedResponse response, boolean isSSL, String host, String port, String uri, String username, String password, Map<String, String> options) {
+  public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) {
+    for(Resource resource : resources) {
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
+      sendData(managedResponse, importOptions, targetServer);
+    }
+  }
+
+  /**
+   * Sends data (exported zip) to the target server
+   * @param response
+   * @param options
+   * @param targetServer
+   * @return
+   */
+  protected boolean sendData(ManagedResponse response, Map<String, String> options, TargetServer targetServer) {
     try {
-      String targetServerURL = getServerURL(isSSL, host, port, uri, options);
+      String targetServerURL = getServerURL(targetServer, getPath(), options);
       URL url = new URL(targetServerURL);
 
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("PUT");
-      String passString = username + ":" + password;
+      String passString = targetServer.getUsername() + ":" + targetServer.getPassword();
       String basicAuth = "Basic " + new String(Base64.encodeBase64(passString.getBytes()));
       conn.setRequestProperty("Authorization", basicAuth);
       conn.setUseCaches(false);
@@ -146,12 +122,12 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     deleteTempFilesStartingWith("gatein-export");
   }
 
-  private String getServerURL(boolean isSSL, String host, String port, String uri, Map<String, String> options) {
+  private String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
     String targetServerURL = "http";
-    if (isSSL) {
+    if (targetServer.isSsl()) {
       targetServerURL += "s";
     }
-    targetServerURL += "://" + host + ":" + port + MANAGED_COMPONENT_REST_URI;
+    targetServerURL += "://" + targetServer.getHost() + ":" + targetServer.getPort() + MANAGED_COMPONENT_REST_URI;
     if (!uri.startsWith("/")) {
       targetServerURL += "/";
     }
@@ -220,12 +196,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     }
 
     return attributes;
-  }
-
-  private Log log = ExoLogger.getLogger(this.getClass());
-
-  protected Log getLogger() {
-    return log;
   }
 
   protected void deleteTempFilesStartingWith(String prefix) {

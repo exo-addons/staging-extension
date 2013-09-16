@@ -9,7 +9,7 @@ public class Resource implements Serializable {
   private String text;
   private String description;
 
-  public Resource(String text, String description, String path) {
+  public Resource(String path, String text, String description) {
     this.text = text;
     this.path = path;
     this.description = description;
@@ -23,12 +23,12 @@ public class Resource implements Serializable {
     this.text = text;
   }
 
-  public String setPath() {
+  public String getPath() {
     return this.path;
   }
 
-  public String getPath() {
-    return this.path;
+  public void setPath(String path) {
+    this.path = path;
   }
 
   public String getDescription() {
@@ -45,8 +45,6 @@ public class Resource implements Serializable {
       return false;
     } else if (obj instanceof Resource) {
       return text.equals(((Resource) obj).getPath());
-    } else if (obj instanceof String) {
-      return text.equals(obj);
     } else {
       return false;
     }

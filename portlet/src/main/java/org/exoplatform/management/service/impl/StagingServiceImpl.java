@@ -121,7 +121,7 @@ public class StagingServiceImpl implements StagingService {
       for (String childName : result.getChildren()) {
         String description = result.getChildDescription(childName).getDescription();
         String childPath = path + "/" + childName;
-        Resource child = new Resource(childName, description, childPath);
+        Resource child = new Resource(childPath, childName, description);
         children.add(child);
       }
     } else {

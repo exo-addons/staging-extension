@@ -1,34 +1,30 @@
 package org.exoplatform.management.service.handler.ecmadmin;
 
 import org.exoplatform.management.service.api.AbstractResourceHandler;
+import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.StagingService;
-import org.gatein.management.api.controller.ManagedResponse;
+import org.exoplatform.management.service.api.TargetServer;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class MetadataTemplatesHandler extends AbstractResourceHandler {
   @Override
-  public String getParentPath() {
+  public String getPath() {
     return StagingService.ECM_TEMPLATES_METADATA_PATH;
   }
 
   @Override
-  public boolean synchronizeData(Set<String> resources, boolean isSSL, String host, String port, String username, String password, Map<String, String> options) {
-    Set<String> selectedResources = filterSubResources(resources);
-    if (selectedResources == null || selectedResources.isEmpty()) {
-      return false;
+  public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) {
+    for (Resource resource : resources) {
+      String resourcePath = resource.getPath().replace(getPath() + "/", "");
+      exportOptions.put("filter/" + resourcePath, null);
     }
 
-    Map<String, String> selectedExportOptions = filterOptions(options, OPERATION_EXPORT_PREFIX);
+    List<Resource> allResources = new ArrayList<Resource>();
+    allResources.add(new Resource(getPath(), null, null));
 
-    for (String resourcePath : selectedResources) {
-      resourcePath = resourcePath.replace(getParentPath() + "/", "");
-      selectedExportOptions.put("filter/" + resourcePath, null);
-    }
-
-    ManagedResponse managedResponse = getExportedResourceFromOperation(getParentPath(), selectedExportOptions);
-    synhronizeData(managedResponse, isSSL, host, port, getParentPath(), username, password, filterOptions(options, OPERATION_EXPORT_PREFIX));
-    return true;
+    super.synchronize(allResources, exportOptions, importOptions, targetServer);
   }
 }

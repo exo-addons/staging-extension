@@ -1,21 +1,17 @@
 package org.exoplatform.management.service.api;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
 
 public interface SynchronizationService {
 
   /**
    * Synchronize Managed Resources
-   * 
-   * @param selectedResources
-   * @param options
-   * @param host
-   * @param port
-   * 
+   *
+   * @param selectedResourcesCategories
+   * @param targetServer
    * @throws java.io.IOException
    */
-  void synchronize(Set<String> selectedResources, Map<String, String> options, String isSSLString, String host, String port, String username, String password) throws IOException;
+  void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws IOException;
 
 }
