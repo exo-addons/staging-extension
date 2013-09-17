@@ -72,7 +72,12 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
           // read NT Templates Metadata
           XStream xStream = new XStream();
           xStream.alias("metadata", ApplicationTemplatesMetadata.class);
-          metadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
+          if (metadata == null) {
+            metadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
+          } else {
+            ApplicationTemplatesMetadata tmpMetadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
+            metadata.getTitleMap().putAll(tmpMetadata.getTitleMap());
+          }
           continue;
         }
 

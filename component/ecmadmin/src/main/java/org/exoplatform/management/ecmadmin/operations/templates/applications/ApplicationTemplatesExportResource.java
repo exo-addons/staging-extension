@@ -59,7 +59,7 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
             }
           }
         }
-        exportTasks.add(new ApplicationTemplatesMetaDataExportTask(metadata));
+        exportTasks.add(new ApplicationTemplatesMetaDataExportTask(metadata, applicationName));
       }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
