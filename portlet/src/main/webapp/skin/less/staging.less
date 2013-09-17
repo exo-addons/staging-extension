@@ -45,6 +45,37 @@
     display: none;
     margin: 0 auto;
     width: 600px;
+
+    #syncServers {
+	      display: none;
+        padding-top: 15px;
+        text-align: right;
+
+        #syncServersTable {
+          margin-bottom: 10px;
+
+          th, td {
+              text-align: center;
+          }
+
+          .delete-sync-server-action {
+            cursor: pointer;
+          }
+        }
+    }
+
+    #syncServersForm {
+    	display: none;
+
+    	#syncServerSaveAs {
+    	  padding-top: 10px;
+    	  text-align: center;
+    	}
+
+    	#newSaveName {
+        width: 150px;
+    	}
+    }
   }
 
   /* Main button */

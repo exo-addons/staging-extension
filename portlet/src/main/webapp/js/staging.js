@@ -21,11 +21,146 @@
         $('.button-export').hide();
         $('.button-import').hide();
         $('.mode-import-options').hide();
-        $('.mode-sync-options').show();
+        $('.mode-sync-options').show(0, reloadServers);
         $('.button-synchronize').css('display', 'block');
       }
     }
 	});
+
+  // Store the list of the synchronization servers
+  var syncServersData;
+
+  /** Reload synchronization servers **/
+  reloadServers = function() {
+    var syncServers = $('#syncServers');
+    var syncServersTable = syncServers.find('#syncServersTable');
+    var syncServersForm = $('#syncServersForm');
+    $.ajax({
+        url : syncServers.jzURL('StagingExtensionController.getSynchonizationServers'),
+        type: 'GET',
+        dataType: 'json',
+        cache: false,
+        processData: false,
+        contentType: false,
+        success: function(data){
+          syncServersData = data.synchronizationServers;
+
+          var tblBody = syncServersTable.find('tbody');
+          tblBody.empty();
+
+          if(data.synchronizationServers.length > 0) {
+            $.each(data.synchronizationServers, function(index, element) {
+              var tr = document.createElement('tr');
+
+              var tdRadiobox = document.createElement('td');
+              var radio = document.createElement('input');
+              radio.setAttribute('type', 'radio');
+              radio.setAttribute('id', element.id);
+              radio.setAttribute('name', 'syncServer');
+              tdRadiobox.appendChild(radio);
+              tr.appendChild(tdRadiobox);
+
+              var tdName = document.createElement('td');
+              tdName.appendChild(document.createTextNode(element.name));
+              tr.appendChild(tdName);
+
+              var tdHost = document.createElement('td');
+              tdHost.appendChild(document.createTextNode(element.host));
+              tr.appendChild(tdHost);
+
+              var tdPort = document.createElement('td');
+              tdPort.appendChild(document.createTextNode(element.port));
+              tr.appendChild(tdPort);
+
+              var tdUsername = document.createElement('td');
+              tdUsername.appendChild(document.createTextNode(element.username));
+              tr.appendChild(tdUsername);
+
+              var tdPassword = document.createElement('td');
+              tdPassword.appendChild(document.createTextNode(element.password));
+              tr.appendChild(tdPassword);
+
+              var tdSSL = document.createElement('td');
+              var imgSSL = document.createElement('span');              
+              if(element.ssl == 'true') {
+                imgSSL.setAttribute('class', 'uiIconTick');
+              } else {
+                imgSSL.setAttribute('class', 'uiIconClose');
+              }
+              imgSSL.setAttribute('disabled', 'disabled');
+              tdSSL.appendChild(imgSSL);
+              tr.appendChild(tdSSL);
+
+              var tdAction = document.createElement('td');
+              var trash = document.createElement('span');
+              trash.setAttribute('id', 'deleteSyncServer_'+element.id);
+              trash.setAttribute('class', 'uiIconDelete delete-sync-server-action');
+              tdAction.appendChild(trash);
+              tr.appendChild(tdAction);
+
+              tblBody.append(tr);
+            });
+
+            tblBody.find('input[name=syncServer]').on('click', function() {
+              syncServersForm.hide();
+            });
+
+            /** Delete a synchronization server **/
+            $(".delete-sync-server-action").on("click", function() {
+              var actionId = $(this).attr('id');
+              var serverId = actionId.substring(actionId.indexOf('_')+1)
+              $.ajax({
+                url : syncServers.jzURL('StagingExtensionController.removeSynchonizationServer'),
+                type: 'POST',
+                data: 'id='+serverId,
+                cache: false,
+                success: reloadServers
+              });
+            });
+
+            syncServersForm.css('display', 'none');
+            syncServers.css('display', 'block');
+          } else {
+            syncServers.css('display', 'none');
+            syncServersForm.css('display', 'block');
+          }
+
+        },
+        error: function(xhr, ajaxOptions, thrownError) {
+        }
+    });
+  };
+
+  /** Click on New Server button **/
+  $(".button-newserver").on("click", function() {
+    var syncServers = $('#syncServers');
+    syncServers.find('input[name=syncServer]').attr('checked', false);
+    var syncServersForm = $('#syncServersForm');
+    syncServersForm.show();
+  });
+
+  /** Click on Save As button **/
+  $(".button-saveserver").on("click", function() {
+    var syncServersForm = $('#syncServersForm')
+    var host = syncServersForm.find('#inputHost');
+    var port = syncServersForm.find('#inputPort');
+    var username = syncServersForm.find('#inputUsername');
+    var password = syncServersForm.find('#inputPassword');
+    var ssl = syncServersForm.find('#inputSSL');
+    var newSaveName = syncServersForm.find('#newSaveName');
+
+    // TODO validate form
+
+    if(newSaveName.val()) {
+      $.ajax({
+        url : syncServersForm.jzURL('StagingExtensionController.addSynchonizationServer'),
+        type: 'POST',
+        data: 'name='+newSaveName.val()+'&host='+host.val()+'&port='+port.val()+'&username='+username.val()+'&password='+password.val()+'&ssl='+(ssl.attr('checked')? 'true' : 'false'),
+        cache: false,
+        success: reloadServers
+      });
+    }
+  });
 
 	/** Click on Export button **/
   $(".button-export").on("click", function() {
@@ -70,56 +205,80 @@
 
   /** Click on Synchronize button **/
 	$('.button-synchronize').on("click", function() {
-		var host = $('#inputHost');
-		var port = $('#inputPort');
-		var username = $('#inputUsername');
-		var password = $('#inputPassword');
-		var ssl = $('#inputSSL');
+	  var hostValue;
+    var portValue;
+    var usernameValue;
+    var passwordValue;
+    var isSSLValue;
 
-		var hostValue = host.attr("value");
-		var portValue = port.attr("value");
-		var usernameValue = username.attr("value");
-		var passwordValue = password.attr("value");
-		var isSSLValue = (ssl.attr("checked")? 'true' : '');
+    var selectedSyncServer = $('input[name=syncServer]:checked');
+    // if a server has been selected in the list...
+    if(selectedSyncServer.length == 1) {
+      $.each(syncServersData, function(index, server) {
+        if(selectedSyncServer.attr('id') == server.id) {
+          hostValue = server.host;
+          portValue = server.port;
+          usernameValue = server.username;
+          passwordValue = server.password;
+          isSSLValue = server.ssl;
+          return false;
+        }
+      });
+    } else {
 
-    // Validate target server form
-		var firstErrorField = null;
-		if(!hostValue) {
-      host.closest('.control-group').addClass('error');
-      if(firstErrorField == null) {
-        firstErrorField = host;
+      var host = $('#inputHost');
+      var port = $('#inputPort');
+      var username = $('#inputUsername');
+      var password = $('#inputPassword');
+      var ssl = $('#inputSSL');
+
+      hostValue = host.attr("value");
+      portValue = port.attr("value");
+      usernameValue = username.attr("value");
+      passwordValue = password.attr("value");
+      isSSLValue = (ssl.attr("checked")? 'true' : 'false');
+
+      // Validate target server form
+      var firstErrorField = null;
+      if(!hostValue) {
+        host.closest('.control-group').addClass('error');
+        if(firstErrorField == null) {
+          firstErrorField = host;
+        }
+      } else {
+        host.closest('.control-group').removeClass('error');
       }
-		} else {
-		  host.closest('.control-group').removeClass('error');
-		}
-		if(!portValue) {
-      port.closest('.control-group').addClass('error');
-      if(firstErrorField == null) {
-        firstErrorField = port;
+      if(!portValue) {
+        port.closest('.control-group').addClass('error');
+        if(firstErrorField == null) {
+          firstErrorField = port;
+        }
+      } else {
+        port.closest('.control-group').removeClass('error');
       }
-		} else {
-		  port.closest('.control-group').removeClass('error');
-		}
-		if(!usernameValue) {
-      username.closest('.control-group').addClass('error');
-      if(firstErrorField == null) {
-        firstErrorField = username;
+      if(!usernameValue) {
+        username.closest('.control-group').addClass('error');
+        if(firstErrorField == null) {
+          firstErrorField = username;
+        }
+      } else {
+        username.closest('.control-group').removeClass('error');
       }
-		} else {
-		  username.closest('.control-group').removeClass('error');
-		}
-		if(!passwordValue) {
-      password.closest('.control-group').addClass('error');
-      if(firstErrorField == null) {
-        firstErrorField = password;
+      if(!passwordValue) {
+        password.closest('.control-group').addClass('error');
+        if(firstErrorField == null) {
+          firstErrorField = password;
+        }
+      } else {
+        password.closest('.control-group').removeClass('error');
       }
-		} else {
-		  password.closest('.control-group').removeClass('error');
-		}
-		if (!hostValue || !portValue || !usernameValue || !passwordValue) {
-		  firstErrorField.focus();
-			return;
-		}
+      if (!hostValue || !portValue || !usernameValue || !passwordValue) {
+        firstErrorField.focus();
+        $('#syncServersForm').show();
+        return;
+      }
+    }
+
 
 		// Launch synchronization...
 		var resultMessage = $('#resultMessage');
@@ -293,7 +452,7 @@
 								"value");
 						$('#resultMessage').jzLoad(
 								"StagingExtensionController.selectOption()", {
-									"name" : "/content/sites/EXPORT/query",
+									"name" : "/content/sites_EXPORT_query",
 									"value" : sql
 								});
 						$('#sitesContentSQLResult').html("Processing...");

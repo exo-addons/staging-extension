@@ -1,5 +1,24 @@
 <div class="mode-sync-options">
-  <div>
+  <div id="syncServers">
+    <table id="syncServersTable" class="table table-bordered table-stripedered">
+      <thead>
+        <tr>
+          <th></th>
+          <th>Name</th>
+          <th>Host</th>
+          <th>Port</th>
+          <th>Username</th>
+          <th>Password</th>
+          <th>SSL</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    <button type="button" class="btn button-newserver">New Server</button>
+  </div>
+  <div id="syncServersForm">
     <form class="form-horizontal">
       <div class="control-group">
         <label class="control-label" for="inputHost">Host</label>
@@ -31,12 +50,10 @@
           <input type="checkbox" name="inputSSL" id="inputSSL">
         </div>
       </div>
-      <!--
-      <div class="form-actions">
-        <button type="button" class="btn btn-primary" id="button-synchronize">Synchronize Data</button>
-        <div id="sync_message"></div>
+      <div id="syncServerSaveAs">
+        <button type="button" class="btn button-saveserver">Save as</button>
+        <input type="text" id="newSaveName"></input>
       </div>
-      -->
     </form>
   </div>
 </div>

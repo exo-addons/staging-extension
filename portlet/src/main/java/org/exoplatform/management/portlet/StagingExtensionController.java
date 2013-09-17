@@ -4,8 +4,8 @@ import juzu.*;
 import juzu.template.Template;
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
-import org.exoplatform.management.service.api.*;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.*;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -236,6 +236,54 @@ public class StagingExtensionController {
       log.error("Error occured while importing content", e);
       return Response.content(500, "Error occured while importing resource. See full stack trace in log file.");
     }
+  }
+
+  @Ajax
+  @juzu.Resource
+  public Response getSynchonizationServers() {
+    List<TargetServer> synchronizationServers = synchronizationService.getSynchonizationServers();
+
+    StringBuilder jsonServers = new StringBuilder(50);
+    jsonServers.append("{\"synchronizationServers\":[");
+    for(TargetServer targetServer : synchronizationServers) {
+      jsonServers.append("{\"id\":\"")
+        .append(targetServer.getId())
+        .append("\",\"name\":\"")
+        .append(targetServer.getName())
+        .append("\",\"host\":\"")
+        .append(targetServer.getHost())
+        .append("\",\"port\":\"")
+        .append(targetServer.getPort())
+        .append("\",\"username\":\"")
+        .append(targetServer.getUsername())
+        .append("\",\"password\":\"")
+        .append(targetServer.getPassword())
+        .append("\",\"ssl\":\"")
+        .append(targetServer.isSsl())
+        .append("\"},");
+    }
+    if(!synchronizationServers.isEmpty()) {
+      jsonServers.deleteCharAt(jsonServers.length()-1);
+    }
+    jsonServers.append("]}");
+
+    return Response.ok(jsonServers.toString());
+  }
+
+  @Ajax
+  @Action
+  public void addSynchonizationServer(String name, String host, String port, String username, String password, String ssl) {
+    TargetServer targetServer = new TargetServer(name, host, port, username, password, "true".equals(ssl));
+
+    synchronizationService.addSynchonizationServer(targetServer);
+  }
+
+  @Ajax
+  @Action
+  public void removeSynchonizationServer(String id) {
+    TargetServer targetServer = new TargetServer(id, null, null, null, null, null, false);
+
+    synchronizationService.removeSynchonizationServer(targetServer);
   }
 
   @Ajax

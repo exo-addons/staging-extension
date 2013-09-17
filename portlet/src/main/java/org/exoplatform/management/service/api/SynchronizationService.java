@@ -5,6 +5,12 @@ import java.util.List;
 
 public interface SynchronizationService {
 
+  public List<TargetServer> getSynchonizationServers();
+
+  public void addSynchonizationServer(TargetServer targetServer);
+
+  public void removeSynchonizationServer(TargetServer targetServer);
+
   /**
    * Synchronize Managed Resources
    *

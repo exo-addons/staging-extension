@@ -10,9 +10,15 @@
 		<supports>
 			<mime-type>text/html</mime-type>
 		</supports>
-		<portlet-info>
-			<title>Staging Extension</title>
-			<keywords>Staging Extension Portlet</keywords>
-		</portlet-info>
+    <portlet-info>
+      <title>Staging Extension</title>
+      <keywords>Staging Extension Portlet</keywords>
+    </portlet-info>
+    <portlet-preferences>
+      <preference>
+        <name>synchronizationServers</name>
+        <read-only>false</read-only>
+      </preference>
+    </portlet-preferences>
 	</portlet>
 </portlet-app>
