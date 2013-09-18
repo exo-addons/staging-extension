@@ -24,24 +24,28 @@
         <label class="control-label" for="inputHost">Host</label>
         <div class="controls">
           <input type="text" name="inputHost" id="inputHost" placeholder="Host">
+          <span class="help-inline">Host is required</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" for="inputPort">Port</label>
         <div class="controls">
           <input type="text" name="inputPort" id="inputPort" placeholder="Port">
+          <span class="help-inline">Port is required</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" for="inputUsername">Username</label>
         <div class="controls">
           <input type="text" name="inputUsername" id="inputUsername" placeholder="Username">
+          <span class="help-inline">Username is required</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" for="inputPassword">Password</label>
         <div class="controls">
           <input type="password" name="inputPassword" id="inputPassword" placeholder="Password">
+          <span class="help-inline">Password is required</span>
         </div>
       </div>
       <div class="control-group">
@@ -50,9 +54,10 @@
           <input type="checkbox" name="inputSSL" id="inputSSL">
         </div>
       </div>
-      <div id="syncServerSaveAs">
+      <div id="syncServerSaveAs" class="control-group">
         <button type="button" class="btn button-saveserver">Save as</button>
         <input type="text" id="newSaveName"></input>
+        <span class="help-inline">Server name is required</span>
       </div>
     </form>
   </div>

@@ -149,16 +149,22 @@
     var ssl = syncServersForm.find('#inputSSL');
     var newSaveName = syncServersForm.find('#newSaveName');
 
-    // TODO validate form
-
-    if(newSaveName.val()) {
-      $.ajax({
-        url : syncServersForm.jzURL('StagingExtensionController.addSynchonizationServer'),
-        type: 'POST',
-        data: 'name='+newSaveName.val()+'&host='+host.val()+'&port='+port.val()+'&username='+username.val()+'&password='+password.val()+'&ssl='+(ssl.attr('checked')? 'true' : 'false'),
-        cache: false,
-        success: reloadServers
-      });
+    // validate form
+    if(validateSyncServerForm(host, port, username, password, ssl)) {
+      var serverName = newSaveName.val();
+      if(serverName) {
+        newSaveName.closest('.control-group').removeClass('error');
+        $.ajax({
+          url : syncServersForm.jzURL('StagingExtensionController.addSynchonizationServer'),
+          type: 'POST',
+          data: 'name='+serverName+'&host='+host.val()+'&port='+port.val()+'&username='+username.val()+'&password='+password.val()+'&ssl='+(ssl.attr('checked')? 'true' : 'false'),
+          cache: false,
+          success: reloadServers
+        });
+      } else {
+        newSaveName.closest('.control-group').addClass('error');
+        newSaveName.focus();
+      }
     }
   });
 
@@ -225,80 +231,93 @@
         }
       });
     } else {
-
       var host = $('#inputHost');
       var port = $('#inputPort');
       var username = $('#inputUsername');
       var password = $('#inputPassword');
       var ssl = $('#inputSSL');
 
-      hostValue = host.attr("value");
-      portValue = port.attr("value");
-      usernameValue = username.attr("value");
-      passwordValue = password.attr("value");
-      isSSLValue = (ssl.attr("checked")? 'true' : 'false');
-
-      // Validate target server form
-      var firstErrorField = null;
-      if(!hostValue) {
-        host.closest('.control-group').addClass('error');
-        if(firstErrorField == null) {
-          firstErrorField = host;
-        }
+      $('#newSaveName').closest('.control-group').removeClass('error');
+      if(validateSyncServerForm(host, port, username, password, ssl)) {
+        hostValue = host.attr("value");
+        portValue = port.attr("value");
+        usernameValue = username.attr("value");
+        passwordValue = password.attr("value");
+        isSSLValue = (ssl.attr("checked")? 'true' : 'false');
       } else {
-        host.closest('.control-group').removeClass('error');
-      }
-      if(!portValue) {
-        port.closest('.control-group').addClass('error');
-        if(firstErrorField == null) {
-          firstErrorField = port;
-        }
-      } else {
-        port.closest('.control-group').removeClass('error');
-      }
-      if(!usernameValue) {
-        username.closest('.control-group').addClass('error');
-        if(firstErrorField == null) {
-          firstErrorField = username;
-        }
-      } else {
-        username.closest('.control-group').removeClass('error');
-      }
-      if(!passwordValue) {
-        password.closest('.control-group').addClass('error');
-        if(firstErrorField == null) {
-          firstErrorField = password;
-        }
-      } else {
-        password.closest('.control-group').removeClass('error');
-      }
-      if (!hostValue || !portValue || !usernameValue || !passwordValue) {
-        firstErrorField.focus();
-        $('#syncServersForm').show();
-        return;
+        return false;
       }
     }
-
 
 		// Launch synchronization...
 		var resultMessage = $('#resultMessage');
 		resultMessage.html("Proceeding...");
 		resultMessage.removeClass("alert-success alert-error").addClass("alert-info");
 		resultMessage.jzLoad("StagingExtensionController.synchronize()", {
-			"host" : hostValue,
-			"port" : portValue,
-			"username" : usernameValue,
-			"password" : passwordValue,
-			"isSSLString" : isSSLValue
-		}, function (response, status, xhr) {
-		  if(status == "success") {
-		    resultMessage.removeClass("alert-info alert-error").addClass("alert-success");
-		  } else if(status == "error") {
-		    resultMessage.removeClass("alert-success alert-info").addClass("alert-error");
-		  }
-		  resultMessage.html(xhr.responseText);
-		});
+        "host" : hostValue,
+        "port" : portValue,
+        "username" : usernameValue,
+        "password" : passwordValue,
+        "isSSLString" : isSSLValue
+      }, function (response, status, xhr) {
+        if(status == "success") {
+          resultMessage.removeClass("alert-info alert-error").addClass("alert-success");
+        } else if(status == "error") {
+          resultMessage.removeClass("alert-success alert-info").addClass("alert-error");
+        }
+        resultMessage.html(xhr.responseText);
+      });
 	});
+
+  /** Validate sync server form **/
+  var validateSyncServerForm = function(host, port, username, password, ssl) {
+    hostValue = host.attr("value");
+    portValue = port.attr("value");
+    usernameValue = username.attr("value");
+    passwordValue = password.attr("value");
+    isSSLValue = (ssl.attr("checked")? 'true' : 'false');
+
+    var firstErrorField = null;
+    if(!hostValue) {
+      host.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = host;
+      }
+    } else {
+      host.closest('.control-group').removeClass('error');
+    }
+    if(!portValue) {
+      port.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = port;
+      }
+    } else {
+      port.closest('.control-group').removeClass('error');
+    }
+    if(!usernameValue) {
+      username.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = username;
+      }
+    } else {
+      username.closest('.control-group').removeClass('error');
+    }
+    if(!passwordValue) {
+      password.closest('.control-group').addClass('error');
+      if(firstErrorField == null) {
+        firstErrorField = password;
+      }
+    } else {
+      password.closest('.control-group').removeClass('error');
+    }
+    if (!hostValue || !portValue || !usernameValue || !passwordValue) {
+      firstErrorField.focus();
+      $('#syncServersForm').show();
+      return;
+    }
+
+    return true;
+  }
 
 
   /** Open/Close Resource Categories **/
