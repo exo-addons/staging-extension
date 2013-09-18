@@ -151,13 +151,13 @@
 
     // validate form
     if(validateSyncServerForm(host, port, username, password, ssl)) {
-      var serverName = newSaveName.val();
+      var serverName = newSaveName.val().trim();
       if(serverName) {
         newSaveName.closest('.control-group').removeClass('error');
         $.ajax({
           url : syncServersForm.jzURL('StagingExtensionController.addSynchonizationServer'),
           type: 'POST',
-          data: 'name='+serverName+'&host='+host.val()+'&port='+port.val()+'&username='+username.val()+'&password='+password.val()+'&ssl='+(ssl.attr('checked')? 'true' : 'false'),
+          data: 'name='+serverName+'&host='+host.val().trim()+'&port='+port.val().trim()+'&username='+username.val().trim()+'&password='+password.val().trim()+'&ssl='+(ssl.attr('checked')? 'true' : 'false'),
           cache: false,
           success: reloadServers
         });
@@ -271,10 +271,10 @@
 
   /** Validate sync server form **/
   var validateSyncServerForm = function(host, port, username, password, ssl) {
-    hostValue = host.attr("value");
-    portValue = port.attr("value");
-    usernameValue = username.attr("value");
-    passwordValue = password.attr("value");
+    hostValue = host.attr("value").trim();
+    portValue = port.attr("value").trim();
+    usernameValue = username.attr("value").trim();
+    passwordValue = password.attr("value").trim();
     isSSLValue = (ssl.attr("checked")? 'true' : 'false');
 
     var firstErrorField = null;
