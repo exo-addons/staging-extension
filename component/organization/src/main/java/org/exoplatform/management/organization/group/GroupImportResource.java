@@ -217,7 +217,7 @@ public class GroupImportResource implements OperationHandler {
         session.save();
       }
     } catch (Exception exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting group's folder:" + exception.getMessage());
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting group's folder:", exception);
     }
   }
 
@@ -250,7 +250,7 @@ public class GroupImportResource implements OperationHandler {
           // Nothing to do
         }
       } catch (Exception exception) {
-        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting group's folder:" + exception.getMessage());
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting group's folder:", exception);
       }
     }
     return (oldGroup == null ? group.getId() : null);

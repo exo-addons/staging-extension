@@ -31,7 +31,7 @@ public class LiveSitesReadResource implements OperationHandler {
 
       resultHandler.completed(new ReadResourceModel("Available sites.", sites));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.READ_RESOURCE, "Unable to retrieve the list of the sites : " + e.getMessage());
+      throw new OperationException(OperationNames.READ_RESOURCE, "Unable to retrieve the list of the sites : ", e);
     }
   }
 }

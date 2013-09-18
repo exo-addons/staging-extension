@@ -28,7 +28,7 @@ public class ApplicationsTemplatesReadResource implements OperationHandler {
         applications.add(applicationName);
       }
     } catch (Exception e) {
-      throw new OperationException("Read template applications", "Error while retrieving applications with templates");
+      throw new OperationException("Read template applications", "Error while retrieving applications with templates", e);
     }
 
     resultHandler.completed(new ReadResourceModel("Available applications", applications));

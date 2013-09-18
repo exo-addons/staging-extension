@@ -131,7 +131,7 @@ public class QueriesExportResource implements OperationHandler {
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage());
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export JCR stored Queries", e);
     }
   }
 }

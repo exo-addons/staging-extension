@@ -152,7 +152,7 @@ public class UserImportResource implements OperationHandler {
     try {
       userNode = hierarchyCreator.getUserNode(sessionProvider, userName);
     } catch (Exception exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:" + exception.getMessage());
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:", exception);
     }
     if (replaceExisting && userNode != null) {
       Session session = userNode.getSession();
@@ -224,7 +224,7 @@ public class UserImportResource implements OperationHandler {
             session.save();
           }
         } catch (Exception exception) {
-          throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:" + exception.getMessage());
+          throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:", exception);
         }
       }
     } else {
