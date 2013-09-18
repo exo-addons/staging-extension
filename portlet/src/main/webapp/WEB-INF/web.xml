@@ -5,11 +5,6 @@
          version="3.0">
   <display-name>staging-extension-portlet</display-name>
 
-  <context-param>
-    <param-name>juzu.run_mode</param-name>
-    <param-value>dev</param-value>
-  </context-param>
-
   <filter>
     <filter-name>ResourceRequestFilter</filter-name>
     <filter-class>org.exoplatform.portal.application.ResourceRequestFilter</filter-class>
