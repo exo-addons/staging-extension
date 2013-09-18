@@ -1,4 +1,6 @@
 <div class="mode-sync-options">
+  <div id="syncServersMessage" class="alert">
+  </div>
   <div id="syncServers">
     <table id="syncServersTable" class="table table-bordered table-stripedered">
       <thead>

@@ -35,6 +35,10 @@
     var syncServers = $('#syncServers');
     var syncServersTable = syncServers.find('#syncServersTable');
     var syncServersForm = $('#syncServersForm');
+
+    var syncServersMessage = $('#syncServersMessage');
+    syncServersMessage.hide();
+
     $.ajax({
         url : syncServers.jzURL('StagingExtensionController.getSynchonizationServers'),
         type: 'GET',
@@ -108,13 +112,28 @@
             /** Delete a synchronization server **/
             $(".delete-sync-server-action").on("click", function() {
               var actionId = $(this).attr('id');
-              var serverId = actionId.substring(actionId.indexOf('_')+1)
+              var serverId = actionId.substring(actionId.indexOf('_')+1);
+
+              syncServersMessage.removeClass("alert-success alert-error").addClass("alert-info");
+              syncServersMessage.html("Deleting server ...");
+              syncServersMessage.show();
+
               $.ajax({
                 url : syncServers.jzURL('StagingExtensionController.removeSynchonizationServer'),
                 type: 'POST',
                 data: 'id='+serverId,
                 cache: false,
-                success: reloadServers
+                success: function() {
+                  reloadServers();
+                  syncServersMessage.removeClass("alert-info alert-error").addClass("alert-success");
+                  syncServersMessage.html("Server deleted !");
+                  syncServersMessage.show();
+                },
+                error: function() {
+                  syncServersMessage.removeClass("alert-success alert-info").addClass("alert-error");
+                  syncServersMessage.html("Error while deleting the server");
+                  syncServersMessage.show();
+                }
               });
             });
 
@@ -154,12 +173,28 @@
       var serverName = newSaveName.val().trim();
       if(serverName) {
         newSaveName.closest('.control-group').removeClass('error');
+
+        var syncServersMessage = $('#syncServersMessage');
+        syncServersMessage.removeClass("alert-success alert-error").addClass("alert-info");
+        syncServersMessage.html("Saving new server ...");
+        syncServersMessage.show();
+
         $.ajax({
           url : syncServersForm.jzURL('StagingExtensionController.addSynchonizationServer'),
           type: 'POST',
           data: 'name='+serverName+'&host='+host.val().trim()+'&port='+port.val().trim()+'&username='+username.val().trim()+'&password='+password.val().trim()+'&ssl='+(ssl.attr('checked')? 'true' : 'false'),
           cache: false,
-          success: reloadServers
+          success: function() {
+            reloadServers();
+            syncServersMessage.removeClass("alert-info alert-error").addClass("alert-success");
+            syncServersMessage.html("Server saved !");
+            syncServersMessage.show();
+          },
+          error: function() {
+            syncServersMessage.removeClass("alert-success alert-info").addClass("alert-error");
+            syncServersMessage.html("Error while saving the server");
+            syncServersMessage.show();
+          }
         });
       } else {
         newSaveName.closest('.control-group').addClass('error');

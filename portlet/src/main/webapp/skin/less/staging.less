@@ -45,10 +45,20 @@
     display: none;
     margin: 0 auto;
     width: 600px;
+    padding-top: 10px;
+
+    #syncServersMessage {
+      margin: 10px auto;
+      text-align: center;
+      width: 50%;
+    }
+
+    #syncServersMessage:empty {
+      display: none;
+    }
 
     #syncServers {
 	      display: none;
-        padding-top: 15px;
         text-align: right;
 
         #syncServersTable {
