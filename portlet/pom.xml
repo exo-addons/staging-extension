@@ -223,6 +223,23 @@
 					</sources>
 				</configuration>
 			</plugin>
-		</plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <configuration>
+          <warSourceIncludes>
+          </warSourceIncludes>
+          <webResources>
+            <resource>
+              <directory>${project.build.directory}/generated-sources/annotations</directory>
+              <includes>
+                <include>**/*.xml</include>
+              </includes>
+              <targetPath>WEB-INF/classes</targetPath>
+            </resource>
+          </webResources>
+        </configuration>
+      </plugin>
+    </plugins>
 	</build>
 </project>

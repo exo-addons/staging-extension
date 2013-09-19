@@ -14,6 +14,9 @@ public class TargetServer {
   private String password;
   private boolean ssl;
 
+  public TargetServer() {
+  }
+
   public TargetServer(String id, String name, String host, String port, String username, String password, boolean ssl) {
     this.id = id;
     this.name = name;

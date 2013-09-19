@@ -6,6 +6,7 @@ import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.*;
+import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -20,10 +21,8 @@ public class StagingExtensionController {
   public static final String OPERATION_IMPORT_PREFIX = "IMPORT";
   public static final String OPERATION_EXPORT_PREFIX = "EXPORT";
 
-  @Inject
   StagingService stagingService;
 
-  @Inject
   SynchronizationService synchronizationService;
 
   @Inject
@@ -88,6 +87,16 @@ public class StagingExtensionController {
     resourceCategories.add(ecmAdmin);
 
     parameters.put("resourceCategories", resourceCategories);
+  }
+
+  @Inject
+  public StagingExtensionController(StagingService stagingService, SynchronizationService synchronizationService, ChromatticService chromatticService) {
+    this.stagingService = stagingService;
+    this.synchronizationService = synchronizationService;
+
+    // FIXME Need to pass through the Controller to be able to inject the ChromatticService
+    // Can't do it directly in the SynchronizationService. Need to figure out how to do it.
+    synchronizationService.init(chromatticService);
   }
 
   @View

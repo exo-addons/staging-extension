@@ -5,6 +5,8 @@ import java.util.List;
 
 public interface SynchronizationService {
 
+  public void init(ChromatticService chromatticService);
+
   public List<TargetServer> getSynchonizationServers();
 
   public void addSynchonizationServer(TargetServer targetServer);
