@@ -2,6 +2,8 @@ package org.exoplatform.management.ecmadmin.operations.nodetype;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Collections;
 
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
@@ -31,14 +33,14 @@ public class NodeTypeExportTask implements ExportTask {
   @Override
   public void export(OutputStream outputStream) throws IOException {
     try {
-      String xmlContent = getNodeTypeXML(nodeType);
+      String xmlContent = getNodeTypeXML(Collections.singleton(nodeType));
       outputStream.write(xmlContent.getBytes("UTF-8"));
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }
   }
 
-  private String getNodeTypeXML(NodeType nodeType) {
+  public static String getNodeTypeXML(Collection<NodeType> nodeTypes) {
     StringBuilder nodeTypeXML = new StringBuilder();
     nodeTypeXML.append("<nodeTypes xmlns:nt=").append("\"");
     nodeTypeXML.append("http://www.jcp.org/jcr/nt/1.5").append("\" ");
@@ -46,32 +48,35 @@ public class NodeTypeExportTask implements ExportTask {
     nodeTypeXML.append("http://www.jcp.org/jcr/mix/1.5").append("\" ");
     nodeTypeXML.append("xmlns:jcr=").append("\"").append("http://www.jcp.org/jcr/1.5");
     nodeTypeXML.append("\" >").append("\n");
-    nodeTypeXML.append("<nodeType ");
-    nodeTypeXML.append("name=").append("\"").append(nodeType.getName()).append("\" ");
-    String isMixIn = String.valueOf(nodeType.isMixin());
-    nodeTypeXML.append("isMixin=").append("\"").append(String.valueOf(isMixIn)).append("\" ");
-    String hasOrderable = String.valueOf(nodeType.hasOrderableChildNodes());
-    nodeTypeXML.append("hasOrderableChildNodes=\"").append(hasOrderable).append("\" ");
-    String primaryItemName = "";
-    if (nodeType.getPrimaryItemName() != null)
-      primaryItemName = nodeType.getPrimaryItemName();
-    nodeTypeXML.append("primaryItemName=").append("\"").append(primaryItemName).append("\" >");
-    nodeTypeXML.append("\n");
-    // represent supertypes
-    String representSuperType = representSuperTypes(nodeType);
-    nodeTypeXML.append(representSuperType);
-    // represent PropertiesDefinition
-    String representPropertiesXML = representPropertyDefinition(nodeType);
-    nodeTypeXML.append(representPropertiesXML);
-    // represent ChildNodeDefinition
-    String representChildXML = representChildNodeDefinition(nodeType);
-    nodeTypeXML.append(representChildXML);
-    nodeTypeXML.append("</nodeType>").append("\n");
+    for (NodeType nodeType : nodeTypes) {
+
+      nodeTypeXML.append("<nodeType ");
+      nodeTypeXML.append("name=").append("\"").append(nodeType.getName()).append("\" ");
+      String isMixIn = String.valueOf(nodeType.isMixin());
+      nodeTypeXML.append("isMixin=").append("\"").append(String.valueOf(isMixIn)).append("\" ");
+      String hasOrderable = String.valueOf(nodeType.hasOrderableChildNodes());
+      nodeTypeXML.append("hasOrderableChildNodes=\"").append(hasOrderable).append("\" ");
+      String primaryItemName = "";
+      if (nodeType.getPrimaryItemName() != null)
+        primaryItemName = nodeType.getPrimaryItemName();
+      nodeTypeXML.append("primaryItemName=").append("\"").append(primaryItemName).append("\" >");
+      nodeTypeXML.append("\n");
+      // represent supertypes
+      String representSuperType = representSuperTypes(nodeType);
+      nodeTypeXML.append(representSuperType);
+      // represent PropertiesDefinition
+      String representPropertiesXML = representPropertyDefinition(nodeType);
+      nodeTypeXML.append(representPropertiesXML);
+      // represent ChildNodeDefinition
+      String representChildXML = representChildNodeDefinition(nodeType);
+      nodeTypeXML.append(representChildXML);
+      nodeTypeXML.append("</nodeType>").append("\n");
+    }
     nodeTypeXML.append("</nodeTypes>");
     return nodeTypeXML.toString();
   }
 
-  private String representSuperTypes(NodeType nodeType) {
+  public static String representSuperTypes(NodeType nodeType) {
     StringBuilder superTypeXML = new StringBuilder();
     NodeType[] superType = nodeType.getDeclaredSupertypes();
     if (superType != null && superType.length > 0) {
@@ -85,7 +90,7 @@ public class NodeTypeExportTask implements ExportTask {
     return superTypeXML.toString();
   }
 
-  private String representPropertyDefinition(NodeType nodeType) {
+  public static String representPropertyDefinition(NodeType nodeType) {
     String[] requireType = { "undefined", "String", "Binary", "Long", "Double", "Date", "Boolean", "Name", "Path", "Reference" };
     String[] onparentVersion = { "", "COPY", "VERSION", "INITIALIZE", "COMPUTE", "IGNORE", "ABORT" };
     StringBuilder propertyXML = new StringBuilder();
@@ -128,7 +133,7 @@ public class NodeTypeExportTask implements ExportTask {
     return propertyXML.toString();
   }
 
-  private String representChildNodeDefinition(NodeType nodeType) {
+  public static String representChildNodeDefinition(NodeType nodeType) {
     String[] onparentVersion = { "", "COPY", "VERSION", "INITIALIZE", "COMPUTE", "IGNORE", "ABORT" };
     StringBuilder childNodeXML = new StringBuilder();
     NodeDefinition[] childDef = nodeType.getChildNodeDefinitions();

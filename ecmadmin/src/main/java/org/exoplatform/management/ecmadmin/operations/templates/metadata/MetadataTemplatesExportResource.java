@@ -59,6 +59,7 @@ public class MetadataTemplatesExportResource implements OperationHandler {
 
         // TODO label is not exposed by the API...
         metadata.setLabel("");
+        metadata.setNodeTypeName(metadataName);
         // metadata templates are not document templates
         metadata.setDocumentTemplate(false);
 
