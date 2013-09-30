@@ -14,16 +14,7 @@
     } else {
       content = "<li class='leaf'>";
       content += "<input type='checkbox' id='"+resourceCategory.getPath()+"' class='resource-category-checkbox'><label for='"+resourceCategory.getPath()+"'>"+resourceCategory.getLabel()+"</label>";
-      content += "<table cellpadding='0' cellspacing='0' border='0' class='display dataTable tree_datatable' id='table_"+resourceCategory.getPath()+"'>";
-      content += "<tbody>";
-      availableResources.get(resourceCategory.getPath()).each { resource ->
-        content += "<tr class='gradeA'>";
-        content += "<td class='gradeA'><input type='checkbox' class='resource-checkbox' name='selectedResources' id='"+resource.getPath()+"' value='"+resource.getPath()+"'>";
-        content += "<label title='"+resource.getDescription()+"' class='leaf' for='"+resource.getPath()+"'>"+resource.getText()+"</label></td>";
-        content += "</tr>";
-      }
-      content += "</tbody>";
-      content += "</table>";
+      content += "<div class='divResourcesTable'></div>";
     }
 
     content += "</li>";

@@ -1,12 +1,14 @@
 package org.exoplatform.management.portlet;
 
-import juzu.*;
+import juzu.Action;
+import juzu.Path;
+import juzu.Response;
+import juzu.SessionScoped;
+import juzu.View;
 import juzu.template.Template;
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
-import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.*;
-import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -21,8 +23,10 @@ public class StagingExtensionController {
   public static final String OPERATION_IMPORT_PREFIX = "IMPORT";
   public static final String OPERATION_EXPORT_PREFIX = "EXPORT";
 
+  /** */
   StagingService stagingService;
 
+  /** */
   SynchronizationService synchronizationService;
 
   @Inject
@@ -42,11 +46,7 @@ public class StagingExtensionController {
   /** */
   Map<String, String> selectedOptions = new Hashtable<String, String>();
 
-  /** */
-  Map<String, Set<Resource>> availableResources = new HashMap<String, Set<Resource>>();
-
   static List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
-  static Map<String, Object> parameters = new HashMap<String, Object>();
 
   static {
     // RESOURCES CATEGORIES
@@ -85,8 +85,6 @@ public class StagingExtensionController {
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
     resourceCategories.add(ecmAdmin);
-
-    parameters.put("resourceCategories", resourceCategories);
   }
 
   @Inject
@@ -108,56 +106,56 @@ public class StagingExtensionController {
     selectedOptions.put("/organization/user_EXPORT_filter/with-membership", "true");
     selectedOptions.put("/organization/group_EXPORT_filter/with-membership", "true");
 
-    // NODES
-    availableResources.put(StagingService.SITES_PORTAL_PATH, stagingService.getPortalSiteResources());
-    availableResources.put(StagingService.SITES_GROUP_PATH, stagingService.getGroupSiteResources());
-    availableResources.put(StagingService.SITES_USER_PATH, stagingService.getUserSiteResources());
-    availableResources.put(StagingService.CONTENT_SITES_PATH, stagingService.getSiteContentResources());
-    availableResources.put(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH, stagingService.getApplicationCLVTemplatesResources());
-    availableResources.put(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH, stagingService.getApplicationSearchTemplatesResources());
-    availableResources.put(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH, stagingService.getDocumentTypeTemplatesResources());
-    availableResources.put(StagingService.ECM_TEMPLATES_METADATA_PATH, stagingService.getMetadataTemplatesResources());
-    availableResources.put(StagingService.ECM_TAXONOMY_PATH, stagingService.getTaxonomyResources());
-    availableResources.put(StagingService.ECM_QUERY_PATH, stagingService.getQueryResources());
-    availableResources.put(StagingService.ECM_DRIVE_PATH, stagingService.getDriveResources());
-    availableResources.put(StagingService.ECM_SCRIPT_PATH, stagingService.getScriptResources());
-    availableResources.put(StagingService.ECM_ACTION_PATH, stagingService.getActionNodeTypeResources());
-    availableResources.put(StagingService.ECM_NODETYPE_PATH, stagingService.getNodeTypeResources());
-    availableResources.put(StagingService.REGISTRY_PATH, stagingService.getRegistryResources());
-    availableResources.put(StagingService.ECM_VIEW_TEMPLATES_PATH, stagingService.getViewTemplatesResources());
-    availableResources.put(StagingService.ECM_VIEW_CONFIGURATION_PATH, stagingService.getViewConfigurationResources());
-    availableResources.put(StagingService.USERS_PATH, stagingService.getUserResources());
-    availableResources.put(StagingService.GROUPS_PATH, stagingService.getGroupResources());
-    availableResources.put(StagingService.ROLE_PATH, stagingService.getRoleResources());
+    Map<String, Object> parameters = buildResourcesParameters();
 
-    parameters.put("availableResources", availableResources);
-
-    parameters.put("selectedResources", selectedResources);
-
-    parameters.put("portalSiteSelectedNodes", getSelectedResources(StagingService.SITES_PORTAL_PATH));
-    parameters.put("groupSiteSelectedNodes", getSelectedResources(StagingService.SITES_GROUP_PATH));
-    parameters.put("userSiteSelectedNodes", getSelectedResources(StagingService.SITES_USER_PATH));
-    parameters.put("siteContentSelectedNodes", getSelectedResources(StagingService.CONTENT_SITES_PATH));
-    parameters.put("applicationCLVTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
-    parameters.put("applicationSearchTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
-    parameters.put("documentTypeTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
-    parameters.put("metadataTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_METADATA_PATH));
-    parameters.put("taxonomySelectedNodes", getSelectedResources(StagingService.ECM_TAXONOMY_PATH));
-    parameters.put("querySelectedNodes", getSelectedResources(StagingService.ECM_QUERY_PATH));
-    parameters.put("driveSelectedNodes", getSelectedResources(StagingService.ECM_DRIVE_PATH));
-    parameters.put("scriptSelectedNodes", getSelectedResources(StagingService.ECM_SCRIPT_PATH));
-    parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_ACTION_PATH));
-    parameters.put("nodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_NODETYPE_PATH));
-    parameters.put("registrySelectedNodes", getSelectedResources(StagingService.REGISTRY_PATH));
-    parameters.put("viewTemplateSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_TEMPLATES_PATH));
-    parameters.put("viewConfigurationSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_CONFIGURATION_PATH));
-    parameters.put("userSelectedNodes", getSelectedResources(StagingService.USERS_PATH));
-    parameters.put("groupSelectedNodes", getSelectedResources(StagingService.GROUPS_PATH));
-    parameters.put("roleSelectedNodes", getSelectedResources(StagingService.ROLE_PATH));
-
-    parameters.put("selectedOptions", selectedOptions);
+    parameters.put("resourceCategories", resourceCategories);
 
     return indexTmpl.ok(parameters);
+  }
+
+  @Ajax
+  @juzu.Resource
+  public Response getResourcesOfCategory(String path) {
+    Set<Resource> resources = stagingService.getResources(path);
+
+    StringBuilder jsonResources = new StringBuilder(50);
+    jsonResources.append("{\"resources\":[");
+
+    for(Resource resource : resources) {
+      jsonResources.append("{\"path\":\"")
+                .append(resource.getPath())
+                .append("\",\"description\":\"")
+                .append(resource.getDescription())
+                .append("\",\"text\":\"")
+                .append(resource.getText())
+                .append("\"},");
+    }
+    if(!resources.isEmpty()) {
+      jsonResources.deleteCharAt(jsonResources.length()-1);
+    }
+    jsonResources.append("]}");
+
+    return Response.ok(jsonResources.toString());
+  }
+
+  @Ajax
+  @juzu.Resource
+  public void selectResourcesCategory(String path, String checked) {
+    if ("true".equals(checked) && path != null && !path.isEmpty()) {
+      selectedResourcesCategories.add(path);
+
+      // select all resources of the category
+      for(Resource resource : stagingService.getResources(path)) {
+        selectedResources.add(resource.getPath());
+      }
+    } else {
+      selectedResourcesCategories.remove(path);
+
+      // unselect all resources of the category
+      for(Resource resource : stagingService.getResources(path)) {
+        selectedResources.remove(resource.getPath());
+      }
+    }
   }
 
   @Ajax
@@ -165,53 +163,15 @@ public class StagingExtensionController {
   public void selectResources(String path, String checked) {
     if (checked != null && path != null && !checked.isEmpty() && !path.isEmpty()) {
       if (checked.equals("true")) {
-        selectedResourcesCategories.add(path);
-        if (availableResources.containsKey(path)) {
-          Set<Resource> children = availableResources.get(path);
-          for (Resource resource : children) {
-            selectedResources.add(resource.getPath());
-          }
-        } else {
-          selectedResources.add(path);
-        }
+        selectedResources.add(path);
       } else {
-        selectedResourcesCategories.remove(path);
-        if (availableResources.containsKey(path)) {
-          Set<Resource> children = availableResources.get(path);
-          for (Resource resource : children) {
-            selectedResources.remove(resource.getPath());
-          }
-        } else {
-          selectedResources.remove(path);
-        }
+        selectedResources.remove(path);
       }
     } else {
       log.warn("Selection not considered.");
     }
 
-    parameters.put("portalSiteSelectedNodes", getSelectedResources(StagingService.SITES_PORTAL_PATH));
-    parameters.put("groupSiteSelectedNodes", getSelectedResources(StagingService.SITES_GROUP_PATH));
-    parameters.put("userSiteSelectedNodes", getSelectedResources(StagingService.SITES_USER_PATH));
-    parameters.put("siteContentSelectedNodes", getSelectedResources(StagingService.CONTENT_SITES_PATH));
-    parameters.put("applicationCLVTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
-    parameters.put("applicationSearchTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
-    parameters.put("documentTypeTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
-    parameters.put("metadataTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_METADATA_PATH));
-    parameters.put("taxonomySelectedNodes", getSelectedResources(StagingService.ECM_TAXONOMY_PATH));
-    parameters.put("querySelectedNodes", getSelectedResources(StagingService.ECM_QUERY_PATH));
-    parameters.put("driveSelectedNodes", getSelectedResources(StagingService.ECM_DRIVE_PATH));
-    parameters.put("scriptSelectedNodes", getSelectedResources(StagingService.ECM_SCRIPT_PATH));
-    parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_ACTION_PATH));
-    parameters.put("nodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_NODETYPE_PATH));
-    parameters.put("registrySelectedNodes", getSelectedResources(StagingService.REGISTRY_PATH));
-    parameters.put("viewTemplateSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_TEMPLATES_PATH));
-    parameters.put("viewConfigurationSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_CONFIGURATION_PATH));
-    parameters.put("userSelectedNodes", getSelectedResources(StagingService.USERS_PATH));
-    parameters.put("groupSelectedNodes", getSelectedResources(StagingService.GROUPS_PATH));
-    parameters.put("roleSelectedNodes", getSelectedResources(StagingService.ROLE_PATH));
-
-    parameters.put("selectedResources", selectedResources);
-    parameters.put("selectedOptions", selectedOptions);
+    Map<String, Object> parameters = buildResourcesParameters();
 
     selectedResourcesTmpl.render(parameters);
   }
@@ -371,6 +331,40 @@ public class StagingExtensionController {
       selectedResources.add(resource);
     }
     return selectedResources;
+  }
+
+  /**
+   * Build a parameter map of selected resources and options
+   * @return
+   */
+  private Map<String, Object> buildResourcesParameters() {
+    Map<String, Object> parameters = new HashMap<String, Object>();
+
+    parameters.put("portalSiteSelectedNodes", getSelectedResources(StagingService.SITES_PORTAL_PATH));
+    parameters.put("groupSiteSelectedNodes", getSelectedResources(StagingService.SITES_GROUP_PATH));
+    parameters.put("userSiteSelectedNodes", getSelectedResources(StagingService.SITES_USER_PATH));
+    parameters.put("siteContentSelectedNodes", getSelectedResources(StagingService.CONTENT_SITES_PATH));
+    parameters.put("applicationCLVTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+    parameters.put("applicationSearchTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
+    parameters.put("documentTypeTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+    parameters.put("metadataTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_METADATA_PATH));
+    parameters.put("taxonomySelectedNodes", getSelectedResources(StagingService.ECM_TAXONOMY_PATH));
+    parameters.put("querySelectedNodes", getSelectedResources(StagingService.ECM_QUERY_PATH));
+    parameters.put("driveSelectedNodes", getSelectedResources(StagingService.ECM_DRIVE_PATH));
+    parameters.put("scriptSelectedNodes", getSelectedResources(StagingService.ECM_SCRIPT_PATH));
+    parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_ACTION_PATH));
+    parameters.put("nodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_NODETYPE_PATH));
+    parameters.put("registrySelectedNodes", getSelectedResources(StagingService.REGISTRY_PATH));
+    parameters.put("viewTemplateSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_TEMPLATES_PATH));
+    parameters.put("viewConfigurationSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_CONFIGURATION_PATH));
+    parameters.put("userSelectedNodes", getSelectedResources(StagingService.USERS_PATH));
+    parameters.put("groupSelectedNodes", getSelectedResources(StagingService.GROUPS_PATH));
+    parameters.put("roleSelectedNodes", getSelectedResources(StagingService.ROLE_PATH));
+
+    parameters.put("selectedResources", selectedResources);
+    parameters.put("selectedOptions", selectedOptions);
+
+    return parameters;
   }
 
 }

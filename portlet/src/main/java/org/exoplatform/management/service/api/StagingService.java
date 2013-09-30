@@ -40,6 +40,13 @@ public interface StagingService {
   void importResource(String selectedResourcePath, FileItem file) throws IOException;
 
   /**
+   * Returns the list of sub resources of the given path
+   *
+   * @return list of resources
+   */
+  public Set<Resource> getResources(String path);
+
+  /**
    * Returns the list of sub resources of MOP of type portalsites computed from
    * GateIN Management SPI
    * 
