@@ -53,7 +53,6 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
     this.pathPrefix = pathPrefix + "/";
   }
 
-  
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream
     super.execute(operationContext, resultHandler);
@@ -62,12 +61,10 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     }
     try {
-      ExtendedNodeTypeManager extManager = (ExtendedNodeTypeManager) repositoryService.getCurrentRepository()
-          .getNodeTypeManager();
+      ExtendedNodeTypeManager extManager = (ExtendedNodeTypeManager) repositoryService.getCurrentRepository().getNodeTypeManager();
 
       if (replaceExisting) {
-        log.info("Overwiting '" + pathPrefix.substring(0, pathPrefix.length() - 1)
-            + "' behavior isn't safe, ignoring existing nodetypes.");
+        log.info("Overwrite '" + pathPrefix.substring(0, pathPrefix.length() - 1) + "' behavior isn't safe, ignoring existing nodetypes.");
       }
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
@@ -92,11 +89,7 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
       }
       zin.close();
 
-      // Import nodetypes after import namespaces is done
-      for (NodeTypeValue nodeTypeValue : nodeTypeValues) {
-        // REPLACE_IF_EXISTS behavior isn't safe, so use this one
-        extManager.registerNodeType(nodeTypeValue, ExtendedNodeTypeManager.IGNORE_IF_EXISTS);
-      }
+      extManager.registerNodeTypes(nodeTypeValues, ExtendedNodeTypeManager.IGNORE_IF_EXISTS);
 
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception exception) {
@@ -104,14 +97,12 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
     }
   }
 
-  private void registerNamespaces(ZipInputStream zin) throws JiBXException, RepositoryException, NamespaceException,
-      UnsupportedRepositoryOperationException, AccessDeniedException {
+  private void registerNamespaces(ZipInputStream zin) throws JiBXException, RepositoryException, NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException {
     IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
     IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
 
     Configuration configuration = (Configuration) uctx.unmarshalDocument(zin, "UTF-8");
-    ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(RepositoryService.class
-        .getName());
+    ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(RepositoryService.class.getName());
     List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
     if (componentPlugins == null || componentPlugins.isEmpty()) {
       log.warn("Wrong Namespaces configuration, no namespace will be imported");

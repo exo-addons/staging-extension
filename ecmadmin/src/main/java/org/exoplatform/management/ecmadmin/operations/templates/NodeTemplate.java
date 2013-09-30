@@ -4,8 +4,9 @@ public class NodeTemplate {
   private String templateFile;
   private String roles;
 
+  public NodeTemplate() {}
+
   public NodeTemplate(String templateFile, String roles) {
-    super();
     this.templateFile = templateFile;
     this.roles = roles;
   }
