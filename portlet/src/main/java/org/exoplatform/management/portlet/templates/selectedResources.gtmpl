@@ -1,14 +1,4 @@
-<% public void addSelectedContent(def selectedResourcesList, def name) { %>
-    <table cellpadding='0' cellspacing='0' border='0' class='display dataTable grid_datatable' id='<%=name%>'>
-        <% selectedResourcesList.each { selectedResource ->
-          if(selectedResource != null && !selectedResource.isEmpty()) { %>
-            <tr class='gradeB'>
-             <td class='gradeB'><%=selectedResource%></td>
-            </tr>
-        <% }
-        } %>
-    </table>
-<% }
+<%
    public String getSQLContentCondition() {
     String condition = "";
     siteContentSelectedNodes.each { selectedResource ->
@@ -57,9 +47,10 @@
      }
      return savedValue;
    }
-  if(!userSelectedNodes.isEmpty()) { %>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/organization/user')" class="unselect-resources-category">Remove</a>
+%>
+
+  <div class="selected-resource" ng-show="categoriesModel['/organization/user']">
+    <a ng-click="unselectCategory('/organization/user')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/organization/user">
     <label class="parent Clickable" for="selected_/organization/user">Users</label>
     <ul>
@@ -68,14 +59,17 @@
         <input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-membership" <%=getOptionValue("/organization/user_EXPORT_filter/with-membership","checkbox","", "")%> /><label for="/organization/user_EXPORT_with-membership" class="checkbox">With memberships</label>
         <input class="option" type="checkbox" name="/organization/user_IMPORT_filter/replace-existing" <%=getOptionValue("/organization/user_IMPORT_filter/replace-existing","checkbox","", "")%> /><label for="/organization/user_IMPORT_replace-existing" class="checkbox">Do not replace existing</label>
         New password: <input class="option" type="text" name="/organization/user_EXPORT_filter/new-password" <%=getOptionValue("/organization/user_EXPORT_filter/new-password","text","", "")%> />
-        <% addSelectedContent(userSelectedNodes, "userSelectedNodes");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/organization/user'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<% } %>
-<% if(!groupSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/organization/group')" class="unselect-resources-category">Remove</a>
+
+  <div class="selected-resource" ng-show="categoriesModel['/organization/group']">
+    <a ng-click="unselectCategory('/organization/group')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/organization/group">
     <label class="parent Clickable" for="selected_/organization/group">Groups</label>
     <ul>
@@ -83,34 +77,42 @@
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/group_EXPORT_filter/with-jcr-content" <%=getOptionValue("/organization/group_EXPORT_filter/with-jcr-content","checkbox","", "")%>>With Group JCR Content</label>
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/group_EXPORT_filter/with-membership" <%=getOptionValue("/organization/group_EXPORT_filter/with-membership","checkbox","", "")%>>With memberships</label>
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/group_IMPORT_filter/replace-existing" <%=getOptionValue("/organization/group_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(groupSelectedNodes, "groupSelectedNodes");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/organization/group'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!roleSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/organization/role')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/organization/role']">
+    <a ng-click="unselectCategory('/organization/role')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/organization/role">
     <label class="parent Clickable" for="selected_/organization/role">Roles</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/role_IMPORT_filter/replace-existing" <%=getOptionValue("/organization/role_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(roleSelectedNodes, "roleSelectedNodes");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/organization/role'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!portalSiteSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/site/portalsites')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/site/portalsites']">
+    <a ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/site/portalsites">
     <label class="parent Clickable" for="selected_/site/portalsites">Portal Sites</label>
     <ul>
       <li>
-        <% addSelectedContent(portalSiteSelectedNodes, "portalSitesSelectedResources"); %>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/site/portalsites'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
         <br />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/portalsites_IMPORT_importMode">
@@ -123,16 +125,18 @@
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!groupSiteSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/site/groupsites')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/site/groupsites']">
+    <a ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/site/groupsites">
     <label class="parent Clickable" for="selected_/site/groupsites">Group Sites</label>
     <ul>
       <li>
-        <% addSelectedContent(groupSiteSelectedNodes, "groupSitesSelectedResources"); %>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/site/groupsites'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
         <br />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/groupsites_IMPORT_importMode">
@@ -145,16 +149,18 @@
         </li>
       </ul>
   </div>
-<%}%>
 
-<% if(!userSiteSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/site/usersites')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/site/usersites']">
+    <a ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/site/usersites">
     <label class="parent Clickable" for="selected_/site/usersites">User Sites</label>
     <ul>
       <li>
-        <% addSelectedContent(userSiteSelectedNodes, "userSitesSelectedResources"); %>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/site/usersites'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
         <br />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/usersites_IMPORT_importMode">
@@ -167,16 +173,18 @@
         </li>
       </ul>
   </div>
-<%}%>
 
-<% if(!siteContentSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource sites-content">
-    <a onclick="unselectResourceCategory('/content/sites')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource sites-content" ng-show="categoriesModel['/content/sites']">
+    <a ng-click="unselectCategory('/content/sites')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/content/sites">
     <label class="parent Clickable" for="selected_/content/sites">Sites Contents</label>
     <ul>
       <li>
-        <% addSelectedContent(siteContentSelectedNodes, "siteContentSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/content/sites'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
         <br />
         <div class="sites-content-filter">
           <div class="sites-content-filter-title">Filter:</div>
@@ -208,81 +216,89 @@
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!applicationCLVTemplatesSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/applications/content-list-viewer']">
+    <a ng-click="unselectCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/applications/content-list-viewer">
     <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/content-list-viewer">Content List Templates</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/applications/content-list-viewer_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(applicationCLVTemplatesSelectedNodes, "CLVTemplatesSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!applicationSearchTemplatesSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/templates/applications/search')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/applications/search']">
+    <a ng-click="unselectCategory('/ecmadmin/templates/applications/search')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/applications/search">
     <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/search">Search Templates</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/applications/search_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(applicationSearchTemplatesSelectedNodes, "SearchTemplatesSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/templates/applications/search'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!documentTypeTemplatesSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/nodetypes']">
+    <a ng-click="unselectCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/nodetypes">
     <label class="parent Clickable" for="selected_/ecmadmin/templates/nodetypes">Document Type Templates</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetypes_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/nodetypes_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(documentTypeTemplatesSelectedNodes, "documentTypeTemplatesSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/templates/nodetypes'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!metadataTemplatesSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/metadata']">
+    <a ng-click="unselectCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/metadata">
     <label class="parent Clickable" for="selected_/ecmadmin/templates/metadata">Metadata Templates</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/templates/metadata_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(metadataTemplatesSelectedNodes, "metadataTemplatesSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/templates/metadata'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!taxonomySelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/taxonomy')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/taxonomy']">
+    <a ng-click="unselectCategory('/ecmadmin/taxonomy')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/taxonomy">
     <label class="parent Clickable" for="selected_/ecmadmin/taxonomy">Taxonomies</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/taxonomy_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(taxonomySelectedNodes, "taxonomySelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/taxonomy'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!querySelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/queries')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/queries']">
+    <a ng-click="unselectCategory('/ecmadmin/queries')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/queries">
     <label class="parent Clickable" for="selected_/ecmadmin/queries">Queries</label>
     <ul>
@@ -291,106 +307,113 @@
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!driveSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/drive')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/drive']">
+    <a ng-click="unselectCategory('/ecmadmin/drive')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/drive">
     <label class="parent Clickable" for="selected_/ecmadmin/drive">Drives</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/drive_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(driveSelectedNodes, "driveSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/drive'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!scriptSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/script')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/script']">
+    <a ng-click="unselectCategory('/ecmadmin/script')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/script">
     <label class="parent Clickable" for="selected_/ecmadmin/script">ECMS Groovy Scripts</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/script_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(scriptSelectedNodes, "scriptSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/script'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!viewTemplateSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/view/templates')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/view/templates']">
+    <a ng-click="unselectCategory('/ecmadmin/view/templates')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/view/templates">
     <label class="parent Clickable" for="selected_/ecmadmin/view/templates">Sites Explorer View Templates</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/view/templates_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(viewTemplateSelectedNodes, "viewTemplatesSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/view/templates'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!viewConfigurationSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/view/configuration')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/view/configuration']">
+    <a ng-click="unselectCategory('/ecmadmin/view/configuration')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/view/configuration">
     <label class="parent Clickable" for="selected_/ecmadmin/view/configuration">Sites Explorer View Configuration</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration_IMPORT_filter/replace-existing" <%=getOptionValue("/ecmadmin/view/configuration_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(viewConfigurationSelectedNodes, "viewConfigurationSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/view/configuration'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!actionNodeTypeSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/action')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/action']">
+    <a ng-click="unselectCategory('/ecmadmin/action')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/action">
     <label class="parent Clickable" for="selected_/ecmadmin/action">Action NodeTypes</label>
     <ul>
       <li>
-        <% addSelectedContent(actionNodeTypeSelectedNodes, "actionNodeTypeSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/action'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!nodeTypeSelectedNodes.isEmpty()) {%>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/ecmadmin/nodetype')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/nodetype']">
+    <a ng-click="unselectCategory('/ecmadmin/nodetype')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/nodetype">
     <label class="parent Clickable" for="selected_/ecmadmin/nodetype">NodeTypes</label>
     <ul>
       <li>
-        <% addSelectedContent(nodeTypeSelectedNodes, "nodeTypeSelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/ecmadmin/nodetype'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<%}%>
 
-<% if(!registrySelectedNodes.isEmpty()) { %>
-  <div class="selected-resource">
-    <a onclick="unselectResourceCategory('/registry')" class="unselect-resources-category">Remove</a>
+  <div class="selected-resource" ng-show="categoriesModel['/registry']">
+    <a ng-click="unselectCategory('/registry')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/registry">
     <label class="parent Clickable" for="selected_/registry">Applications Registry</label>
     <ul>
       <li>
         <label class="checkbox"><input class="option" type="checkbox" name="/registry_IMPORT_filter/replace-existing" <%=getOptionValue("/registry_IMPORT_filter/replace-existing","checkbox","", "")%>>Do not replace existing</label>
-        <% addSelectedContent(registrySelectedNodes, "registrySelectedResources");%>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/registry'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
       </li>
     </ul>
   </div>
-<% } %>
-
-<% if(!selectedResources.isEmpty()){ %>
-  <script>
-    initSynchronizationForm();
-  </script>
-<% } %>

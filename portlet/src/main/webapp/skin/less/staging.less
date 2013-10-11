@@ -36,13 +36,11 @@
   }
 
   .mode-import-options {
-    display: none;
     margin: 0 auto;
     width:400px;
   }
 
   .mode-sync-options {
-    display: none;
     margin: 0 auto;
     width: 600px;
     padding-top: 10px;
@@ -58,7 +56,6 @@
     }
 
     #syncServers {
-	      display: none;
         text-align: right;
 
         #syncServersTable {
@@ -75,7 +72,6 @@
     }
 
     #syncServersForm {
-    	display: none;
 
     	#syncServerSaveAs {
     	  padding-top: 10px;
@@ -102,13 +98,13 @@
   }
 
   .button-import {
-    display: none;
+    display: block;
     margin: 0 auto;
     width: 300px;
   }
 
   .button-synchronize {
-    display: none;
+    display: block;
     margin: 0 auto;
     width: 300px;
   }
@@ -187,6 +183,7 @@
     .resource-category > label {
        font-size: 1.1em;
        font-weight: bold;
+       cursor: pointer;
     }
 
     .resource-category > label::before {
@@ -207,7 +204,7 @@
     }
 
     .resource-category > ul {
-      display: none;
+      /*display: none;*/
     }
 
     .leaf {
@@ -234,9 +231,18 @@
       display: block;
     }
 
-    .dataTables_wrapper {
-      padding-bottom: 5px;
-      padding-left: 20px;
+    .divResourcesTable {
+      overflow-x: hidden;
+      overflow-y: auto;
+      max-height: 200px;
+      margin-bottom: 10px;
+      width: 95%;
+
+      table {
+        margin-bottom: 0px;
+        margin-left: 20px;
+        border-bottom: 1px #DDDDDD solid;
+      }
     }
   }
 
@@ -428,31 +434,6 @@
 
   .resources-list li {
     list-style-type: circle;
-  }
-
-  div.dataTables_length label {
-    width: 460px;
-    float: left;
-    text-align: left;
-  }
-
-  div.dataTables_length select {
-    width: 75px;
-  }
-
-  div.dataTables_filter label {
-    float: right;
-    padding-bottom: 10px;
-    width: 460px;
-  }
-
-  div.dataTables_info {
-    padding-top: 8px;
-  }
-
-  div.dataTables_paginate {
-    float: right;
-    margin: 0;
   }
 
   table {

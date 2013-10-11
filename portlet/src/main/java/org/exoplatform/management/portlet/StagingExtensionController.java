@@ -1,14 +1,11 @@
 package org.exoplatform.management.portlet;
 
-import juzu.Action;
-import juzu.Path;
-import juzu.Response;
-import juzu.SessionScoped;
-import juzu.View;
+import juzu.*;
 import juzu.template.Template;
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
 import org.exoplatform.management.service.api.*;
+import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -115,6 +112,38 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
+  public Response getCategories() {
+    StringBuilder jsonCategories = new StringBuilder(50);
+    jsonCategories.append("{\"categories\":[");
+
+    for(ResourceCategory category : resourceCategories) {
+      jsonCategories.append("{\"path\":\"")
+              .append(category.getPath())
+              .append("\",\"label\":\"")
+              .append(category.getLabel())
+              .append("\",\"subcategories\":[");
+      for(ResourceCategory subcategory : category.getSubResourceCategories()) {
+        jsonCategories.append("{\"path\":\"")
+                .append(subcategory.getPath())
+                .append("\",\"label\":\"")
+                .append(subcategory.getLabel())
+                .append("\"},");
+      }
+      if(!category.getSubResourceCategories().isEmpty()) {
+        jsonCategories.deleteCharAt(jsonCategories.length()-1);
+      }
+      jsonCategories.append("]},");
+    }
+    if(!resourceCategories.isEmpty()) {
+      jsonCategories.deleteCharAt(jsonCategories.length()-1);
+    }
+    jsonCategories.append("]}");
+
+    return Response.ok(jsonCategories.toString());
+  }
+
+  @Ajax
+  @juzu.Resource
   public Response getResourcesOfCategory(String path) {
     Set<Resource> resources = stagingService.getResources(path);
 
@@ -170,10 +199,6 @@ public class StagingExtensionController {
     } else {
       log.warn("Selection not considered.");
     }
-
-    Map<String, Object> parameters = buildResourcesParameters();
-
-    selectedResourcesTmpl.render(parameters);
   }
 
   @Ajax
@@ -209,6 +234,7 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
+  @Route("/servers")
   public Response getSynchonizationServers() {
     List<TargetServer> synchronizationServers = synchronizationService.getSynchonizationServers();
 

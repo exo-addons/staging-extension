@@ -9,9 +9,16 @@
     @Binding(value = ChromatticService.class, implementation = ChromatticServiceImpl.class)
   }
 )
+@Assets(
+  scripts = {
+    @juzu.plugin.asset.Script(id = "angularjs", src = "js/angular.min.js"),
+    @juzu.plugin.asset.Script(id = "staging", src = "js/staging.js")
+})
+
 package org.exoplatform.management.portlet;
 
 import juzu.Application;
+import juzu.plugin.asset.Assets;
 import juzu.plugin.binding.Binding;
 import juzu.plugin.binding.Bindings;
 import juzu.plugin.portlet.Portlet;

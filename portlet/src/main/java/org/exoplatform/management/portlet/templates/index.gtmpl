@@ -1,77 +1,66 @@
-<%
-  public String renderResourceCategory(def resourceCategory) {
-    String content = null;
-
-    if(!resourceCategory.getSubResourceCategories().isEmpty()) {
-      content = "<li class='resource-category'>";
-      //content += "<input type='checkbox' id='"+resourceCategory.getPath()+"'><label class='parent' for='"+resourceCategory.getPath()+"'>"+resourceCategory.getLabel()+"</label>";
-      content += "<label class='parent' for='"+resourceCategory.getPath()+"'>"+resourceCategory.getLabel()+"</label>";
-      content += "<ul>";
-			resourceCategory.getSubResourceCategories().each { subResourceCategory ->
-			    content += renderResourceCategory(subResourceCategory);
-      }
-      content += "</ul>";
-    } else {
-      content = "<li class='leaf'>";
-      content += "<input type='checkbox' id='"+resourceCategory.getPath()+"' class='resource-category-checkbox'><label for='"+resourceCategory.getPath()+"'>"+resourceCategory.getLabel()+"</label>";
-      content += "<div class='divResourcesTable'></div>";
-    }
-
-    content += "</li>";
-
-    return content;
-  }
-%>
-
-
-
-<div class="staging">
-  <div class="well modes">
-    <div class="mode-items">
-      <input type="radio" name="mode" value="export" checked="checked">Export</input>
-      <input type="radio" name="mode" value="import">Import</input>
-      <input type="radio" name="mode" value="synchronization">Synchronize</input>
-    </div>
-    <div class="mode-options clearfix">
-      #{include path=modeImportOptions.gtmpl}#{/include}
-      #{include path=modeSyncOptions.gtmpl}#{/include}
-    </div>
-  </div>
-
-  <div class="buttons">
-    <button type="button" class="btn btn-primary button-export">Export</button>
-    <button type="button" class="btn btn-primary button-import">Import</button>
-    <button type="button" class="btn btn-primary button-synchronize">Synchronize</button>
-  </div>
-
-  <div id="resultMessage" class="result-message alert alert-info"></div>
-
-  <div class="resources-panel">
-    <div class="well left-column">
-      <div class="treeview">
-        <ul>
-          <%resourceCategories.each { resourceCategory -> %>
-            <%=renderResourceCategory(resourceCategory)%>
-          <%}%>
-        </ul>
+<div id="staging" class="staging" ng-app>
+  <div ng-controller="StagingCtrl">
+    <div class="well modes">
+      <div class="mode-items">
+        <input type="radio" name="mode" value="export" ng-model="mode" ng-click="changeMode('export')">Export</input>
+        <input type="radio" name="mode" value="import" ng-model="mode" ng-click="changeMode('import')">Import</input>
+        <input type="radio" name="mode" value="synchronize" ng-model="mode" ng-click="changeMode('synchronize')">Synchronize</input>
+      </div>
+      <div class="mode-options clearfix">
+        #{include path=modeImportOptions.gtmpl}#{/include}
+        #{include path=modeSyncOptions.gtmpl}#{/include}
       </div>
     </div>
-    <div class="right-column">
-      <form class="form-horizontal">
-        <fieldset>
-          <legend>Selected resources</legend>
-          <div id="selectedResourcesForm">
-            #{include path=selectedResources.gtmpl}#{/include}
-          </div>
-        </fieldset>
-      </form>
-    </div>
-  </div>
 
-  <div class="buttons">
-    <button type="button" class="btn btn-primary button-export">Export</button>
-    <button type="button" class="btn btn-primary button-import">Import</button>
-    <button type="button" class="btn btn-primary button-synchronize">Synchronize</button>
+    <div class="buttons">
+      <button type="button" class="btn btn-primary button-export" ng-click="exportResources()" ng-show="mode=='export'">Export</button>
+      <button type="button" class="btn btn-primary button-import" ng-click="importResources()" ng-show="mode=='import'">Import</button>
+      <button type="button" class="btn btn-primary button-synchronize" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
+    </div>
+
+    <div id="resultMessage" class="result-message alert {{resultMessageClass}}">{{resultMessage}}</div>
+
+    <div class="resources-panel">
+      <div class="well left-column">
+        <div class="treeview">
+          <ul>
+            <li class="resource-category {{category.expanded && 'expanded' || ''}}" ng-repeat="category in categories">
+              <label class="parent" for="{{category.path}}" ng-click="category.expanded = !category.expanded">{{category.label}}</label>
+              <ul ng-show="category.expanded">
+                <li class="leaf" ng-repeat="subCategory in category.subcategories">
+                  <input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input>
+                  <label for="{{subCategory.path}}">{{subCategory.label}}</label>
+                  <div class="divResourcesTable" ng-show="categoriesModel[subCategory.path]">
+                    <table class="table table-striped table-condensed">
+                      <tr ng-repeat="resource in resources[subCategory.path]">
+                        <td><input type="checkbox" ng-model="resource.selected" ng-click="selectResource(resource)"></input></td>
+                        <td data-title="'Name'">{{resource.text}}</td>
+                      </tr>
+                    </table>
+                  </div>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="right-column">
+        <form class="form-horizontal">
+          <fieldset>
+            <legend>Selected resources</legend>
+            <div id="selectedResourcesForm">
+              #{include path=selectedResources.gtmpl}#{/include}
+            </div>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button type="button" class="btn btn-primary button-export" ng-click="exportResources()" ng-show="mode=='export'">Export</button>
+      <button type="button" class="btn btn-primary button-import" ng-click="importResources()" ng-show="mode=='import'">Import</button>
+      <button type="button" class="btn btn-primary button-synchronize" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
+    </div>
   </div>
 <div>
 

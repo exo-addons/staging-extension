@@ -1,8 +1,7 @@
-<div class="mode-sync-options">
-  <div id="syncServersMessage" class="alert">
-  </div>
-  <div id="syncServers">
-    <table id="syncServersTable" class="table table-bordered table-stripedered">
+<div class="mode-sync-options" ng-show="mode=='synchronize'">
+  <div id="syncServersMessage" class="alert {{syncServersMessageClass}}">{{syncServersMessage}}</div>
+  <div id="syncServers" ng-show="servers.length > 0">
+    <table id="syncServersTable" class="table table-bordered table-striped">
       <thead>
         <tr>
           <th></th>
@@ -16,49 +15,59 @@
         </tr>
       </thead>
       <tbody>
+        <tr ng-repeat="server in servers">
+          <td><input type="radio" id="{{server.id}}" name="syncServer" ng-click="$parent.isNewServerFormDisplayed = false" ng-model="$parent.selectedServer" ng-value="server"></input></td>
+          <td>{{server.name}}</td>
+          <td>{{server.host}}</td>
+          <td>{{server.port}}</td>
+          <td>{{server.username}}</td>
+          <td>{{server.password}}</td>
+          <td><span class="{{server.ssl}}" disabled="disabled"></span></td>
+          <td><span class="uiIconDelete delete-sync-server-action" ng-click="deleteServer(server.id)"></span></td>
+        </tr>
       </tbody>
     </table>
-    <button type="button" class="btn button-newserver">New Server</button>
+    <button type="button" class="btn button-newserver" ng-click="displayServerForm()">New Server</button>
   </div>
-  <div id="syncServersForm">
-    <form class="form-horizontal">
-      <div class="control-group">
+  <div id="syncServersForm" ng-show="isNewServerFormDisplayed || servers.length == 0">
+    <form name="newServerForm" class="form-horizontal" novalidate>
+      <div class="control-group {{hostClass}}">
         <label class="control-label" for="inputHost">Host</label>
         <div class="controls">
-          <input type="text" name="inputHost" id="inputHost" placeholder="Host">
+          <input type="text" name="inputHost" id="inputHost" placeholder="Host" ng-model="newServer.host" required>
           <span class="help-inline">Host is required</span>
         </div>
       </div>
-      <div class="control-group">
+      <div class="control-group {{portClass}}">
         <label class="control-label" for="inputPort">Port</label>
         <div class="controls">
-          <input type="text" name="inputPort" id="inputPort" placeholder="Port">
+          <input type="text" name="inputPort" id="inputPort" placeholder="Port" ng-model="newServer.port" required>
           <span class="help-inline">Port is required</span>
         </div>
       </div>
-      <div class="control-group">
+      <div class="control-group {{usernameClass}}">
         <label class="control-label" for="inputUsername">Username</label>
         <div class="controls">
-          <input type="text" name="inputUsername" id="inputUsername" placeholder="Username">
+          <input type="text" name="inputUsername" id="inputUsername" placeholder="Username" ng-model="newServer.username" required>
           <span class="help-inline">Username is required</span>
         </div>
       </div>
-      <div class="control-group">
+      <div class="control-group {{passwordClass}}">
         <label class="control-label" for="inputPassword">Password</label>
         <div class="controls">
-          <input type="password" name="inputPassword" id="inputPassword" placeholder="Password">
+          <input type="password" name="inputPassword" id="inputPassword" placeholder="Password" ng-model="newServer.password" password-validate required>
           <span class="help-inline">Password is required</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" for="inputSSL">Is SSL</label>
         <div class="controls">
-          <input type="checkbox" name="inputSSL" id="inputSSL">
+          <input type="checkbox" name="inputSSL" id="inputSSL" ng-model="newServer.ssl">
         </div>
       </div>
-      <div id="syncServerSaveAs" class="control-group">
-        <button type="button" class="btn button-saveserver">Save as</button>
-        <input type="text" id="newSaveName"></input>
+      <div id="syncServerSaveAs" class="control-group {{serverNameClass}}">
+        <button type="button" class="btn button-saveserver" ng-click="saveServer(newServer)">Save as</button>
+        <input type="text" id="newSaveName" ng-model="newServer.name" required></input>
         <span class="help-inline">Server name is required</span>
       </div>
     </form>

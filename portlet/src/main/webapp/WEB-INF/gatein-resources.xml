@@ -14,34 +14,13 @@
   <portlet>
 		<name>StagingExtensionPortlet</name>
 		<module>
-			<depends>
-				<module>jsStagingExtension</module>
-			</depends>
+      <depends>
+        <module>juzu-ajax</module>
+      </depends>
+      <depends>
+        <module>jquery</module>
+      </depends>
 		</module>
 	</portlet>
 
-  <module>
-		<name>jsStagingExtension</name>
-		<script>
-			<path>/js/staging.js</path>
-		</script>
-		<depends>
-			<module>juzu-ajax</module>
-		</depends>
-		<depends>
-			<module>jquery</module>
-		</depends>
-    <depends>
-      <module>jQueryDataTable</module>
-    </depends>
-	</module>
-  <module>
-    <name>jQueryDataTable</name>
-    <script>
-      <path>/js/jquery.dataTables.js</path>
-    </script>
-    <depends>
-      <module>jquery</module>
-    </depends>
-  </module>
 </gatein-resources>
