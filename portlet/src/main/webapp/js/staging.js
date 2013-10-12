@@ -217,9 +217,42 @@
       return;
     }
 
+    var selectedResourcesCategoryPath = "";
     selectedResourcesCategories.each(function() {
-      location.href = '/portal/rest/managed-components' + $(this).attr("id") + '.zip';
+      selectedResourcesCategoryPath = $(this).attr("id");
     });
+
+    var options = "";
+
+    // find export options
+    $("input.option").each(function() {
+      if(this.name.indexOf(selectedResourcesCategoryPath +"_EXPORT_") === 0) {
+        if(options === "") {
+          options = "?";
+        } else {
+          options += "&";
+        }
+        var optionFullName = this.name.substring((selectedResourcesCategoryPath +"_EXPORT_").length, this.name.length);
+        var fieldValue = "";
+        if(this.type === "checkbox") {
+          fieldValue = this.checked;
+        } else {
+          fieldValue = this.value;
+        }
+
+        var indexSlash = optionFullName.indexOf("/");
+        if(indexSlash > 0) {
+          var optionName = optionFullName.substring(0, indexSlash);
+          var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
+           options += optionName + "=" + optionValue;
+        } else {
+          options += optionFullName + "=" + this.value;
+        }
+      }
+    });
+
+
+    location.href = "/portal/rest/managed-components" + selectedResourcesCategoryPath + ".zip" + options;
   });
 
   $(".button-import").on("click", function() {
