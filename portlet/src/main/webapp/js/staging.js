@@ -209,6 +209,35 @@
     }
   });
 
+  var getOptionsString = function(selectedResourcesCategoryPath, type) {
+    var options = "";
+    $("input.option").each(function() {
+      if(this.name.indexOf(selectedResourcesCategoryPath +"_" + type + "_") === 0) {
+        if(options !== "") {
+          options += "&";
+        }
+        var optionFullName = this.name.substring((selectedResourcesCategoryPath + "_" + type + "_").length, this.name.length);
+        var fieldValue = "";
+        if(this.type === "checkbox") {
+          fieldValue = this.checked;
+        } else {
+          fieldValue = this.value;
+        }
+
+        var indexSlash = optionFullName.indexOf("/");
+        if(indexSlash > 0) {
+          var optionName = optionFullName.substring(0, indexSlash);
+          var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
+          options += optionName + "=" + optionValue;
+        } else {
+          options += optionFullName + "=" + this.value;
+        }
+      }
+    });
+
+    return options;
+  };
+
 	/** Click on Export button **/
   $(".button-export").on("click", function() {
     var selectedResourcesCategories = $('.staging .left-column .resource-category-checkbox:checked');
@@ -222,37 +251,12 @@
       selectedResourcesCategoryPath = $(this).attr("id");
     });
 
-    var options = "";
+    var queryParams = getOptionsString(selectedResourcesCategoryPath, "EXPORT");
+    if(queryParams !== "") {
+      queryParams = "?" + queryParams;
+    }
 
-    // find export options
-    $("input.option").each(function() {
-      if(this.name.indexOf(selectedResourcesCategoryPath +"_EXPORT_") === 0) {
-        if(options === "") {
-          options = "?";
-        } else {
-          options += "&";
-        }
-        var optionFullName = this.name.substring((selectedResourcesCategoryPath +"_EXPORT_").length, this.name.length);
-        var fieldValue = "";
-        if(this.type === "checkbox") {
-          fieldValue = this.checked;
-        } else {
-          fieldValue = this.value;
-        }
-
-        var indexSlash = optionFullName.indexOf("/");
-        if(indexSlash > 0) {
-          var optionName = optionFullName.substring(0, indexSlash);
-          var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
-           options += optionName + "=" + optionValue;
-        } else {
-          options += optionFullName + "=" + this.value;
-        }
-      }
-    });
-
-
-    location.href = "/portal/rest/managed-components" + selectedResourcesCategoryPath + ".zip" + options;
+    location.href = "/portal/rest/managed-components" + selectedResourcesCategoryPath + ".zip" + queryParams;
   });
 
   $(".button-import").on("click", function() {
@@ -261,8 +265,24 @@
     var form = new FormData();
     form.append('file', importFile.files[0]);
 
+    var selectedResourcesCategories = $('.staging .left-column .resource-category-checkbox:checked');
+    if(selectedResourcesCategories.length > 1) {
+      alert('You must select a category');
+      return;
+    }
+
+    var selectedResourcesCategoryPath = "";
+    selectedResourcesCategories.each(function() {
+      selectedResourcesCategoryPath = $(this).attr("id");
+    });
+
+    var queryParams = getOptionsString(selectedResourcesCategoryPath, "IMPORT");
+    if(queryParams !== "") {
+      queryParams = "&" + queryParams;
+    }
+
     $.ajax({
-        url : resultMessage.jzURL('StagingExtensionController.importResources'),
+        url : resultMessage.jzURL('StagingExtensionController.importResources') + queryParams,
         type: 'POST',
         data : form,
         cache: false,

@@ -5,6 +5,7 @@ import juzu.Path;
 import juzu.Response;
 import juzu.SessionScoped;
 import juzu.View;
+import juzu.impl.request.Request;
 import juzu.template.Template;
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
@@ -199,7 +200,13 @@ public class StagingExtensionController {
       return Response.content(500, "Only one resource can be imported at a time.");
     }
     try {
-      stagingService.importResource(selectedResourcesCategories.iterator().next(), file);
+      Map<String, String[]> parameters = Request.getCurrent().getParameters();
+      Map<String, List<String>> attributes = new HashMap<String, List<String>>();
+      for(String param : parameters.keySet()) {
+        attributes.put(param, Arrays.asList(parameters.get(param)));
+      }
+
+      stagingService.importResource(selectedResourcesCategories.iterator().next(), file, attributes);
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
