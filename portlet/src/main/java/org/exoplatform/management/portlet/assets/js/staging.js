@@ -90,6 +90,8 @@ function StagingCtrl($scope, $http) {
   //
   $scope.categoriesModel = [];
   //
+  $scope.optionsModel = [];
+  //
   $scope.resources = [];
 
   $http.get(stagingContainer.jzURL('StagingExtensionController.getCategories')).success(function (data) {
@@ -142,6 +144,35 @@ function StagingCtrl($scope, $http) {
     return selectedCategories;
   };
 
+  $scope.getOptionsString = function(selectedResourcesCategoryPath, type) {
+    var options = "";
+    for(optionName in $scope.optionsModel) {
+      if(optionName.indexOf(selectedResourcesCategoryPath +"_" + type + "_") === 0) {
+        if(options !== "") {
+          options += "&";
+        }
+        var optionFullName = optionName.substring((selectedResourcesCategoryPath + "_" + type + "_").length, optionName.length);
+        var fieldValue = $scope.optionsModel[optionName];
+
+        var indexSlash = optionFullName.indexOf("/");
+        if(indexSlash > 0) {
+          var optionName = optionFullName.substring(0, indexSlash);
+          var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
+          options += optionName + "=" + optionValue;
+        } else {
+          options += optionFullName + "=" + this.value;
+        }
+      }
+    }
+
+    return options;
+  };
+
+  // Temporary method used to update the server state
+  $scope.updateOption = function(optionPath) {
+    $http.post(stagingContainer.jzURL("StagingExtensionController.selectOption") + "&name=" + optionPath + "&value=" + $scope.optionsModel[optionPath]);
+  };
+
   // export action
   $scope.exportResources = function() {
     var selectedCategories = $scope.getSelectedCategories();
@@ -155,7 +186,12 @@ function StagingCtrl($scope, $http) {
       return;
     }
 
-    location.href = '/portal/rest/managed-components' + selectedCategories[0] + '.zip';
+    var queryParams = $scope.getOptionsString(selectedCategories[0], "EXPORT");
+    if(queryParams !== "") {
+      queryParams = "?" + queryParams;
+    }
+
+    location.href = '/portal/rest/managed-components' + selectedCategories[0] + '.zip' + queryParams;
   };
 
   // import action
@@ -182,10 +218,15 @@ function StagingCtrl($scope, $http) {
     var form = new FormData();
     form.append('file', $scope.importFile);
 
+    var queryParams = $scope.getOptionsString(selectedCategories[0], "IMPORT");
+    if(queryParams !== "") {
+      queryParams = "&" + queryParams;
+    }
+
     $scope.resultMessageClass = "alert-info";
     $scope.resultMessage = "Importing ...";
     $http({
-      url: stagingContainer.jzURL("StagingExtensionController.importResources"),
+      url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
       data : form,
       method : 'POST',
       headers : {'Content-Type':false},

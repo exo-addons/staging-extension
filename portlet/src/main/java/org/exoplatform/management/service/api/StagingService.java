@@ -4,6 +4,8 @@ import org.apache.commons.fileupload.FileItem;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public interface StagingService {
@@ -37,7 +39,7 @@ public interface StagingService {
    * @param file
    * @throws IOException
    */
-  void importResource(String selectedResourcePath, FileItem file) throws IOException;
+  void importResource(String selectedResourcePath, FileItem file, Map<String, List<String>> attributes) throws IOException;
 
   /**
    * Returns the list of sub resources of the given path

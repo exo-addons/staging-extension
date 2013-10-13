@@ -45,8 +45,7 @@ public class StagingServiceImpl implements StagingService {
    * {@inheritDoc}
    */
   @Override
-  public void importResource(String selectedResourcePath, FileItem file) throws IOException {
-    Map<String, List<String>> attributes = new HashMap<String, List<String>>(0);
+  public void importResource(String selectedResourcePath, FileItem file, Map<String, List<String>> attributes) throws IOException {
     ManagedRequest request = ManagedRequest.Factory.create(OperationNames.IMPORT_RESOURCE, PathAddress.pathAddress(selectedResourcePath), attributes, file.getInputStream(), ContentType.ZIP);
 
     ManagedResponse response = managementController.execute(request);
