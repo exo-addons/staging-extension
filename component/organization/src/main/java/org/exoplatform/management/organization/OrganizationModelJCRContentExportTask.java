@@ -3,8 +3,7 @@ package org.exoplatform.management.organization;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.organization.Group;
-import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.*;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ExportTask;
@@ -31,6 +30,8 @@ public class OrganizationModelJCRContentExportTask implements ExportTask {
     this.repositoryService = repositoryService;
     this.jcrPath = node.getPath();
     this.workspace = node.getSession().getWorkspace().getName();
+
+    serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION).append("/");
     if (organizationObject instanceof User) {
       serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER)
               .append("/")
