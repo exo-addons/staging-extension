@@ -20,8 +20,6 @@ import javax.jcr.Session;
 import java.io.*;
 import java.util.Collection;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -67,14 +65,15 @@ public class UserImportResource implements OperationHandler {
       IOUtils.copy(attachmentInputStream, fos);
       fos.close();
 
+      // User
       ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
       ZipEntry entry;
-
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("user.xml")) {
           log.debug("Parsing : " + filePath);
-          createUser(zin, replaceExisting);
+          String username = extractUserName(filePath);
+          createUser(username, zin, replaceExisting);
         }
         try {
           zin.closeEntry();
@@ -83,12 +82,15 @@ public class UserImportResource implements OperationHandler {
         }
       }
       zin.close();
+
+      // UserProfile
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("profile.xml")) {
           log.debug("Parsing : " + filePath);
-          createUserProfile(zin);
+          String username = extractUserName(filePath);
+          createUserProfile(username, zin, replaceExisting);
         }
         try {
           zin.closeEntry();
@@ -97,12 +99,15 @@ public class UserImportResource implements OperationHandler {
         }
       }
       zin.close();
+
+      // Memberships
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("_membership.xml")) {
           log.debug("Parsing : " + filePath);
-          createMembership(zin);
+          String username = extractUserName(filePath);
+          createMembership(username, zin, replaceExisting);
         }
         try {
           zin.closeEntry();
@@ -111,13 +116,15 @@ public class UserImportResource implements OperationHandler {
         }
       }
       zin.close();
+
+      // Content
       zin = new ZipInputStream(new FileInputStream(tempFile));
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("u_content.xml")) {
           log.debug("Parsing : " + filePath);
           String userName = extractUserName(filePath);
-          createContent(zin, userName, replaceExisting);
+          createContent(userName, zin, replaceExisting);
         }
         try {
           zin.closeEntry();
@@ -140,59 +147,57 @@ public class UserImportResource implements OperationHandler {
     }
   }
 
-  private void createContent(ZipInputStream zin, String userName, boolean replaceExisting) throws Exception {
-    SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-    Node userNode = null;
-    try {
-      userNode = hierarchyCreator.getUserNode(sessionProvider, userName);
-    } catch (Exception exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:", exception);
-    }
-    if (replaceExisting && userNode != null) {
-      Session session = userNode.getSession();
-      userNode.remove();
-      session.save();
-      userNode = null;
-    }
-    if (userNode == null) {
-      try {
-        userNode = hierarchyCreator.getUserNode(sessionProvider, userName);
-        Session session = userNode.getSession();
-        String parentPath = userNode.getParent().getPath();
-        userNode.remove();
-        session.save();
-        ByteArrayInputStream bis = new ByteArrayInputStream(IOUtils.toByteArray(zin));
-        session.importXML(parentPath, bis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-        session.save();
-      } catch (Exception exception) {
-        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing user's personnal JCR contents", exception);
-      }
-    }
-  }
-
+  /**
+   * Extract the username from the file path
+   * @param filePath
+   * @return
+   */
   private String extractUserName(String filePath) {
-    Pattern pattern = Pattern.compile(usersBasePath + "(.*)/");
-    Matcher matcher = pattern.matcher(filePath);
-    if (matcher.find()) {
-      return matcher.group(1);
+    String username = null;
+    if(filePath.startsWith(usersBasePath)) {
+      String filePathEnd = filePath.substring(usersBasePath.length());
+      username = filePathEnd.substring(0, filePathEnd.indexOf("/"));
     } else {
-      throw new IllegalStateException("filePath doesn't match users/*/FILE.xml");
+      throw new IllegalStateException("Incorrect file path (" + filePath + ") must start with /organization/users/");
     }
+    return username;
   }
 
-  private void createUser(final ZipInputStream zin, Boolean replaceExisting) throws Exception {
-    User user = deserializeObject(zin, organizationService.getUserHandler().createUserInstance("test").getClass());
-    User oldUser = organizationService.getUserHandler().findUserByName(user.getUserName());
+  private void createUser(String username, final ZipInputStream zin, boolean replaceExisting) throws Exception {
+
+    User oldUser = organizationService.getUserHandler().findUserByName(username);
     boolean alreadyExists = (oldUser != null);
-    if (alreadyExists && replaceExisting) {
-      log.info("ReplaceExisting is On: Deleting user '" + user.getUserName() + "'");
-      organizationService.getUserHandler().removeUser(user.getUserName(), true);
-      log.info("ReplaceExisting is On: Deleting profile '" + user.getUserName() + "'");
-      organizationService.getUserProfileHandler().removeUserProfile(user.getUserName(), true);
-      oldUser = null;
-    }
-    if (oldUser == null) {
-      organizationService.getUserHandler().createUser(user, false);
+
+    if (!alreadyExists) {
+      log.info("Creating user '" + username + "'");
+      User user = deserializeObject(zin, organizationService.getUserHandler().createUserInstance("test").getClass());
+      organizationService.getUserHandler().createUser(user, true);
+      /*
+      if (alreadyExists && replaceExisting) {
+        // Delete Memberships to replace it by what is unserialized
+        Collection<?> memberships = organizationService.getMembershipHandler().findMembershipsByUser(user.getUserName());
+        for (Object membership : memberships) {
+          organizationService.getMembershipHandler().removeMembership(((Membership) membership).getId(), true);
+        }
+        Node userNode = null;
+        try {
+          SessionProvider sessionProvider = SessionProvider.createSystemProvider();
+          userNode = hierarchyCreator.getUserNode(sessionProvider, user.getUserName());
+          if (userNode != null) {
+            Session session = userNode.getSession();
+            userNode.remove();
+            session.save();
+          }
+        } catch (Exception exception) {
+          throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:", exception);
+        }
+      }
+      */
+    } else if(replaceExisting && alreadyExists) {
+      log.info("ReplaceExisting is On: Updating user '" + username + "'");
+      User user = deserializeObject(zin, organizationService.getUserHandler().createUserInstance("test").getClass());
+      organizationService.getUserHandler().saveUser(user, true);
+      /*
       // Delete Profile to replace it by what is unserialized
       UserProfile oldUserProfile = organizationService.getUserProfileHandler().findUserProfileByName(user.getUserName());
       if (oldUserProfile != null && replaceExisting) {
@@ -202,6 +207,7 @@ public class UserImportResource implements OperationHandler {
         organizationService.getUserProfileHandler().removeUserProfile(user.getUserName(), true);
         oldUserProfile = null;
       }
+      */
       if (alreadyExists && replaceExisting) {
         // Delete Memberships to replace it by what is unserialized
         Collection<?> memberships = organizationService.getMembershipHandler().findMembershipsByUser(user.getUserName());
@@ -222,34 +228,69 @@ public class UserImportResource implements OperationHandler {
         }
       }
     } else {
-      log.info("ReplaceExisting is Off: Ignoring user '" + user.getUserName() + "'");
+      log.info("ReplaceExisting is Off: Ignoring user '" + username + "'");
     }
   }
 
-  private void createUserProfile(final ZipInputStream zin) throws Exception {
-    UserProfile profile = deserializeObject(zin, organizationService.getUserProfileHandler().createUserProfileInstance().getClass());
-    organizationService.getUserProfileHandler().saveUserProfile(profile, true);
+  private void createUserProfile(String username, final ZipInputStream zin, boolean replaceExisting) throws Exception {
+    boolean alreadyExists = false;
+    if(!replaceExisting) {
+      User oldUser = organizationService.getUserHandler().findUserByName(username);
+      alreadyExists = (oldUser != null);
+    }
+
+    if(replaceExisting || !alreadyExists) {
+      UserProfile profile = deserializeObject(zin, organizationService.getUserProfileHandler().createUserProfileInstance().getClass());
+      organizationService.getUserProfileHandler().saveUserProfile(profile, true);
+    }
   }
 
   @SuppressWarnings("deprecation")
-  private void createMembership(final ZipInputStream zin) throws Exception {
-    Membership membership = null;
-    try {
-      membership = deserializeObject(zin, organizationService.getMembershipHandler().createMembershipInstance().getClass());
-    } catch (Exception e) {
-      log.warn("Can't serialize membership with : " + UserImpl.class.getName() + ". Trying with : " + org.exoplatform.services.organization.idm.UserImpl.class.getName());
-      membership = deserializeObject(zin, org.exoplatform.services.organization.idm.MembershipImpl.class);
+  private void createMembership(String username, final ZipInputStream zin, boolean replaceExisting) throws Exception {
+    boolean alreadyExists = false;
+    if(!replaceExisting) {
+      User oldUser = organizationService.getUserHandler().findUserByName(username);
+      alreadyExists = (oldUser != null);
     }
 
-    Membership oldMembership = organizationService.getMembershipHandler().findMembership(membership.getId());
-    if (oldMembership == null) {
-      log.info("Membership '" + membership.getId() + "' was not found, creating it.");
-      Group group = organizationService.getGroupHandler().findGroupById(membership.getGroupId());
-      User user = organizationService.getUserHandler().findUserByName(membership.getUserName());
-      MembershipType membershipType = organizationService.getMembershipTypeHandler().findMembershipType(membership.getMembershipType());
-      organizationService.getMembershipHandler().linkMembership(user, group, membershipType, true);
-    } else {
-      log.info("Membership already exists: Ignoring.");
+    if(replaceExisting || !alreadyExists) {
+      Membership membership = null;
+      try {
+        membership = deserializeObject(zin, organizationService.getMembershipHandler().createMembershipInstance().getClass());
+      } catch (Exception e) {
+        log.warn("Can't serialize membership with : " + UserImpl.class.getName() + ". Trying with : " + org.exoplatform.services.organization.idm.UserImpl.class.getName());
+        membership = deserializeObject(zin, org.exoplatform.services.organization.idm.MembershipImpl.class);
+      }
+
+      Membership oldMembership = organizationService.getMembershipHandler().findMembership(membership.getId());
+      if (oldMembership == null) {
+        log.info("Membership '" + membership.getMembershipType() + ":" + membership.getGroupId() +"' was not found for user " + membership.getUserName() + ", creating it.");
+        Group group = organizationService.getGroupHandler().findGroupById(membership.getGroupId());
+        User user = organizationService.getUserHandler().findUserByName(membership.getUserName());
+        MembershipType membershipType = organizationService.getMembershipTypeHandler().findMembershipType(membership.getMembershipType());
+        organizationService.getMembershipHandler().linkMembership(user, group, membershipType, true);
+      } else {
+        log.info("Membership '" + membership.getMembershipType() + ":" + membership.getGroupId() +"' already exists for user " + membership.getUserName() + " : ignoring.");
+      }
+    }
+  }
+
+  private void createContent(String username, ZipInputStream zin, boolean replaceExisting) throws Exception {
+    SessionProvider sessionProvider = SessionProvider.createSystemProvider();
+
+    try {
+      // getUserNode() creates the folder if it does not exist
+      Node userNode = hierarchyCreator.getUserNode(sessionProvider, username);
+      Session session = userNode.getSession();
+      String parentPath = userNode.getParent().getPath();
+      userNode.remove();
+      session.save();
+
+      ByteArrayInputStream bis = new ByteArrayInputStream(IOUtils.toByteArray(zin));
+      session.importXML(parentPath, bis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+      session.save();
+    } catch (Exception exception) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing user's personal folder of " + username + " : " + exception.getMessage(), exception);
     }
   }
 
