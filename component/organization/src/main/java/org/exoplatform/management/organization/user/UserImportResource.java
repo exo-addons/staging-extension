@@ -61,7 +61,7 @@ public class UserImportResource implements OperationHandler {
       }
     }
     if (replaceExisting == null) {
-      replaceExisting = true;
+      replaceExisting = false;
     }
 
     // get attachement input stream
@@ -76,6 +76,7 @@ public class UserImportResource implements OperationHandler {
 
       ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
       ZipEntry entry;
+
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("user.xml")) {

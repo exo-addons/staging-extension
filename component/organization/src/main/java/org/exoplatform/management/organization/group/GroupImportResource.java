@@ -74,7 +74,7 @@ public class GroupImportResource implements OperationHandler {
       }
     }
     if (replaceExisting == null) {
-      replaceExisting = true;
+      replaceExisting = false;
     }
 
     // get attachement input stream
