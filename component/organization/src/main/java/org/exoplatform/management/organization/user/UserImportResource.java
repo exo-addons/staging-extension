@@ -19,6 +19,7 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 import java.io.*;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -49,20 +50,12 @@ public class UserImportResource implements OperationHandler {
     }
 
     InputStream attachmentInputStream = null;
-    Boolean replaceExisting = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
-    if (attributes != null && attributes.getValues("filter") != null) {
-      for(String filter : attributes.getValues("filter")) {
-        if (filter.startsWith("replace-existing:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
-          break;
-        }
-      }
-    }
-    if (replaceExisting == null) {
-      replaceExisting = false;
-    }
+    List<String> filters = attributes.getValues("filter");
+
+    // "replace-existing" attribute. Defaults to false.
+    boolean replaceExisting = filters.contains("replace-existing:true");
 
     // get attachement input stream
     OperationAttachment attachment = operationContext.getAttachment(false);
