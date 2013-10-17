@@ -50,10 +50,13 @@ public class UserExportResource implements OperationHandler {
       OperationAttributes attributes = operationContext.getAttributes();
       List<String> filters = attributes.getValues("filter");
 
+      // "with-membership" attribute. Defaults to false.
       boolean withContent = filters.contains("with-jcr-content:true");
-      boolean withMemberships = filters.contains("with-membership:true");
-      String newPassword = null;
+      // "with-membership" attribute. Defaults to true.
+      boolean withMemberships = !filters.contains("with-membership:false");
 
+      // "new-password" attribute. Defaults to null (means : don't change passwords).
+      String newPassword = null;
       for(String filter : attributes.getValues("filter")) {
         if (filter.startsWith("new-password:")) {
           newPassword = filter.substring("new-password:".length());
