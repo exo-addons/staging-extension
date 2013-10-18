@@ -87,10 +87,16 @@ function StagingCtrl($scope, $http) {
 
   // categories tree (categories + subcategories)
   $scope.categories = [];
+
   //
   $scope.categoriesModel = [];
-  //
+
+  // options
   $scope.optionsModel = [];
+  // options default values
+  $scope.optionsModel['/organization/user_EXPORT_filter/with-membership'] = true;
+  $scope.optionsModel['/organization/group_EXPORT_filter/with-membership'] = true;
+
   //
   $scope.resources = [];
 
@@ -169,9 +175,11 @@ function StagingCtrl($scope, $http) {
   };
 
   // Temporary method used to update the server state
+  /*
   $scope.updateOption = function(optionPath) {
     $http.post(stagingContainer.jzURL("StagingExtensionController.selectOption") + "&name=" + optionPath + "&value=" + $scope.optionsModel[optionPath]);
   };
+  */
 
   // export action
   $scope.exportResources = function() {
@@ -276,17 +284,31 @@ function StagingCtrl($scope, $http) {
       return;
     }
 
+    var options = '';
+    for(optionName in $scope.optionsModel) {
+      options += '&options=' + optionName + ":" + $scope.optionsModel[optionName];
+    }
+
 		// Launch synchronization...
     $scope.resultMessageClass = "alert-info";
     $scope.resultMessage = "Proceeding...";
 
-    $http.get(stagingContainer.jzURL('StagingExtensionController.synchronize') + '&host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString).success(function (data) {
+    $http({
+      method: 'POST',
+      url: stagingContainer.jzURL('StagingExtensionController.synchronize'),
+      data: 'host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString + options,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    })
+    /*
+    $http.post(stagingContainer.jzURL('StagingExtensionController.synchronize'),
+      'host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString + '&server=toto').success(function (data) {
         $scope.resultMessageClass = "alert-success";
         $scope.resultMessage = data;
       }).error(function (data) {
         $scope.resultMessageClass = "alert-error";
         $scope.resultMessage = data;
       });
+    */
   };
 
 }

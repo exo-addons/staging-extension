@@ -41,9 +41,6 @@ public class StagingExtensionController {
   /** */
   Set<String> selectedResources = Collections.synchronizedSet(new HashSet<String>());
 
-  /** */
-  Map<String, String> selectedOptions = new Hashtable<String, String>();
-
   static List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
 
   static {
@@ -99,10 +96,6 @@ public class StagingExtensionController {
   public Response.Render index() {
     // Clear selection
     selectedResources.clear();
-    selectedOptions.clear();
-
-    selectedOptions.put("/organization/user_EXPORT_filter/with-membership", "true");
-    selectedOptions.put("/organization/group_EXPORT_filter/with-membership", "true");
 
     Map<String, Object> parameters = buildResourcesParameters();
 
@@ -204,16 +197,6 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public void selectOption(String name, String value) {
-    if (value == null || value.trim().isEmpty()) {
-      selectedOptions.remove(name);
-    } else {
-      selectedOptions.put(name, value);
-    }
-  }
-
-  @Ajax
-  @juzu.Resource
   public Response.Content<?> importResources(FileItem file) throws IOException {
     if (file == null || file.getSize() == 0) {
       return Response.content(500, "File is empty.");
@@ -290,7 +273,7 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response synchronize(String isSSLString, String host, String port, String username, String password) throws IOException {
+  public Response synchronize(String isSSLString, String host, String port, String username, String password, String[] options) throws IOException {
     TargetServer targetServer = new TargetServer(host, port, username, password, "true".equals(isSSLString));
 
     // Create selected resources categories
@@ -311,16 +294,22 @@ public class StagingExtensionController {
     }
 
     // Dispatch selected options in resources categories
-    for(String selectedOption : selectedOptions.keySet()) {
-      String optionParts[] = selectedOption.split("_");
-      for(ResourceCategory resourceCategory : resourceCategories) {
-        if(optionParts[0].equals(resourceCategory.getPath())) {
-          if(optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
-            resourceCategory.getExportOptions().put(optionParts[2], selectedOptions.get(selectedOption));
-          } else if(optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
-            resourceCategory.getImportOptions().put(optionParts[2], selectedOptions.get(selectedOption));
+    for(String selectedOption : options) {
+      int indexColon = selectedOption.indexOf(":");
+      if(indexColon > 0) {
+        String optionName = selectedOption.substring(0, indexColon);
+        String optionValue = selectedOption.substring(indexColon + 1);
+
+        String optionParts[] = optionName.split("_");
+        for(ResourceCategory resourceCategory : resourceCategories) {
+          if(optionParts[0].equals(resourceCategory.getPath())) {
+            if(optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
+              resourceCategory.getExportOptions().put(optionParts[2], optionValue);
+            } else if(optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
+              resourceCategory.getImportOptions().put(optionParts[2], optionValue);
+            }
+            break;
           }
-          break;
         }
       }
     }
@@ -395,7 +384,6 @@ public class StagingExtensionController {
     parameters.put("roleSelectedNodes", getSelectedResources(StagingService.ROLE_PATH));
 
     parameters.put("selectedResources", selectedResources);
-    parameters.put("selectedOptions", selectedOptions);
 
     return parameters;
   }
