@@ -99,14 +99,19 @@ function StagingCtrl($scope, $http) {
 
   //
   $scope.resources = [];
+  //
+  $scope.loadingResources = [];
 
+  $scope.loadingCategoriesTree = true;
   $http.get(stagingContainer.jzURL('StagingExtensionController.getCategories')).success(function (data) {
     $scope.categories = data.categories;
+    $scope.loadingCategoriesTree = false;
   });
 
   $scope.toggleCategorySelection = function(selectedCategory) {
     $http.post(stagingContainer.jzURL('StagingExtensionController.selectResourcesCategory') + '&path=' + selectedCategory + '&checked=' + $scope.categoriesModel[selectedCategory]).success(function (data) {
       if($scope.categoriesModel[selectedCategory]) {
+        $scope.loadingResources[selectedCategory] = true;
         $http.get(stagingContainer.jzURL('StagingExtensionController.getResourcesOfCategory') + '&path=' + selectedCategory).success(function (data) {
           $scope.resources[selectedCategory] = [];
           for(var i=0; i<data.resources.length; i++) {
@@ -116,6 +121,7 @@ function StagingCtrl($scope, $http) {
               "selected": true
             });
           }
+          $scope.loadingResources[selectedCategory] = false;
         });
       } else {
         delete $scope.resources[selectedCategory];

@@ -24,12 +24,13 @@
       <div class="well left-column">
         <div class="treeview">
           <ul>
+            <div class="loader" ng-show="loadingCategoriesTree">Loading...</div>
             <li class="resource-category {{category.expanded && 'expanded' || ''}}" ng-repeat="category in categories">
               <label class="parent" for="{{category.path}}" ng-click="category.expanded = !category.expanded">{{category.label}}</label>
               <ul ng-show="category.expanded">
                 <li class="leaf" ng-repeat="subCategory in category.subcategories">
                   <input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input>
-                  <label for="{{subCategory.path}}">{{subCategory.label}}</label>
+                  <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}}">{{subCategory.label}}</label>
                   <div class="divResourcesTable" ng-show="categoriesModel[subCategory.path]">
                     <table class="table table-striped table-condensed">
                       <tr ng-repeat="resource in resources[subCategory.path]">
