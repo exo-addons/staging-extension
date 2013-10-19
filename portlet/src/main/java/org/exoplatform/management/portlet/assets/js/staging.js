@@ -2,10 +2,6 @@ function StagingCtrl($scope, $http) {
   var stagingContainer = $('#staging');
 
   $scope.mode = "export";
-  $scope.syncServersMessage = "";
-  $scope.syncServersMessageClass = "alert-info";
-  $scope.resultMessage = "";
-  $scope.resultMessageClass = "alert-info";
 
   $scope.changeMode = function(mode) {
     $scope.mode = mode;
@@ -21,6 +17,15 @@ function StagingCtrl($scope, $http) {
 
   $scope.selectedServer = "";
   $scope.newServer = "";
+
+  $scope.syncServersMessage = "";
+  $scope.syncServersMessageClass = "alert-info";
+
+  // function which set the result message with the given style
+  $scope.setSyncServerMessage = function(text, type) {
+    $scope.syncServersMessageClass = "alert-" + type;
+    $scope.syncServersMessage = text;
+  }
 
   /** Load synchronization servers **/
   $scope.loadServers = function() {
@@ -44,16 +49,13 @@ function StagingCtrl($scope, $http) {
       return;
     }
 
-    $scope.syncServersMessageClass = "alert-info";
-    $scope.syncServersMessage = "Saving new server ...";
+    $scope.setSyncServerMessage("Saving new server ...", "info");
     $http.post(stagingContainer.jzURL('StagingExtensionController.addSynchonizationServer') + '&name='+server.name+'&host='+server.host+'&port='+server.port+'&username='+server.username+'&password='+server.password+'&ssl='+(server.ssl? 'true' : 'false')).success(function (data) {
-      $scope.syncServersMessageClass = "alert-success";
-      $scope.syncServersMessage = "Server saved !";
-      $scope.loadServers();
-    }).error(function (data) {
-      $scope.syncServersMessageClass = "alert-error";
-      $scope.syncServersMessage = "Error while saving the server";
-    });
+        $scope.setSyncServerMessage("Server saved !", "success");
+        $scope.loadServers();
+      }).error(function (data) {
+        $scope.setSyncServerMessage("Error while saving the server", "error");
+      });
   };
 
   $scope.deleteServer = function(id) {
@@ -144,6 +146,15 @@ function StagingCtrl($scope, $http) {
   /*                 ACTIONS (export/import/synchronize)                */
   /**********************************************************************/
 
+  $scope.resultMessage = "";
+  $scope.resultMessageClass = "alert-info";
+
+  // function which set the result message with the given style
+  $scope.setResultMessage = function(text, type) {
+    $scope.resultMessageClass = "alert-" + type;
+    $scope.resultMessage = text;
+  }
+
   // function which lists the selected categories
   // TODO see if it can be improved with a better binding
   $scope.getSelectedCategories = function() {
@@ -180,13 +191,6 @@ function StagingCtrl($scope, $http) {
     return options;
   };
 
-  // Temporary method used to update the server state
-  /*
-  $scope.updateOption = function(optionPath) {
-    $http.post(stagingContainer.jzURL("StagingExtensionController.selectOption") + "&name=" + optionPath + "&value=" + $scope.optionsModel[optionPath]);
-  };
-  */
-
   // export action
   $scope.exportResources = function() {
     var selectedCategories = $scope.getSelectedCategories();
@@ -211,8 +215,7 @@ function StagingCtrl($scope, $http) {
   // import action
   $scope.importResources = function() {
     if(!$scope.importFile) {
-      $scope.resultMessageClass = "alert-error";
-      $scope.resultMessage = "No file selected";
+      $scope.setResultMessage("No file selected", "error");
       return;
     }
 
@@ -220,12 +223,10 @@ function StagingCtrl($scope, $http) {
     var nbOfSelectedCategories = selectedCategories.length;
 
     if(nbOfSelectedCategories === 0) {
-      $scope.resultMessageClass = "alert-error";
-      $scope.resultMessage = "No resource category selected";
+      $scope.setResultMessage("No resource category selected", "error");
       return;
     } else if(nbOfSelectedCategories > 1) {
-      $scope.resultMessageClass = "alert-error";
-      $scope.resultMessage = "Only one resource category can be imported at a time";
+      $scope.setResultMessage("Only one resource category can be imported at a time", "error");
       return;
     }
 
@@ -237,21 +238,18 @@ function StagingCtrl($scope, $http) {
       queryParams = "&" + queryParams;
     }
 
-    $scope.resultMessageClass = "alert-info";
-    $scope.resultMessage = "Importing ...";
+    $scope.setResultMessage("Importing ...", "info");
     $http({
-      url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
-      data : form,
-      method : 'POST',
-      headers : {'Content-Type':false},
-      transformRequest: function(data) { return data; }
-    }).success(function (data) {
-      $scope.resultMessageClass = "alert-success";
-      $scope.resultMessage = data;
-    }).error(function (data) {
-      $scope.resultMessageClass = "alert-error";
-      $scope.resultMessage = "Import failed. " + data;
-    });
+        url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
+        data : form,
+        method : 'POST',
+        headers : {'Content-Type':false},
+        transformRequest: function(data) { return data; }
+      }).success(function (data) {
+        $scope.setResultMessage(data, "success");
+      }).error(function (data) {
+        $scope.setResultMessage("Import failed. " + data, "error");
+      });
   };
 
   $scope.setFile = function(element) {
@@ -271,8 +269,7 @@ function StagingCtrl($scope, $http) {
       }
       targetServer = $scope.newServer;
     } else {
-      $scope.resultMessageClass = "alert-error";
-      $scope.resultMessage = "No destination server selected...";
+      $scope.setResultMessage("No destination server selected...", "error");
       return;
     }
 
@@ -285,36 +282,28 @@ function StagingCtrl($scope, $http) {
     }
 
     if(selectedResources.length === 0) {
-      $scope.resultMessageClass = "alert-error";
-      $scope.resultMessage = "No resources selected";
+      $scope.setResultMessage("No resources selected", "error");
       return;
     }
 
-    var options = '';
+    var options = "";
     for(optionName in $scope.optionsModel) {
-      options += '&options=' + optionName + ":" + $scope.optionsModel[optionName];
+      options += "&options=" + optionName + ":" + $scope.optionsModel[optionName];
     }
 
 		// Launch synchronization...
-    $scope.resultMessageClass = "alert-info";
-    $scope.resultMessage = "Proceeding...";
+    $scope.setResultMessage("Proceeding...", "info");
 
     $http({
-      method: 'POST',
-      url: stagingContainer.jzURL('StagingExtensionController.synchronize'),
-      data: 'host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString + options,
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-    })
-    /*
-    $http.post(stagingContainer.jzURL('StagingExtensionController.synchronize'),
-      'host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString + '&server=toto').success(function (data) {
-        $scope.resultMessageClass = "alert-success";
-        $scope.resultMessage = data;
+        method: 'POST',
+        url: stagingContainer.jzURL('StagingExtensionController.synchronize'),
+        data: 'host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString + options,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      }).success(function (data) {
+        $scope.setResultMessage(data, "success");
       }).error(function (data) {
-        $scope.resultMessageClass = "alert-error";
-        $scope.resultMessage = data;
+        $scope.setResultMessage(data, "error");
       });
-    */
   };
 
 }
