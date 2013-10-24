@@ -231,14 +231,6 @@
       margin: 0;
     }
 
-    input[type=radio][value=query].option + label + .sites-content-sql {
-      display: none;
-    }
-
-    input[type=radio][value=query].option:checked + label + .sites-content-sql {
-      display: block;
-    }
-
     input[type=radio].option {
       display: block;
     }
@@ -388,12 +380,8 @@
         float: left;
       }
 
-      input[type=radio][value=query].option + label + .sites-content-sql {
-        display: none;
-      }
-
-      input[type=radio][value=query].option:checked + label + .sites-content-sql {
-        display: block;
+      input.contentQuery {
+        width: 400px;
       }
     }
   }

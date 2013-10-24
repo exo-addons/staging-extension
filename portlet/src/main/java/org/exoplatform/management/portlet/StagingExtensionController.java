@@ -338,7 +338,7 @@ public class StagingExtensionController {
       return Response.ok(builder.toString());
     } catch (Exception e) {
       log.error("Error while executing request: " + sql, e);
-      return Response.ok("Error while executing request: " + e.getMessage());
+      return Response.content(500, "Error while executing request: " + e.getMessage());
     }
   }
 

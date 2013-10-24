@@ -1,18 +1,3 @@
-<%
-   public String getSQLContentCondition() {
-    String condition = "";
-    siteContentSelectedNodes.each { selectedResource ->
-      if(selectedResource != null && !selectedResource.isEmpty()) {
-        if(!condition.isEmpty()) {
-          condition += " OR ";
-        }
-        condition += "jcr:path = '/sites/" + selectedResource + "/%'";
-      }
-     }
-    return " AND (" + condition + ")";
-   }
-%>
-
   <div class="selected-resource" ng-show="categoriesModel['/organization/user']">
     <a ng-click="unselectCategory('/organization/user')" class="unselect-resources-category">Remove</a>
     <input type="checkbox" class="tree-checkbox" id="selected_/organization/user">
@@ -89,7 +74,6 @@
             <td>{{resource.text}}</td>
           </tr>
         </table>
-        <br />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/portalsites_IMPORT_importMode"
                   ng-change="updateOption('/site/portalsites_IMPORT_importMode')" ng-model="optionsModel['/site/portalsites_IMPORT_importMode']">
@@ -114,7 +98,6 @@
             <td>{{resource.text}}</td>
           </tr>
         </table>
-        <br />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/groupsites_IMPORT_importMode"
                   ng-change="updateOption('/site/groupsites_IMPORT_importMode')" ng-model="optionsModel['/site/groupsites_IMPORT_importMode']">
@@ -139,7 +122,6 @@
             <td>{{resource.text}}</td>
           </tr>
         </table>
-        <br />
         <label class="checkbox">Import Mode
           <select class="option" name="/site/usersites_IMPORT_importMode"
                   ng-change="updateOption('/site/usersites_IMPORT_importMode')" ng-model="optionsModel['/site/usersites_IMPORT_importMode']">
@@ -164,37 +146,34 @@
             <td>{{resource.text}}</td>
           </tr>
         </table>
-        <br />
         <div class="sites-content-filter">
           <div class="sites-content-filter-title">Filter:</div>
           <div class="sites-content-filter-options">
             <input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="false" id="contentEntireSite"
-              ng-change="updateOption('/content/sites_EXPORT_filter/no-skeleton')" ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><label for="contentEntireSite">The entire site</label>
+              ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><label for="contentEntireSite">The entire site</label>
             <input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="true" id="contentWithoutSkeleton"
-              ng-change="updateOption('/content/sites_EXPORT_filter/no-skeleton')" ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><label for="contentWithoutSkeleton">Without Site Skeleton</label>
-            <input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="true" id="contentWithQuery"
-              ng-change="updateOption('/content/sites_EXPORT_filter/no-skeleton')" ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><label for="contentWithQuery">With JCR Query</label>
-            <div class="sites-content-sql">
+              ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><label for="contentWithoutSkeleton">Without Site Skeleton</label>
+            <input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="query" id="contentWithQuery"
+              ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><label for="contentWithQuery">With JCR Query</label>
+            <div class="sites-content-sql" ng-show="optionsModel['/content/sites_EXPORT_filter/no-skeleton'] == 'query'">
               <div class="input-append">
-                <input name="/content/sites_EXPORT_filter/query" placeholder="JCR SQL Query" class="span2 option" id="appendedInput" type="text"
-                  ng-change="updateOption('/content/sites_EXPORT_filter/query')" ng-model="optionsModel['/content/sites_EXPORT_filter/query']">
-                <span class="add-on"><%=getSQLContentCondition()%></span>
+                <input name="/content/sites_EXPORT_filter/query" placeholder="JCR SQL Query" class="span2 option contentQuery" type="text"
+                  ng-model="optionsModel['/content/sites_EXPORT_filter/query']">
               </div>
-              <button type="button" class="btn" id="sitesContentSQLButton">Validate Query</button>
-              <div id="sitesContentSQLResult" class="sites-content-sql-result">
-              </div>
+              <button type="button" class="btn" id="sitesContentSQLButton" ng-click="validateQuery()">Validate Query</button>
+              <div id="sitesContentSQLResult" class="alert {{validateQueryResultMessageClass}}" ng-bind-html-unsafe="validateQueryResultMessage" ng-show="validateQueryResultMessage.length"></div>
             </div>
           </div>
         </div>
         <input id="withoutTaxonomy" class="option" type="checkbox" name="/content/sites_EXPORT_filter/taxonomy" value="true"
-          ng-change="updateOption('/content/sites_EXPORT_filter/taxonomy')" ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><label for="withoutTaxonomy" class="checkbox">Without taxonomy nodes</label>
+          ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><label for="withoutTaxonomy" class="checkbox">Without taxonomy nodes</label>
         <input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-hitory" value="true"
-          ng-change="updateOption('/content/sites_EXPORT_filter/no-hitory')" ng-model="optionsModel['/content/sites_EXPORT_filter/no-hitory']"/><label for="withoutVersionHistory" class="checkbox">Without Version history</label>
+          ng-model="optionsModel['/content/sites_EXPORT_filter/no-hitory']"/><label for="withoutVersionHistory" class="checkbox">Without Version history</label>
         <input id="cleanupPublication" class="option" type="checkbox" name="/content/sites_IMPORT_filter/cleanPublication" value="true"
-          ng-change="updateOption('/content/sites_IMPORT_filter/cleanPublication')" ng-model="optionsModel['/content/sites_IMPORT_filter/cleanPublication']"/><label for="cleanupPublication" class="checkbox">Cleanup publication (used if Version history isn't exported)</label>
+          ng-model="optionsModel['/content/sites_IMPORT_filter/cleanPublication']"/><label for="cleanupPublication" class="checkbox">Cleanup publication (used if Version history isn't exported)</label>
         JCR UUID Behavior
         <select class="option" name="/content/sites_IMPORT_uuidBehavior"
-                ng-change="updateOption('/content/sites_IMPORT_uuidBehavior')" ng-model="optionsModel['/content/sites_IMPORT_uuidBehavior']">
+                ng-model="optionsModel['/content/sites_IMPORT_uuidBehavior']">
           <option value="0">Create new</option>
           <option value="1">Remove existing</option>
           <option value="2">Replace existing</option>

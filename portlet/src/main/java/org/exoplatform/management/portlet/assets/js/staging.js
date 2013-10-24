@@ -306,6 +306,29 @@ function StagingCtrl($scope, $http) {
       });
   };
 
+
+  $scope.validateQuery = function() {
+    var sql = $scope.optionsModel["/content/sites_EXPORT_filter/query"];
+    if(sql == null || sql === "") {
+      $scope.validateQueryResultMessageClass = "alert-error";
+      $scope.validateQueryResultMessage = "Error : Empty query";
+    } else {
+      $http({
+        method: 'POST',
+        url: stagingContainer.jzURL('StagingExtensionController.executeSQL'),
+        data: 'sql=' + sql
+        ,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      }).success(function (data) {
+          $scope.validateQueryResultMessageClass = "alert-info";
+          $scope.validateQueryResultMessage = data;
+        }).error(function (data) {
+          $scope.validateQueryResultMessageClass = "alert-error";
+          $scope.validateQueryResultMessage = data;
+        });
+    }
+  };
+
 }
 
 

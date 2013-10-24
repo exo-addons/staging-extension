@@ -97,14 +97,21 @@ public class SiteContentsExportResource implements OperationHandler {
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
       List<String> filters = attributes.getValues("filter");
+
+      boolean exportSiteWithSkeleton = true;
       String jcrQuery = null;
-      for (String filterValue : filters) {
-        if (filterValue.startsWith("query:")) {
-          jcrQuery = filterValue.replace("query:", "");
+
+      // no-skeleton as the priority over query
+      if(!filters.contains("no-skeleton:true") && !filters.contains("no-skeleton:false")) {
+        for (String filterValue : filters) {
+          if (filterValue.startsWith("query:")) {
+            jcrQuery = filterValue.replace("query:", "");
+          }
         }
+      } else {
+        exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
       }
 
-      boolean exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
       boolean exportVersionHistory = !filters.contains("no-hitory:true");
 
