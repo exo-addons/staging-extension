@@ -22,7 +22,7 @@
           <td>{{server.port}}</td>
           <td>{{server.username}}</td>
           <td>{{server.password}}</td>
-          <td><span class="{{server.ssl}}" disabled="disabled"></span></td>
+          <td><span class="{{server.ssl && 'uiIconTick' || 'uiIconClose'}}" disabled="disabled"></span></td>
           <td><span class="uiIconDelete delete-sync-server-action" ng-click="deleteServer(server.id)"></span></td>
         </tr>
       </tbody>

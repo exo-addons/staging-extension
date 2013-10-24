@@ -243,9 +243,9 @@ public class StagingExtensionController {
         .append(targetServer.getUsername())
         .append("\",\"password\":\"")
         .append(targetServer.getPassword())
-        .append("\",\"ssl\":\"")
+        .append("\",\"ssl\":")
         .append(targetServer.isSsl())
-        .append("\"},");
+        .append("},");
     }
     if(!synchronizationServers.isEmpty()) {
       jsonServers.deleteCharAt(jsonServers.length()-1);
