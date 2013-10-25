@@ -31,14 +31,16 @@
                 <li class="leaf" ng-repeat="subCategory in category.subcategories">
                   <input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input>
                   <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}}">{{subCategory.label}}</label>
-                  <div class="divResourcesTable" ng-show="categoriesModel[subCategory.path]">
+                  <div class="divResources" ng-show="categoriesModel[subCategory.path]">
                     <input type="text" class="searchResources" ng-model="resourcesSearchTerm.text"></input>
-                    <table class="table table-striped table-condensed">
-                      <tr ng-repeat="resource in resources[subCategory.path] | filter:resourcesSearchTerm">
-                        <td><input type="checkbox" ng-model="resource.selected" ng-click="selectResource(resource)"></input></td>
-                        <td>{{resource.text}}</td>
-                      </tr>
-                    </table>
+                    <div class="divResourcesTable">
+                      <table class="table table-striped table-condensed">
+                        <tr ng-repeat="resource in resources[subCategory.path] | filter:resourcesSearchTerm">
+                          <td><input type="checkbox" ng-model="resource.selected" ng-click="selectResource(resource)"></input></td>
+                          <td>{{resource.text}}</td>
+                        </tr>
+                      </table>
+                    </div>
                   </div>
                 </li>
               </ul>
