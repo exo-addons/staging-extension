@@ -239,6 +239,6 @@ public interface StagingService {
    * @param selectedResources 
    * @throws Exception 
    */
-  Set<String> executeSQL(String sql, Set<String> selectedResources) throws Exception;
+  Set<String> executeSQL(String sql, Set<String> sites) throws Exception;
 
 }

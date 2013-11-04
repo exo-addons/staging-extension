@@ -58,9 +58,8 @@ public class StagingServiceImpl implements StagingService {
    * {@inheritDoc}
    */
   @Override
-  public Set<String> executeSQL(String sql, Set<String> selectedResources) throws Exception {
+  public Set<String> executeSQL(String sql, Set<String> sites) throws Exception {
     NodeLocation sitesLocation = getWCMConfigurationService().getLivePortalsLocation();
-    Set<String> sites = filterSelectedResources(selectedResources, CONTENT_SITES_PATH);
     Set<String> paths = new HashSet<String>();
     for (String sitePath : sites) {
       String realSQL = sql;

@@ -111,34 +111,27 @@ function StagingCtrl($scope, $http) {
   });
 
   $scope.toggleCategorySelection = function(selectedCategory) {
-    $http.post(stagingContainer.jzURL('StagingExtensionController.selectResourcesCategory') + '&path=' + selectedCategory + '&checked=' + $scope.categoriesModel[selectedCategory]).success(function (data) {
-      if($scope.categoriesModel[selectedCategory]) {
-        $scope.loadingResources[selectedCategory] = true;
-        $http.get(stagingContainer.jzURL('StagingExtensionController.getResourcesOfCategory') + '&path=' + selectedCategory).success(function (data) {
-          $scope.resources[selectedCategory] = [];
-          for(var i=0; i<data.resources.length; i++) {
-            $scope.resources[selectedCategory].push({
-              "path": data.resources[i].path,
-              "text": data.resources[i].text,
-              "selected": true
-            });
-          }
-          $scope.loadingResources[selectedCategory] = false;
-        });
-      } else {
-        delete $scope.resources[selectedCategory];
-      }
-    });
+    if($scope.categoriesModel[selectedCategory]) {
+      $scope.loadingResources[selectedCategory] = true;
+      $http.get(stagingContainer.jzURL('StagingExtensionController.getResourcesOfCategory') + '&path=' + selectedCategory).success(function (data) {
+        $scope.resources[selectedCategory] = [];
+        for(var i=0; i<data.resources.length; i++) {
+          $scope.resources[selectedCategory].push({
+            "path": data.resources[i].path,
+            "text": data.resources[i].text,
+            "selected": true
+          });
+        }
+        $scope.loadingResources[selectedCategory] = false;
+      });
+    } else {
+      delete $scope.resources[selectedCategory];
+    }
   };
 
   $scope.unselectCategory = function(selectedCategory) {
     $scope.categoriesModel[selectedCategory] = false;
     $scope.toggleCategorySelection(selectedCategory);
-  };
-
-  // Temporary method used to update the server state
-  $scope.selectResource = function(resource) {
-    $http.post(stagingContainer.jzURL("StagingExtensionController.selectResources") + "&path=" + resource.path + "&checked=" + resource.selected);
   };
 
 
@@ -181,9 +174,9 @@ function StagingCtrl($scope, $http) {
         if(indexSlash > 0) {
           var optionName = optionFullName.substring(0, indexSlash);
           var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
-          options += optionName + "=" + optionValue;
+          options += "staging-option:" + optionName + "=" + optionValue;
         } else {
-          options += optionFullName + "=" + this.value;
+          options += "staging-option:" + optionFullName + "=" + this.value;
         }
       }
     }
@@ -233,10 +226,14 @@ function StagingCtrl($scope, $http) {
     var form = new FormData();
     form.append('file', $scope.importFile);
 
+    // options
     var queryParams = $scope.getOptionsString(selectedCategories[0], "IMPORT");
     if(queryParams !== "") {
       queryParams = "&" + queryParams;
     }
+
+    // resource category
+    queryParams += "&staging:resourceCategory=" + selectedCategories[0];
 
     $scope.setResultMessage("Importing ...", "info");
     $http({
@@ -286,9 +283,32 @@ function StagingCtrl($scope, $http) {
       return;
     }
 
-    var options = "";
+    // Request parameters
+
+    // target server
+    var paramsTargetServer = "host=" + targetServer.host;
+    paramsTargetServer += "&port=" + targetServer.port;
+    paramsTargetServer += "&username=" + targetServer.username;
+    paramsTargetServer += "&password=" + targetServer.password;
+    paramsTargetServer += "&isSSLString=" + targetServer.isSSLString;
+
+    // resource categories
+    var selectedCategories = $scope.getSelectedCategories();
+    var paramsResourceCategories = "";
+    for(var i=0; i<selectedCategories.length; i++) {
+      paramsResourceCategories += "&resourceCategories=" + selectedCategories[i];
+    }
+
+    // resources
+    var paramsResources = "";
+    for(var i=0; i<selectedResources.length; i++) {
+      paramsResources += "&resources=" + selectedResources[i].path;
+    }
+
+    // options
+    var paramsOptions = "";
     for(optionName in $scope.optionsModel) {
-      options += "&options=" + optionName + ":" + $scope.optionsModel[optionName];
+      paramsOptions += "&options=" + optionName + ":" + $scope.optionsModel[optionName];
     }
 
 		// Launch synchronization...
@@ -297,7 +317,7 @@ function StagingCtrl($scope, $http) {
     $http({
         method: 'POST',
         url: stagingContainer.jzURL('StagingExtensionController.synchronize'),
-        data: 'host=' + targetServer.host + '&port=' + targetServer.port + '&username=' + targetServer.username + '&password=' + targetServer.password + '&isSSLString=' + targetServer.isSSLString + options,
+        data: paramsTargetServer + paramsResourceCategories + paramsResources + paramsOptions,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       }).success(function (data) {
         $scope.setResultMessage(data, "success");
@@ -313,10 +333,17 @@ function StagingCtrl($scope, $http) {
       $scope.validateQueryResultMessageClass = "alert-error";
       $scope.validateQueryResultMessage = "Error : Empty query";
     } else {
+
+      var selectedSites = $scope.resources["/content/sites"].filter(function(element) { return element.selected === true && element.path.indexOf("/content/sites") == 0; });
+      var paramsSites = "";
+      for(var i=0; i<selectedSites.length; i++) {
+        paramsSites += "&sites=" + selectedSites[i].path;
+      }
+
       $http({
         method: 'POST',
         url: stagingContainer.jzURL('StagingExtensionController.executeSQL'),
-        data: 'sql=' + sql
+        data: 'sql=' + sql + paramsSites
         ,
         headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       }).success(function (data) {

@@ -20,6 +20,8 @@ public class StagingExtensionController {
 
   public static final String OPERATION_IMPORT_PREFIX = "IMPORT";
   public static final String OPERATION_EXPORT_PREFIX = "EXPORT";
+  public static final String PARAM_PREFIX_OPTION = "staging-option:";
+
 
   /** */
   StagingService stagingService;
@@ -34,12 +36,6 @@ public class StagingExtensionController {
   @Inject
   @Path("index.gtmpl")
   Template indexTmpl;
-
-  /** */
-  Set<String> selectedResourcesCategories = Collections.synchronizedSet(new HashSet<String>());
-
-  /** */
-  Set<String> selectedResources = Collections.synchronizedSet(new HashSet<String>());
 
   static List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
 
@@ -94,10 +90,7 @@ public class StagingExtensionController {
 
   @View
   public Response.Render index() {
-    // Clear selection
-    selectedResources.clear();
-
-    Map<String, Object> parameters = buildResourcesParameters();
+    Map<String, Object> parameters = new HashMap<String, Object>();
 
     parameters.put("resourceCategories", resourceCategories);
 
@@ -163,58 +156,30 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public void selectResourcesCategory(String path, String checked) {
-    if ("true".equals(checked) && path != null && !path.isEmpty()) {
-      selectedResourcesCategories.add(path);
-
-      // select all resources of the category
-      for(Resource resource : stagingService.getResources(path)) {
-        selectedResources.add(resource.getPath());
-      }
-    } else {
-      selectedResourcesCategories.remove(path);
-
-      // unselect all resources of the category
-      for(Resource resource : stagingService.getResources(path)) {
-        selectedResources.remove(resource.getPath());
-      }
-    }
-  }
-
-  @Ajax
-  @juzu.Resource
-  public void selectResources(String path, String checked) {
-    if (checked != null && path != null && !checked.isEmpty() && !path.isEmpty()) {
-      if (checked.equals("true")) {
-        selectedResources.add(path);
-      } else {
-        selectedResources.remove(path);
-      }
-    } else {
-      log.warn("Selection not considered.");
-    }
-  }
-
-  @Ajax
-  @juzu.Resource
   public Response.Content<?> importResources(FileItem file) throws IOException {
     if (file == null || file.getSize() == 0) {
       return Response.content(500, "File is empty.");
     }
-    if (selectedResourcesCategories == null || selectedResourcesCategories.isEmpty()) {
+
+    Map<String, String[]> parameters = Request.getCurrent().getParameters();
+    String[] selectedResourcesCategories = parameters.get("staging:resourceCategory");
+
+    if (selectedResourcesCategories == null || selectedResourcesCategories.length == 0) {
       return Response.content(500, "You must select a resource category.");
     }
-    if(selectedResourcesCategories.size() > 1) {
+    if(selectedResourcesCategories.length > 1) {
       return Response.content(500, "Only one resource can be imported at a time.");
     }
+
     try {
-      Map<String, String[]> parameters = Request.getCurrent().getParameters();
       Map<String, List<String>> attributes = new HashMap<String, List<String>>();
       for(String param : parameters.keySet()) {
-        attributes.put(param, Arrays.asList(parameters.get(param)));
+        if(param.startsWith(PARAM_PREFIX_OPTION)) {
+          attributes.put(param.substring(PARAM_PREFIX_OPTION.length()), Arrays.asList(parameters.get(param)));
+        }
       }
 
-      stagingService.importResource(selectedResourcesCategories.iterator().next(), file, attributes);
+      stagingService.importResource(selectedResourcesCategories[0], file, attributes);
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
@@ -273,19 +238,19 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response synchronize(String isSSLString, String host, String port, String username, String password, String[] options) throws IOException {
+  public Response synchronize(String isSSLString, String host, String port, String username, String password, String[] resourceCategories, String[] resources, String[] options) throws IOException {
     TargetServer targetServer = new TargetServer(host, port, username, password, "true".equals(isSSLString));
 
     // Create selected resources categories
-    List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
-    for(String selectedResourcesCategory : selectedResourcesCategories) {
+    List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
+    for(String selectedResourcesCategory : resourceCategories) {
       ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
-      resourceCategories.add(resourceCategory);
+      selectedResourceCategories.add(resourceCategory);
     }
 
     // Dispatch selected resources in resources categories
-    for(String selectedResource : selectedResources) {
-      for(ResourceCategory resourceCategory : resourceCategories) {
+    for(String selectedResource : resources) {
+      for(ResourceCategory resourceCategory : selectedResourceCategories) {
         if(selectedResource.startsWith(resourceCategory.getPath())) {
           resourceCategory.getResources().add(new Resource(selectedResource, null, null));
           break;
@@ -301,7 +266,7 @@ public class StagingExtensionController {
         String optionValue = selectedOption.substring(indexColon + 1);
 
         String optionParts[] = optionName.split("_");
-        for(ResourceCategory resourceCategory : resourceCategories) {
+        for(ResourceCategory resourceCategory : selectedResourceCategories) {
           if(optionParts[0].equals(resourceCategory.getPath())) {
             if(optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
               resourceCategory.getExportOptions().put(optionParts[2], optionValue);
@@ -315,7 +280,7 @@ public class StagingExtensionController {
     }
 
     try {
-      synchronizationService.synchronize(resourceCategories, targetServer);
+      synchronizationService.synchronize(selectedResourceCategories, targetServer);
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);
@@ -325,9 +290,9 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response executeSQL(String sql) throws IOException {
+  public Response executeSQL(String sql, String[] sites) throws IOException {
     try {
-      Set<String> resultedNodePaths = stagingService.executeSQL(sql, selectedResources);
+      Set<String> resultedNodePaths = stagingService.executeSQL(sql, new HashSet<String>(Arrays.asList(sites)));
       StringBuilder builder = new StringBuilder("<ul>");
       for (String path : resultedNodePaths) {
         builder.append("<li>");
@@ -341,51 +306,4 @@ public class StagingExtensionController {
       return Response.content(500, "Error while executing request: " + e.getMessage());
     }
   }
-
-  private Set<String> getSelectedResources(String parentPath) {
-    Set<String> resources = stagingService.filterSelectedResources(selectedResources, parentPath);
-    Set<String> selectedResources = new HashSet<String>();
-    for (String resource : resources) {
-      resource = resource.replace(parentPath, "");
-      if (resource.startsWith("/")) {
-        resource = resource.substring(1);
-      }
-      selectedResources.add(resource);
-    }
-    return selectedResources;
-  }
-
-  /**
-   * Build a parameter map of selected resources and options
-   * @return
-   */
-  private Map<String, Object> buildResourcesParameters() {
-    Map<String, Object> parameters = new HashMap<String, Object>();
-
-    parameters.put("portalSiteSelectedNodes", getSelectedResources(StagingService.SITES_PORTAL_PATH));
-    parameters.put("groupSiteSelectedNodes", getSelectedResources(StagingService.SITES_GROUP_PATH));
-    parameters.put("userSiteSelectedNodes", getSelectedResources(StagingService.SITES_USER_PATH));
-    parameters.put("siteContentSelectedNodes", getSelectedResources(StagingService.CONTENT_SITES_PATH));
-    parameters.put("applicationCLVTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
-    parameters.put("applicationSearchTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
-    parameters.put("documentTypeTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
-    parameters.put("metadataTemplatesSelectedNodes", getSelectedResources(StagingService.ECM_TEMPLATES_METADATA_PATH));
-    parameters.put("taxonomySelectedNodes", getSelectedResources(StagingService.ECM_TAXONOMY_PATH));
-    parameters.put("querySelectedNodes", getSelectedResources(StagingService.ECM_QUERY_PATH));
-    parameters.put("driveSelectedNodes", getSelectedResources(StagingService.ECM_DRIVE_PATH));
-    parameters.put("scriptSelectedNodes", getSelectedResources(StagingService.ECM_SCRIPT_PATH));
-    parameters.put("actionNodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_ACTION_PATH));
-    parameters.put("nodeTypeSelectedNodes", getSelectedResources(StagingService.ECM_NODETYPE_PATH));
-    parameters.put("registrySelectedNodes", getSelectedResources(StagingService.REGISTRY_PATH));
-    parameters.put("viewTemplateSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_TEMPLATES_PATH));
-    parameters.put("viewConfigurationSelectedNodes", getSelectedResources(StagingService.ECM_VIEW_CONFIGURATION_PATH));
-    parameters.put("userSelectedNodes", getSelectedResources(StagingService.USERS_PATH));
-    parameters.put("groupSelectedNodes", getSelectedResources(StagingService.GROUPS_PATH));
-    parameters.put("roleSelectedNodes", getSelectedResources(StagingService.ROLE_PATH));
-
-    parameters.put("selectedResources", selectedResources);
-
-    return parameters;
-  }
-
 }
