@@ -160,7 +160,7 @@ function StagingCtrl($scope, $http) {
     return selectedCategories;
   };
 
-  $scope.getOptionsString = function(selectedResourcesCategoryPath, type) {
+  $scope.getOptionsString = function(selectedResourcesCategoryPath, type, addNamespace) {
     var options = "";
     for(optionName in $scope.optionsModel) {
       if(optionName.indexOf(selectedResourcesCategoryPath +"_" + type + "_") === 0) {
@@ -174,9 +174,15 @@ function StagingCtrl($scope, $http) {
         if(indexSlash > 0) {
           var optionName = optionFullName.substring(0, indexSlash);
           var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
-          options += "staging-option:" + optionName + "=" + optionValue;
+          if(addNamespace) {
+            options += "staging-option:"
+          }
+          options += optionName + "=" + optionValue;
         } else {
-          options += "staging-option:" + optionFullName + "=" + this.value;
+          if(addNamespace) {
+            options += "staging-option:"
+          }
+          options += optionFullName + "=" + this.value;
         }
       }
     }
@@ -197,7 +203,7 @@ function StagingCtrl($scope, $http) {
       return;
     }
 
-    var queryParams = $scope.getOptionsString(selectedCategories[0], "EXPORT");
+    var queryParams = $scope.getOptionsString(selectedCategories[0], "EXPORT", false);
     if(queryParams !== "") {
       queryParams = "?" + queryParams;
     }
@@ -227,7 +233,7 @@ function StagingCtrl($scope, $http) {
     form.append('file', $scope.importFile);
 
     // options
-    var queryParams = $scope.getOptionsString(selectedCategories[0], "IMPORT");
+    var queryParams = $scope.getOptionsString(selectedCategories[0], "IMPORT", true);
     if(queryParams !== "") {
       queryParams = "&" + queryParams;
     }

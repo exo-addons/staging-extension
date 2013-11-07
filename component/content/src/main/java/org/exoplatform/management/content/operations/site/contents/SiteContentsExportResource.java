@@ -113,7 +113,7 @@ public class SiteContentsExportResource implements OperationHandler {
       }
 
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
-      boolean exportVersionHistory = !filters.contains("no-hitory:true");
+      boolean exportVersionHistory = !filters.contains("no-history:true");
 
       // Validate Site Structure
       validateSiteStructure(siteName);

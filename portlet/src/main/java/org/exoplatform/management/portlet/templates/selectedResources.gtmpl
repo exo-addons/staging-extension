@@ -178,8 +178,8 @@
         </div>
         <input id="withoutTaxonomy" class="option" type="checkbox" name="/content/sites_EXPORT_filter/taxonomy" value="true"
                ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><label for="withoutTaxonomy" class="checkbox">Without taxonomy nodes</label>
-        <input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-hitory" value="true"
-               ng-model="optionsModel['/content/sites_EXPORT_filter/no-hitory']"/><label for="withoutVersionHistory" class="checkbox">Without Version history</label>
+        <input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-history" value="true"
+               ng-model="optionsModel['/content/sites_EXPORT_filter/no-history']"/><label for="withoutVersionHistory" class="checkbox">Without Version history</label>
       </div>
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <input id="cleanupPublication" class="option" type="checkbox" name="/content/sites_IMPORT_filter/cleanPublication" value="true"
