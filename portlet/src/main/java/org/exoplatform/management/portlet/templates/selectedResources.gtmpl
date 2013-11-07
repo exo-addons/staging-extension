@@ -187,10 +187,10 @@
         JCR UUID Behavior
         <select class="option" name="/content/sites_IMPORT_uuidBehavior"
                 ng-model="optionsModel['/content/sites_IMPORT_uuidBehavior']">
-          <option value="0">Create new</option>
-          <option value="1">Remove existing</option>
-          <option value="2">Replace existing</option>
-          <option value="3">Throw Exception when collision</option>
+          <option value="NEW">Create new</option>
+          <option value="REMOVE">Remove existing</option>
+          <option value="REPLACE">Replace existing</option>
+          <option value="THROW">Throw Exception when collision</option>
         </select>
       </div>
       <div>

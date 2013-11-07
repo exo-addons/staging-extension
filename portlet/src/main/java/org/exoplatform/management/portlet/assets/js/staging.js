@@ -98,6 +98,7 @@ function StagingCtrl($scope, $http) {
   // options default values
   $scope.optionsModel['/organization/user_EXPORT_filter/with-membership'] = true;
   $scope.optionsModel['/organization/group_EXPORT_filter/with-membership'] = true;
+  $scope.optionsModel['/content/sites_IMPORT_uuidBehavior'] = "NEW";
 
   //
   $scope.resources = [];
@@ -163,7 +164,7 @@ function StagingCtrl($scope, $http) {
   $scope.getOptionsString = function(selectedResourcesCategoryPath, type, addNamespace) {
     var options = "";
     for(optionName in $scope.optionsModel) {
-      if(optionName.indexOf(selectedResourcesCategoryPath +"_" + type + "_") === 0) {
+      if(optionName.indexOf(selectedResourcesCategoryPath + "_" + type + "_") === 0) {
         if(options !== "") {
           options += "&";
         }
@@ -182,7 +183,7 @@ function StagingCtrl($scope, $http) {
           if(addNamespace) {
             options += "staging-option:"
           }
-          options += optionFullName + "=" + this.value;
+          options += optionFullName + "=" + fieldValue;
         }
       }
     }
