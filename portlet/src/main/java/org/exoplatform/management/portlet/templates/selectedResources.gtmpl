@@ -176,8 +176,8 @@
             </div>
           </div>
         </div>
-        <input id="withoutTaxonomy" class="option" type="checkbox" name="/content/sites_EXPORT_filter/taxonomy" value="true"
-               ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><label for="withoutTaxonomy" class="checkbox">Without taxonomy nodes</label>
+        <input id="taxonomy" class="option" type="checkbox" name="/content/sites_EXPORT_filter/taxonomy" value="true"
+               ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><label for="taxonomy" class="checkbox">Include taxonomy</label>
         <input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-history" value="true"
                ng-model="optionsModel['/content/sites_EXPORT_filter/no-history']"/><label for="withoutVersionHistory" class="checkbox">Without Version history</label>
       </div>
