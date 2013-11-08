@@ -302,32 +302,10 @@
         vertical-align: initial;
       }
 
-      .tree-checkbox {
-        position: absolute;
-        opacity: 0;
-      }
-
-      .tree-checkbox:disabled + label {
-        cursor: default;
-        opacity: .6;
-      }
-
-      .tree-checkbox:checked:not(:disabled) + label + .selected-resource-details {
-        display: block;
-      }
-
-      .tree-checkbox:checked + .parent::before {
-        background: transparent url("/staging-extension-portlet/skin/images/minus.png") no-repeat center;
-      }
-
-      .parent::before {
-        background: transparent url("/staging-extension-portlet/skin/images/plus.png") no-repeat center;
-      }
-
       .selected-resource-details {
         margin: 0 0 0 45px;
         font-size: 0.8em;
-        display: none;
+        //display: none;
 
         table {
           margin-top: 15px;
@@ -344,14 +322,7 @@
         width: 16px;
       }
 
-      label.parent::before {
-        .labelBeforeMixin;
-        margin: 0 10px 0 0;
-        display: inline-block;
-        height: 18px;
-      }
-
-      .Clickable {
+      .clickable {
         cursor: pointer;
         white-space: nowrap;
       }
@@ -360,7 +331,7 @@
         background-color: #f5f5f5;
       }
 
-      .NotClickable {
+      .notClickable {
         cursor: default;
       }
 

@@ -1,8 +1,7 @@
   <div class="selected-resource" ng-show="categoriesModel['/organization/user']">
     <a ng-click="unselectCategory('/organization/user')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/organization/user">
-    <label class="parent Clickable" for="selected_/organization/user">Users</label>
-    <div class="selected-resource-details">
+    <div class="clickable" ng-init="resourceDetailsOrgUsersVisible=true" ng-click="resourceDetailsOrgUsersVisible = !resourceDetailsOrgUsersVisible">Users</div>
+    <div class="selected-resource-details" ng-show="resourceDetailsOrgUsersVisible">
       <div ng-show="mode == 'export' || mode == 'synchronize'">
         <input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-jcr-content"
           ng-model="optionsModel['/organization/user_EXPORT_filter/with-jcr-content']"/>
@@ -31,9 +30,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/organization/group']">
     <a ng-click="unselectCategory('/organization/group')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/organization/group">
-    <label class="parent Clickable" for="selected_/organization/group">Groups</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsOrgGroupsVisible=true" ng-click="resourceDetailsOrgGroupsVisible = !resourceDetailsOrgGroupsVisible">Groups</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsOrgGroupsVisible">
       <div ng-show="mode == 'export' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/group_EXPORT_filter/with-jcr-content"
           ng-model="optionsModel['/organization/group_EXPORT_filter/with-jcr-content']">With Group JCR Content</label>
@@ -56,9 +54,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/organization/role']">
     <a ng-click="unselectCategory('/organization/role')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/organization/role">
-    <label class="parent Clickable" for="selected_/organization/role">Roles</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsOrgRolesVisible=true" ng-click="resourceDetailsOrgRolesVisible = !resourceDetailsOrgRolesVisible">Roles</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsOrgRolesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/organization/role_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/organization/role_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -75,9 +72,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/site/portalsites']">
     <a ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/site/portalsites">
-    <label class="parent Clickable" for="selected_/site/portalsites">Portal Sites</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsPortalSitesVisible=true" ng-click="resourceDetailsPortalSitesVisible = !resourceDetailsPortalSitesVisible">Portal Sites</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsPortalSitesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox">Import Mode
           <select class="option" name="/site/portalsites_IMPORT_importMode"
@@ -101,9 +97,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/site/groupsites']">
     <a ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/site/groupsites">
-    <label class="parent Clickable" for="selected_/site/groupsites">Group Sites</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsGroupSitesVisible=true" ng-click="resourceDetailsGroupSitesVisible = !resourceDetailsGroupSitesVisible">Group Sites</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsGroupSitesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox">Import Mode
           <select class="option" name="/site/groupsites_IMPORT_importMode"
@@ -127,9 +122,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/site/usersites']">
     <a ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/site/usersites">
-    <label class="parent Clickable" for="selected_/site/usersites">User Sites</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsUserSitesVisible=true" ng-click="resourceDetailsUserSitesVisible = !resourceDetailsUserSitesVisible">User Sites</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsUserSitesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox">Import Mode
           <select class="option" name="/site/usersites_IMPORT_importMode"
@@ -153,9 +147,8 @@
 
   <div class="selected-resource sites-content" ng-show="categoriesModel['/content/sites']">
     <a ng-click="unselectCategory('/content/sites')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/content/sites">
-    <label class="parent Clickable" for="selected_/content/sites">Sites Contents</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsSitesContentVisible=true" ng-click="resourceDetailsSitesContentVisible = !resourceDetailsSitesContentVisible">Sites Contents</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsSitesContentVisible">
       <div ng-show="mode == 'export' || mode == 'synchronize'">
         <div class="sites-content-filter">
           <div class="sites-content-filter-title">Filter:</div>
@@ -205,9 +198,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/applications/content-list-viewer']">
     <a ng-click="unselectCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/applications/content-list-viewer">
-    <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/content-list-viewer">Content List Templates</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsCLVTemplatesVisible=true" ng-click="resourceDetailsCLVTemplatesVisible = !resourceDetailsCLVTemplatesVisible">Content List Templates</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsCLVTemplatesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/templates/applications/content-list-viewer_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -224,9 +216,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/applications/search']">
     <a ng-click="unselectCategory('/ecmadmin/templates/applications/search')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/applications/search">
-    <label class="parent Clickable" for="selected_/ecmadmin/templates/applications/search">Search Templates</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsSearchTemplatesVisible=true" ng-click="resourceDetailsSearchTemplatesVisible = !resourceDetailsSearchTemplatesVisible">Search Templates</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsSearchTemplatesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/search_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/templates/applications/search_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -243,9 +234,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/nodetypes']">
     <a ng-click="unselectCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/nodetypes">
-    <label class="parent Clickable" for="selected_/ecmadmin/templates/nodetypes">Document Type Templates</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsDocTemplatesVisible=true" ng-click="resourceDetailsDocTemplatesVisible = !resourceDetailsDocTemplatesVisible">Document Type Templates</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsDocTemplatesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetypes_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/templates/nodetypes_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -262,9 +252,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/templates/metadata']">
     <a ng-click="unselectCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/templates/metadata">
-    <label class="parent Clickable" for="selected_/ecmadmin/templates/metadata">Metadata Templates</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsMetadataTemplatesVisible=true" ng-click="resourceDetailsMetadataTemplatesVisible = !resourceDetailsMetadataTemplatesVisible">Metadata Templates</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsMetadataTemplatesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/templates/metadata_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -281,9 +270,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/taxonomy']">
     <a ng-click="unselectCategory('/ecmadmin/taxonomy')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/taxonomy">
-    <label class="parent Clickable" for="selected_/ecmadmin/taxonomy">Taxonomies</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsTaxonomiesVisible=true" ng-click="resourceDetailsTaxonomiesVisible = !resourceDetailsTaxonomiesVisible">Taxonomies</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsTaxonomiesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/taxonomy_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -300,9 +288,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/queries']">
     <a ng-click="unselectCategory('/ecmadmin/queries')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/queries">
-    <label class="parent Clickable" for="selected_/ecmadmin/queries">Queries</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsQueriesVisible=true" ng-click="resourceDetailsQueriesVisible = !resourceDetailsQueriesVisible">Queries</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsQueriesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/queries_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/queries_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -312,9 +299,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/drive']">
     <a ng-click="unselectCategory('/ecmadmin/drive')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/drive">
-    <label class="parent Clickable" for="selected_/ecmadmin/drive">Drives</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsDrivesVisible=true" ng-click="resourceDetailsDrivesVisible = !resourceDetailsDrivesVisible">Drives</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsDrivesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/drive_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/drive_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -331,9 +317,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/script']">
     <a ng-click="unselectCategory('/ecmadmin/script')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/script">
-    <label class="parent Clickable" for="selected_/ecmadmin/script">ECMS Groovy Scripts</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">ECMS Groovy Scripts</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/script_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/script_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -350,9 +335,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/view/templates']">
     <a ng-click="unselectCategory('/ecmadmin/view/templates')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/view/templates">
-    <label class="parent Clickable" for="selected_/ecmadmin/view/templates">Sites Explorer View Templates</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsSEViewTemplatesVisible=true" ng-click="resourceDetailsSEViewTemplatesVisible = !resourceDetailsSEViewTemplatesVisible">Sites Explorer View Templates</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsSEViewTemplatesVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/view/templates_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -369,9 +353,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/view/configuration']">
     <a ng-click="unselectCategory('/ecmadmin/view/configuration')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/view/configuration">
-    <label class="parent Clickable" for="selected_/ecmadmin/view/configuration">Sites Explorer View Configuration</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsSEViewConfVisible=true" ng-click="resourceDetailsSEViewConfVisible = !resourceDetailsSEViewConfVisible">Sites Explorer View Configuration</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsSEViewConfVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/ecmadmin/view/configuration_IMPORT_filter/replace-existing']">Replace existing</label>
@@ -388,9 +371,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/action']">
     <a ng-click="unselectCategory('/ecmadmin/action')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/action">
-    <label class="parent Clickable" for="selected_/ecmadmin/action">Action NodeTypes</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsActionNodetypesVisible=true" ng-click="resourceDetailsActionNodetypesVisible = !resourceDetailsActionNodetypesVisible">Action NodeTypes</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsActionNodetypesVisible">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/action'] | filter:{selected:true}">
           <td>{{resource.text}}</td>
@@ -401,9 +383,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/ecmadmin/nodetype']">
     <a ng-click="unselectCategory('/ecmadmin/nodetype')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/ecmadmin/nodetype">
-    <label class="parent Clickable" for="selected_/ecmadmin/nodetype">NodeTypes</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsNodetypesVisible=true" ng-click="resourceDetailsNodetypesVisible = !resourceDetailsNodetypesVisible">NodeTypes</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsNodetypesVisible">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/nodetype'] | filter:{selected:true}">
           <td>{{resource.text}}</td>
@@ -414,9 +395,8 @@
 
   <div class="selected-resource" ng-show="categoriesModel['/registry']">
     <a ng-click="unselectCategory('/registry')" class="unselect-resources-category">Remove</a>
-    <input type="checkbox" class="tree-checkbox" id="selected_/registry">
-    <label class="parent Clickable" for="selected_/registry">Applications Registry</label>
-    <div class="selected-resource-details">
+    <label class="clickable" ng-init="resourceDetailsAppRegistryVisible=true" ng-click="resourceDetailsAppRegistryVisible = !resourceDetailsAppRegistryVisible">Applications Registry</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsAppRegistryVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox"><input class="option" type="checkbox" name="/registry_IMPORT_filter/replace-existing"
           ng-model="optionsModel['/registry_IMPORT_filter/replace-existing']">Replace existing</label>
