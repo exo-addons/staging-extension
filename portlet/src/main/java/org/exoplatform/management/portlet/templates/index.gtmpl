@@ -1,4 +1,4 @@
-<div id="staging" class="staging" ng-app>
+<div id="staging" class="staging" ng-app="stagingApp">
   <div ng-controller="StagingCtrl">
     <div class="well modes">
       <div class="mode-items">
