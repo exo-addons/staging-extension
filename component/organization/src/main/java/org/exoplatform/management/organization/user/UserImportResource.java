@@ -182,59 +182,15 @@ public class UserImportResource implements OperationHandler {
       log.info("Creating user '" + username + "'");
       User user = deserializeObject(zin, organizationService.getUserHandler().createUserInstance("test").getClass());
       organizationService.getUserHandler().createUser(user, true);
-      /*
-      if (alreadyExists && replaceExisting) {
-        // Delete Memberships to replace it by what is unserialized
-        Collection<?> memberships = organizationService.getMembershipHandler().findMembershipsByUser(user.getUserName());
-        for (Object membership : memberships) {
-          organizationService.getMembershipHandler().removeMembership(((Membership) membership).getId(), true);
-        }
-        Node userNode = null;
-        try {
-          SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-          userNode = hierarchyCreator.getUserNode(sessionProvider, user.getUserName());
-          if (userNode != null) {
-            Session session = userNode.getSession();
-            userNode.remove();
-            session.save();
-          }
-        } catch (Exception exception) {
-          throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:", exception);
-        }
-      }
-      */
     } else if(replaceExisting && alreadyExists) {
       log.info("ReplaceExisting is On: Updating user '" + username + "'");
       User user = deserializeObject(zin, organizationService.getUserHandler().createUserInstance("test").getClass());
       organizationService.getUserHandler().saveUser(user, true);
-      /*
-      // Delete Profile to replace it by what is unserialized
-      UserProfile oldUserProfile = organizationService.getUserProfileHandler().findUserProfileByName(user.getUserName());
-      if (oldUserProfile != null && replaceExisting) {
-        if (alreadyExists) {
-          log.info("ReplaceExisting is On: Deleting profile '" + user.getUserName() + "'");
-        }
-        organizationService.getUserProfileHandler().removeUserProfile(user.getUserName(), true);
-        oldUserProfile = null;
-      }
-      */
 
       // Delete Memberships to replace it by what is unserialized
       Collection<?> memberships = organizationService.getMembershipHandler().findMembershipsByUser(user.getUserName());
       for (Object membership : memberships) {
         organizationService.getMembershipHandler().removeMembership(((Membership) membership).getId(), true);
-      }
-      Node userNode = null;
-      try {
-        SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-        userNode = hierarchyCreator.getUserNode(sessionProvider, user.getUserName());
-        if (userNode != null) {
-          Session session = userNode.getSession();
-          userNode.remove();
-          session.save();
-        }
-      } catch (Exception exception) {
-        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting user's personnel folder:", exception);
       }
     } else {
       log.info("ReplaceExisting is Off: Ignoring user '" + username + "'");
