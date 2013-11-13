@@ -1,15 +1,5 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
-import java.io.StringReader;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.ComponentPlugin;
@@ -39,6 +29,15 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
+
+import javax.jcr.Node;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+import java.io.StringReader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
@@ -119,7 +118,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
                 for (Query query : queries) {
                   if (queryData.getName().equals(query.getStoredQueryPath().substring(query.getStoredQueryPath().lastIndexOf("/") + 1))) {
                     if (replaceExisting) {
-                      log.info("Overwrite query '" + queryData.getName() + "' already exists for user '" + username + "'.");
+                      log.info("Overwrite query '" + queryData.getName() + "' already existing for user '" + username + "'.");
                       Node queriesNode = nodeHierarchyCreator.getUserNode(WCMCoreUtils.getSystemSessionProvider(), username).getNode(queryService.getRelativePath());
                       Node queryNode = queriesNode.getNode(queryData.getName());
                       queryNode.remove();

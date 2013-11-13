@@ -1,18 +1,8 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
-import java.io.StringReader;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
-import org.exoplatform.container.xml.ComponentPlugin;
-import org.exoplatform.container.xml.Configuration;
-import org.exoplatform.container.xml.ExternalComponentPlugins;
-import org.exoplatform.container.xml.InitParams;
-import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.container.xml.*;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.management.ecmadmin.operations.queries.QueriesExportTask;
 import org.exoplatform.services.cms.drives.DriveData;
@@ -29,6 +19,12 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
+
+import java.io.StringReader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -84,6 +80,8 @@ public class DriveImportResource extends ECMAdminImportResource {
             // Delete existing drives if replaceExisting=true
             if (replaceExisting) {
               deleteExistingDrives(componentPlugin);
+            } else {
+              log.info("Ignore existing drives");
             }
           }
         }

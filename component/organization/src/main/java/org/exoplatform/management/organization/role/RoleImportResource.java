@@ -12,7 +12,7 @@ import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.NoResultModel;
 
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,21 +31,12 @@ public class RoleImportResource implements OperationHandler {
     }
 
     InputStream attachmentInputStream = null;
-    Boolean replaceExisting = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext() && replaceExisting == null) {
-        String filter = filters.next();
-        if (filter.startsWith("replace-existing:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
-        }
-      }
-    }
-    if (replaceExisting == null) {
-      replaceExisting = false;
-    }
+    List<String> filters = attributes.getValues("filter");
+
+    // "replace-existing" attribute. Defaults to false.
+    boolean replaceExisting = filters.contains("replace-existing:true");
 
     // get attachement input stream
     OperationAttachment attachment = operationContext.getAttachment(false);

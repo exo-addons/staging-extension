@@ -5,7 +5,7 @@ import org.gatein.management.api.operation.*;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -32,18 +32,10 @@ public abstract class ECMAdminImportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attribute 'replaceExisting'
     OperationAttributes attributes = operationContext.getAttributes();
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext() && replaceExisting == null) {
-        String filter = filters.next();
-        if (filter.startsWith("replace-existing:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
-        }
-      }
-    }
-    if (replaceExisting == null) {
-      replaceExisting = true;
-    }
+    List<String> filters = attributes.getValues("filter");
+
+    // "replace-existing" attribute. Defaults to false.
+    replaceExisting = filters.contains("replace-existing:true");
 
     // get attachement input stream
     try {

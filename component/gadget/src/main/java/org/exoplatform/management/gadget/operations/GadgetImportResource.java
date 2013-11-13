@@ -21,6 +21,7 @@ import javax.jcr.Session;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Iterator;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -59,21 +60,22 @@ public class GadgetImportResource implements OperationHandler {
       }
     }
     OperationAttributes attributes = operationContext.getAttributes();
+    List<String> filters = attributes.getValues("filter");
 
+    // "replace-existing" attribute. Defaults to false.
+    boolean replaceExisting = filters.contains("replace-existing:true");
+
+    // "jcrpath" attribute.
     String jcrPath = null;
-    boolean replaceExisting = true;
     if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext()) {
-        String filter = filters.next();
+      Iterator<String> filtersIterator = attributes.getValues("filter").iterator();
+      while (filtersIterator.hasNext()) {
+        String filter = filtersIterator.next();
         if (filter.startsWith("jcrpath:")) {
           jcrPath = filter.substring("jcrpath:".length());
           if (!jcrPath.endsWith("/")) {
             jcrPath += "/";
           }
-        }
-        if (filter.startsWith("replace-existing:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
         }
       }
     }

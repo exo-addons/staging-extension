@@ -18,7 +18,6 @@ import org.jibx.runtime.IUnmarshallingContext;
 import javax.jcr.Session;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -40,17 +39,10 @@ public class RegistryImportResource implements OperationHandler {
       }
     }
     OperationAttributes attributes = operationContext.getAttributes();
+    List<String> filters = attributes.getValues("filter");
 
-    boolean replaceExisting = true;
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext()) {
-        String filter = filters.next();
-        if (filter.startsWith("replace-existing:")) {
-          replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
-        }
-      }
-    }
+    // "replace-existing" attribute. Defaults to false.
+    boolean replaceExisting = filters.contains("replace-existing:true");
 
     OperationAttachment attachment = operationContext.getAttachment(false);
     InputStream attachmentInputStream = attachment.getStream();

@@ -26,7 +26,7 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.Session;
 import java.io.*;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -57,25 +57,11 @@ public class GroupImportResource implements OperationHandler {
       groupsPath = hierarchyCreator.getJcrPath(OrganizationModelJCRContentExportTask.GROUPS_PATH);
     }
 
-    Boolean replaceExisting = null;
-
     OperationAttributes attributes = operationContext.getAttributes();
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext() && replaceExisting == null) {
-        String filter = filters.next();
-        if (filter.startsWith("replace-existing:")) {
-          try {
-            replaceExisting = Boolean.parseBoolean(filter.substring("replace-existing:".length()));
-          } catch (Exception e) {
-            log.warn(filter + " filter expression is not valid.");
-          }
-        }
-      }
-    }
-    if (replaceExisting == null) {
-      replaceExisting = false;
-    }
+    List<String> filters = attributes.getValues("filter");
+
+    // "replace-existing" attribute. Defaults to false.
+    boolean replaceExisting = filters.contains("replace-existing:true");
 
     // get attachement input stream
     OperationAttachment attachment = operationContext.getAttachment(false);
