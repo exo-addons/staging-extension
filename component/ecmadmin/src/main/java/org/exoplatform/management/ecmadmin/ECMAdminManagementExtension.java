@@ -1,7 +1,5 @@
 package org.exoplatform.management.ecmadmin;
 
-import java.util.HashSet;
-
 import org.exoplatform.management.ecmadmin.operations.ECMAdminContentImportResource;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminContentReadResource;
 import org.exoplatform.management.ecmadmin.operations.action.ActionExportResource;
@@ -32,12 +30,7 @@ import org.exoplatform.management.ecmadmin.operations.templates.metadata.Metadat
 import org.exoplatform.management.ecmadmin.operations.templates.nodetypes.NodeTypesTemplatesExportResource;
 import org.exoplatform.management.ecmadmin.operations.templates.nodetypes.NodeTypesTemplatesImportResource;
 import org.exoplatform.management.ecmadmin.operations.templates.nodetypes.NodeTypesTemplatesReadResource;
-import org.exoplatform.management.ecmadmin.operations.view.ViewConfigurationExportResource;
-import org.exoplatform.management.ecmadmin.operations.view.ViewConfigurationReadResource;
-import org.exoplatform.management.ecmadmin.operations.view.ViewImportResource;
-import org.exoplatform.management.ecmadmin.operations.view.ViewReadResource;
-import org.exoplatform.management.ecmadmin.operations.view.ViewTemplatesExportResource;
-import org.exoplatform.management.ecmadmin.operations.view.ViewTemplatesReadResource;
+import org.exoplatform.management.ecmadmin.operations.view.*;
 import org.gatein.management.api.ComponentRegistration;
 import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
@@ -50,6 +43,8 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
 import org.gatein.management.spi.ManagementExtension;
+
+import java.util.HashSet;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -118,13 +113,13 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     ManagedResource.Registration action = ecmadmin.registerSubResource("action", description("NodeTypes of type JCR action."));
     action.registerOperationHandler(OperationNames.READ_RESOURCE, new ActionReadResource(), description("Lists available actions"));
     action.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ActionExportResource(), description("Exports available actions"));
-    action.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new NodeTypeImportResource("nodetype"), description("Imports actions"));
+    action.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new NodeTypeImportResource("action"), description("Imports actions"));
 
     // /ecmadmin/nodetype
     ManagedResource.Registration nodetype = ecmadmin.registerSubResource("nodetype", description("All JCR Nodetypes and Namespaces."));
-    nodetype.registerOperationHandler(OperationNames.READ_RESOURCE, new NodeTypeReadResource(), description("Lists available actions"));
-    nodetype.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new NodeTypeExportResource(), description("Exports available actions"));
-    nodetype.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new NodeTypeImportResource("action"), description("Imports actions"));
+    nodetype.registerOperationHandler(OperationNames.READ_RESOURCE, new NodeTypeReadResource(), description("Lists available node types"));
+    nodetype.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new NodeTypeExportResource(), description("Exports available node types"));
+    nodetype.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new NodeTypeImportResource("nodetype"), description("Imports node types"));
 
     // /ecmadmin/drive
     ManagedResource.Registration drive = ecmadmin.registerSubResource("drive", description("ECMS General and group Drives configuration."));

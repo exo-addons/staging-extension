@@ -1,21 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.nodetype;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
-
-import org.exoplatform.container.xml.ComponentPlugin;
-import org.exoplatform.container.xml.Configuration;
-import org.exoplatform.container.xml.ExternalComponentPlugins;
-import org.exoplatform.container.xml.PropertiesParam;
+import org.exoplatform.container.xml.*;
 import org.exoplatform.container.xml.Property;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -33,6 +18,13 @@ import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
+
+import javax.jcr.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -62,11 +54,10 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     }
     try {
-      ExtendedNodeTypeManager extManager = (ExtendedNodeTypeManager) repositoryService.getCurrentRepository().getNodeTypeManager();
+      ExtendedNodeTypeManager extManager = repositoryService.getCurrentRepository().getNodeTypeManager();
 
-      if (replaceExisting) {
-        log.info("Overwrite '" + pathPrefix.substring(0, pathPrefix.length() - 1) + "' behavior isn't safe, ignoring existing nodetypes.");
-      }
+      log.info("Import node types (existing nodetypes will be ignored) :");
+
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
       List<NodeTypeValue> nodeTypeValues = new ArrayList<NodeTypeValue>();
@@ -80,7 +71,9 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
           NodeTypeValuesList nodeTypeValuesList = (NodeTypeValuesList) uctx.unmarshalDocument(zin, null);
           ArrayList<?> ntvList = nodeTypeValuesList.getNodeTypeValuesList();
           for (Object object : ntvList) {
-            nodeTypeValues.add((NodeTypeValue) object);
+            NodeTypeValue nodeTypeValue = (NodeTypeValue) object;
+            log.info("- " + nodeTypeValue.getName());
+            nodeTypeValues.add(nodeTypeValue);
           }
         } else if (ze.getName().endsWith("namespaces-configuration.xml")) {
           // Import namespaces
@@ -90,7 +83,13 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
       }
       zin.close();
 
+      if (replaceExisting) {
+        log.info("Option replace-existing ignored for nodetypes (" + pathPrefix.substring(0, pathPrefix.length() - 1) + ") import, since the behavior isn't safe. So existing nodetypes will be ignored.");
+      }
+
       extManager.registerNodeTypes(nodeTypeValues, ExtendedNodeTypeManager.IGNORE_IF_EXISTS);
+
+      log.info("Node types imported");
 
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception exception) {
