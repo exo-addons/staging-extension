@@ -1,18 +1,7 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.Value;
-import javax.jcr.query.Query;
-
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.container.xml.ComponentPlugin;
-import org.exoplatform.container.xml.Configuration;
-import org.exoplatform.container.xml.ExternalComponentPlugins;
-import org.exoplatform.container.xml.InitParams;
-import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.container.xml.*;
 import org.exoplatform.services.cms.queries.QueryService;
 import org.exoplatform.services.cms.queries.impl.QueryData;
 import org.exoplatform.services.cms.queries.impl.QueryPlugin;
@@ -26,6 +15,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import javax.jcr.Node;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
@@ -41,6 +36,8 @@ public class QueriesExportResource implements OperationHandler {
       OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+
+      List<String> filters = operationContext.getAttributes().getValues("filter");
 
       // shared queries
       List<Node> sharedQueries = queryService.getSharedQueries(WCMCoreUtils.getSystemSessionProvider());
@@ -64,12 +61,19 @@ public class QueriesExportResource implements OperationHandler {
         // Queries API returns Node object instead of QueryData, so we need
         // to convert them...
         for (Node sharedQueryNode : sharedQueries) {
-          QueryData queryData = new QueryData();
+          String queryName = null;
           if (sharedQueryNode.hasProperty("exo:name")) {
-            queryData.setName(sharedQueryNode.getProperty("exo:name").getString());
+            queryName = sharedQueryNode.getProperty("exo:name").getString();
           } else {
-            queryData.setName(sharedQueryNode.getName());
+            queryName = sharedQueryNode.getName();
           }
+
+          if (!filters.isEmpty() && !filters.contains(queryName)) {
+            continue;
+          }
+
+          QueryData queryData = new QueryData();
+          queryData.setName(queryName);
           queryData.setStatement(sharedQueryNode.getProperty("jcr:statement").getString());
           if (sharedQueryNode.hasProperty("jcr:language")) {
             queryData.setLanguage(sharedQueryNode.getProperty("jcr:language").getString());
@@ -119,9 +123,14 @@ public class QueriesExportResource implements OperationHandler {
           userQueriesComponentPluginsList.add(userQueriesComponentPlugin);
 
           for (Query query : userQueries) {
-            QueryData queryData = new QueryData();
             String queryPath = query.getStoredQueryPath();
-            queryData.setName(queryPath.substring(queryPath.lastIndexOf("/") + 1));
+            String userQueryName = queryPath.substring(queryPath.lastIndexOf("/") + 1);
+            if (!filters.isEmpty() && !filters.contains(user.getUserName() + "/" + userQueryName)) {
+              continue;
+            }
+
+            QueryData queryData = new QueryData();
+            queryData.setName(userQueryName);
             queryData.setStatement(query.getStatement());
             queryData.setLanguage(query.getLanguage());
             queryData.setCacheResult(false);
