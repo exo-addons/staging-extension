@@ -1,15 +1,14 @@
 package org.exoplatform.management.ecmadmin.operations.nodetype;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Collections;
+import org.gatein.management.api.operation.model.ExportTask;
 
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
-
-import org.gatein.management.api.operation.model.ExportTask;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -27,7 +26,7 @@ public class NodeTypeExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return type + "/" + nodeType.getName().replace(":", "_") + "-nodeType.xml";
+    return "ecmadmin/" + type + "/" + nodeType.getName().replace(":", "_") + "-nodeType.xml";
   }
 
   @Override

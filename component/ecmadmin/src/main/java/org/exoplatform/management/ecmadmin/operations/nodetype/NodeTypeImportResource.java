@@ -37,12 +37,12 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
 
   public NodeTypeImportResource(String pathPrefix) {
     super(null);
-    this.pathPrefix = pathPrefix + "/";
+    this.pathPrefix = "ecmadmin/" + pathPrefix + "/";
   }
 
   public NodeTypeImportResource(String pathPrefix, String filePath) {
     super(filePath);
-    this.pathPrefix = pathPrefix + "/";
+    this.pathPrefix = "ecmadmin/" + pathPrefix + "/";
   }
 
   @Override

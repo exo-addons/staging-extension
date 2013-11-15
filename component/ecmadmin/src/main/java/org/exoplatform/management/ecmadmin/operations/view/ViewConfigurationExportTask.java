@@ -1,10 +1,10 @@
 package org.exoplatform.management.ecmadmin.operations.view;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.exoplatform.container.xml.InitParams;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -21,7 +21,7 @@ public class ViewConfigurationExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return "view/" + name;
+    return "ecmadmin/view/" + name;
   }
 
   @Override

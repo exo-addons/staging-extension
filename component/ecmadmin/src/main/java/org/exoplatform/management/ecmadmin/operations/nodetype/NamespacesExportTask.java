@@ -1,23 +1,18 @@
 package org.exoplatform.management.ecmadmin.operations.nodetype;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-
-import javax.jcr.NamespaceRegistry;
-
-import org.exoplatform.container.xml.ComponentPlugin;
-import org.exoplatform.container.xml.Configuration;
-import org.exoplatform.container.xml.ExternalComponentPlugins;
-import org.exoplatform.container.xml.InitParams;
-import org.exoplatform.container.xml.PropertiesParam;
+import org.exoplatform.container.xml.*;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.impl.AddNamespacesPlugin;
 import org.gatein.management.api.operation.model.ExportTask;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
+
+import javax.jcr.NamespaceRegistry;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -35,7 +30,7 @@ public class NamespacesExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return type + "/jcr-namespaces-configuration.xml";
+    return "ecmadmin/" + type + "/jcr-namespaces-configuration.xml";
   }
 
   @Override

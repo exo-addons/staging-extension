@@ -1,16 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.templates.metadata;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
@@ -25,7 +15,16 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -36,8 +35,8 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
   private MetadataService metadataService;
   private RepositoryService repositoryService;
 
-  private Pattern templateEntryPattern = Pattern.compile("templates/metadata/(.*)/(.*)/(.*)\\.gtmpl");
-  private Pattern metadataEntryPattern = Pattern.compile("templates/metadata/(.*)/metadata.xml");
+  private Pattern templateEntryPattern = Pattern.compile("ecmadmin/templates/metadata/(.*)/(.*)/(.*)\\.gtmpl");
+  private Pattern metadataEntryPattern = Pattern.compile("ecmadmin/templates/metadata/(.*)/metadata.xml");
 
   private Map<String, MetadataTemplatesMetaData> metadatas = new HashMap<String, MetadataTemplatesMetaData>();
   private Map<String, byte[]> templatesContent = new HashMap<String, byte[]>();
@@ -73,7 +72,7 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (!filePath.startsWith("templates/metadata/")) {
+        if (!filePath.startsWith("ecmadmin/templates/metadata/")) {
           continue;
         }
         // Skip directories
@@ -167,7 +166,7 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
 
   private void putData(String nodeTypeName, String contentType, String fileName, InputStream inputStream) throws Exception {
     byte[] bytes = IOUtils.toByteArray(inputStream);
-    templatesContent.put("templates/metadata/" + nodeTypeName + "/" + contentType + "/" + fileName, bytes);
+    templatesContent.put("ecmadmin/templates/metadata/" + nodeTypeName + "/" + contentType + "/" + fileName, bytes);
   }
 
 }

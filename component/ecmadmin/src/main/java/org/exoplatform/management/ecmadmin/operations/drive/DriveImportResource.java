@@ -55,7 +55,7 @@ public class DriveImportResource extends ECMAdminImportResource {
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
       while ((ze = zin.getNextEntry()) != null) {
-        if (!ze.getName().startsWith("drive/")) {
+        if (!ze.getName().startsWith("ecmadmin/drive/")) {
           continue;
         }
         if (ze.getName().endsWith("drives-configuration.xml")) {

@@ -87,7 +87,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
       String baseQueriesPath = nodeHierarchyCreator.getJcrPath(BasePath.QUERIES_PATH);
       while ((ze = zin.getNextEntry()) != null) {
         String zipEntryName = ze.getName();
-        if (!zipEntryName.startsWith("queries/")) {
+        if (!zipEntryName.startsWith("ecmadmin/queries/")) {
           continue;
         }
         String content = IOUtils.toString(zin);
@@ -97,7 +97,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
         List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
 
         // Users' queries
-        if (zipEntryName.startsWith("queries/users/") && zipEntryName.endsWith("-queries-configuration.xml")) {
+        if (zipEntryName.startsWith("ecmadmin/queries/users/") && zipEntryName.endsWith("-queries-configuration.xml")) {
           // extract username from filename
           String username = zipEntryName.substring(zipEntryName.lastIndexOf("/") + 1, zipEntryName.indexOf("-queries-configuration.xml"));
 

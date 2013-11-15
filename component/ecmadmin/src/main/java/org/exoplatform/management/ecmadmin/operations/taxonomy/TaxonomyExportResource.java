@@ -1,13 +1,5 @@
 package org.exoplatform.management.ecmadmin.operations.taxonomy;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
-
 import org.exoplatform.ecm.webui.utils.Utils;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -20,13 +12,20 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class TaxonomyExportResource implements OperationHandler {
 
-  private static final String EXPORT_BASE_PATH = "taxonomy";
+  private static final String EXPORT_BASE_PATH = "ecmadmin/taxonomy";
 
   private TaxonomyService taxonomyService;
   private RepositoryService repositoryService;

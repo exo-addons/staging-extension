@@ -21,7 +21,7 @@ public class ScriptExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return "script/" + scriptPath;
+    return "ecmadmin/script/" + scriptPath;
   }
 
   @Override

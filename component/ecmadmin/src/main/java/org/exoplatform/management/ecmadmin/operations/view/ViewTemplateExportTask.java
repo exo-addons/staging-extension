@@ -1,17 +1,16 @@
 package org.exoplatform.management.ecmadmin.operations.view;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.ecm.webui.utils.Utils;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -27,7 +26,7 @@ public class ViewTemplateExportTask implements ExportTask {
   @Override
   public String getEntry() {
     try {
-      return "view/templates/" + this.templateNode.getName() + ".gtmpl";
+      return "ecmadmin/view/templates/" + this.templateNode.getName() + ".gtmpl";
     } catch (RepositoryException e) {
       throw new RuntimeException(e);
     }

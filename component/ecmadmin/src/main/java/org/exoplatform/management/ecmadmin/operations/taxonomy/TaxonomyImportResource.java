@@ -1,19 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.taxonomy;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.Session;
-
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
@@ -27,7 +14,18 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.Session;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -68,7 +66,7 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
       while ((ze = zin.getNextEntry()) != null) {
-        if (!ze.getName().startsWith("taxonomy/")) {
+        if (!ze.getName().startsWith("ecmadmin/taxonomy/")) {
           continue;
         }
         if (ze.getName().endsWith("tree.xml")) {

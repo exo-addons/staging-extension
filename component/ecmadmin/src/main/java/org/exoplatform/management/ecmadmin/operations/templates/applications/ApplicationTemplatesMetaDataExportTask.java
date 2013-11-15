@@ -1,11 +1,10 @@
 package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
+import com.thoughtworks.xstream.XStream;
 import org.gatein.management.api.operation.model.ExportTask;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -23,7 +22,7 @@ public class ApplicationTemplatesMetaDataExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return "templates/applications/" + applicationName + "/metadata.xml";
+    return "ecmadmin/templates/applications/" + applicationName + "/metadata.xml";
   }
 
   @Override

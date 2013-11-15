@@ -1,11 +1,5 @@
 package org.exoplatform.management.ecmadmin.operations.view;
 
-import java.util.Iterator;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.Node;
-
 import org.apache.tika.io.IOUtils;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
@@ -22,6 +16,11 @@ import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
+
+import javax.jcr.Node;
+import java.util.Iterator;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -60,7 +59,7 @@ public class ViewImportResource extends ECMAdminImportResource {
     try {
       while ((entry = zin.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (!filePath.startsWith("view/")) {
+        if (!filePath.startsWith("ecmadmin/view/")) {
           continue;
         }
         // Skip directories
@@ -125,7 +124,7 @@ public class ViewImportResource extends ECMAdminImportResource {
   }
 
   private String extractTemplateName(String filePath) {
-    return filePath.replace("view/templates/", "").replace(".gtmpl", "");
+    return filePath.replace("ecmadmin/view/templates/", "").replace(".gtmpl", "");
   }
 
 }

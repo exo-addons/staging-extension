@@ -1,13 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
-import java.io.InputStreamReader;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.Node;
-
+import com.thoughtworks.xstream.XStream;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
@@ -20,7 +13,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import javax.jcr.Node;
+import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -65,7 +63,7 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (!filePath.startsWith("templates/applications/")) {
+        if (!filePath.startsWith("ecmadmin/templates/applications/")) {
           continue;
         }
         if (filePath.endsWith("metadata.xml")) {

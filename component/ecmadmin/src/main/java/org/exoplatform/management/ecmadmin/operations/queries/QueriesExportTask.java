@@ -1,10 +1,10 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.exoplatform.container.xml.Configuration;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -25,9 +25,9 @@ public class QueriesExportTask implements ExportTask {
   @Override
   public String getEntry() {
     if (userId != null) {
-      return "queries/users/" + this.userId + "-queries-configuration.xml";
+      return "ecmadmin/queries/users/" + this.userId + "-queries-configuration.xml";
     } else {
-      return "queries/shared-queries-configuration.xml";
+      return "ecmadmin/queries/shared-queries-configuration.xml";
     }
   }
 

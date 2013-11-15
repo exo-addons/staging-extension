@@ -1,18 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.templates.nodetypes;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.PathNotFoundException;
-
+import com.thoughtworks.xstream.XStream;
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
@@ -26,7 +14,17 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import javax.jcr.PathNotFoundException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -37,8 +35,8 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
   private TemplateService templateService;
   private RepositoryService repositoryService;
 
-  private Pattern templateEntryPattern = Pattern.compile("templates/nodetypes/(.*)/(.*)/(.*)\\.gtmpl");
-  private Pattern metadataEntryPattern = Pattern.compile("templates/nodetypes/(.*)/metadata.xml");
+  private Pattern templateEntryPattern = Pattern.compile("ecmadmin/templates/nodetypes/(.*)/(.*)/(.*)\\.gtmpl");
+  private Pattern metadataEntryPattern = Pattern.compile("ecmadmin/templates/nodetypes/(.*)/metadata.xml");
 
   private Map<String, NodeTypeTemplatesMetaData> metadatas = new HashMap<String, NodeTypeTemplatesMetaData>();
   private Map<String, byte[]> templatesContent = new HashMap<String, byte[]>();
@@ -74,7 +72,7 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         String filePath = entry.getName();
-        if (!filePath.startsWith("templates/nodetypes/")) {
+        if (!filePath.startsWith("ecmadmin/templates/nodetypes/")) {
           continue;
         }
         // Skip directories
@@ -173,7 +171,7 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
 
   private void putData(String nodeTypeName, String contentType, String fileName, InputStream inputStream) throws Exception {
     byte[] bytes = IOUtils.toByteArray(inputStream);
-    templatesContent.put("templates/nodetypes/" + nodeTypeName + "/" + contentType + "/" + fileName, bytes);
+    templatesContent.put("ecmadmin/templates/nodetypes/" + nodeTypeName + "/" + contentType + "/" + fileName, bytes);
   }
 
 }

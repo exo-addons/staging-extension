@@ -1,8 +1,5 @@
 package org.exoplatform.management.ecmadmin.operations.script;
 
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.scripts.CmsScript;
@@ -15,6 +12,9 @@ import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
+
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -45,10 +45,10 @@ public class ScriptImportResource extends ECMAdminImportResource {
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
       while ((ze = zin.getNextEntry()) != null) {
-        if (!ze.getName().startsWith("script/")) {
+        if (!ze.getName().startsWith("ecmadmin/script/")) {
           continue;
         }
-        String path = ze.getName().substring("script/".length());
+        String path = ze.getName().substring("ecmadmin/script/".length());
         CmsScript script = null;
         try {
           script = scriptService.getScript(path);

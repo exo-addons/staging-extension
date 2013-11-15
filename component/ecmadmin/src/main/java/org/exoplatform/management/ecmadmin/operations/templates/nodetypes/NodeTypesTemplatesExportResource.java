@@ -25,7 +25,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  */
 public class NodeTypesTemplatesExportResource implements OperationHandler {
 
-  private static final String EXPORT_BASE_PATH = "templates/nodetypes";
+  private static final String EXPORT_BASE_PATH = "ecmadmin/templates/nodetypes";
 
   private NodeTypeTemplatesMetaData metadata;
   private TemplateService templateService;

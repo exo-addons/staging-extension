@@ -23,7 +23,7 @@ public class TestQueriesExportTask {
     String userId = "root";
     Configuration configuration = new Configuration();
 
-    Assert.assertEquals(new QueriesExportTask(configuration, userId).getEntry(), "queries/users/root-queries-configuration.xml");
-    Assert.assertEquals(new QueriesExportTask(configuration, null).getEntry(), "queries/shared-queries-configuration.xml");
+    Assert.assertEquals(new QueriesExportTask(configuration, userId).getEntry(), "ecmadmin/queries/users/root-queries-configuration.xml");
+    Assert.assertEquals(new QueriesExportTask(configuration, null).getEntry(), "ecmadmin/queries/shared-queries-configuration.xml");
   }
 }
