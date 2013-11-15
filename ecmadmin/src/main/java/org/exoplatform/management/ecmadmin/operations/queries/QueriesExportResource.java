@@ -65,16 +65,26 @@ public class QueriesExportResource implements OperationHandler {
         // to convert them...
         for (Node sharedQueryNode : sharedQueries) {
           QueryData queryData = new QueryData();
-          queryData.setName(sharedQueryNode.getProperty("exo:name").getString());
-          queryData.setStatement(sharedQueryNode.getProperty("jcr:statement").getString());
-          queryData.setLanguage(sharedQueryNode.getProperty("jcr:language").getString());
-          queryData.setCacheResult(sharedQueryNode.getProperty("exo:cachedResult").getBoolean());
-          Value[] permissionsValues = sharedQueryNode.getProperty("exo:accessPermissions").getValues();
-          List<String> permissions = new ArrayList<String>();
-          for (Value permissionValue : permissionsValues) {
-            permissions.add(permissionValue.getString());
+          if (sharedQueryNode.hasProperty("exo:name")) {
+            queryData.setName(sharedQueryNode.getProperty("exo:name").getString());
+          } else {
+            queryData.setName(sharedQueryNode.getName());
           }
-          queryData.setPermissions(permissions);
+          queryData.setStatement(sharedQueryNode.getProperty("jcr:statement").getString());
+          if (sharedQueryNode.hasProperty("jcr:language")) {
+            queryData.setLanguage(sharedQueryNode.getProperty("jcr:language").getString());
+          }
+          if (sharedQueryNode.hasProperty("exo:cachedResult")) {
+            queryData.setCacheResult(sharedQueryNode.getProperty("exo:cachedResult").getBoolean());
+          }
+          if (sharedQueryNode.hasProperty("exo:accessPermissions")) {
+            Value[] permissionsValues = sharedQueryNode.getProperty("exo:accessPermissions").getValues();
+            List<String> permissions = new ArrayList<String>();
+            for (Value permissionValue : permissionsValues) {
+              permissions.add(permissionValue.getString());
+            }
+            queryData.setPermissions(permissions);
+          }
 
           ObjectParameter objectParam = new ObjectParameter();
           objectParam.setName(queryData.getName());

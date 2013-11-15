@@ -14,14 +14,16 @@ import com.thoughtworks.xstream.XStream;
 public class ApplicationTemplatesMetaDataExportTask implements ExportTask {
 
   private ApplicationTemplatesMetadata metaData = null;
+  private String applicationName = null;
 
-  public ApplicationTemplatesMetaDataExportTask(ApplicationTemplatesMetadata metaData) {
+  public ApplicationTemplatesMetaDataExportTask(ApplicationTemplatesMetadata metaData, String applicationName) {
     this.metaData = metaData;
+    this.applicationName = applicationName;
   }
 
   @Override
   public String getEntry() {
-    return "templates/applications/metadata.xml";
+    return "templates/applications/" + applicationName + "/metadata.xml";
   }
 
   @Override
