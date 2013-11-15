@@ -17,8 +17,10 @@ import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.NoResultModel;
 
 import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
@@ -90,7 +92,7 @@ public class GadgetImportResource implements OperationHandler {
     OperationAttachment attachment = operationContext.getAttachment(false);
     InputStream attachmentInputStream = attachment.getStream();
     if (attachmentInputStream == null) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for Gadget import.");
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for Gadget import");
     }
     final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
     ZipEntry entry;
@@ -105,29 +107,31 @@ public class GadgetImportResource implements OperationHandler {
         // Skip directories
         // & Skip empty entries
         // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.equals("") || !filePath.endsWith(".xml")) {
+        if (entry.isDirectory() || filePath.equals("") || !filePath.startsWith("gadget/") || !filePath.endsWith(".xml")) {
           continue;
         }
 
-        String gadgetName = filePath.substring(0, filePath.length() - 4);
+        String gadgetName = filePath.substring("gadget/".length(), filePath.length() - 4);
         Gadget gadget = gadgetRegistryService.getGadget(gadgetName);
 
         if (gadget != null) {
           if (replaceExisting) {
-            log.info(gadgetName + " already exists. filter used 'replace-existing:true' (default filter value is true).");
+            log.info(gadgetName + " already exists. Replace it.");
             gadgetRegistryService.removeGadget(gadgetName);
 
             // commit changes
             RequestLifeCycle.end();
             // keep an active transaction
             RequestLifeCycle.begin(PortalContainer.getInstance());
+
+            doImportGadget(jcrPath, zis, session);
           } else {
-            log.info(gadgetName + "already exists. Ignore gadget.");
+            log.info(gadgetName + " already exists. Ignore gadget (add the attribute replace-existing:true if you want to replace existing gadgets).");
           }
+        } else {
+          log.info("Import gadget " + gadgetName);
+          doImportGadget(jcrPath, zis, session);
         }
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(zis));
-        session.importXML(jcrPath, byteArrayInputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-        session.save();
         zis.closeEntry();
       }
       zis.close();
@@ -140,6 +144,12 @@ public class GadgetImportResource implements OperationHandler {
     }
 
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void doImportGadget(String jcrPath, ZipInputStream zis, Session session) throws IOException, RepositoryException {
+    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(zis));
+    session.importXML(jcrPath, byteArrayInputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+    session.save();
   }
 
 }

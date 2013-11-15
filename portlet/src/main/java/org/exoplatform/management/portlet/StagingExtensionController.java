@@ -58,8 +58,8 @@ public class StagingExtensionController {
     resourceCategories.add(organization);
 
     ResourceCategory applications = new ResourceCategory("Applications", null);
-    //organization.getSubResourceCategories().add(new ResourceCategory("gadgetPath", "Gadgets", SynchronizationService.GADGET_PATH));
     applications.getSubResourceCategories().add(new ResourceCategory("Applications Registry", StagingService.REGISTRY_PATH));
+    applications.getSubResourceCategories().add(new ResourceCategory("Gadgets", StagingService.GADGET_PATH));
     resourceCategories.add(applications);
 
     ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", null);

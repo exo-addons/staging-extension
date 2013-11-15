@@ -1,9 +1,5 @@
 package org.exoplatform.management.gadget.operations;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.exoplatform.application.gadget.Gadget;
 import org.exoplatform.application.gadget.GadgetRegistryService;
 import org.gatein.management.api.exceptions.OperationException;
@@ -12,6 +8,10 @@ import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -25,7 +25,7 @@ public class GadgetReadResource implements OperationHandler {
     if (gadgetRegistryService == null) {
       gadgetRegistryService = operationContext.getRuntimeContext().getRuntimeComponent(GadgetRegistryService.class);
       if (gadgetRegistryService == null) {
-        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Cannot get GadgetRegistryService instance.");
+        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Cannot get GadgetRegistryService instance");
       }
     }
     Set<String> result = new HashSet<String>();
@@ -35,9 +35,9 @@ public class GadgetReadResource implements OperationHandler {
         result.add(gadget.getName());
       }
     } catch (Exception e) {
-      throw new OperationException(OperationNames.READ_RESOURCE, "Error while retrieving gadget list.", e);
+      throw new OperationException(OperationNames.READ_RESOURCE, "Error while retrieving gadget list", e);
     }
 
-    resultHandler.completed(new ReadResourceModel("Available gadgets.", result));
+    resultHandler.completed(new ReadResourceModel("Available gadgets", result));
   }
 }

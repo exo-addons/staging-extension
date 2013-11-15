@@ -417,3 +417,21 @@
       </div>
     </div>
   </div>
+
+  <div class="selected-resource" ng-show="categoriesModel['/gadget']">
+    <a ng-click="unselectCategory('/gadget')" class="unselect-resources-category">Remove</a>
+    <label class="clickable" ng-init="resourceDetailsGadgetVisible=true" ng-click="resourceDetailsGadgetVisible = !resourceDetailsGadgetVisible">Applications Registry</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsGadgetVisible">
+      <div ng-show="mode == 'import' || mode == 'synchronize'">
+        <label class="checkbox"><input class="option" type="checkbox" name="/gadget_IMPORT_filter/replace-existing"
+                                       ng-model="optionsModel['/gadget_IMPORT_filter/replace-existing']">Replace existing</label>
+      </div>
+      <div>
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/gadget'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
