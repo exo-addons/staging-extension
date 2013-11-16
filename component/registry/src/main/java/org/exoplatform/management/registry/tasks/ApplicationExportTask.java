@@ -1,9 +1,5 @@
 package org.exoplatform.management.registry.tasks;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
 import org.exoplatform.application.registry.Application;
 import org.exoplatform.application.registry.ApplicationRegistryService;
 import org.exoplatform.container.xml.ObjectParameter;
@@ -14,11 +10,16 @@ import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class ApplicationExportTask implements ExportTask {
+  public static final String APPLICATION_FILE_BASE_PATH = "registry/";
   public static final String APPLICATION_FILE_SUFFIX = "_ApplicationRegistry.xml";
   private ApplicationRegistryService applicationRegistryService;
   private String categoryName;
@@ -32,7 +33,7 @@ public class ApplicationExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return categoryName + "_" + applicationName + APPLICATION_FILE_SUFFIX;
+    return APPLICATION_FILE_BASE_PATH + categoryName + "_" + applicationName + APPLICATION_FILE_SUFFIX;
   }
 
   @Override

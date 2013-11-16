@@ -59,7 +59,7 @@ public class RegistryImportResource implements OperationHandler {
         // Skip directories
         // & Skip empty entries
         // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.equals("") || !(filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX) || filePath.endsWith(CategoryExportTask.CATEGORY_FILE_SUFFIX))) {
+        if (entry.isDirectory() || filePath.equals("") || !(filePath.startsWith(ApplicationExportTask.APPLICATION_FILE_BASE_PATH)) || !(filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX) || filePath.endsWith(CategoryExportTask.CATEGORY_FILE_SUFFIX))) {
           continue;
         }
 
