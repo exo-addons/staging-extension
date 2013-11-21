@@ -112,7 +112,9 @@ public class SiteContentsExportResource implements OperationHandler {
         exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
       }
 
+      // "taxonomy" attribute. Defaults to true.
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
+      // "no-history" attribute. Defaults to false.
       boolean exportVersionHistory = !filters.contains("no-history:true");
 
       // Validate Site Structure

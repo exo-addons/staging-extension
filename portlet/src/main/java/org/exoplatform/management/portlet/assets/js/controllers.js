@@ -98,6 +98,7 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
   // options default values
   $scope.optionsModel['/organization/user_EXPORT_filter/with-membership'] = true;
   $scope.optionsModel['/organization/group_EXPORT_filter/with-membership'] = true;
+  $scope.optionsModel['/content/sites_EXPORT_filter/taxonomy'] = true;
   $scope.optionsModel['/content/sites_IMPORT_uuidBehavior'] = "NEW";
 
   //
