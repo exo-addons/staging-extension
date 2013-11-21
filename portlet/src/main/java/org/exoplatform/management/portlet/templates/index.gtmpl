@@ -14,13 +14,13 @@
 
     <div class="buttons">
       <button type="button" class="btn btn-primary button-export" ng-click="exportResources()" ng-show="mode=='export'">Export</button>
-      <button type="button" class="btn btn-primary button-import" ng-click="importResources()" ng-show="mode=='import'">Import</button>
+      <button type="button" class="btn btn-primary button-import" ng-click="importResources()" ng-show="mode=='import' && readyToImport">Import</button>
       <button type="button" class="btn btn-primary button-synchronize" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
     </div>
 
     <div id="resultMessage" class="result-message alert {{resultMessageClass}}">{{resultMessage}}</div>
 
-    <div class="resources-panel">
+    <div class="resources-panel" ng-show="mode != 'import' || readyToImport">
       <div class="well left-column">
         <div class="treeview">
           <ul>
@@ -29,10 +29,12 @@
               <label class="parent" for="{{category.path}}" ng-click="category.expanded = !category.expanded">{{category.label}}</label>
               <ul ng-show="category.expanded">
                 <li class="leaf" ng-repeat="subCategory in category.subcategories">
-                  <input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input>
+                  <input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]"
+                         ng-disabled="mode == 'import' && !categoriesModel[subCategory.path]"
+                         ng-click="toggleCategorySelection(subCategory.path)"></input>
                   <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}}">{{subCategory.label}}</label>
-                  <div class="divResources" ng-show="categoriesModel[subCategory.path]">
-                    <input type="text" class="searchResources" ng-model="resourcesSearchTerm.text"></input>
+                  <div class="divResources" ng-show="mode != 'import' && categoriesModel[subCategory.path]">
+                    <input type="text" class="searchResources" ng-model="resourcesSearchTerm.text" ng-disabled="!categoriesModel[subCategory.path]"></input>
                     <div class="divResourcesTable">
                       <table class="table table-striped table-condensed">
                         <tr ng-repeat="resource in resources[subCategory.path] | filter:resourcesSearchTerm">
@@ -62,7 +64,7 @@
 
     <div class="buttons">
       <button type="button" class="btn btn-primary button-export" ng-click="exportResources()" ng-show="mode=='export'">Export</button>
-      <button type="button" class="btn btn-primary button-import" ng-click="importResources()" ng-show="mode=='import'">Import</button>
+      <button type="button" class="btn btn-primary button-import" ng-click="importResources()" ng-show="mode=='import' && readyToImport">Import</button>
       <button type="button" class="btn btn-primary button-synchronize" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
     </div>
   </div>
