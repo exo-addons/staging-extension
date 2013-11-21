@@ -51,7 +51,7 @@ public class ViewImportResource extends ECMAdminImportResource {
       nodeHierarchyCreator = operationContext.getRuntimeContext().getRuntimeComponent(NodeHierarchyCreator.class);
     }
 
-    SessionProvider provider = SessionProvider.createSystemProvider();
+    SessionProvider sessionProvider = SessionProvider.createSystemProvider();
     String templatesHomePath = getTemplatesHomePath() + "/";
 
     final ZipInputStream zin = new ZipInputStream(attachmentInputStream);
@@ -73,19 +73,21 @@ public class ViewImportResource extends ECMAdminImportResource {
 
           log.debug("Reading Stream for template: " + templateName);
           String content = IOUtils.toString(zin);
-          try {
-            log.debug("Adding Template, seems not existing: " + templateName);
-            viewService.addTemplate(templateName, content, templatesHomePath, provider);
-          } catch (Exception e) {
-            if (replaceExisting) {
-              try {
-                viewService.updateTemplate(templateName, content, templatesHomePath, provider);
-                log.debug("Template updated: " + templateName);
-              } catch (Exception e1) {
-                throw new OperationException(OperationNames.IMPORT_RESOURCE, "Operation cannot finish, error occured while importing templates.", e);
-              }
+
+          Node template = viewService.getTemplate(templatesHomePath + templateName, sessionProvider);
+
+          if(template != null) {
+            if(replaceExisting) {
+              log.info("Overwrite existing view template: " + templateName);
+              viewService.updateTemplate(templateName, content, templatesHomePath, sessionProvider);
+            } else {
+              log.info("Ignore existing view template: " + templateName);
             }
+          } else {
+            log.info("Add new view template: " + templateName);
+            viewService.addTemplate(templateName, content, templatesHomePath, sessionProvider);
           }
+
         } else if (filePath.endsWith(".xml")) {
           log.debug("Parsing : " + filePath);
 
@@ -98,16 +100,18 @@ public class ViewImportResource extends ECMAdminImportResource {
               continue;
             }
             ViewConfig config = (ViewConfig) objectParameter.getObject();
-            if (!replaceExisting) {
-              Node node = viewService.getViewByName(config.getName(), provider);
-              if (node != null) {
-                log.debug("ViewConfig: " + config.getName() + " already exists, ignoring.");
-                continue;
+            if (viewService.hasView(config.getName())) {
+              if(replaceExisting) {
+                log.info("Overwrite existing view: " + config.getName());
+                viewService.removeView(config.getName());
+                viewService.addView(config.getName(), config.getPermissions(), config.isHideExplorerPanel(), config.getTemplate(), config.getTabList());
+              } else {
+                log.info("Ignore existing view: " + config.getName());
               }
+            } else {
+              log.info("Add new view: " + config.getName());
+              viewService.addView(config.getName(), config.getPermissions(), config.getTemplate(), config.getTabList());
             }
-            log.debug("Parsing ViewConfig: " + config.getName());
-            // Adds or updates by versionning
-            viewService.addView(config.getName(), config.getPermissions(), config.getTemplate(), config.getTabList());
           }
         }
         zin.closeEntry();
