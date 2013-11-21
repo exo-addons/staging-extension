@@ -191,7 +191,13 @@ public class StagingExtensionController {
   @juzu.Resource
   @Route("/servers")
   public Response getSynchonizationServers() {
-    List<TargetServer> synchronizationServers = synchronizationService.getSynchonizationServers();
+    List<TargetServer> synchronizationServers;
+    try {
+      synchronizationServers = synchronizationService.getSynchonizationServers();
+    } catch (Exception e) {
+      log.error("Error while fetching synchronization target servers", e);
+      synchronizationServers = new ArrayList<TargetServer>();
+    }
 
     StringBuilder jsonServers = new StringBuilder(50);
     jsonServers.append("{\"synchronizationServers\":[");
