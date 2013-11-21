@@ -75,12 +75,12 @@ public class UserImportResource implements OperationHandler {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("user.xml")) {
           log.debug("Parsing : " + filePath);
-          String username = extractUserName(filePath);
-          User existingUser = organizationService.getUserHandler().findUserByName(username);
+          String userName = extractUserName(filePath);
+          User existingUser = organizationService.getUserHandler().findUserByName(userName);
           if(existingUser == null) {
-            newUsers.add(username);
+            newUsers.add(userName);
           }
-          createUser(username, zin, existingUser, replaceExisting);
+          createUser(userName, zin, existingUser, replaceExisting);
         }
         try {
           zin.closeEntry();
@@ -96,9 +96,9 @@ public class UserImportResource implements OperationHandler {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("profile.xml")) {
           log.debug("Parsing : " + filePath);
-          String username = extractUserName(filePath);
-          if(replaceExisting || newUsers.contains(username)) {
-            createUserProfile(username, zin);
+          String userName = extractUserName(filePath);
+          if(replaceExisting || newUsers.contains(userName)) {
+            createUserProfile(userName, zin);
           }
         }
         try {
@@ -115,9 +115,9 @@ public class UserImportResource implements OperationHandler {
         String filePath = entry.getName();
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("_membership.xml")) {
           log.debug("Parsing : " + filePath);
-          String username = extractUserName(filePath);
-          if(replaceExisting || newUsers.contains(username)) {
-            createMembership(username, zin);
+          String userName = extractUserName(filePath);
+          if(replaceExisting || newUsers.contains(userName)) {
+            createMembership(userName, zin);
           }
         }
         try {
@@ -135,7 +135,9 @@ public class UserImportResource implements OperationHandler {
         if (filePath.startsWith(usersBasePath) && filePath.endsWith("u_content.xml")) {
           log.debug("Parsing : " + filePath);
           String userName = extractUserName(filePath);
-          createContent(userName, zin);
+          if(replaceExisting || newUsers.contains(userName)) {
+            createContent(userName, zin);
+          }
         }
         try {
           zin.closeEntry();
