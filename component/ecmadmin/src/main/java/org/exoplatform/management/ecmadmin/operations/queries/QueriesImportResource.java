@@ -1,19 +1,15 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
 import org.apache.commons.io.IOUtils;
-import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.Configuration;
 import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.ObjectParameter;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
-import org.exoplatform.services.cms.BasePath;
 import org.exoplatform.services.cms.impl.DMSConfiguration;
 import org.exoplatform.services.cms.impl.DMSRepositoryConfiguration;
 import org.exoplatform.services.cms.queries.QueryService;
 import org.exoplatform.services.cms.queries.impl.QueryData;
-import org.exoplatform.services.cms.queries.impl.QueryPlugin;
-import org.exoplatform.services.cms.queries.impl.QueryServiceImpl;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -84,7 +80,6 @@ public class QueriesImportResource extends ECMAdminImportResource {
       IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
 
       Session session = getDMSJCRSession();
-      String baseQueriesPath = nodeHierarchyCreator.getJcrPath(BasePath.QUERIES_PATH);
       while ((ze = zin.getNextEntry()) != null) {
         String zipEntryName = ze.getName();
         if (!zipEntryName.startsWith("ecmadmin/queries/")) {
@@ -148,30 +143,29 @@ public class QueriesImportResource extends ECMAdminImportResource {
                 QueryData queryData = (QueryData) object;
                 // if the shared query already exists, remove it from the
                 // init-params of the plugin
-                if (session.itemExists(baseQueriesPath + "/" + queryData.getName())) {
-                  if (replaceExisting) {
+                Node sharedQuery = queryService.getSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
+                boolean alreadyExists = (sharedQuery != null);
+                if (alreadyExists) {
+                  if(replaceExisting) {
                     log.info("Overwrite shared query '" + queryData.getName() + "'.");
-                    session.getItem(baseQueriesPath + "/" + queryData.getName()).remove();
-                    session.save();
+                    queryService.removeSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
                   } else {
                     log.info("Ignore existing shared query '" + queryData.getName() + "'.");
-                    componentPlugin.getInitParams().removeParameter(queryData.getName());
                   }
+                }
+
+                if(!alreadyExists || replaceExisting) {
+                  String[] permissions = new String[queryData.getPermissions().size()];
+                  queryService.addSharedQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), queryData.getPermissions().toArray(permissions), queryData.getCacheResult(), WCMCoreUtils.getSystemSessionProvider());
                 }
               }
             }
-            QueryPlugin cplugin = (QueryPlugin) PortalContainer.getInstance().createComponent(pluginClass, componentPlugin.getInitParams());
-            cplugin.setName(componentPlugin.getName());
-            cplugin.setDescription(componentPlugin.getDescription());
-            // TODO add setQueryPlugin in Interface QueryService
-            ((QueryServiceImpl) queryService).setQueryPlugin(cplugin);
           }
         }
         zin.closeEntry();
       }
       zin.close();
-      // init service, so it will create the shared queries
-      queryService.init();
+
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception exception) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS queries.", exception);
