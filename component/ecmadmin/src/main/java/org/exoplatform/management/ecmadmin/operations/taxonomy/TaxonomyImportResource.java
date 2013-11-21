@@ -100,10 +100,10 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
         TaxonomyMetaData metaData = entry.getValue();
         if (taxonomyService.hasTaxonomyTree(taxonomyName)) {
           if (!replaceExisting) {
-            log.info("Ignore existing taxonomy tree '" + taxonomyName + "'.");
+            log.info("Ignore existing taxonomy tree '" + taxonomyName + "'");
             continue;
           } else {
-            log.info("Overwrite existing taxonomy tree '" + taxonomyName + "'.");
+            log.info("Overwrite existing taxonomy tree '" + taxonomyName + "'");
             taxonomyService.removeTaxonomyTree(taxonomyName);
           }
         }
@@ -127,12 +127,12 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
       }
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Throwable exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while proceeding taxonomy import.", exception);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while proceeding taxonomy import", exception);
     }
   }
 
   private static String extractTaxonomyName(String name) {
-    return name.split("/")[1];
+    return name.split("/")[2];
   }
 
 }
