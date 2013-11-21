@@ -8,7 +8,6 @@ import org.exoplatform.management.ecmadmin.operations.queries.QueriesExportTask;
 import org.exoplatform.services.cms.drives.DriveData;
 import org.exoplatform.services.cms.drives.ManageDriveService;
 import org.exoplatform.services.cms.drives.impl.ManageDrivePlugin;
-import org.exoplatform.services.cms.drives.impl.ManageDriveServiceImpl;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
@@ -73,13 +72,10 @@ public class DriveImportResource extends ECMAdminImportResource {
             cplugin.setName(componentPlugin.getName());
             cplugin.setDescription(componentPlugin.getDescription());
 
-            // TODO add setManageDrivePlugin in Interface
-            // ManageDriveService
-            ((ManageDriveServiceImpl) driveService).setManageDrivePlugin(cplugin);
-
             // Delete existing drives if replaceExisting=true
             if (replaceExisting) {
               deleteExistingDrives(componentPlugin);
+              cplugin.init();
             } else {
               log.info("Ignore existing drives");
             }
@@ -88,7 +84,6 @@ public class DriveImportResource extends ECMAdminImportResource {
         zin.closeEntry();
       }
       zin.close();
-      driveService.init();
     } catch (Exception exception) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS drives.", exception);
     }
