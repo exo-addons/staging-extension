@@ -1,33 +1,3 @@
-@import "jquery.dataTables.css";
-
-@selectionBColor: ivory;
-@blockBG: #f7f7f7;
-@blockRadius: 6px;
-.blockStyle (@bgcolor) {
-	border: 1px solid #dddddd;
-	background-color: @bgcolor;
-	margin-bottom: 10px;
-	font-size: 18px;
-	font-weight: 200;
-	line-height: 30px;
-	-webkit-border-radius: @blockRadius;
-	-moz-border-radius: @blockRadius;
-	border-radius: @blockRadius;
-	box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.35), -1px 0 1px #ffffff;
-}
-
-.descriptionBox {
-	.blockStyle (#f5f5f5);
-	padding: 6px 30px;
-	margin: 20px 0;
-	box-shadow: inset 0 0 1px rgba(0, 0, 0, 0.35), -1px 0 1px #ffffff;
-	text-shadow: 0 1px 1px #FFF;
-	background-image: linear-gradient(to bottom, #f6f6f6, #efefef);
-	b {
-		color: #2f5e92;
-	}
-}
-
 .staging {
 
   .loader {
@@ -35,6 +5,15 @@
     padding: 10px 0px 10px 20px;
     margin: 0 auto;
     width: 80px;
+  }
+
+  .clickable {
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .not-clickable {
+    cursor: default;
   }
 
   /* Mode panel */
@@ -136,6 +115,12 @@
 
   /* Left Panel */
 
+  .left-column {
+    width: 25%;
+    display: block;
+    float: left;
+  }
+
   .treeview {
     padding: 10px;
 
@@ -164,14 +149,6 @@
       list-style: none;
     }
 
-    > ul {
-      padding: 5px;
-      margin: 10px;
-      background-color: #FAFAFA;
-      border-radius: 3px;
-      border: 1px solid lightblue;
-    }
-
     a {
       color: #00f;
       text-decoration: none;
@@ -192,35 +169,17 @@
       margin-bottom: 0px;
     }
 
-    .resource-category > label {
+    .resource-category > div > label {
        font-size: 1.1em;
        font-weight: bold;
-       cursor: pointer;
-    }
-
-    .resource-category > label::before {
-      .labelAMixin;
-      content: "";
-      width: 16px;
-      margin: 0 5px 0 0;
-      background: transparent url("/staging-extension-portlet/skin/images/plus.png") no-repeat center;
-      margin-left: 5px;
-    }
-
-    .resource-category.expanded > label::before {
-      .labelAMixin;
-      content: "";
-      width: 16px;
-      margin: 0 5px;
-      background: transparent url("/staging-extension-portlet/skin/images/minus.png") no-repeat center;
-    }
-
-    .resource-category > ul {
-      /*display: none;*/
     }
 
     .leaf {
       padding-left: 25px;
+
+      .uiCheckbox {
+        width: 10px;
+      }
     }
 
     .leaf > label {
@@ -235,24 +194,24 @@
       display: block;
     }
 
-    .divResources {
+    .resources {
       margin-left: 20px;
 
-      .divResourcesTable {
+      .resources-table {
         overflow-x: hidden;
         overflow-y: auto;
         max-height: 200px;
         margin-bottom: 10px;
         width: 95%;
 
-        .searchResources {
+        .search-resources {
           margin-left: 20px;
           width: 50%;
         }
 
         table {
-          margin-bottom: 0px;
           border-bottom: 1px #DDDDDD solid;
+          margin-bottom: 10px;
 
           td:first-of-type {
             width: 10%;
@@ -265,17 +224,20 @@
   /* Right Panel */
 
   .right-column {
-    width: 60%;
+    width: 72%;
     display: block;
     float: left;
     margin: 0 0 10px 2%;
-    padding: 0 2% 30px 2%;
-    .blockStyle (#FBFBFB);
+
+    .no-resource-selected {
+      width: 100%;
+      text-align: center;
+      padding: 10px 0;
+    }
 
     .selected-resource {
-      .blockStyle (@blockBG);
       padding: 10px;
-      background-image: linear-gradient(to left, #f6f6f6, #e5e5e5);
+      margin: 15px;
 
       ul , li {
         padding: 0;
@@ -295,52 +257,51 @@
       a.unselect-resources-category {
         float: right;
         cursor: pointer;
-        font-size: 0.8em;
       }
 
       .resource-checkbox {
         vertical-align: initial;
       }
 
+      .selected-resource-title {
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
       .selected-resource-details {
-        margin: 0 0 0 45px;
-        font-size: 0.8em;
-        //display: none;
+        margin: 15px 0 0 45px;
 
         table {
           margin-top: 15px;
+          border-bottom: 1px solid #DDDDDD;
         }
       }
 
+      > label {
+        font-weight: bold;
+        font-size: 1.1em;
+      }
+
       label {
-        font-size: 1em;
-        padding-left: 15px;
+        font-size: 1.1em;
       }
 
-      .labelBeforeMixin {
-        content: "";
-        width: 16px;
-      }
-
-      .clickable {
+      label.checkbox {
         cursor: pointer;
-        white-space: nowrap;
-      }
-
-      .SelectedNode {
-        background-color: #f5f5f5;
-      }
-
-      .notClickable {
-        cursor: default;
       }
 
       input[type=radio].option, input[type=checkbox].option {
           float: left;
+        margin-right: 5px;
+      }
+
+      input[type=text].option {
+        margin-left: 5px;
       }
 
       .sites-content-filter-title {
         float: left;
+        font-size: 1.1em;
       }
 
       .sites-content-filter-options {
@@ -391,16 +352,7 @@
     }
   }
 
-  .left-column {
-    margin-left: 0;
-    width: 32%;
-    display: block;
-    float: left;
-    padding: 10px;
-  }
-
   .resources-list {
-    font-size: 14px;
     margin: 2px;
     background-color: white;
     padding: 0 19px;
@@ -445,10 +397,6 @@
 
   .sync-servers {
     display: none;
-  }
-
-  .form-horizontal {
-    font-size: 13px;
   }
 
   .form-horizontal .help-inline {

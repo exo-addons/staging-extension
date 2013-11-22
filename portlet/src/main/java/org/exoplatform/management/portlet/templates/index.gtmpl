@@ -1,6 +1,6 @@
 <div id="staging" class="staging" ng-app="stagingApp">
   <div ng-controller="StagingCtrl">
-    <div class="well modes">
+    <div class="uiBox modes">
       <div class="mode-items">
         <input type="radio" name="mode" value="export" ng-model="mode" ng-click="changeMode('export')">Export</input>
         <input type="radio" name="mode" value="import" ng-model="mode" ng-click="changeMode('import')">Import</input>
@@ -21,23 +21,26 @@
     <div id="resultMessage" class="result-message alert {{resultMessageClass}}">{{resultMessage}}</div>
 
     <div class="resources-panel">
-      <div class="well left-column">
-        <div class="treeview">
+      <div class="uiBox left-column">
+        <h5 class="title">Resources Types</h5>
+        <div class="uiTreeExplorer treeview">
           <ul>
             <div class="loader" ng-show="loadingCategoriesTree">Loading...</div>
-            <li class="resource-category {{category.expanded && 'expanded' || ''}}" ng-repeat="category in categories">
-              <label class="parent" for="{{category.path}}" ng-click="category.expanded = !category.expanded">{{category.label}}</label>
+            <li class="resource-category" ng-repeat="category in categories">
+              <div class="{{category.expanded && 'collapseIcon' || 'expandIcon'}} clickable" ng-click="category.expanded = !category.expanded">
+                <label class="clickable">{{category.label}}</label>
+              </div>
               <ul ng-show="category.expanded">
                 <li class="leaf" ng-repeat="subCategory in category.subcategories">
-                  <input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input>
-                  <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}}">{{subCategory.label}}</label>
-                  <div class="divResources" ng-show="categoriesModel[subCategory.path]">
-                    <input type="text" class="searchResources" ng-model="resourcesSearchTerm.text"></input>
-                    <div class="divResourcesTable">
+                  <span class="uiCheckbox"><input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input><span></span></span>
+                  <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}} clickable">{{subCategory.label}}</label>
+                  <div class="resources" ng-show="categoriesModel[subCategory.path]">
+                    <input type="text" class="search-resources" ng-model="resourcesSearchTerm.text"></input>
+                    <div class="resources-table">
                       <table class="table table-striped table-condensed">
                         <tr ng-repeat="resource in resources[subCategory.path] | filter:resourcesSearchTerm">
-                          <td><input type="checkbox" ng-model="resource.selected"></input></td>
-                          <td>{{resource.text}}</td>
+                          <td><span class="uiCheckbox"><input type="checkbox" ng-model="resource.selected"></input><span></span></span></td>
+                          <td class="clickable" ng-click="resource.selected = !resource.selected">{{resource.text}}</td>
                         </tr>
                       </table>
                     </div>
@@ -48,15 +51,11 @@
           </ul>
         </div>
       </div>
-      <div class="right-column">
-        <form class="form-horizontal">
-          <fieldset>
-            <legend>Selected resources</legend>
-            <div id="selectedResourcesForm">
-              #{include path=selectedResources.gtmpl}#{/include}
-            </div>
-          </fieldset>
-        </form>
+      <div class="uiBox right-column">
+        <h5 class="title">Selected Resources</h5>
+        <div id="selectedResourcesForm">
+          #{include path=selectedResources.gtmpl}#{/include}
+        </div>
       </div>
     </div>
 
