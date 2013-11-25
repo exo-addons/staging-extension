@@ -96,12 +96,13 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
       }
       propertiesBOS.flush();
       zipService.addInputStream("mapping.properties", propertiesBIS);
-      zipFile = getExportedFile("data", "zip");
+      zipFile = getExportedFile("data", ".zip");
       in = new BufferedInputStream(new TempFileInputStream(zipFile));
       out = new BufferedOutputStream(new FileOutputStream(zipFile));
       out.flush();
       zipService.createZip(out);
       IOUtils.copy(in, outputStream);
+      outputStream.flush();
     } catch (OutOfMemoryError error) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "OutOfMemoryError, Unable to export content from : " + absolutePath, error);
     } catch (Exception exception) {

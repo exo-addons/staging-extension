@@ -2,9 +2,24 @@
   <div ng-controller="StagingCtrl">
     <div class="uiBox modes">
       <div class="mode-items">
-        <input type="radio" name="mode" value="export" ng-model="mode" ng-click="changeMode('export')">Export</input>
-        <input type="radio" name="mode" value="import" ng-model="mode" ng-click="changeMode('import')">Import</input>
-        <input type="radio" name="mode" value="synchronize" ng-model="mode" ng-click="changeMode('synchronize')">Synchronize</input>
+			<span class="uiRadio">
+				<label class="radio">
+					<input type="radio" name="mode" value="export" ng-model="mode" ng-click="changeMode('export')"/>
+					<span>Export</span>
+				</label>
+			</span>
+			<span class="uiRadio">
+				<label class="radio">
+					<input type="radio" name="mode" value="import" ng-model="mode" ng-click="changeMode('import')"/>
+					<span>Import</span>
+				</label>
+			</span>
+			<span class="uiRadio">
+				<label class="radio">
+					<input type="radio" name="mode" value="synchronize" ng-model="mode" ng-click="changeMode('synchronize')"/>
+					<span>Synchronize</span>
+				</label>
+			</span>
       </div>
       <div class="mode-options clearfix">
         #{include path=modeImportOptions.gtmpl}#{/include}
@@ -34,7 +49,7 @@
                 <li class="leaf" ng-repeat="subCategory in category.subcategories">
                   <span class="uiCheckbox"><input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]" ng-click="toggleCategorySelection(subCategory.path)"></input><span></span></span>
                   <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}} clickable">{{subCategory.label}}</label>
-                  <div class="resources" ng-show="categoriesModel[subCategory.path]">
+                  <div class="resources uiSearchInput" ng-show="categoriesModel[subCategory.path]">
                     <input type="text" class="search-resources" ng-model="resourcesSearchTerm.text"></input>
                     <div class="resources-table">
                       <table class="table table-striped table-condensed">
