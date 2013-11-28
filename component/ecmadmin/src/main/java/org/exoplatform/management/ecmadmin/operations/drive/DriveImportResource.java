@@ -1,13 +1,13 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
 import org.apache.commons.io.IOUtils;
-import org.exoplatform.container.PortalContainer;
-import org.exoplatform.container.xml.*;
+import org.exoplatform.container.xml.ComponentPlugin;
+import org.exoplatform.container.xml.Configuration;
+import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.management.ecmadmin.operations.queries.QueriesExportTask;
 import org.exoplatform.services.cms.drives.DriveData;
 import org.exoplatform.services.cms.drives.ManageDriveService;
-import org.exoplatform.services.cms.drives.impl.ManageDrivePlugin;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
@@ -20,7 +20,6 @@ import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
 
 import java.io.StringReader;
-import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -67,19 +66,20 @@ public class DriveImportResource extends ECMAdminImportResource {
           ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(ManageDriveService.class.getName());
           List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
           for (ComponentPlugin componentPlugin : componentPlugins) {
-            Class<?> pluginClass = Class.forName(componentPlugin.getType());
-            ManageDrivePlugin cplugin = (ManageDrivePlugin) PortalContainer.getInstance().createComponent(pluginClass, componentPlugin.getInitParams());
-            cplugin.setName(componentPlugin.getName());
-            cplugin.setDescription(componentPlugin.getDescription());
+            List<DriveData> drives = componentPlugin.getInitParams().getObjectParamValues(DriveData.class);
 
-            // Delete existing drives if replaceExisting=true
-            if (replaceExisting) {
-              deleteExistingDrives(componentPlugin);
-              cplugin.init();
-            } else {
-              log.info("Ignore existing drives");
+            for (DriveData drive : drives) {
+              if(replaceExisting || driveService.getDriveByName(drive.getName()) == null) {
+                log.info("Overwrite existing drive : " + drive.getName());
+                // The addDrive method add the drive if it does not exist or updates it if it exists
+                driveService.addDrive(drive.getName(), drive.getWorkspace(), drive.getPermissions(), drive.getHomePath(), drive.getViews(), drive.getIcon(), drive.getViewPreferences(), drive.getViewNonDocument(), drive.getViewSideBar(), drive.getShowHiddenNode(), drive.getAllowCreateFolders(), drive.getAllowNodeTypesOnTree());
+              } else {
+                log.info("Ignore existing drive : " + drive.getName());
+              }
             }
           }
+
+          driveService.clearAllDrivesCache();
         }
         zin.closeEntry();
       }
@@ -88,20 +88,6 @@ public class DriveImportResource extends ECMAdminImportResource {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS drives.", exception);
     }
     resultHandler.completed(NoResultModel.INSTANCE);
-  }
-
-  private void deleteExistingDrives(ComponentPlugin componentPlugin) throws Exception {
-    InitParams params_ = componentPlugin.getInitParams();
-    @SuppressWarnings("unchecked")
-    Iterator<ObjectParameter> it = params_.getObjectParamIterator();
-    while (it.hasNext()) {
-      DriveData data = (DriveData) it.next().getObject();
-      DriveData storedDriveData = driveService.getDriveByName(data.getName());
-      if (storedDriveData != null) {
-        log.info("Overwrite existing drive '" + data.getName() + "'.");
-        driveService.removeDrive(data.getName());
-      }
-    }
   }
 
 }
