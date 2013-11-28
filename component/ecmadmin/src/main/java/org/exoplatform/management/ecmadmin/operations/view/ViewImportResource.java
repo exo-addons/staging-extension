@@ -74,7 +74,12 @@ public class ViewImportResource extends ECMAdminImportResource {
           log.debug("Reading Stream for template: " + templateName);
           String content = IOUtils.toString(zin);
 
-          Node template = viewService.getTemplate(templatesHomePath + templateName, sessionProvider);
+          Node template = null;
+          try {
+            template = viewService.getTemplate(templatesHomePath + templateName, sessionProvider);
+          } catch (Exception e) {
+            // template does not exist, ignore the error
+          }
 
           if(template != null) {
             if(replaceExisting) {
