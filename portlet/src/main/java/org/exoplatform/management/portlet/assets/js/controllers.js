@@ -215,7 +215,12 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
 
         // expand/unexpand first level resources categories
         for(var i=0; i<$scope.categories.length; i++) {
-          $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+          // exception : /gadget and /registry are not really under /application
+          if($scope.categories[i].path === "/application") {
+            $scope.categories[i].expanded = (data === "/gadget" || data === "/registry");
+          } else {
+            $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+          }
         }
 
         $scope.toggleCategorySelection(data);

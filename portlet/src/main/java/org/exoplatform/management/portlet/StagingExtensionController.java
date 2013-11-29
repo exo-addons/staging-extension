@@ -79,7 +79,7 @@ public class StagingExtensionController {
     organization.getSubResourceCategories().add(new ResourceCategory("Roles", StagingService.ROLE_PATH));
     resourceCategories.add(organization);
 
-    ResourceCategory applications = new ResourceCategory("Applications", null);
+    ResourceCategory applications = new ResourceCategory("Applications", "/application");
     applications.getSubResourceCategories().add(new ResourceCategory("Applications Registry", StagingService.REGISTRY_PATH));
     applications.getSubResourceCategories().add(new ResourceCategory("Gadgets", StagingService.GADGET_PATH));
     resourceCategories.add(applications);
