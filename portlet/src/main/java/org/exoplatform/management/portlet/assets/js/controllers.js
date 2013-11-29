@@ -212,6 +212,12 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
         $scope.categoriesModel = [];
         // select category
         $scope.categoriesModel[data] = true;
+
+        // expand/unexpand first level resources categories
+        for(var i=0; i<$scope.categories.length; i++) {
+          $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+        }
+
         $scope.toggleCategorySelection(data);
       }).error(function (data) {
         $scope.setResultMessage("Prepare Import failed. " + data, "error");

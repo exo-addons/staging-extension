@@ -215,15 +215,55 @@ public class StagingExtensionController {
       }
     }
 
-    log.debug("Found resource path : {0}", foundResources);
+    List<String> foundResourcesWithExceptions = getResourcesWithExceptions(foundResources);
+
+    log.info("Found resource path in imported zip : {}", foundResourcesWithExceptions);
 
     zipInputStream.close();
 
-    if(!foundResources.isEmpty()) {
-      return Response.ok(foundResources.get(0));
+    if(!foundResourcesWithExceptions.isEmpty()) {
+      return Response.ok(foundResourcesWithExceptions.get(0));
     } else {
       return Response.content(500, "Zip file does not contain known resources to import");
     }
+  }
+
+  /*
+   * Handle exceptions in resources paths (ex : /content/sites/intranet -> /content/sites)
+   */
+  private List<String> getResourcesWithExceptions(List<String> foundResources) {
+    List<String> foundResourcesWithExceptions = new ArrayList<String>(foundResources);
+
+    boolean categoryExists = false;
+    for(ResourceCategory resourceCategory : resourceCategories) {
+      for(ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
+        if(foundResources.get(0).equals(subResourceCategory.getPath())) {
+          categoryExists = true;
+          break;
+        }
+      }
+      if(categoryExists) {
+        break;
+      }
+    }
+
+    if(!categoryExists) {
+      boolean categoryFound = false;
+      for(ResourceCategory resourceCategory : resourceCategories) {
+        for(ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
+          if(foundResources.get(0).startsWith(subResourceCategory.getPath())) {
+            foundResourcesWithExceptions.set(0, subResourceCategory.getPath());
+            categoryFound = true;
+            break;
+          }
+        }
+        if(categoryFound) {
+          break;
+        }
+      }
+    }
+
+    return foundResourcesWithExceptions;
   }
 
   @Ajax
@@ -364,8 +404,17 @@ public class StagingExtensionController {
       }
     }
 
+    // Manage paths exceptions (/site/portalsites -> /site)
+    List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
+    for(ResourceCategory resourceCategory : selectedResourceCategories) {
+      if(IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
+        resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+      }
+      selectedResourceCategoriesWithExceptions.add(resourceCategory);
+    }
+
     try {
-      synchronizationService.synchronize(selectedResourceCategories, targetServer);
+      synchronizationService.synchronize(selectedResourceCategoriesWithExceptions, targetServer);
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);

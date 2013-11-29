@@ -5,7 +5,6 @@ import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
-import java.io.IOException;
 import java.util.List;
 
 public class SynchronizationServiceImpl implements SynchronizationService {
@@ -45,7 +44,7 @@ public class SynchronizationServiceImpl implements SynchronizationService {
    * {@inheritDoc}
    */
   @Override
-  public void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws IOException {
+  public void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws Exception {
     for(ResourceCategory selectedResourceCategory : selectedResourcesCategories) {
       // Gets the right resource handler thanks to the Service Locator
       ResourceHandler resourceHandler = ResourceHandlerLocator.getResourceHandler(selectedResourceCategory.getPath());
@@ -54,6 +53,7 @@ public class SynchronizationServiceImpl implements SynchronizationService {
         resourceHandler.synchronize(selectedResourceCategory.getResources(), selectedResourceCategory.getExportOptions(), selectedResourceCategory.getImportOptions(), targetServer);
       } else {
         log.error("No handler for " + selectedResourceCategory.getPath());
+        throw new Exception("No handler for " + selectedResourceCategory.getPath());
       }
     }
   }
