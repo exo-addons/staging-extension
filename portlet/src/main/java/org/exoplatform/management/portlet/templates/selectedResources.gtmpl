@@ -430,7 +430,7 @@
 
   <div class="uiBox selected-resource" ng-show="categoriesModel['/gadget']">
     <a ng-click="unselectCategory('/gadget')" class="unselect-resources-category">Remove</a>
-    <label class="selected-resource-title clickable" ng-init="resourceDetailsGadgetVisible=true" ng-click="resourceDetailsGadgetVisible = !resourceDetailsGadgetVisible">Applications Registry</label>
+    <label class="selected-resource-title clickable" ng-init="resourceDetailsGadgetVisible=true" ng-click="resourceDetailsGadgetVisible = !resourceDetailsGadgetVisible">Gadgets</label>
     <div class="selected-resource-details" ng-show="resourceDetailsGadgetVisible">
       <div ng-show="mode == 'import' || mode == 'synchronize'">
         <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/gadget_IMPORT_filter/replace-existing"
