@@ -21,7 +21,7 @@ public class ViewConfigurationExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return "ecmadmin/view/" + name;
+    return "ecmadmin/view/configuration/" + name;
   }
 
   @Override

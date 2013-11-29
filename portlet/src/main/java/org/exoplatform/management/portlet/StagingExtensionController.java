@@ -9,10 +9,17 @@ import org.exoplatform.management.service.api.*;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.gatein.management.api.ManagedResource;
+import org.gatein.management.api.ManagementService;
+import org.gatein.management.api.PathAddress;
+import org.gatein.management.api.operation.OperationHandler;
+import org.gatein.management.api.operation.OperationNames;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @SessionScoped
 public class StagingExtensionController {
@@ -22,12 +29,17 @@ public class StagingExtensionController {
   public static final String OPERATION_EXPORT_PREFIX = "EXPORT";
   public static final String PARAM_PREFIX_OPTION = "staging-option:";
 
+  public static final Map<String, String> IMPORT_ZIP_PATH_EXCEPTIONS = new HashMap<String, String>();
+  public static final Map<String, String> IMPORT_PATH_EXCEPTIONS = new HashMap<String, String>();
 
   /** */
   StagingService stagingService;
 
   /** */
   SynchronizationService synchronizationService;
+
+  /** */
+  ManagementService managementService;
 
   @Inject
   @Path("selectedResources.gtmpl")
@@ -40,18 +52,28 @@ public class StagingExtensionController {
   static List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
 
   static {
+    // ZIP PATH EXCEPTIONS
+    IMPORT_ZIP_PATH_EXCEPTIONS.put("/portal", "/site/portalsites");
+    IMPORT_ZIP_PATH_EXCEPTIONS.put("/group", "/site/groupsites");
+    IMPORT_ZIP_PATH_EXCEPTIONS.put("/user", "/site/usersites");
+
+    // PATH EXCEPTIONS
+    IMPORT_PATH_EXCEPTIONS.put("/site/portalsites", "/site");
+    IMPORT_PATH_EXCEPTIONS.put("/site/groupsites", "/site");
+    IMPORT_PATH_EXCEPTIONS.put("/site/usersites", "/site");
+
     // RESOURCES CATEGORIES
-    ResourceCategory contents = new ResourceCategory("Contents", null);
+    ResourceCategory contents = new ResourceCategory("Contents", "/content");
     contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
     resourceCategories.add(contents);
 
-    ResourceCategory sites = new ResourceCategory("Sites", null);
+    ResourceCategory sites = new ResourceCategory("Sites", "/site");
     sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
     sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
     sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
     resourceCategories.add(sites);
 
-    ResourceCategory organization = new ResourceCategory("Organization", null);
+    ResourceCategory organization = new ResourceCategory("Organization", "/organization");
     organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));
     organization.getSubResourceCategories().add(new ResourceCategory("Groups", StagingService.GROUPS_PATH));
     organization.getSubResourceCategories().add(new ResourceCategory("Roles", StagingService.ROLE_PATH));
@@ -62,7 +84,7 @@ public class StagingExtensionController {
     applications.getSubResourceCategories().add(new ResourceCategory("Gadgets", StagingService.GADGET_PATH));
     resourceCategories.add(applications);
 
-    ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", null);
+    ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", "/ecmadmin");
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Search Templates", StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
@@ -79,9 +101,10 @@ public class StagingExtensionController {
   }
 
   @Inject
-  public StagingExtensionController(StagingService stagingService, SynchronizationService synchronizationService, ChromatticService chromatticService) {
+  public StagingExtensionController(StagingService stagingService, SynchronizationService synchronizationService, ChromatticService chromatticService, ManagementService managementService) {
     this.stagingService = stagingService;
     this.synchronizationService = synchronizationService;
+    this.managementService = managementService;
 
     // FIXME Need to pass through the Controller to be able to inject the ChromatticService
     // Can't do it directly in the SynchronizationService. Need to figure out how to do it.
@@ -156,6 +179,95 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
+  public Response.Content<?> prepareImportResources(FileItem file) throws IOException {
+    if (file == null || file.getSize() == 0) {
+      return Response.content(500, "File is empty");
+    }
+
+    //
+    ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
+    ZipEntry entry = zipInputStream.getNextEntry();
+    String fileName = entry.getName();
+    String[] fileNameParts = fileName.split("/");
+    List<String> foundResources = new ArrayList<String>();
+
+    for(int i=fileNameParts.length-1; i>=0; i--) {
+      PathAddress address = PathAddress.pathAddress(Arrays.copyOfRange(fileNameParts, 0, i));
+
+      String pathException = IMPORT_ZIP_PATH_EXCEPTIONS.get(address.toString());
+      if(pathException != null) {
+        // Got it !
+        foundResources.add(pathException);
+        // Manage only one resource at a time for the moment
+        break;
+      }
+
+      ManagedResource managedResource = managementService.getManagedResource(address);
+
+      if(managedResource != null) {
+        OperationHandler operationHandler = managedResource.getOperationHandler(PathAddress.EMPTY_ADDRESS, OperationNames.IMPORT_RESOURCE);
+        if(operationHandler != null) {
+          // Got it !
+          foundResources.add(address.toString());
+          // Manage only one resource at a time for the moment
+          break;
+        }
+      }
+    }
+
+    List<String> foundResourcesWithExceptions = getResourcesWithExceptions(foundResources);
+
+    log.info("Found resource path in imported zip : {}", foundResourcesWithExceptions);
+
+    zipInputStream.close();
+
+    if(!foundResourcesWithExceptions.isEmpty()) {
+      return Response.ok(foundResourcesWithExceptions.get(0));
+    } else {
+      return Response.content(500, "Zip file does not contain known resources to import");
+    }
+  }
+
+  /*
+   * Handle exceptions in resources paths (ex : /content/sites/intranet -> /content/sites)
+   */
+  private List<String> getResourcesWithExceptions(List<String> foundResources) {
+    List<String> foundResourcesWithExceptions = new ArrayList<String>(foundResources);
+
+    boolean categoryExists = false;
+    for(ResourceCategory resourceCategory : resourceCategories) {
+      for(ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
+        if(foundResources.get(0).equals(subResourceCategory.getPath())) {
+          categoryExists = true;
+          break;
+        }
+      }
+      if(categoryExists) {
+        break;
+      }
+    }
+
+    if(!categoryExists) {
+      boolean categoryFound = false;
+      for(ResourceCategory resourceCategory : resourceCategories) {
+        for(ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
+          if(foundResources.get(0).startsWith(subResourceCategory.getPath())) {
+            foundResourcesWithExceptions.set(0, subResourceCategory.getPath());
+            categoryFound = true;
+            break;
+          }
+        }
+        if(categoryFound) {
+          break;
+        }
+      }
+    }
+
+    return foundResourcesWithExceptions;
+  }
+
+  @Ajax
+  @juzu.Resource
   public Response.Content<?> importResources(FileItem file) throws IOException {
     if (file == null || file.getSize() == 0) {
       return Response.content(500, "File is empty.");
@@ -179,7 +291,14 @@ public class StagingExtensionController {
         }
       }
 
-      stagingService.importResource(selectedResourcesCategories[0], file, attributes);
+      String selectedResourcesCategory = selectedResourcesCategories[0];
+      String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
+      if(exceptionPathCategory != null) {
+        selectedResourcesCategory = exceptionPathCategory;
+      }
+
+      stagingService.importResource(selectedResourcesCategory, file, attributes);
+
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
@@ -285,8 +404,17 @@ public class StagingExtensionController {
       }
     }
 
+    // Manage paths exceptions (/site/portalsites -> /site)
+    List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
+    for(ResourceCategory resourceCategory : selectedResourceCategories) {
+      if(IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
+        resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+      }
+      selectedResourceCategoriesWithExceptions.add(resourceCategory);
+    }
+
     try {
-      synchronizationService.synchronize(selectedResourceCategories, targetServer);
+      synchronizationService.synchronize(selectedResourceCategoriesWithExceptions, targetServer);
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);

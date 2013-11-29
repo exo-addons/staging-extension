@@ -70,7 +70,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     applicationsTemplates.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ApplicationsTemplatesImportResource(), description("Import applications templates"));
 
     // /ecmadmin/templates/applications/<application_name>
-    ManagedResource.Registration applicationTemplates = applicationsTemplates.registerSubResource("{application-name: .*}", description("ECMS Groovy templates for {application-name} Portlet."));
+    ManagedResource.Registration applicationTemplates = applicationsTemplates.registerSubResource("{application-name: [^/]*}", description("ECMS Groovy templates for {application-name} Portlet."));
     applicationTemplates.registerOperationHandler(OperationNames.READ_RESOURCE, new ApplicationTemplatesReadResource(), description("Lists available templates of an application"));
     applicationTemplates.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ApplicationTemplatesExportResource(), description("Exports available templates of an application"));
     applicationTemplates.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ApplicationsTemplatesImportResource(), description("Import applications templates"));
@@ -99,7 +99,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     taxonomies.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new TaxonomyImportResource(), description("Imports available taxonomies"));
 
     // /ecmadmin/taxonomy/name
-    ManagedResource.Registration taxonomy = taxonomies.registerSubResource("{taxonomy-name: .*}", description("Taxonomy '{taxonomy-name}'."));
+    ManagedResource.Registration taxonomy = taxonomies.registerSubResource("{taxonomy-name: [^/]*}", description("Taxonomy '{taxonomy-name}'."));
     taxonomy.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("nothing"));
     taxonomy.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new TaxonomyExportResource(), description("Exports selected taxonomy"));
 
@@ -139,7 +139,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     viewsConfiguration.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ViewImportResource(), description("Import Sites Explorer Views."));
 
     // /ecmadmin/view/configuration/<configuration_name>
-    ManagedResource.Registration viewConfiguration = viewsConfiguration.registerSubResource("{configuration-name: .*}", description("Sites Explorer {configuration-name} View configuration."));
+    ManagedResource.Registration viewConfiguration = viewsConfiguration.registerSubResource("{configuration-name: [^/]*}", description("Sites Explorer {configuration-name} View configuration."));
     viewConfiguration.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Nothing to read."));
     viewConfiguration.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ViewConfigurationExportResource(), description("Exports selected views."));
 
@@ -150,7 +150,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     viewsTemplate.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ViewImportResource(), description("Import Sites Explorer Views."));
 
     // /ecmadmin/view/templates/<template-name>
-    ManagedResource.Registration viewTemplate = viewsTemplate.registerSubResource("{template-name: .*}", description("Sites Explorer {template-name} View template."));
+    ManagedResource.Registration viewTemplate = viewsTemplate.registerSubResource("{template-name: [^/]*}", description("Sites Explorer {template-name} View template."));
     viewTemplate.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Nothing to read."));
     viewTemplate.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ViewTemplatesExportResource(), description("Exports {template-name} template of Sites Explorer Portlet"));
   }

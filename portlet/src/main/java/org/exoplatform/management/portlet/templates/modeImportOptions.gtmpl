@@ -1,7 +1,8 @@
 <div class="mode-import-options" ng-show="mode=='import'">
   <div>
-    <form class="form-horizontal">
-      Import file : <input title="Upload file" type="file" id="filteToImport" accept=".zip" name="filteToImport" onchange="angular.element(this).scope().setFile(this)"/>
+    <form id="form-import-upload" class="form-horizontal" ng-submit="prepareImportResources()">
+      Import file : <input title="Upload file" type="file" id="filteToImport" accept=".zip" name="filteToImport"
+                           onchange="angular.element(this).scope().setFile(this);angular.element(this).scope().prepareImportResources();"/>
     </form>
   </div>
 </div>

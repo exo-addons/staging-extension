@@ -5,6 +5,7 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
 
   $scope.changeMode = function(mode) {
     $scope.mode = mode;
+    $scope.readyToImport = false;
     if(mode === 'synchronize') {
       $scope.syncServersMessage = "";
       $scope.loadServers();
@@ -144,6 +145,8 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
   $scope.resultMessage = "";
   $scope.resultMessageClass = "alert-info";
 
+  $scope.readyToImport = false;
+
   // function which set the result message with the given style
   $scope.setResultMessage = function(text, type) {
     $scope.resultMessageClass = "alert-" + type;
@@ -161,38 +164,6 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
     }
     return selectedCategories;
   };
-
-  /*
-  $scope.getOptionsString = function(selectedResourcesCategoryPath, type, addNamespace) {
-    var options = "";
-    for(optionName in $scope.optionsModel) {
-      if(optionName.indexOf(selectedResourcesCategoryPath + "_" + type + "_") === 0) {
-        if(options !== "") {
-          options += "&";
-        }
-        var optionFullName = optionName.substring((selectedResourcesCategoryPath + "_" + type + "_").length, optionName.length);
-        var fieldValue = $scope.optionsModel[optionName];
-
-        var indexSlash = optionFullName.indexOf("/");
-        if(indexSlash > 0) {
-          var optionName = optionFullName.substring(0, indexSlash);
-          var optionValue = optionFullName.substring(indexSlash + 1, optionFullName.length) + ":" + fieldValue;
-          if(addNamespace) {
-            options += "staging-option:"
-          }
-          options += optionName + "=" + optionValue;
-        } else {
-          if(addNamespace) {
-            options += "staging-option:"
-          }
-          options += optionFullName + "=" + fieldValue;
-        }
-      }
-    }
-
-    return options;
-  };
-  */
 
   // export action
   $scope.exportResources = function() {
@@ -214,6 +185,45 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
 
     location.href = '/portal/rest/managed-components' + selectedCategories[0] + '.zip' + queryParams;
   };
+
+  // import action
+  $scope.prepareImportResources = function() {
+    if(!$scope.importFile) {
+      $scope.setResultMessage("No file selected", "error");
+      return;
+    }
+
+    var form = new FormData();
+    form.append('file', $scope.importFile);
+
+    $scope.setResultMessage("Analyzing import file ...", "info");
+    $http({
+        url: stagingContainer.jzURL("StagingExtensionController.prepareImportResources"),
+        data : form,
+        method : 'POST',
+        headers : {'Content-Type':false},
+        transformRequest: function(data) { return data; }
+      }).success(function (data) {
+        $scope.setResultMessage("", "info");
+
+        $scope.readyToImport = true;
+
+        // reset all selected categories
+        $scope.categoriesModel = [];
+        // select category
+        $scope.categoriesModel[data] = true;
+
+        // expand/unexpand first level resources categories
+        for(var i=0; i<$scope.categories.length; i++) {
+          $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+        }
+
+        $scope.toggleCategorySelection(data);
+      }).error(function (data) {
+        $scope.setResultMessage("Prepare Import failed. " + data, "error");
+        $scope.readyToImport = false;
+      });
+  }
 
   // import action
   $scope.importResources = function() {

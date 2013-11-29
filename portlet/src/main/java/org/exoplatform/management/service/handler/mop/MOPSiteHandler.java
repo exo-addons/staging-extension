@@ -8,7 +8,7 @@ public class MOPSiteHandler extends AbstractResourceHandler {
   String parentPath;
 
   public MOPSiteHandler(SiteType siteType) {
-    parentPath = "/site/" + siteType.getName() + "sites/";
+    parentPath = "/site";
   }
 
   @Override
