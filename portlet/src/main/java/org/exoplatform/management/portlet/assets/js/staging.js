@@ -23,6 +23,3 @@ $.fn.jzLoad = function(url, data, complete) {
   }
   return this.load(url, data, complete);
 };
-
-
-var stagingApp = angular.module('stagingApp',[]);

@@ -1,4 +1,4 @@
-stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
+var StagingCtrl = function($scope, $http, StagingService) {
   var stagingContainer = $('#staging');
 
   $scope.mode = "export";
@@ -381,4 +381,4 @@ stagingApp.controller("StagingCtrl", function($scope, $http, StagingService) {
     }
   };
 
-});
+};

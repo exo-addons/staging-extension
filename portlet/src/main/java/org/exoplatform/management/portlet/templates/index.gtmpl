@@ -1,4 +1,4 @@
-<div id="staging" class="staging" ng-app="stagingApp">
+<div id="staging" class="staging">
   <div ng-controller="StagingCtrl">
     <div class="uiBox modes">
       <div class="mode-items">
@@ -84,6 +84,16 @@
   </div>
 <div>
 
-
+<script>
+  // Bootstrap manually the ng application, since :
+  // - it allows to correctly reinit the ng app after a (portal) page edition. Indeed, if we use the automatic init,
+  //   when the (portal) page is edited and then saved, the module are not registered again, so they are not executed
+  // - it is a good practice if we want to allow several ng app in the same html page (which could be the case with several portlets)
+  var stagingAppRoot = document.getElementById('staging');
+  var stagingApp = angular.module('stagingApp', []);
+  stagingApp.controller('StagingCtrl', StagingCtrl);
+  stagingApp.service('StagingService', StagingService);
+  angular.bootstrap(stagingAppRoot, ['stagingApp']);
+</script>
 
 

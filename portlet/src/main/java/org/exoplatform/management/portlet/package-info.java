@@ -13,7 +13,7 @@
 @Assets(
   scripts = {
     @Script(id = "angularjs", src = "js/lib/angular.min.js"),
-    @Script(id = "staging", src = "js/staging.js"),
+    @Script(id = "staging", src = "js/staging.js", depends = "angularjs"),
     @Script(id = "services", src = "js/services.js", depends = "staging"),
     @Script(id = "controllers", src = "js/controllers.js", depends = "staging")
 

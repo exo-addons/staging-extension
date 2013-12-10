@@ -1,4 +1,4 @@
-stagingApp.factory('StagingService', function() {
+var StagingService = function() {
 
   var service = {};
 
@@ -34,4 +34,4 @@ stagingApp.factory('StagingService', function() {
 
   return service;
 
-});
+};
