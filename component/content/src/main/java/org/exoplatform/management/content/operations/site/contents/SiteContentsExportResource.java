@@ -1,25 +1,8 @@
 package org.exoplatform.management.content.operations.site.contents;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.portal.config.DataStorage;
-import org.exoplatform.portal.config.model.Application;
-import org.exoplatform.portal.config.model.Container;
-import org.exoplatform.portal.config.model.ModelObject;
-import org.exoplatform.portal.config.model.Page;
-import org.exoplatform.portal.config.model.PortalConfig;
+import org.exoplatform.portal.config.model.*;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageService;
@@ -36,13 +19,16 @@ import org.exoplatform.services.wcm.portal.PortalFolderSchemaHandler;
 import org.exoplatform.wcm.webui.Utils;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttributes;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.*;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+import java.util.*;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
@@ -267,18 +253,20 @@ public class SiteContentsExportResource implements OperationHandler {
   private List<ExportTask> exportQueryResult(NodeLocation sitesLocation, String siteRootNodePath, String jcrQuery, boolean exportVersionHistory) throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    String queryPath = "jcr:path = '" + siteRootNodePath + "/%'";
-    queryPath.replace("//", "/");
-    if (jcrQuery.contains("where")) {
-      int startIndex = jcrQuery.indexOf("where");
-      int endIndex = startIndex + "where".length();
+    if(!jcrQuery.contains("jcr:path")) {
+      String queryPath = "jcr:path = '" + siteRootNodePath + "/%'";
+      queryPath.replace("//", "/");
+      if (jcrQuery.contains("where")) {
+        int startIndex = jcrQuery.indexOf("where");
+        int endIndex = startIndex + "where".length();
 
-      String condition = jcrQuery.substring(endIndex);
-      condition = queryPath + " AND (" + condition + ")";
+        String condition = jcrQuery.substring(endIndex);
+        condition = queryPath + " AND (" + condition + ")";
 
-      jcrQuery = jcrQuery.substring(0, startIndex) + " where " + condition;
-    } else {
-      jcrQuery += " where " + queryPath;
+        jcrQuery = jcrQuery.substring(0, startIndex) + " where " + condition;
+      } else {
+        jcrQuery += " where " + queryPath;
+      }
     }
 
     SessionProvider provider = SessionProvider.createSystemProvider();
