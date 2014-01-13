@@ -50,3 +50,6 @@ rebel-remote.xml
 /synchronization/ear/src/main/application/META-INF/application.xml
 /synchronization/portlet/src/main/webapp/META-INF
 /synchronization/portlet/src/main/webapp/skin/css/synchronization.css
+
+/cli/src/main/webapp/META-INF/maven/org.exoplatform.addons.staging/staging-extension-cli/pom.properties
+/cli/src/main/webapp/META-INF/maven/org.exoplatform.addons.staging/staging-extension-cli/pom.xml

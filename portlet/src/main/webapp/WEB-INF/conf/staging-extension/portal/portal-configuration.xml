@@ -11,6 +11,10 @@
 			<type>org.exoplatform.portal.config.NewPortalConfigListener</type>
 			<description>this listener init the portal configuration</description>
 			<init-params>
+				<value-param>
+				  <name>override</name>
+				  <value>true</value>
+				</value-param>
 				<object-param>
 				  <name>group.configuration</name>
 				  <description>description</description>
