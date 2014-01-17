@@ -1,25 +1,12 @@
-// HACK : redefine jz js functions
-// TODO : find a way to use juzu-ajax js
-$.fn.jz = function() {
-  return this.closest(".jz");
-};
-$.fn.jzURL = function(mid) {
-  return this.
-    jz().
-    children().
-    filter(function() { return $(this).data("method-id") == mid; }).
-    map(function() { return $(this).data("url"); })[0];
-};
-var re = /^(.*)\(\)$/;
-$.fn.jzLoad = function(url, data, complete) {
-  var match = re.exec(url);
-  if (match !== null) {
-    var repl = this.jzURL(match[1]);
-    url = repl || url;
-  }
-  if (typeof data === "function") {
-    complete = data;
-    data = null;
-  }
-  return this.load(url, data, complete);
-};
+// Bootstrap manually the ng application, since :
+// - it allows to correctly reinit the ng app after a (portal) page edition. Indeed, if we use the automatic init,
+//   when the (portal) page is edited and then saved, the module are not registered again, so they are not executed
+// - it is a good practice if we want to allow several ng app in the same html page (which could be the case with several portlets)
+require( ["SHARED/jquery", "stagingControllers", "stagingServices"], function ( $,  stagingControllers, stagingServices)
+{
+  var stagingAppRoot = $('#staging');
+  var stagingApp = angular.module('stagingApp', []);
+  stagingApp.controller('stagingCtrl', stagingControllers);
+  stagingApp.service('stagingService', stagingServices);
+  angular.bootstrap(stagingAppRoot, ['stagingApp']);
+});

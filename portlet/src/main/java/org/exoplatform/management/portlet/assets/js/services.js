@@ -1,4 +1,7 @@
-var StagingService = function() {
+define( "stagingServices", [], function ( )
+{
+
+var stagingService = function() {
 
   var service = {};
 
@@ -35,3 +38,7 @@ var StagingService = function() {
   return service;
 
 };
+
+  return stagingService;
+
+});

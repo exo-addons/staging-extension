@@ -161,6 +161,7 @@
 					</sources>
 				</configuration>
 			</plugin>
+			<!--
 			<plugin>
 				<groupId>com.github.searls</groupId>
 				<artifactId>jasmine-maven-plugin</artifactId>
@@ -176,6 +177,9 @@
 						<source>${project.basedir}/src/test/webapp/js/lib/jquery-1.8.3.js</source>
 						<source>${project.basedir}/src/main/java/org/exoplatform/management/portlet/assets/js/lib/angular.min.js</source>
 						<source>${project.basedir}/src/test/webapp/js/lib/angular-mocks.js</source>
+            					/* use eXo bootstrap lib to simulate requirejs features */
+						<source>${project.basedir}/src/test/webapp/js/lib/exo-require-init.js</source>
+						<source>${project.basedir}/src/test/webapp/js/lib/exo-bootstrap.js</source>
 					</preloadSources>
 					<jsSrcDir>src/main/java/org/exoplatform/management/portlet/assets/js</jsSrcDir>
 					<jsTestSrcDir>src/test/webapp/js</jsTestSrcDir>
@@ -184,12 +188,12 @@
 						<include>*Spec.js</include>
 					</specIncludes>
 					<sourceIncludes>
-						<include>staging.js</include>
 						<include>services.js</include>
-						<include>controllers.js</include>
+						/*<include>controllers.js</include>*/
 					</sourceIncludes>
 				</configuration>
 			</plugin>
+			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
