@@ -4,12 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.exoplatform.addons.staging</groupId>
-		<artifactId>staging-extension-parent</artifactId>
+		<artifactId>staging-extension-component</artifactId>
 		<version>2.3.0-SNAPSHOT</version>
 	</parent>
-	<artifactId>staging-extension-portlet</artifactId>
-	<packaging>war</packaging>
-	<name>Staging Extension - Portlet</name>
+	<artifactId>staging-extension-service</artifactId>
+	<name>Staging Extension - Common Portlet Services</name>
 	<dependencies>
 		<dependency>
 			<groupId>org.gatein.management</groupId>
@@ -118,12 +117,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.exoplatform.platform-ui</groupId>
-			<artifactId>platform-ui-web-eXoResources</artifactId>
-			<type>war</type>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-services</artifactId>
 			<scope>provided</scope>
@@ -133,80 +126,5 @@
 			<artifactId>ecms-core-webui</artifactId>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>xmlunit</groupId>
-			<artifactId>xmlunit</artifactId>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
-	<build>
-		<finalName>staging-extension-portlet</finalName>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.gmaven</groupId>
-				<artifactId>gmaven-plugin</artifactId>
-				<configuration>
-					<sources>
-						<fileset>
-							<directory>${project.build.outputDirectory}</directory>
-							<includes>
-								<include>**/*.groovy</include>
-							</includes>
-						</fileset>
-					</sources>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>com.github.searls</groupId>
-				<artifactId>jasmine-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>test</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<preloadSources>
-						<source>${project.basedir}/src/test/webapp/js/lib/jquery-1.8.3.js</source>
-						<source>${project.basedir}/src/main/java/org/exoplatform/management/portlet/assets/js/lib/angular.min.js</source>
-						<source>${project.basedir}/src/test/webapp/js/lib/angular-mocks.js</source>
-					</preloadSources>
-					<jsSrcDir>src/main/java/org/exoplatform/management/portlet/assets/js</jsSrcDir>
-					<jsTestSrcDir>src/test/webapp/js</jsTestSrcDir>
-					<specIncludes>
-						<include>bootstrap.js</include>
-						<include>*Spec.js</include>
-					</specIncludes>
-					<sourceIncludes>
-						<include>staging.js</include>
-						<include>services.js</include>
-						<include>controllers.js</include>
-					</sourceIncludes>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<configuration>
-					<warSourceIncludes>
-					</warSourceIncludes>
-					<webResources>
-						<resource>
-							<directory>${project.build.directory}/generated-sources/annotations</directory>
-							<includes>
-								<include>**/*.xml</include>
-							</includes>
-							<targetPath>WEB-INF/classes</targetPath>
-						</resource>
-					</webResources>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 </project>

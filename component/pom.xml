@@ -14,8 +14,10 @@
 		<module>content</module>
 		<module>ecmadmin</module>
 		<module>gadget</module>
-    <module>organization</module>
-    <module>registry</module>
-    <module>site</module>
+		<module>organization</module>
+		<module>registry</module>
+		<module>site</module>
+		<module>service</module>
+		<module>uiextension</module>
 	</modules>
 </project>

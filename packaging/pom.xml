@@ -10,9 +10,7 @@
 	<packaging>pom</packaging>
 	<name>Staging Extension - Packaging</name>
 	<description>Staging Extension - Packaging</description>
-	<modules>		
-		<module>ear</module>
-		<module>ear-jpp</module>
+	<modules>
 		<module>extension</module>
 	</modules>
 </project>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.exoplatform.addons.staging</groupId>
+		<artifactId>staging-extension-component</artifactId>
+		<version>2.3.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>staging-extension-uiextension</artifactId>
+	<name>Staging Extension - UI Extension</name>
+	<description>Staging Extension - UI Extension</description>
+	<dependencies>
+		<dependency>
+			<groupId>org.exoplatform.ecms</groupId>
+			<artifactId>ecms-core-webui-explorer</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.exoplatform.addons.staging</groupId>
+			<artifactId>staging-extension-service</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.exoplatform.addons.staging</groupId>
+			<artifactId>staging-extension-content</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.gatein.management</groupId>
+			<artifactId>gatein-management-spi</artifactId>
+		</dependency>
+	</dependencies>
+</project>
