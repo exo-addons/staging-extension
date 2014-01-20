@@ -43,6 +43,7 @@ public class PushContentActionComponent extends UIComponent {
       pushContentPopupContainer.setContentsHandler(CONTENTS_HANDLER);
       pushContentPopupContainer.setSynchronizationService(SYNCHRONIZATION_SERVICE);
       pushContentPopupContainer.setCurrentPath(uiExplorer.getCurrentPath());
+      pushContentPopupContainer.init();
 
       uiPopupContainer.activate(pushContentPopupContainer, 700, 0);
       event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
