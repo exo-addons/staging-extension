@@ -1,7 +1,9 @@
 package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -23,19 +25,13 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  */
 public class ApplicationTemplatesReadResource implements OperationHandler {
 
-  public final static String DISPLAY_TEMPLATE_CATEGORY = "navigation";
-
-  public final static String DISPLAY_TEMPLATE_LIST = "list";
-
-  public final static String TEMPLATE_STORAGE_FOLDER = "content-list-viewer";
-
-  public final static String CONTENT_LIST_TYPE = "ContentList";
-
-  public final static String CATEGORIES_CONTENT_TYPE = "CategoryContents";
-
-  public final static String CATOGORIES_NAVIGATION_TYPE = "CategoryNavigation";
-
-  public final static String PAGINATOR_TEMPLATE_CATEGORY = "paginators";
+  public final static Map<String, String[]> APPLICATION_SUB_TEMPLATES_MAP = new HashMap<String, String[]>();
+  static {
+    APPLICATION_SUB_TEMPLATES_MAP.put("content-list-viewer", new String[]
+      { "navigation", "list", "paginators" });
+    APPLICATION_SUB_TEMPLATES_MAP.put("search", new String[]
+      { "search-form", "search-page-layout", "search-paginator", "search-result" });
+  }
 
   private ApplicationTemplateManagerService templateManagerService;
 
@@ -45,21 +41,21 @@ public class ApplicationTemplatesReadResource implements OperationHandler {
     PathAddress address = operationContext.getAddress();
 
     String applicationName = address.resolvePathTemplate("application-name");
-    if (applicationName == null) {
+    if (applicationName == null || !APPLICATION_SUB_TEMPLATES_MAP.containsKey(applicationName)) {
       throw new OperationException(operationName, "No application name specified.");
     }
 
-    Set<String> templates = new TreeSet<String>();
+    TreeSet<String> templates = new TreeSet<String>();
     templateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(ApplicationTemplateManagerService.class);
     try {
       Set<String> tmpTemplates = new TreeSet<String>();
-      tmpTemplates.addAll(getTemplateList(TEMPLATE_STORAGE_FOLDER, DISPLAY_TEMPLATE_LIST));
-      tmpTemplates.addAll(getTemplateList(TEMPLATE_STORAGE_FOLDER, DISPLAY_TEMPLATE_CATEGORY));
-      tmpTemplates.addAll(getTemplateList(TEMPLATE_STORAGE_FOLDER, PAGINATOR_TEMPLATE_CATEGORY));
-      for (String template : tmpTemplates) {
-        templates.add(template.substring(template.indexOf(TEMPLATE_STORAGE_FOLDER) + TEMPLATE_STORAGE_FOLDER.length() + 1));
+      String[] applicationSubTemplates = APPLICATION_SUB_TEMPLATES_MAP.get(applicationName);
+      for (String applicationSubTemplate : applicationSubTemplates) {
+        tmpTemplates.addAll(getTemplateList(applicationName, applicationSubTemplate));
       }
-
+      for (String template : tmpTemplates) {
+        templates.add(template.substring(template.indexOf(applicationName) + applicationName.length() + 1));
+      }
     } catch (Exception e) {
       throw new OperationException("Read template applications", "Error while retrieving applications with templates", e);
     }
