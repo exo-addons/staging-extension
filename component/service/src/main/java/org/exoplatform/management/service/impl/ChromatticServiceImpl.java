@@ -1,5 +1,8 @@
 package org.exoplatform.management.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.chromattic.api.Chromattic;
 import org.chromattic.api.ChromatticBuilder;
 import org.chromattic.api.ChromatticSession;
@@ -8,17 +11,6 @@ import org.exoplatform.management.service.api.ChromatticService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.api.model.TargetServerChromattic;
 import org.exoplatform.management.service.integration.CurrentRepositoryLifeCycle;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.nodetype.ExtendedNodeTypeManager;
-import org.exoplatform.services.jcr.core.nodetype.NodeTypeDataManager;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.jcr.impl.core.ExtendedNamespaceRegistry;
-
-import javax.inject.Inject;
-import javax.jcr.Session;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Thomas Delhoménie
@@ -29,16 +21,10 @@ public class ChromatticServiceImpl implements ChromatticService {
 
   Chromattic chromattic;
 
-  @Inject
-  RepositoryService repositoryService;
-
-
   public ChromatticServiceImpl() {
   }
 
   public Chromattic init() {
-
-    registerNodetypes(repositoryService);
 
     // Init Chromattic
     ChromatticBuilder builder = ChromatticBuilder.create();
@@ -65,19 +51,12 @@ public class ChromatticServiceImpl implements ChromatticService {
       QueryResult<TargetServerChromattic> servers = session.createQueryBuilder(TargetServerChromattic.class).where("jcr:path like '" + STAGING_SERVERS_ROOT_PATH + "/%'").get().objects();
       while (servers.hasNext()) {
         TargetServerChromattic server = servers.next();
-        targetServers.add(new TargetServer(
-                server.getId(),
-                server.getName(),
-                server.getHost(),
-                server.getPort(),
-                server.getUsername(),
-                server.getPassword(),
-                server.isSsl()));
+        targetServers.add(new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), server.getPassword(), server.isSsl()));
       }
 
       session.save();
     } finally {
-      if(session != null) {
+      if (session != null) {
         session.close();
       }
     }
@@ -101,7 +80,7 @@ public class ChromatticServiceImpl implements ChromatticService {
 
       session.save();
     } finally {
-      if(session != null) {
+      if (session != null) {
         session.close();
       }
     }
@@ -116,12 +95,12 @@ public class ChromatticServiceImpl implements ChromatticService {
       session = openSession();
 
       TargetServerChromattic server = session.findById(TargetServerChromattic.class, targetServer.getId());
-      if(server != null) {
+      if (server != null) {
         session.remove(server);
         session.save();
       }
     } finally {
-      if(session != null) {
+      if (session != null) {
         session.close();
       }
     }
@@ -130,32 +109,4 @@ public class ChromatticServiceImpl implements ChromatticService {
   private ChromatticSession openSession() {
     return chromattic.openSession("collaboration");
   }
-
-  private void registerNodetypes(RepositoryService repoService) {
-    SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-    try {
-      // get JCR session
-      Session session = sessionProvider.getSession("dms-system", repoService.getCurrentRepository());
-
-      // create namespace if needed
-      ExtendedNamespaceRegistry namespaceRegistry = (ExtendedNamespaceRegistry) session.getWorkspace().getNamespaceRegistry();
-      try {
-        String prefix = namespaceRegistry.getNamespacePrefixByURI("http://exoplatform.org/jcr/staging");
-      } catch (javax.jcr.NamespaceException nse) {
-        namespaceRegistry.registerNamespace("staging", "http://exoplatform.org/jcr/staging");
-      }
-
-      // create node types
-      ExtendedNodeTypeManager nodeTypeManager = (ExtendedNodeTypeManager) session.getWorkspace().getNodeTypeManager();
-      InputStream is = ChromatticService.class.getResourceAsStream("model/nodetypes.xml");
-      nodeTypeManager.registerNodeTypes(is, ExtendedNodeTypeManager.REPLACE_IF_EXISTS, NodeTypeDataManager.TEXT_XML);
-
-    } catch (Exception e) {
-      e.printStackTrace();
-    } finally {
-      sessionProvider.close();
-    }
-  }
-
-
 }

@@ -31,7 +31,7 @@ import org.exoplatform.webui.form.validator.MandatoryValidator;
  * @version $Revision$
  */
 @ComponentConfig(
-  template = "classpath:/groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
+  template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
   events =
     { @EventConfig(
       listeners = PushContentPopupContainer.CloseActionListener.class), @EventConfig(
@@ -40,7 +40,8 @@ public class PushContentPopupContainer extends UIForm implements UIPopupComponen
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupContainer.class.getName());
 
   private static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
-  private static final String PWD_FIELD_NAME = "targetServer";
+  private static final String USERNAME_FIELD_NAME = "username";
+  private static final String PWD_FIELD_NAME = "password";
 
   private SiteContentsHandler contentsHandler_;
   private SynchronizationService synchronizationService_;
@@ -53,13 +54,19 @@ public class PushContentPopupContainer extends UIForm implements UIPopupComponen
 
   public void init() throws Exception {
     List<SelectItemOption<String>> itemOptions = new ArrayList<SelectItemOption<String>>();
-    targetServers = synchronizationService_.getSynchonizationServers();
+    try {
+      targetServers = synchronizationService_.getSynchonizationServers();
+    } catch (Exception e) {
+      LOG.warn(e);
+      targetServers = new ArrayList<TargetServer>();
+    }
     for (TargetServer targetServer : targetServers) {
       SelectItemOption<String> selectItemOption = new SelectItemOption<String>(targetServer.getName(), targetServer.getId());
       itemOptions.add(selectItemOption);
     }
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, itemOptions).addValidator(MandatoryValidator.class));
-    UIFormStringInput pwdInput = new UIFormStringInput(PWD_FIELD_NAME, PWD_FIELD_NAME);
+    addUIFormInput(new UIFormStringInput(USERNAME_FIELD_NAME, USERNAME_FIELD_NAME, ""));
+    UIFormStringInput pwdInput = new UIFormStringInput(PWD_FIELD_NAME, PWD_FIELD_NAME, "");
     pwdInput.setType(UIFormStringInput.PASSWORD_TYPE);
     addUIFormInput(pwdInput);
   }
@@ -96,7 +103,9 @@ public class PushContentPopupContainer extends UIForm implements UIPopupComponen
           return;
         }
 
-        String password = pushContentPopupContainer.getChild(UIFormStringInput.class).getValue();
+        String password = pushContentPopupContainer.getUIStringInput(PWD_FIELD_NAME).getValue();
+        String username = pushContentPopupContainer.getUIStringInput(USERNAME_FIELD_NAME).getValue();
+        targetServer.setUsername(username);
         targetServer.setPassword(password);
 
         pushContentPopupContainer.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
