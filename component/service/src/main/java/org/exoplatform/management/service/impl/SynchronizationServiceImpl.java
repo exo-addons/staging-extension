@@ -13,13 +13,8 @@ public class SynchronizationServiceImpl implements SynchronizationService {
 
   ChromatticService chromatticService;
 
-  public SynchronizationServiceImpl() {
-  }
-
-  @Override
-  public void init(ChromatticService chromatticService) {
+  public SynchronizationServiceImpl(ChromatticService chromatticService) {
     this.chromatticService = chromatticService;
-    chromatticService.init();
   }
 
   /**
@@ -45,11 +40,11 @@ public class SynchronizationServiceImpl implements SynchronizationService {
    */
   @Override
   public void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws Exception {
-    for(ResourceCategory selectedResourceCategory : selectedResourcesCategories) {
+    for (ResourceCategory selectedResourceCategory : selectedResourcesCategories) {
       // Gets the right resource handler thanks to the Service Locator
       ResourceHandler resourceHandler = ResourceHandlerLocator.getResourceHandler(selectedResourceCategory.getPath());
 
-      if(resourceHandler != null) {
+      if (resourceHandler != null) {
         resourceHandler.synchronize(selectedResourceCategory.getResources(), selectedResourceCategory.getExportOptions(), selectedResourceCategory.getImportOptions(), targetServer);
       } else {
         log.error("No handler for " + selectedResourceCategory.getPath());

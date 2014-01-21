@@ -32,13 +32,13 @@ public class StagingExtensionController {
   public static final Map<String, String> IMPORT_ZIP_PATH_EXCEPTIONS = new HashMap<String, String>();
   public static final Map<String, String> IMPORT_PATH_EXCEPTIONS = new HashMap<String, String>();
 
-  /** */
+  @Inject
   StagingService stagingService;
 
-  /** */
+  @Inject
   SynchronizationService synchronizationService;
 
-  /** */
+  @Inject
   ManagementService managementService;
 
   @Inject
@@ -98,17 +98,6 @@ public class StagingExtensionController {
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
     resourceCategories.add(ecmAdmin);
-  }
-
-  @Inject
-  public StagingExtensionController(StagingService stagingService, SynchronizationService synchronizationService, ChromatticService chromatticService, ManagementService managementService) {
-    this.stagingService = stagingService;
-    this.synchronizationService = synchronizationService;
-    this.managementService = managementService;
-
-    // FIXME Need to pass through the Controller to be able to inject the ChromatticService
-    // Can't do it directly in the SynchronizationService. Need to figure out how to do it.
-    synchronizationService.init(chromatticService);
   }
 
   @View

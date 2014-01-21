@@ -7,25 +7,29 @@ import org.chromattic.api.Chromattic;
 import org.chromattic.api.ChromatticBuilder;
 import org.chromattic.api.ChromatticSession;
 import org.chromattic.api.query.QueryResult;
+import org.exoplatform.commons.chromattic.ChromatticManager;
 import org.exoplatform.management.service.api.ChromatticService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.api.model.TargetServerChromattic;
 import org.exoplatform.management.service.integration.CurrentRepositoryLifeCycle;
+import org.picocontainer.Startable;
 
 /**
  * @author Thomas Delhoménie
  */
-public class ChromatticServiceImpl implements ChromatticService {
+public class ChromatticServiceImpl implements ChromatticService, Startable {
 
   public final static String STAGING_SERVERS_ROOT_PATH = "/exo:applications/staging/servers";
 
   Chromattic chromattic;
 
-  public ChromatticServiceImpl() {
+  public ChromatticServiceImpl(ChromatticManager chromatticManager) {
+    // Nothing to do with chromatticManager, it's only to ensure that
+    // ChromatticManager is started before this service
   }
 
-  public Chromattic init() {
-
+  @Override
+  public void start() {
     // Init Chromattic
     ChromatticBuilder builder = ChromatticBuilder.create();
     builder.add(TargetServerChromattic.class);
@@ -35,8 +39,6 @@ public class ChromatticServiceImpl implements ChromatticService {
     builder.setOptionValue(ChromatticBuilder.ROOT_NODE_PATH, STAGING_SERVERS_ROOT_PATH);
 
     chromattic = builder.build();
-
-    return chromattic;
   }
 
   @Override
@@ -108,5 +110,9 @@ public class ChromatticServiceImpl implements ChromatticService {
 
   private ChromatticSession openSession() {
     return chromattic.openSession("collaboration");
+  }
+
+  @Override
+  public void stop() {
   }
 }

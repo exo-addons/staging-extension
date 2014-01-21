@@ -8,9 +8,9 @@ import java.util.Map;
 
 import org.exoplatform.ecm.webui.component.explorer.UIJCRExplorer;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
-import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.web.application.ApplicationMessage;
@@ -43,14 +43,11 @@ public class PushContentPopupContainer extends UIForm implements UIPopupComponen
   private static final String USERNAME_FIELD_NAME = "username";
   private static final String PWD_FIELD_NAME = "password";
 
-  private SiteContentsHandler contentsHandler_;
+  private ResourceHandler contentsHandler_;
   private SynchronizationService synchronizationService_;
 
   private List<TargetServer> targetServers;
   private String currentPath;
-
-  public PushContentPopupContainer() throws Exception {
-  }
 
   public void init() throws Exception {
     List<SelectItemOption<String>> itemOptions = new ArrayList<SelectItemOption<String>>();
@@ -141,11 +138,11 @@ public class PushContentPopupContainer extends UIForm implements UIPopupComponen
     return targetServers;
   }
 
-  public void setContentsHandler(SiteContentsHandler contentsHandler) {
+  public void setContentsHandler(ResourceHandler contentsHandler) {
     contentsHandler_ = contentsHandler;
   }
 
-  public SiteContentsHandler getContentsHandler() {
+  public ResourceHandler getContentsHandler() {
     return this.contentsHandler_;
   }
 

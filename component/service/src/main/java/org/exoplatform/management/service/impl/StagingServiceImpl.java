@@ -38,7 +38,10 @@ public class StagingServiceImpl implements StagingService {
   private WCMConfigurationService wcmConfigurationService = null;
   private RepositoryService repositoryService = null;
 
-  public StagingServiceImpl() {
+  public StagingServiceImpl(ManagementController managementController, WCMConfigurationService wcmConfigurationService, RepositoryService repositoryService) {
+    this.managementController = managementController;
+    this.wcmConfigurationService = wcmConfigurationService;
+    this.repositoryService = repositoryService;
   }
 
   /**

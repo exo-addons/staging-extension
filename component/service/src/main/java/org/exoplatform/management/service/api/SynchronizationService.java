@@ -4,8 +4,6 @@ import java.util.List;
 
 public interface SynchronizationService {
 
-  public void init(ChromatticService chromatticService);
-
   public List<TargetServer> getSynchonizationServers();
 
   public void addSynchonizationServer(TargetServer targetServer);
@@ -14,7 +12,7 @@ public interface SynchronizationService {
 
   /**
    * Synchronize Managed Resources
-   *
+   * 
    * @param selectedResourcesCategories
    * @param targetServer
    * @throws java.io.IOException
