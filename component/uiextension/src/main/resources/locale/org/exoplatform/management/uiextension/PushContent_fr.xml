@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<UITabForm>
+		<label>
+			<pushContent>Synchroniser</pushContent>
+		</label>
+	</UITabForm>
+	<UIActionBar>
+		<tooltip>
+			<PushContent>Synchroniser</PushContent>
+		</tooltip>
+	</UIActionBar>
+	<PushContent>
+		<msg>
+			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
+			<synchronizationError>Une erreur est survenu lors de la synchronisation</synchronizationError>
+			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
+			<userNameMandatory>Le nom de l'utilisateur est obligatoire</userNameMandatory>
+			<passwordMandatory>Le mot de passe est obligatoire</passwordMandatory>
+		</msg>
+	</PushContent>
+	<PushContentPopupComponent>
+		<label>
+			<targetServer>Serveur cible</targetServer>
+			<username>Login</username>
+			<password>Mot de passe</password>
+			<synchronizationNode>Noeud</synchronizationNode>
+		</label>
+		<action>
+			<Push>Synchroniser</Push>
+			<Close>Fermer</Close>
+		</action>
+	</PushContentPopupComponent>
+	<UIPopupWindow>
+		<title>
+			<PushContentPopupComponent>Synchroniser un contenu</PushContentPopupComponent>
+		</title>
+	</UIPopupWindow>
+</bundle>

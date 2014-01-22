@@ -1,24 +1,28 @@
-<%
-	import org.exoplatform.webui.form.UIFormRadioBoxInput ;
-	String componentID = uicomponent.id.replace("UI","ui");
-%>
-<div class="uiForm $componentID">
+<div class="uiForm $uicomponent.id">
 	<% uiform.begin() %>
 		<div class="form-horizontal resizable">
+			<div class="control-group">
+				<label class="control-label">
+					<%=uicomponent.getLabel("synchronizationNode") +": "%>
+				</label>
+				<div class="controls">
+					<b><%=uicomponent.getCurrentPath()%></b>
+				</div>
+			</div>
 			<% 
 				for(field in uiform.getChildren()) {
 					if(field.isRendered()) {
 			%>
-			<div class="control-group">
-				<label class="control-label" for="<%=field.getId()%>">
-					<%if(!uicomponent.getLabel(field.getName()).equals(uicomponent.getId())) { %>												
-						<%=uicomponent.getLabel(field.getName())+": " %>
-					<%}%>
-				</label>
-				<div class="controls">
-					<%uiform.renderField(field) ; %>
-				</div>
-			</div>
+						<div class="control-group">
+							<% if(!uicomponent.getLabel(field.getName()).equals(uicomponent.getId()) && !uicomponent.getLabel(field.getName()).equals("info")) { %>
+								<label class="control-label" for="<%=field.getId()%>">
+										<%=uicomponent.getLabel(field.getName()) +": " %>
+								</label>
+							<% } %>
+							<div class="controls">
+								<%uiform.renderField(field) ; %>
+							</div>
+						</div>
 			<%
 					}
 				}

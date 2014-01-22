@@ -43,7 +43,7 @@ public class PushContentActionComponent extends UIComponent {
 
       UIWorkingArea uiWorkingArea = uiExplorer.getChild(UIWorkingArea.class);
       UIActionBar uiActionBar = uiWorkingArea.getChild(UIActionBar.class);
-      PushContentPopupContainer pushContentPopupContainer = uiActionBar.createUIComponent(PushContentPopupContainer.class, null, null);
+      PushContentPopupComponent pushContentPopupContainer = uiActionBar.createUIComponent(PushContentPopupComponent.class, null, null);
 
       pushContentPopupContainer.setContentsHandler(CONTENTS_HANDLER);
       pushContentPopupContainer.setSynchronizationService(SYNCHRONIZATION_SERVICE);

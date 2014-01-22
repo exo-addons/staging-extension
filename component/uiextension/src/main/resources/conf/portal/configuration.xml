@@ -44,4 +44,22 @@
 			</init-params>
 		</component-plugin>
 	</external-component-plugins>
+	<external-component-plugins>
+		<target-component>org.exoplatform.services.resources.ResourceBundleService</target-component>
+		<component-plugin>
+			<name>Staging UIExtension ResourceBundle Plugin</name>
+			<set-method>addResourceBundle</set-method>
+			<type>org.exoplatform.services.resources.impl.BaseResourceBundlePlugin</type>
+			<init-params>
+				<values-param>
+					<name>init.resources</name>
+					<value>locale.org.exoplatform.management.uiextension.PushContent</value>
+				</values-param>
+				<values-param>
+					<name>portal.resource.names</name>
+					<value>locale.org.exoplatform.management.uiextension.PushContent</value>
+				</values-param>
+			</init-params>
+		</component-plugin>
+	</external-component-plugins>
 </configuration>

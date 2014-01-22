@@ -1,5 +1,14 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
+import java.io.StringReader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.Node;
+import javax.jcr.query.Query;
+
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.Configuration;
@@ -7,12 +16,9 @@ import org.exoplatform.container.xml.ExternalComponentPlugins;
 import org.exoplatform.container.xml.ObjectParameter;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.impl.DMSConfiguration;
-import org.exoplatform.services.cms.impl.DMSRepositoryConfiguration;
 import org.exoplatform.services.cms.queries.QueryService;
 import org.exoplatform.services.cms.queries.impl.QueryData;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -25,15 +31,6 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
-
-import javax.jcr.Node;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-import java.io.StringReader;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
@@ -79,7 +76,6 @@ public class QueriesImportResource extends ECMAdminImportResource {
       IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
       IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
 
-      Session session = getDMSJCRSession();
       while ((ze = zin.getNextEntry()) != null) {
         String zipEntryName = ze.getName();
         if (!zipEntryName.startsWith("ecmadmin/queries/")) {
@@ -133,7 +129,6 @@ public class QueriesImportResource extends ECMAdminImportResource {
           }
         } else if (zipEntryName.endsWith("shared-queries-configuration.xml")) {
           for (ComponentPlugin componentPlugin : componentPlugins) {
-            Class<?> pluginClass = Class.forName(componentPlugin.getType());
             @SuppressWarnings("rawtypes")
             Iterator objectParamIterator = componentPlugin.getInitParams().getObjectParamIterator();
             while (objectParamIterator.hasNext()) {
@@ -170,13 +165,6 @@ public class QueriesImportResource extends ECMAdminImportResource {
     } catch (Exception exception) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS queries.", exception);
     }
-  }
-
-  private Session getDMSJCRSession() throws Exception {
-    SessionProvider provider = WCMCoreUtils.getSystemSessionProvider();
-    ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
-    DMSRepositoryConfiguration dmsRepoConfig = dmsConfiguration.getConfig();
-    return provider.getSession(dmsRepoConfig.getSystemWorkspace(), manageableRepository);
   }
 
 }

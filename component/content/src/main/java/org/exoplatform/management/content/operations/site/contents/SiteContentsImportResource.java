@@ -25,7 +25,6 @@ import javax.jcr.query.QueryManager;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.exoplatform.management.content.operations.site.SiteConstants;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -175,6 +174,9 @@ public class SiteContentsImportResource implements OperationHandler {
       String path = metaData.getExportedFiles().get(name);
 
       String targetNodePath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
+      if(targetNodePath.contains("//")) {
+        targetNodePath = targetNodePath.replaceAll("//", "/");
+      }
 
       log.info("Deleting the node " + workspace + ":" + targetNodePath);
 

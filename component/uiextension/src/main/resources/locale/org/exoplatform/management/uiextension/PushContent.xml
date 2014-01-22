@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<UITabForm>
+		<label>
+			<pushContent>Push Content</pushContent>
+		</label>
+	</UITabForm>
+	<UIActionBar>
+		<tooltip>
+			<PushContent>Push Content</PushContent>
+		</tooltip>
+	</UIActionBar>
+	<PushContent>
+		<msg>
+			<unableToConnect>Unable to connect to server</unableToConnect>
+			<synchronizationError>An error occured while synchronizing content</synchronizationError>
+			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
+			<userNameMandatory>Login is mandatory</userNameMandatory>
+			<passwordMandatory>Password is mandatory</passwordMandatory>
+		</msg>
+	</PushContent>
+	<PushContentPopupComponent>
+		<label>
+			<targetServer>Target Server</targetServer>
+			<username>Login</username>
+			<password>Password</password>
+			<synchronizationNode>Node</synchronizationNode>
+		</label>
+		<action>
+			<Push>Push</Push>
+			<Close>Close</Close>
+		</action>
+	</PushContentPopupComponent>
+	<UIPopupWindow>
+		<title>
+			<PushContentPopupComponent>Push Content</PushContentPopupComponent>
+		</title>
+	</UIPopupWindow>
+</bundle>
