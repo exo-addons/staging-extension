@@ -25,6 +25,7 @@
 			<username>Login</username>
 			<password>Password</password>
 			<synchronizationNode>Node</synchronizationNode>
+			<publishOnTarget>Publish on target server</publishOnTarget>
 		</label>
 		<action>
 			<Push>Push</Push>

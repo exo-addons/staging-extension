@@ -25,6 +25,7 @@ import org.exoplatform.webui.form.UIForm;
 import org.exoplatform.webui.form.UIFormInputInfo;
 import org.exoplatform.webui.form.UIFormSelectBox;
 import org.exoplatform.webui.form.UIFormStringInput;
+import org.exoplatform.webui.form.input.UICheckBoxInput;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -43,6 +44,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   private static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
   private static final String USERNAME_FIELD_NAME = "username";
   private static final String PWD_FIELD_NAME = "password";
+  private static final String PUBLISH_FIELD_NAME = "publishOnTarget";
   private static final String INFO_FIELD_NAME = "info";
 
   private ResourceHandler contentsHandler_;
@@ -59,6 +61,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     addUIFormInput(pwdInput);
 
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
+    addUIFormInput(new UICheckBoxInput(PUBLISH_FIELD_NAME, PUBLISH_FIELD_NAME, false));
   }
 
   public void init() throws Exception {
@@ -97,6 +100,9 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           return;
         }
 
+        // get cleanupPublication checkbox value
+        boolean cleanupPublication = pushContentPopupComponent.getUICheckBoxInput(PUBLISH_FIELD_NAME).getValue();
+
         // get target server
         TargetServer targetServer = null;
         String targetServerId = pushContentPopupComponent.getUIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME).getValue();
@@ -121,10 +127,12 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         Map<String, String> exportOptions = new HashMap<String, String>();
         String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
         exportOptions.put("filter/query", sqlQueryFilter);
-        exportOptions.put("filter/taxonomy:false", "false");
+        exportOptions.put("filter/taxonomy", "false");
+        exportOptions.put("filter/no-history", "" + cleanupPublication);
 
         Map<String, String> importOptions = new HashMap<String, String>();
-        importOptions.put("filter/cleanPublication", "true");
+
+        importOptions.put("filter/cleanPublication", "" + cleanupPublication);
 
         pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
       } catch (Exception ex) {

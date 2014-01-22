@@ -174,7 +174,7 @@ public class SiteContentsImportResource implements OperationHandler {
       String path = metaData.getExportedFiles().get(name);
 
       String targetNodePath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
-      if(targetNodePath.contains("//")) {
+      if (targetNodePath.contains("//")) {
         targetNodePath = targetNodePath.replaceAll("//", "/");
       }
 
@@ -184,6 +184,8 @@ public class SiteContentsImportResource implements OperationHandler {
         if (session.itemExists(targetNodePath)) {
           Node oldNode = (Node) session.getItem(targetNodePath);
           oldNode.remove();
+          session.save();
+          session.refresh(true);
         }
       } catch (Exception e) {
         log.error("Error when trying to find and delete the node: " + targetNodePath, e);
@@ -209,7 +211,7 @@ public class SiteContentsImportResource implements OperationHandler {
           org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, new FileInputStream(historyFilePath), mapHistoryValue);
         } else if (isCleanPublication) {
           // Clean publication information
-          cleanPublication(path, session);
+          cleanPublication(targetNodePath, session);
         }
       } catch (Exception e) {
         // Revert changes
@@ -232,13 +234,21 @@ public class SiteContentsImportResource implements OperationHandler {
     NodeIterator iter = query.execute().getNodes();
     while (iter.hasNext()) {
       Node node = iter.nextNode();
-      if (node.hasProperty("publication:liveRevision") && node.hasProperty("publication:currentState")) {
-        log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
-        node.setProperty("publication:liveRevision", "");
-        node.setProperty("publication:currentState", "published");
-      }
+      cleanPublication(node);
     }
+    if (session.itemExists(path)) {
+      Node node = (Node) session.getItem(path);
+      cleanPublication(node);
+    }
+  }
 
+  private void cleanPublication(Node node) throws Exception {
+    if (node.hasProperty("publication:liveRevision") && node.hasProperty("publication:currentState")) {
+      log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
+      node.setProperty("publication:liveRevision", "");
+      node.setProperty("publication:currentState", "published");
+      node.save();
+    }
   }
 
   private Node createJCRPath(Session session, String path) throws RepositoryException {
@@ -267,7 +277,8 @@ public class SiteContentsImportResource implements OperationHandler {
    * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
    *         Delhoménie</a>
    */
-  private enum ImportBehavior {
+  private enum ImportBehavior
+  {
     THROW(ImportUUIDBehavior.IMPORT_UUID_COLLISION_THROW), //
     REMOVE(ImportUUIDBehavior.IMPORT_UUID_COLLISION_REMOVE_EXISTING), //
     REPLACE(ImportUUIDBehavior.IMPORT_UUID_COLLISION_REPLACE_EXISTING), //
