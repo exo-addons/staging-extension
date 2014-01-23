@@ -17,6 +17,7 @@
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<userNameMandatory>Login is mandatory</userNameMandatory>
 			<passwordMandatory>Password is mandatory</passwordMandatory>
+			<synchronizationDone>Synhronization done successfully.</synchronizationDone>
 		</msg>
 	</PushContent>
 	<PushContentPopupComponent>

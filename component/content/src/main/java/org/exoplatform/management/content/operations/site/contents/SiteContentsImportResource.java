@@ -20,6 +20,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
@@ -243,8 +244,16 @@ public class SiteContentsImportResource implements OperationHandler {
   }
 
   private void cleanPublication(Node node) throws Exception {
-    if (node.hasProperty("publication:liveRevision") && node.hasProperty("publication:currentState")) {
+    if (node.hasProperty("publication:currentState")) {
       log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
+      // See in case the content is enrolled for the first time but never
+      // publisher in "source server", if yes, set manually "published" state
+      Value[] values = node.getProperty("publication:revisionData").getValues();
+      if (values.length < 2) {
+        String user = node.getProperty("publication:lastUser").getString();
+        node.setProperty("publication:revisionData", new String[]
+          { node.getUUID() + ",published," + user });
+      }
       node.setProperty("publication:liveRevision", "");
       node.setProperty("publication:currentState", "published");
       node.save();

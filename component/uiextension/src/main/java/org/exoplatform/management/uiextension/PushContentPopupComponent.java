@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.ResourceHandler;
@@ -13,8 +14,10 @@ import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.web.application.ApplicationMessage;
+import org.exoplatform.webui.application.WebuiRequestContext;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
 import org.exoplatform.webui.config.annotation.EventConfig;
+import org.exoplatform.webui.core.UIApplication;
 import org.exoplatform.webui.core.UIPopupComponent;
 import org.exoplatform.webui.core.UIPopupContainer;
 import org.exoplatform.webui.core.lifecycle.UIFormLifecycle;
@@ -52,6 +55,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   private List<TargetServer> targetServers;
   private String currentPath;
+  private final ResourceBundle resourceBundle;
 
   public PushContentPopupComponent() throws Exception {
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
@@ -62,6 +66,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
     addUIFormInput(new UICheckBoxInput(PUBLISH_FIELD_NAME, PUBLISH_FIELD_NAME, false));
+    resourceBundle = WebuiRequestContext.getCurrentInstance().getApplicationResourceBundle();
   }
 
   public void init() throws Exception {
@@ -79,23 +84,32 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     }
   }
 
+  public ResourceBundle getResourceBundle() {
+    return resourceBundle;
+  }
+
   static public class PushActionListener extends EventListener<PushContentPopupComponent> {
     public void execute(Event<PushContentPopupComponent> event) throws Exception {
       PushContentPopupComponent pushContentPopupComponent = event.getSource();
       UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
+      UIApplication uiApp = pushContentPopupComponent.getAncestorOfType(UIApplication.class);
       try {
         // get username
         String username = pushContentPopupComponent.getUIStringInput(USERNAME_FIELD_NAME).getValue();
-        if (username == null) {
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(new ApplicationMessage("PushContent.msg.userNameMandatory", null).getMessage());
+        if (username == null || username.isEmpty()) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.userNameMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
           return;
         }
 
         // get password
         String password = pushContentPopupComponent.getUIStringInput(PWD_FIELD_NAME).getValue();
-        if (password == null) {
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(new ApplicationMessage("PushContent.msg.passwordMandatory", null).getMessage());
+        if (password == null || password.isEmpty()) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.passwordMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
           return;
         }
@@ -114,7 +128,9 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           }
         }
         if (targetServer == null) {
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(new ApplicationMessage("PushContent.msg.targetServerMandatory", null).getMessage());
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.targetServerMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
           return;
         }
@@ -135,11 +151,17 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         importOptions.put("filter/cleanPublication", "" + cleanupPublication);
 
         pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
+        uiPopupContainer.deActivate();
+        uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.INFO));
       } catch (Exception ex) {
-        if (ex != null && ex.getMessage().contains("java.net.ConnectException")) {
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(new ApplicationMessage("PushContent.msg.unableToConnect", null).getMessage());
+        if (ex != null && ex.getMessage() != null && ex.getMessage().contains("java.net.ConnectException")) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
         } else {
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(new ApplicationMessage("PushContent.msg.synchronizationError", null).getMessage());
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
         }
         LOG.error("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' error:", ex);
       }
