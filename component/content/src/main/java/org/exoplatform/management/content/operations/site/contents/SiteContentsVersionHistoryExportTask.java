@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -26,11 +28,17 @@ import org.exoplatform.ecm.webui.utils.Utils;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.compress.CompressData;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ExportTask;
 
 public class SiteContentsVersionHistoryExportTask implements ExportTask {
+  private static final Log log = ExoLogger.getLogger(SiteContentsExportTask.class);
+
   public static final String VERSION_HISTORY_FILE_SUFFIX = "_VersionHistory.zip";
   public static final String ROOT_SQL_QUERY = "select * from mix:versionable order by exo:dateCreated DESC";
   public static final String VERSION_SQL_QUERY = "select * from mix:versionable where jcr:path like '$0/%' " + "order by exo:dateCreated DESC";
@@ -41,12 +49,14 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   private final String workspace;
   private final String absolutePath;
   private final String siteName;
+  private final boolean recurse;
 
-  public SiteContentsVersionHistoryExportTask(RepositoryService repositoryService, String workspace, String siteName, String absolutePath) {
+  public SiteContentsVersionHistoryExportTask(RepositoryService repositoryService, String workspace, String siteName, String absolutePath, boolean recurse) {
     this.repositoryService = repositoryService;
     this.workspace = workspace;
     this.siteName = siteName;
     this.absolutePath = absolutePath;
+    this.recurse = recurse;
   }
 
   @Override
@@ -56,6 +66,8 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
 
   @Override
   public void export(OutputStream outputStream) throws IOException {
+    log.info("Export VersionHistory: " + workspace + ":" + absolutePath);
+
     OutputStream out = null;
     InputStream in = null;
     File exportedFile = null;
@@ -67,21 +79,23 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     Session session = null;
     try {
       Node currentNode = getCurrentNode();
-      String sysWsName = repositoryService.getCurrentRepository().getConfiguration().getSystemWorkspaceName();
-      session = getSessionByWorkspace(sysWsName);
-      QueryResult queryResult = getQueryResult(currentNode);
-      NodeIterator queryIter = queryResult.getNodes();
-      while (queryIter.hasNext()) {
-        exportedFile = getExportedFile("data", ".xml");
-        out = new BufferedOutputStream(new FileOutputStream(exportedFile));
-        in = new BufferedInputStream(new TempFileInputStream(exportedFile));
-        Node node = queryIter.nextNode();
-        String historyValue = getHistoryValue(node);
-        propertiesBOS.write(historyValue.getBytes());
-        propertiesBOS.write('\n');
-        session.exportSystemView(node.getVersionHistory().getPath(), out, false, false);
-        out.flush();
-        zipService.addInputStream(node.getUUID() + ".xml", in);
+      if (recurse) {
+        String sysWsName = repositoryService.getCurrentRepository().getConfiguration().getSystemWorkspaceName();
+        session = getSession(sysWsName);
+        QueryResult queryResult = getQueryResult(currentNode);
+        NodeIterator queryIter = queryResult.getNodes();
+        while (queryIter.hasNext()) {
+          Node node = queryIter.nextNode();
+          exportedFile = getExportedFile("data", ".xml");
+          out = new BufferedOutputStream(new FileOutputStream(exportedFile));
+          in = new BufferedInputStream(new TempFileInputStream(exportedFile));
+          String historyValue = getHistoryValue(node);
+          propertiesBOS.write(historyValue.getBytes());
+          propertiesBOS.write('\n');
+          session.exportSystemView(node.getVersionHistory().getPath(), out, false, false);
+          out.flush();
+          zipService.addInputStream(node.getUUID() + ".xml", in);
+        }
       }
       if (currentNode.isNodeType(Utils.MIX_VERSIONABLE)) {
         exportedFile = getExportedFile("data", ".xml");
@@ -147,14 +161,10 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     return query.execute();
   }
 
-  private Session getSessionByWorkspace(String sysWsName) throws Exception {
-    return repositoryService.getCurrentRepository().getSystemSession(sysWsName);
-  }
-
   private Node getCurrentNode() throws Exception {
     Session session = null;
     try {
-      session = getSessionByWorkspace(workspace);
+      session = getSession(workspace);
       return (Node) session.getItem(absolutePath);
     } catch (RepositoryException exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);
@@ -186,6 +196,13 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     tempFile.deleteOnExit();
     tempFiles.add(tempFile);
     return tempFile;
+  }
+
+  private Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+    SessionProvider provider = SessionProvider.createSystemProvider();
+    ManageableRepository repository = repositoryService.getCurrentRepository();
+    Session session = provider.getSession(workspace, repository);
+    return session;
   }
 
 }

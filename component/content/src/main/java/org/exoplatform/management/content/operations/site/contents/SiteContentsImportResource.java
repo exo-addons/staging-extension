@@ -8,14 +8,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -29,6 +34,8 @@ import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.seo.PageMetadataModel;
 import org.exoplatform.services.seo.SEOService;
 import org.gatein.common.logging.Logger;
@@ -168,10 +175,22 @@ public class SiteContentsImportResource implements OperationHandler {
       boolean isCleanPublication) throws Exception {
 
     RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
-    Session session = repositoryService.getCurrentRepository().getSystemSession(workspace);
 
-    for (Iterator<String> it = nodes.keySet().iterator(); it.hasNext();) {
-      String name = (String) it.next();
+    List<Map.Entry<String, String>> orderedEntries = new ArrayList<Map.Entry<String, String>>(nodes.entrySet());
+    Collections.sort(orderedEntries, new Comparator<Map.Entry<String, String>>() {
+      @Override
+      public int compare(Entry<String, String> o1, Entry<String, String> o2) {
+        if (o1.getKey().contains("/exo:actions") && !o2.getKey().contains("/exo:actions")) {
+          return 1;
+        }
+        if (o2.getKey().contains("/exo:actions") && !o1.getKey().contains("/exo:actions")) {
+          return -1;
+        }
+        return o1.getKey().compareTo(o2.getKey());
+      }
+    });
+    for (Map.Entry<String, String> entry : orderedEntries) {
+      String name = entry.getKey();
       String path = metaData.getExportedFiles().get(name);
 
       String targetNodePath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
@@ -181,8 +200,9 @@ public class SiteContentsImportResource implements OperationHandler {
 
       log.info("Deleting the node " + workspace + ":" + targetNodePath);
 
+      Session session = getSession(workspace, repositoryService);
       try {
-        if (session.itemExists(targetNodePath)) {
+        if (session.itemExists(targetNodePath) && session.getItem(targetNodePath) instanceof Node) {
           Node oldNode = (Node) session.getItem(targetNodePath);
           oldNode.remove();
           session.save();
@@ -191,6 +211,11 @@ public class SiteContentsImportResource implements OperationHandler {
       } catch (Exception e) {
         log.error("Error when trying to find and delete the node: " + targetNodePath, e);
         continue;
+      } finally {
+        if (session != null) {
+          session.logout();
+        }
+        session = getSession(workspace, repositoryService);
       }
 
       if (log.isInfoEnabled()) {
@@ -218,14 +243,13 @@ public class SiteContentsImportResource implements OperationHandler {
         // Revert changes
         session.refresh(false);
         throw e;
+      } finally {
+        if (session != null) {
+          session.logout();
+        }
       }
 
-      session.save();
     }
-    // save at the end
-    // TODO Can there be too much data? Big memory consumption...
-    // TODO Transaction instead of a simple session?
-    session.save();
   }
 
   private void cleanPublication(String path, Session session) throws Exception {
@@ -465,4 +489,12 @@ public class SiteContentsImportResource implements OperationHandler {
       super.close();
     }
   }
+
+  private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+    SessionProvider provider = SessionProvider.createSystemProvider();
+    ManageableRepository repository = repositoryService.getCurrentRepository();
+    Session session = provider.getSession(workspace, repository);
+    return session;
+  }
+
 }

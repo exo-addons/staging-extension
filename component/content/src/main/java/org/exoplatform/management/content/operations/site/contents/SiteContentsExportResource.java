@@ -1,12 +1,36 @@
 package org.exoplatform.management.content.operations.site.contents;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
+import javax.jcr.query.Query;
+
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.portal.config.DataStorage;
-import org.exoplatform.portal.config.model.*;
+import org.exoplatform.portal.config.model.Application;
+import org.exoplatform.portal.config.model.Container;
+import org.exoplatform.portal.config.model.ModelObject;
+import org.exoplatform.portal.config.model.Page;
+import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.mop.page.PageContext;
 import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.pom.spi.portlet.Portlet;
+import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -19,16 +43,13 @@ import org.exoplatform.services.wcm.portal.PortalFolderSchemaHandler;
 import org.exoplatform.wcm.webui.Utils;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationHandler;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-import java.util.*;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
@@ -44,10 +65,13 @@ public class SiteContentsExportResource implements OperationHandler {
   public static final String FILTER_SEPARATOR = ":";
 
   private WCMConfigurationService wcmConfigurationService = null;
+  private TemplateService templateService = null;
   private RepositoryService repositoryService = null;
   private WCMService wcmService = null;
   private DataStorage dataStorage = null;
   private PageService pageService = null;
+
+  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
   private SiteMetaData metaData = null;
 
@@ -66,6 +90,7 @@ public class SiteContentsExportResource implements OperationHandler {
 
       wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+      templateService = operationContext.getRuntimeContext().getRuntimeComponent(TemplateService.class);
       dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
       pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
       wcmService = operationContext.getRuntimeContext().getRuntimeComponent(WCMService.class);
@@ -88,7 +113,7 @@ public class SiteContentsExportResource implements OperationHandler {
       String jcrQuery = null;
 
       // no-skeleton as the priority over query
-      if(!filters.contains("no-skeleton:true") && !filters.contains("no-skeleton:false")) {
+      if (!filters.contains("no-skeleton:true") && !filters.contains("no-skeleton:false")) {
         for (String filterValue : filters) {
           if (filterValue.startsWith("query:")) {
             jcrQuery = filterValue.replace("query:", "");
@@ -120,7 +145,7 @@ public class SiteContentsExportResource implements OperationHandler {
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage());
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage(), e);
     }
   }
 
@@ -151,7 +176,8 @@ public class SiteContentsExportResource implements OperationHandler {
     }
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings(
+    { "unchecked", "rawtypes" })
   private List<String> getSCVPaths(ArrayList<ModelObject> children) throws Exception {
     List<String> scvPaths = new ArrayList<String>();
     if (children != null) {
@@ -189,7 +215,8 @@ public class SiteContentsExportResource implements OperationHandler {
     return scvPaths;
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings(
+    { "unchecked", "rawtypes" })
   private List<String> getCLVPaths(ArrayList<ModelObject> children) throws Exception {
     List<String> scvPaths = new ArrayList<String>();
     if (children != null) {
@@ -224,21 +251,15 @@ public class SiteContentsExportResource implements OperationHandler {
    * @param exportVersionHistory
    * @return
    */
-  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory) {
+  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory) throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, sitesLocation.getWorkspace(), metaData.getOptions().get(SiteMetaData.SITE_NAME), siteRootNodePath);
-    exportTasks.add(siteContentExportTask);
+    Session session = getSession(sitesLocation.getWorkspace());
 
-    if (exportVersionHistory) {
-      SiteContentsVersionHistoryExportTask siteContentVersionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, sitesLocation.getWorkspace(), metaData.getOptions().get(
-          SiteMetaData.SITE_NAME), siteRootNodePath);
-      exportTasks.add(siteContentVersionHistoryExportTask);
+    Node siteNode = (Node) session.getItem(siteRootNodePath);
+    Node parentNode = siteNode.getParent();
 
-      metaData.getExportedHistoryFiles().put(siteContentExportTask.getEntry(), siteContentVersionHistoryExportTask.getEntry());
-    }
-
-    metaData.getExportedFiles().put(siteContentExportTask.getEntry(), sitesLocation.getPath());
+    exportNode(sitesLocation.getWorkspace(), parentNode, null, exportVersionHistory, exportTasks, siteNode);
 
     return exportTasks;
   }
@@ -253,7 +274,7 @@ public class SiteContentsExportResource implements OperationHandler {
   private List<ExportTask> exportQueryResult(NodeLocation sitesLocation, String siteRootNodePath, String jcrQuery, boolean exportVersionHistory) throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    if(!jcrQuery.contains("jcr:path")) {
+    if (!jcrQuery.contains("jcr:path")) {
       String queryPath = "jcr:path = '" + siteRootNodePath + "/%'";
       queryPath.replace("//", "/");
       if (jcrQuery.contains("where")) {
@@ -269,9 +290,7 @@ public class SiteContentsExportResource implements OperationHandler {
       }
     }
 
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(sitesLocation.getWorkspace(), repository);
+    Session session = getSession(sitesLocation.getWorkspace());
 
     Query query = session.getWorkspace().getQueryManager().createQuery(jcrQuery, Query.SQL);
     NodeIterator nodeIterator = query.execute().getNodes();
@@ -350,7 +369,7 @@ public class SiteContentsExportResource implements OperationHandler {
    * @return
    * @throws RepositoryException
    */
-  protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory) throws RepositoryException {
+  protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory) throws Exception {
     List<ExportTask> subNodesExportTask = new ArrayList<ExportTask>();
     NodeIterator childrenNodes = parentNode.getNodes();
     while (childrenNodes.hasNext()) {
@@ -360,20 +379,77 @@ public class SiteContentsExportResource implements OperationHandler {
     return subNodesExportTask;
   }
 
-  private void exportNode(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, List<ExportTask> subNodesExportTask, Node childNode) throws RepositoryException {
+  private void exportNode(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, List<ExportTask> subNodesExportTask, Node childNode) throws Exception {
     if (excludedNodes == null || !excludedNodes.contains(childNode.getName())) {
-      SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath());
+      boolean recursive = isRecursiveExport(childNode);
+      SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath(), recursive);
       subNodesExportTask.add(siteContentExportTask);
       if (exportVersionHistory) {
         SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
-            childNode.getPath());
+            childNode.getPath(), recursive);
         subNodesExportTask.add(versionHistoryExportTask);
       }
       metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
+      if (!recursive) {
+        NodeIterator nodeIterator = childNode.getNodes();
+        while (nodeIterator.hasNext()) {
+          Node node = nodeIterator.nextNode();
+          exportNode(workspace, childNode, excludedNodes, exportVersionHistory, subNodesExportTask, node);
+        }
+      }
     }
+  }
+
+  private boolean isRecursiveExport(Node node) throws Exception {
+
+    // FIXME: eXo ECMS bug, items with exo:actionnable don't define manatory
+    // field exo:actions. Still use this workaround. EXOCONSULTING-219
+    if (node.isNodeType("exo:actionable") && !node.hasProperty("exo:actions")) {
+      node.setProperty("exo:actions", "");
+      node.save();
+      node.getSession().refresh(true);
+    }
+    // END workaround
+
+    NodeType nodeType = node.getPrimaryNodeType();
+    NodeType[] nodeTypes = node.getMixinNodeTypes();
+    boolean recursive = isRecursiveNT(nodeType);
+    if (nodeTypes != null && nodeTypes.length > 0) {
+      int i = 0;
+      while (!recursive && i < nodeTypes.length) {
+        recursive = isRecursiveNT(nodeTypes[i]);
+        i++;
+      }
+    }
+    return recursive;
+  }
+
+  private boolean isRecursiveNT(NodeType nodeType) throws Exception {
+    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
+      boolean hasMandatoryChild = false;
+      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
+      if (nodeDefinitions != null) {
+        int i = 0;
+        while (!hasMandatoryChild && i < nodeDefinitions.length) {
+          hasMandatoryChild = nodeDefinitions[i].isMandatory();
+          i++;
+        }
+      }
+      boolean noRecursive = !hasMandatoryChild && !templateService.isManagedNodeType(nodeType.getName());
+      isNTRecursiveMap.put(nodeType.getName(), !noRecursive);
+    }
+    return isNTRecursiveMap.get(nodeType.getName());
   }
 
   private SiteMetaDataExportTask getMetaDataExportTask() {
     return new SiteMetaDataExportTask(metaData);
   }
+
+  private Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+    SessionProvider provider = SessionProvider.createSystemProvider();
+    ManageableRepository repository = repositoryService.getCurrentRepository();
+    Session session = provider.getSession(workspace, repository);
+    return session;
+  }
+
 }

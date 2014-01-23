@@ -152,7 +152,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
         pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
         uiPopupContainer.deActivate();
-        uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.INFO));
+        uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
       } catch (Exception ex) {
         if (ex != null && ex.getMessage() != null && ex.getMessage().contains("java.net.ConnectException")) {
           ApplicationMessage message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
