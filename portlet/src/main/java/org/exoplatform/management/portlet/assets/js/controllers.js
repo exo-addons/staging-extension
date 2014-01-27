@@ -116,7 +116,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $scope.loadingCategoriesTree = false;
     });
 
-    $scope.toggleCategorySelection = function(selectedCategory) {
+    $scope.onToggleCategorySelection = function(selectedCategory) {
       if($scope.categoriesModel[selectedCategory]) {
         $scope.loadingResources[selectedCategory] = true;
         $http.get(stagingContainer.jzURL('StagingExtensionController.getResourcesOfCategory') + '&path=' + selectedCategory).success(function (data) {
@@ -137,7 +137,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
     $scope.unselectCategory = function(selectedCategory) {
       $scope.categoriesModel[selectedCategory] = false;
-      $scope.toggleCategorySelection(selectedCategory);
+      $scope.onToggleCategorySelection(selectedCategory);
     };
 
 
@@ -204,7 +204,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           url: stagingContainer.jzURL("StagingExtensionController.prepareImportResources"),
           data : form,
           method : 'POST',
-          headers : {'Content-Type':false},
+          headers : {'Content-Type':undefined},
           transformRequest: function(data) { return data; }
         }).success(function (data) {
           $scope.setResultMessage("", "info");
@@ -226,7 +226,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
             }
           }
 
-          $scope.toggleCategorySelection(data);
+          $scope.onToggleCategorySelection(data);
         }).error(function (data) {
           $scope.setResultMessage("Prepare Import failed. " + data, "error");
           $scope.readyToImport = false;
@@ -268,7 +268,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
           data : form,
           method : 'POST',
-          headers : {'Content-Type':false},
+          headers : {'Content-Type':undefined},
           transformRequest: function(data) { return data; }
         }).success(function (data) {
           $scope.setResultMessage(data, "success");

@@ -49,7 +49,7 @@
                 <li class="leaf" ng-repeat="subCategory in category.subcategories">
                   <span class="uiCheckbox"><input type="checkbox" id="{{subCategory.path}}" class="resource-category-checkbox" ng-model="categoriesModel[subCategory.path]"
                                                   ng-disabled="mode == 'import' && !categoriesModel[subCategory.path]"
-                                                  ng-click="toggleCategorySelection(subCategory.path)"></input><span></span></span>
+                                                  ng-change="onToggleCategorySelection(subCategory.path)"></input><span></span></span>
                   <label for="{{subCategory.path}}" class="{{loadingResources[subCategory.path] && 'resources-loader' || ''}} clickable">{{subCategory.label}}</label>
                   <div class="resources uiSearchInput" ng-show="mode != 'import' && categoriesModel[subCategory.path]">
                     <input type="text" class="search-resources" ng-model="resourcesSearchTerm.text" ng-disabled="!categoriesModel[subCategory.path]"></input>
