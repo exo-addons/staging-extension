@@ -94,16 +94,6 @@ public class SiteContentsExportResource implements OperationHandler {
       dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
       pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
       wcmService = operationContext.getRuntimeContext().getRuntimeComponent(WCMService.class);
-      NodeLocation sitesLocation = wcmConfigurationService.getLivePortalsLocation();
-      String sitePath = sitesLocation.getPath();
-      if (!sitePath.endsWith("/")) {
-        sitePath += "/";
-      }
-      sitePath += siteName;
-
-      metaData.getOptions().put(SiteMetaData.SITE_PATH, sitePath);
-      metaData.getOptions().put(SiteMetaData.SITE_WORKSPACE, sitesLocation.getWorkspace());
-      metaData.getOptions().put(SiteMetaData.SITE_NAME, siteName);
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
@@ -112,7 +102,7 @@ public class SiteContentsExportResource implements OperationHandler {
       boolean exportSiteWithSkeleton = true;
       String jcrQuery = null;
 
-      // no-skeleton as the priority over query
+      // no-skeleton has the priority over query
       if (!filters.contains("no-skeleton:true") && !filters.contains("no-skeleton:false")) {
         for (String filterValue : filters) {
           if (filterValue.startsWith("query:")) {
@@ -122,6 +112,29 @@ public class SiteContentsExportResource implements OperationHandler {
       } else {
         exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
       }
+
+      // workspace
+      String workspace = null;
+      for (String filterValue : filters) {
+        if (filterValue.startsWith("workspace:")) {
+          workspace = filterValue.replace("workspace:", "");
+        }
+      }
+
+      NodeLocation sitesLocation = wcmConfigurationService.getLivePortalsLocation();
+      String sitePath = sitesLocation.getPath();
+      if (!sitePath.endsWith("/")) {
+        sitePath += "/";
+      }
+      sitePath += siteName;
+
+      if (workspace == null || workspace.isEmpty()) {
+        workspace = sitesLocation.getWorkspace();
+      }
+
+      metaData.getOptions().put(SiteMetaData.SITE_PATH, sitePath);
+      metaData.getOptions().put(SiteMetaData.SITE_WORKSPACE, workspace);
+      metaData.getOptions().put(SiteMetaData.SITE_NAME, siteName);
 
       // "taxonomy" attribute. Defaults to true.
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
