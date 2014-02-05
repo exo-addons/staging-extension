@@ -19,6 +19,14 @@
 			<passwordMandatory>Le mot de passe est obligatoire</passwordMandatory>
 			<synchronizationDone>La synhronisation est terminée avec succès.</synchronizationDone>
 		</msg>
+		<state>
+			<not_found_source>Manquant ici</not_found_source>
+			<not_found_target>Manquant sur le serveur cible</not_found_target>
+			<modified_source>Modifié ici</modified_source>
+			<modified_target>Modifié dans le serveur cible</modified_target>
+			<same>Egaux</same>
+			<unkown>Inconnu</unkown>
+		</state>
 	</PushContent>
 	<PushContentPopupComponent>
 		<label>
@@ -29,10 +37,43 @@
 			<publishOnTarget>Publier sur le serveur cible</publishOnTarget>
 		</label>
 		<action>
+			<Select>Sélectionner manuellement les contenus</Select>
 			<Push>Synchroniser</Push>
 			<Close>Fermer</Close>
+			<title>
+				<delete>Supprimer</delete>
+			</title>
 		</action>
+		<header>
+			<title>Titre</title>
+			<path>Chemin</path>
+			<action>Action</action>
+		</header>
 	</PushContentPopupComponent>
+	<SelectNodesPopupWindow>
+		<title>
+			<SelectNodesPopupComponent>Sélectionner manuellement les contenus à synchroniser</SelectNodesPopupComponent>
+		</title>
+	</SelectNodesPopupWindow>
+	<SelectNodesPopupComponent>
+		<header>
+			<title>Titre</title>
+			<path>Chemin</path>
+			<lastModifierUserName>Modifié par</lastModifierUserName>
+			<sourceModificationDate>Modifié le (ici)</sourceModificationDate>
+			<targetModificationDate>Modifié le (Distant)</targetModificationDate>
+			<stateLocalized>Etat</stateLocalized>
+			<action>Action</action>
+		</header>
+		<action>
+			<title>
+				<Select>Sélectionner un contenu</Select>
+			</title>
+		</action>
+		<label>
+			<seeOnlyDifferent>Voir seulement les contenus différents</seeOnlyDifferent>
+		</label>
+	</SelectNodesPopupComponent>
 	<UIPopupWindow>
 		<title>
 			<PushContentPopupComponent>Synchroniser un contenu</PushContentPopupComponent>

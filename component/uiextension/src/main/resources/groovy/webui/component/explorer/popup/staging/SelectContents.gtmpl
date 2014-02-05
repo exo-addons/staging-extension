@@ -1,0 +1,23 @@
+<div class="$uicomponent.id">
+	<% uiform.begin() %>
+			<%
+				for(field in uiform.getChildren()) {
+					if(field.isRendered()) {
+			%>
+				<div class="control-group">
+					<% if(uicomponent.getLabel(field.getName()).equals("UIGrid")) {
+						 uiform.renderField(field) ;
+						%>
+					<% } else { %>
+					<div class="controls">
+						<%uiform.renderField(field) ; %>&nbsp;&nbsp;
+						<%=_ctx.appRes(uicomponent.getName() + ".label." + field.getName()) %>
+					</div>
+					<% } %>
+				</div>
+			<%
+					}
+				}
+			%>
+	<%uiform.end()%>
+</div>

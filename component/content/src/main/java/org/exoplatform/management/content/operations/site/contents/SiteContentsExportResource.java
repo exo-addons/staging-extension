@@ -15,6 +15,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
@@ -73,12 +74,10 @@ public class SiteContentsExportResource implements OperationHandler {
 
   private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
-  private SiteMetaData metaData = null;
-
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
-      metaData = new SiteMetaData();
+      SiteMetaData metaData = new SiteMetaData();
       String operationName = operationContext.getOperationName();
       PathAddress address = operationContext.getAddress();
       OperationAttributes attributes = operationContext.getAttributes();
@@ -140,21 +139,23 @@ public class SiteContentsExportResource implements OperationHandler {
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
       // "no-history" attribute. Defaults to false.
       boolean exportVersionHistory = !filters.contains("no-history:true");
+      // Exports only metadata
+      boolean exportOnlyMetadata = filters.contains("only-metadata:true");
 
       // Validate Site Structure
-      validateSiteStructure(siteName);
+      validateSiteStructure(siteName, metaData);
 
       // Site contents
       if (!StringUtils.isEmpty(jcrQuery)) {
-        exportTasks.addAll(exportQueryResult(sitesLocation, sitePath, jcrQuery, exportVersionHistory));
+        exportTasks.addAll(exportQueryResult(sitesLocation, sitePath, jcrQuery, exportVersionHistory, metaData, exportOnlyMetadata));
       } else if (exportSiteWithSkeleton) {
-        exportTasks.addAll(exportSite(sitesLocation, sitePath, exportVersionHistory));
+        exportTasks.addAll(exportSite(sitesLocation, sitePath, exportVersionHistory, metaData, exportOnlyMetadata));
       } else {
-        exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath, exportSiteTaxonomy, exportVersionHistory));
+        exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath, exportSiteTaxonomy, exportVersionHistory, metaData, exportOnlyMetadata));
       }
 
       // Metadata
-      exportTasks.add(getMetaDataExportTask());
+      exportTasks.add(getMetaDataExportTask(metaData));
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
@@ -162,7 +163,7 @@ public class SiteContentsExportResource implements OperationHandler {
     }
   }
 
-  private void validateSiteStructure(String siteName) throws Exception {
+  private void validateSiteStructure(String siteName, SiteMetaData metaData) throws Exception {
     if (siteName.equals(wcmConfigurationService.getSharedPortalName())) {
       return;
     }
@@ -172,16 +173,16 @@ public class SiteContentsExportResource implements OperationHandler {
     while (pagesQueryResult.hasNext()) {
       PageContext pageContext = (PageContext) pagesQueryResult.next();
       Page page = dataStorage.getPage(pageContext.getKey().format());
-      contentSet.addAll(getSCVPaths(page.getChildren()));
-      contentSet.addAll(getCLVPaths(page.getChildren()));
+      contentSet.addAll(getSCVPaths(page.getChildren(), metaData));
+      contentSet.addAll(getCLVPaths(page.getChildren(), metaData));
     }
 
     // site layout
     PortalConfig portalConfig = dataStorage.getPortalConfig(siteName);
     if (portalConfig != null) {
       Container portalLayout = portalConfig.getPortalLayout();
-      contentSet.addAll(getSCVPaths(portalLayout.getChildren()));
-      contentSet.addAll(getCLVPaths(portalLayout.getChildren()));
+      contentSet.addAll(getSCVPaths(portalLayout.getChildren(), metaData));
+      contentSet.addAll(getCLVPaths(portalLayout.getChildren(), metaData));
     }
 
     if (!contentSet.isEmpty()) {
@@ -191,7 +192,7 @@ public class SiteContentsExportResource implements OperationHandler {
 
   @SuppressWarnings(
     { "unchecked", "rawtypes" })
-  private List<String> getSCVPaths(ArrayList<ModelObject> children) throws Exception {
+  private List<String> getSCVPaths(ArrayList<ModelObject> children, SiteMetaData metaData) throws Exception {
     List<String> scvPaths = new ArrayList<String>();
     if (children != null) {
       for (ModelObject modelObject : children) {
@@ -221,7 +222,7 @@ public class SiteContentsExportResource implements OperationHandler {
           }
           scvPaths.add(path);
         } else if (modelObject instanceof Container) {
-          scvPaths.addAll(getSCVPaths(((Container) modelObject).getChildren()));
+          scvPaths.addAll(getSCVPaths(((Container) modelObject).getChildren(), metaData));
         }
       }
     }
@@ -230,7 +231,7 @@ public class SiteContentsExportResource implements OperationHandler {
 
   @SuppressWarnings(
     { "unchecked", "rawtypes" })
-  private List<String> getCLVPaths(ArrayList<ModelObject> children) throws Exception {
+  private List<String> getCLVPaths(ArrayList<ModelObject> children, SiteMetaData metaData) throws Exception {
     List<String> scvPaths = new ArrayList<String>();
     if (children != null) {
       for (ModelObject modelObject : children) {
@@ -250,7 +251,7 @@ public class SiteContentsExportResource implements OperationHandler {
             scvPaths.add(path);
           }
         } else if (modelObject instanceof Container) {
-          scvPaths.addAll(getCLVPaths(((Container) modelObject).getChildren()));
+          scvPaths.addAll(getCLVPaths(((Container) modelObject).getChildren(), metaData));
         }
       }
     }
@@ -262,9 +263,11 @@ public class SiteContentsExportResource implements OperationHandler {
    * @param sitesLocation
    * @param siteRootNodePath
    * @param exportVersionHistory
+   * @param metaData
+   * @param exportOnlyMetadata
    * @return
    */
-  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory) throws Exception {
+  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory, SiteMetaData metaData, boolean exportOnlyMetadata) throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     Session session = getSession(sitesLocation.getWorkspace());
@@ -272,7 +275,7 @@ public class SiteContentsExportResource implements OperationHandler {
     Node siteNode = (Node) session.getItem(siteRootNodePath);
     Node parentNode = siteNode.getParent();
 
-    exportNode(sitesLocation.getWorkspace(), parentNode, null, exportVersionHistory, exportTasks, siteNode);
+    exportNode(sitesLocation.getWorkspace(), parentNode, null, exportVersionHistory, exportTasks, siteNode, metaData, exportOnlyMetadata);
 
     return exportTasks;
   }
@@ -282,9 +285,12 @@ public class SiteContentsExportResource implements OperationHandler {
    * @param sitesLocation
    * @param siteRootNodePath
    * @param exportVersionHistory
+   * @param metaData
+   * @param exportOnlyMetadata
    * @return
    */
-  private List<ExportTask> exportQueryResult(NodeLocation sitesLocation, String siteRootNodePath, String jcrQuery, boolean exportVersionHistory) throws Exception {
+  private List<ExportTask> exportQueryResult(NodeLocation sitesLocation, String siteRootNodePath, String jcrQuery, boolean exportVersionHistory, SiteMetaData metaData, boolean exportOnlyMetadata)
+      throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     if (!jcrQuery.contains("jcr:path")) {
@@ -309,7 +315,7 @@ public class SiteContentsExportResource implements OperationHandler {
     NodeIterator nodeIterator = query.execute().getNodes();
     while (nodeIterator.hasNext()) {
       Node node = nodeIterator.nextNode();
-      exportNode(sitesLocation.getWorkspace(), node.getParent(), null, exportVersionHistory, exportTasks, node);
+      exportNode(sitesLocation.getWorkspace(), node.getParent(), null, exportVersionHistory, exportTasks, node, metaData, exportOnlyMetadata);
     }
     return exportTasks;
   }
@@ -320,11 +326,14 @@ public class SiteContentsExportResource implements OperationHandler {
    * @param path
    * @param exportSiteTaxonomy
    * @param exportVersionHistory
+   * @param metaData
+   * @param exportOnlyMetadata
    * @return
    * @throws Exception
    * @throws RepositoryException
    */
-  private List<ExportTask> exportSiteWithoutSkeleton(NodeLocation sitesLocation, String path, boolean exportSiteTaxonomy, boolean exportVersionHistory) throws Exception, RepositoryException {
+  private List<ExportTask> exportSiteWithoutSkeleton(NodeLocation sitesLocation, String path, boolean exportSiteTaxonomy, boolean exportVersionHistory, SiteMetaData metaData,
+      boolean exportOnlyMetadata) throws Exception, RepositoryException {
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
@@ -334,40 +343,42 @@ public class SiteContentsExportResource implements OperationHandler {
     PortalFolderSchemaHandler portalFolderSchemaHandler = new PortalFolderSchemaHandler();
 
     // CSS Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getCSSFolder(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getCSSFolder(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // JS Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getJSFolder(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getJSFolder(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // Document Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getDocumentStorage(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getDocumentStorage(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // Images Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getImagesFolder(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getImagesFolder(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // Audio Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getAudioFolder(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getAudioFolder(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // Video Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getVideoFolder(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getVideoFolder(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // Multimedia Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory,
+        metaData, exportOnlyMetadata));
 
     // Link Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getLinkFolder(portalNode), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getLinkFolder(portalNode), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     // WebContent Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory, metaData,
+        exportOnlyMetadata));
 
     // Site Artifacts Folder
     Node webContentNode = portalFolderSchemaHandler.getWebContentStorage(portalNode);
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), webContentNode.getNode("site artifacts"), null, exportVersionHistory));
+    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), webContentNode.getNode("site artifacts"), null, exportVersionHistory, metaData, exportOnlyMetadata));
 
     if (exportSiteTaxonomy) {
       // Categories Folder
       Node categoriesNode = portalNode.getNode("categories");
-      exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), categoriesNode, null, exportVersionHistory));
+      exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), categoriesNode, null, exportVersionHistory, metaData, exportOnlyMetadata));
     }
     return exportTasks;
   }
@@ -379,44 +390,81 @@ public class SiteContentsExportResource implements OperationHandler {
    * @param workspace
    * @param parentNode
    * @param excludedNodes
+   * @param metaData
+   * @param exportOnlyMetadata
    * @return
    * @throws RepositoryException
    */
-  protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory) throws Exception {
+  protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, SiteMetaData metaData, boolean exportOnlyMetadata)
+      throws Exception {
     List<ExportTask> subNodesExportTask = new ArrayList<ExportTask>();
     NodeIterator childrenNodes = parentNode.getNodes();
     while (childrenNodes.hasNext()) {
       Node childNode = (Node) childrenNodes.next();
-      exportNode(workspace, parentNode, excludedNodes, exportVersionHistory, subNodesExportTask, childNode);
+      exportNode(workspace, parentNode, excludedNodes, exportVersionHistory, subNodesExportTask, childNode, metaData, exportOnlyMetadata);
     }
     return subNodesExportTask;
   }
 
-  private void exportNode(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, List<ExportTask> subNodesExportTask, Node childNode) throws Exception {
+  private void exportNode(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, List<ExportTask> subNodesExportTask, Node childNode, SiteMetaData metaData,
+      boolean exportOnlyMetadata) throws Exception {
     if (excludedNodes == null || !excludedNodes.contains(childNode.getName())) {
+      String path = childNode.getPath();
       boolean recursive = isRecursiveExport(childNode);
-      SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), childNode.getPath(), recursive);
-      subNodesExportTask.add(siteContentExportTask);
-      if (exportVersionHistory) {
-        SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
-            childNode.getPath(), recursive);
-        subNodesExportTask.add(versionHistoryExportTask);
+      if (!exportOnlyMetadata) {
+        SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), path, recursive);
+        subNodesExportTask.add(siteContentExportTask);
+        if (exportVersionHistory) {
+          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
+              path, recursive);
+          subNodesExportTask.add(versionHistoryExportTask);
+        }
+        metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
+      } else {
+        NodeMetadata nodeMetadata = new NodeMetadata();
+        metaData.getNodesMetadata().put(path, nodeMetadata);
+        nodeMetadata.setPath(path);
+        if (childNode.hasProperty("exo:title")) {
+          nodeMetadata.setTitle(childNode.getProperty("exo:title").getString());
+        } else if (childNode.hasProperty("exo:name")) {
+          nodeMetadata.setTitle(childNode.getProperty("exo:name").getString());
+        } else {
+          nodeMetadata.setTitle(childNode.getName());
+        }
+        if (childNode.hasProperty("exo:lastModifier")) {
+          nodeMetadata.setLastModifier(childNode.getProperty("exo:lastModifier").getString());
+        }
+        if (childNode.hasProperty("exo:dateModified")) {
+          nodeMetadata.setDateModified(childNode.getProperty("exo:dateModified").getDate());
+        }
+        if (childNode.hasProperty("publication:history")) {
+          Value[] values = childNode.getProperty("publication:history").getValues();
+          if (values != null) {
+            StringBuilder sB = new StringBuilder();
+            for (int i = 0; i < values.length; i++) {
+              if (i > 0) {
+                sB.append("; ");
+              }
+              sB.append(values[i].getString());
+            }
+            nodeMetadata.setPublicationHistory(sB.toString());
+          }
+        }
       }
-      metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
+      // If not export the whole node
       if (!recursive) {
         NodeIterator nodeIterator = childNode.getNodes();
         while (nodeIterator.hasNext()) {
           Node node = nodeIterator.nextNode();
-          exportNode(workspace, childNode, excludedNodes, exportVersionHistory, subNodesExportTask, node);
+          exportNode(workspace, childNode, excludedNodes, exportVersionHistory, subNodesExportTask, node, metaData, exportOnlyMetadata);
         }
       }
     }
   }
 
   private boolean isRecursiveExport(Node node) throws Exception {
-
     // FIXME: eXo ECMS bug, items with exo:actionnable don't define manatory
-    // field exo:actions. Still use this workaround. EXOCONSULTING-219
+    // field exo:actions. Still use this workaround. ECMS-5998
     if (node.isNodeType("exo:actionable") && !node.hasProperty("exo:actions")) {
       node.setProperty("exo:actions", "");
       node.save();
@@ -427,7 +475,7 @@ public class SiteContentsExportResource implements OperationHandler {
     NodeType nodeType = node.getPrimaryNodeType();
     NodeType[] nodeTypes = node.getMixinNodeTypes();
     boolean recursive = isRecursiveNT(nodeType);
-    if (nodeTypes != null && nodeTypes.length > 0) {
+    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
       int i = 0;
       while (!recursive && i < nodeTypes.length) {
         recursive = isRecursiveNT(nodeTypes[i]);
@@ -448,13 +496,13 @@ public class SiteContentsExportResource implements OperationHandler {
           i++;
         }
       }
-      boolean noRecursive = !hasMandatoryChild && !templateService.isManagedNodeType(nodeType.getName());
-      isNTRecursiveMap.put(nodeType.getName(), !noRecursive);
+      boolean recursive = hasMandatoryChild || templateService.isManagedNodeType(nodeType.getName());
+      isNTRecursiveMap.put(nodeType.getName(), recursive);
     }
     return isNTRecursiveMap.get(nodeType.getName());
   }
 
-  private SiteMetaDataExportTask getMetaDataExportTask() {
+  private SiteMetaDataExportTask getMetaDataExportTask(SiteMetaData metaData) {
     return new SiteMetaDataExportTask(metaData);
   }
 

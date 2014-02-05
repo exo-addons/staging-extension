@@ -34,4 +34,8 @@ public class SiteMetaDataExportTask implements ExportTask {
     String xmlContent = xStream.toXML(metaData);
     outputStream.write(xmlContent.getBytes());
   }
+
+  public SiteMetaData getMetaData() {
+    return metaData;
+  }
 }

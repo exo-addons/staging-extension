@@ -12,6 +12,7 @@ public class SiteMetaData {
   Map<String, String> options = new HashMap<String, String>();
   Map<String, String> exportedFiles = new HashMap<String, String>();
   Map<String, String> exportedHistoryFiles = new HashMap<String, String>();
+  Map<String, NodeMetadata> nodesMetadata = new HashMap<String, NodeMetadata>();
 
   public Map<String, String> getExportedFiles() {
     return this.exportedFiles;
@@ -35,6 +36,14 @@ public class SiteMetaData {
 
   public void setExportedHistoryFiles(Map<String, String> exportedHistoryFiles) {
     this.exportedHistoryFiles = exportedHistoryFiles;
+  }
+
+  public Map<String, NodeMetadata> getNodesMetadata() {
+    return nodesMetadata;
+  }
+
+  public void setNodesMetadata(Map<String, NodeMetadata> nodesMetadata) {
+    this.nodesMetadata = nodesMetadata;
   }
 
 }

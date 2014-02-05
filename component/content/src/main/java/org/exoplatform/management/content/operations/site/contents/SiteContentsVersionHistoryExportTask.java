@@ -79,9 +79,10 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     Session session = null;
     try {
       Node currentNode = getCurrentNode();
+      String sysWsName = repositoryService.getCurrentRepository().getConfiguration().getSystemWorkspaceName();
+      session = getSession(sysWsName);
       if (recurse) {
-        String sysWsName = repositoryService.getCurrentRepository().getConfiguration().getSystemWorkspaceName();
-        session = getSession(sysWsName);
+        // Export version history of sub nodes
         QueryResult queryResult = getQueryResult(currentNode);
         NodeIterator queryIter = queryResult.getNodes();
         while (queryIter.hasNext()) {
@@ -98,6 +99,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
         }
       }
       if (currentNode.isNodeType(Utils.MIX_VERSIONABLE)) {
+        // Export version history of current nodes
         exportedFile = getExportedFile("data", ".xml");
         out = new BufferedOutputStream(new FileOutputStream(exportedFile));
         in = new BufferedInputStream(new TempFileInputStream(exportedFile));

@@ -63,8 +63,7 @@ public class SiteContentsImportResource implements OperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(SiteContentsImportResource.class);
 
-  private SEOService seoService = null;
-  private String operationName = null;
+  private static SEOService seoService = null;
 
   private String importedSiteName = null;
   private String filePath = null;
@@ -115,7 +114,7 @@ public class SiteContentsImportResource implements OperationHandler {
     Map<String, SiteData> sitesData = null;
     try {
       // extract data from zip
-      sitesData = extractDataFromZip(attachmentInputStream);
+      sitesData = extractDataFromZip(attachmentInputStream, importedSiteName);
 
       // import data of each site
       for (String site : sitesData.keySet()) {
@@ -133,7 +132,7 @@ public class SiteContentsImportResource implements OperationHandler {
           importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(), siteData.getNodeExportHistoryFiles(), workspace, uuidBehaviorValue, isCleanPublication);
           log.info("Content import has been finished");
         } catch (Exception e) {
-          throw new OperationException(operationName, "Unable to create import task", e);
+          throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to create import task", e);
         }
       }
     } finally {
@@ -157,6 +156,109 @@ public class SiteContentsImportResource implements OperationHandler {
       }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  /**
+   * Extract data from zip
+   * 
+   * @param attachment
+   * @return
+   */
+  public static Map<String, SiteData> extractDataFromZip(InputStream attachmentInputStream, String importedSiteName) {
+
+    Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
+
+    final NonCloseableZipInputStream zis = new NonCloseableZipInputStream(attachmentInputStream);
+
+    try {
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        // Skip directories
+        if (entry.isDirectory()) {
+          continue;
+        }
+        String filePath = entry.getName();
+        // Skip empty entries (this allows empty zip files to not cause
+        // exceptions).
+        if (filePath.equals("") || !filePath.startsWith(SiteUtil.getSitesBasePath() + "/")) {
+          continue;
+        }
+
+        String siteName = extractSiteNameFromPath(filePath);
+
+        // if we are in a site (for example /content/sites/acme), take only
+        // the files relative to this site
+        if (importedSiteName != null && !importedSiteName.equals(siteName)) {
+          continue;
+        }
+
+        // metadata file ?
+        if (filePath.endsWith(SiteMetaDataExportTask.FILENAME)) {
+          // Unmarshall metadata xml file
+          XStream xstream = new XStream();
+          xstream.alias("metadata", SiteMetaData.class);
+          InputStreamReader isr = new InputStreamReader(zis, "UTF-8");
+          SiteMetaData siteMetadata = (SiteMetaData) xstream.fromXML(isr);
+
+          // Save unmarshalled metadata
+          SiteData siteData = sitesData.get(siteName);
+          if (siteData == null) {
+            siteData = new SiteData();
+          }
+          siteData.setSiteMetadata(siteMetadata);
+          sitesData.put(siteName, siteData);
+        }
+        // seo file ?
+        else if (filePath.endsWith(SiteSEOExportTask.FILENAME)) {
+          String lang = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.indexOf(SiteSEOExportTask.FILENAME));
+          XStream xStream = new XStream();
+          xStream.alias("seo", List.class);
+          InputStreamReader isr = new InputStreamReader(zis, "UTF-8");
+
+          @SuppressWarnings("unchecked")
+          List<PageMetadataModel> models = (List<PageMetadataModel>) xStream.fromXML(isr);
+          if (models != null && !models.isEmpty()) {
+            for (PageMetadataModel pageMetadataModel : models) {
+              seoService.storeMetadata(pageMetadataModel, siteName, false, lang);
+            }
+          }
+        }
+        // sysview file ?
+        else if (filePath.endsWith(".xml")) {
+          // Unmarshall sysview xml file to String
+          log.info("Collecting the node " + filePath);
+          String nodeContent = IOUtils.toString(zis, "UTF-8");
+
+          // Save unmarshalled sysview
+          SiteData siteData = sitesData.get(siteName);
+          if (siteData == null) {
+            siteData = new SiteData();
+          }
+          siteData.getNodeExportFiles().put(filePath, nodeContent);
+          sitesData.put(siteName, siteData);
+        } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
+          // Put Version History file in temp folder
+          File tempFile = File.createTempFile("JCR", "-VersionHistory.zip");
+          tempFile.deleteOnExit();
+          FileOutputStream outputStream = new FileOutputStream(tempFile);
+          IOUtils.copy(zis, outputStream);
+          outputStream.flush();
+          outputStream.close();
+          SiteData siteData = sitesData.get(siteName);
+          if (siteData == null) {
+            siteData = new SiteData();
+          }
+          siteData.getNodeExportHistoryFiles().put(filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"), tempFile.getAbsolutePath());
+        }
+      }
+
+      zis.reallyClose();
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Exception when reading the underlying data stream from import.", e);
+    }
+
+    return sitesData;
+
   }
 
   /**
@@ -341,7 +443,7 @@ public class SiteContentsImportResource implements OperationHandler {
       try {
         uuidBehaviorValue = ImportBehavior.valueOf(uuidBehavior).getBehavior();
       } catch (Exception e) {
-        throw new OperationException(this.operationName, "Unknown uuidBehavior " + uuidBehavior);
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unknown uuidBehavior " + uuidBehavior);
       }
     } else {
       uuidBehaviorValue = ImportBehavior.NEW.getBehavior();
@@ -351,116 +453,13 @@ public class SiteContentsImportResource implements OperationHandler {
   }
 
   /**
-   * Extract data from zip
-   * 
-   * @param attachment
-   * @return
-   */
-  private Map<String, SiteData> extractDataFromZip(InputStream attachmentInputStream) {
-
-    Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
-
-    final NonCloseableZipInputStream zis = new NonCloseableZipInputStream(attachmentInputStream);
-
-    try {
-      ZipEntry entry;
-      while ((entry = zis.getNextEntry()) != null) {
-        // Skip directories
-        if (entry.isDirectory()) {
-          continue;
-        }
-        String filePath = entry.getName();
-        // Skip empty entries (this allows empty zip files to not cause
-        // exceptions).
-        if (filePath.equals("") || !filePath.startsWith(SiteUtil.getSitesBasePath() + "/")) {
-          continue;
-        }
-
-        String siteName = extractSiteNameFromPath(filePath);
-
-        // if we are in a site (for example /content/sites/acme), take only
-        // the files relative to this site
-        if (importedSiteName != null && !importedSiteName.equals(siteName)) {
-          continue;
-        }
-
-        // metadata file ?
-        if (filePath.endsWith(SiteMetaDataExportTask.FILENAME)) {
-          // Unmarshall metadata xml file
-          XStream xstream = new XStream();
-          xstream.alias("metadata", SiteMetaData.class);
-          InputStreamReader isr = new InputStreamReader(zis, "UTF-8");
-          SiteMetaData siteMetadata = (SiteMetaData) xstream.fromXML(isr);
-
-          // Save unmarshalled metadata
-          SiteData siteData = sitesData.get(siteName);
-          if (siteData == null) {
-            siteData = new SiteData();
-          }
-          siteData.setSiteMetadata(siteMetadata);
-          sitesData.put(siteName, siteData);
-        }
-        // seo file ?
-        else if (filePath.endsWith(SiteSEOExportTask.FILENAME)) {
-          String lang = filePath.substring(filePath.lastIndexOf("/") + 1, filePath.indexOf(SiteSEOExportTask.FILENAME));
-          XStream xStream = new XStream();
-          xStream.alias("seo", List.class);
-          InputStreamReader isr = new InputStreamReader(zis, "UTF-8");
-
-          @SuppressWarnings("unchecked")
-          List<PageMetadataModel> models = (List<PageMetadataModel>) xStream.fromXML(isr);
-          if (models != null && !models.isEmpty()) {
-            for (PageMetadataModel pageMetadataModel : models) {
-              seoService.storeMetadata(pageMetadataModel, siteName, false, lang);
-            }
-          }
-        }
-        // sysview file ?
-        else if (filePath.endsWith(".xml")) {
-          // Unmarshall sysview xml file to String
-          log.info("Collecting the node " + filePath);
-          String nodeContent = IOUtils.toString(zis, "UTF-8");
-
-          // Save unmarshalled sysview
-          SiteData siteData = sitesData.get(siteName);
-          if (siteData == null) {
-            siteData = new SiteData();
-          }
-          siteData.getNodeExportFiles().put(filePath, nodeContent);
-          sitesData.put(siteName, siteData);
-        } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
-          // Put Version History file in temp folder
-          File tempFile = File.createTempFile("JCR", "-VersionHistory.zip");
-          tempFile.deleteOnExit();
-          FileOutputStream outputStream = new FileOutputStream(tempFile);
-          IOUtils.copy(zis, outputStream);
-          outputStream.flush();
-          outputStream.close();
-          SiteData siteData = sitesData.get(siteName);
-          if (siteData == null) {
-            siteData = new SiteData();
-          }
-          siteData.getNodeExportHistoryFiles().put(filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"), tempFile.getAbsolutePath());
-        }
-      }
-
-      zis.reallyClose();
-    } catch (Exception e) {
-      throw new OperationException(this.operationName, "Exception when reading the underlying data stream from import.", e);
-    }
-
-    return sitesData;
-
-  }
-
-  /**
    * Extract site name from the file path
    * 
    * @param path
    *          The path of the file
    * @return The site name
    */
-  private String extractSiteNameFromPath(String path) {
+  private static String extractSiteNameFromPath(String path) {
     String siteName = null;
 
     int beginIndex = SiteUtil.getSitesBasePath().length() + 1;

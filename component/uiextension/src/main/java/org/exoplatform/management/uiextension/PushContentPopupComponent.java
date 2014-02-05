@@ -7,17 +7,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import org.exoplatform.commons.utils.LazyPageList;
+import org.exoplatform.commons.utils.ListAccessImpl;
 import org.exoplatform.management.service.api.Resource;
-import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
+import org.exoplatform.management.service.handler.content.NodeComparaison;
+import org.exoplatform.management.service.handler.content.NodeComparaisonState;
+import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.wcm.webui.core.UIPopupWindow;
 import org.exoplatform.web.application.ApplicationMessage;
 import org.exoplatform.webui.application.WebuiRequestContext;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
+import org.exoplatform.webui.config.annotation.ComponentConfigs;
 import org.exoplatform.webui.config.annotation.EventConfig;
 import org.exoplatform.webui.core.UIApplication;
+import org.exoplatform.webui.core.UIGrid;
 import org.exoplatform.webui.core.UIPopupComponent;
 import org.exoplatform.webui.core.UIPopupContainer;
 import org.exoplatform.webui.core.lifecycle.UIFormLifecycle;
@@ -28,36 +35,58 @@ import org.exoplatform.webui.form.UIForm;
 import org.exoplatform.webui.form.UIFormInputInfo;
 import org.exoplatform.webui.form.UIFormSelectBox;
 import org.exoplatform.webui.form.UIFormStringInput;
-import org.exoplatform.webui.form.input.UICheckBoxInput;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-@ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
-  events =
-    { @EventConfig(
-      listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(
-      listeners = PushContentPopupComponent.PushActionListener.class) })
+
+@ComponentConfigs(
+  { @ComponentConfig(
+    type = UIGrid.class,
+    id = "selectedNodesGrid",
+    template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"), @ComponentConfig(
+    lifecycle = UIFormLifecycle.class,
+    template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
+    events =
+      { @EventConfig(
+        listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(
+        listeners = PushContentPopupComponent.PushActionListener.class), @EventConfig(
+        listeners = PushContentPopupComponent.SelectActionListener.class), @EventConfig(
+        listeners = PushContentPopupComponent.DeleteActionListener.class) }) })
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
 
   private static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
   private static final String USERNAME_FIELD_NAME = "username";
   private static final String PWD_FIELD_NAME = "password";
-  private static final String PUBLISH_FIELD_NAME = "publishOnTarget";
-  private static final String INFO_FIELD_NAME = "info";
 
-  private ResourceHandler contentsHandler_;
+  // private static final String PUBLISH_FIELD_NAME = "publishOnTarget";
+
+  private static final String INFO_FIELD_NAME = "info";
+  private List<NodeComparaison> defaultSelection = new ArrayList<NodeComparaison>();
+
+  private SiteContentsHandler contentsHandler_;
   private SynchronizationService synchronizationService_;
 
   private List<TargetServer> targetServers;
   private String currentPath;
+  private String workspace;
   private final ResourceBundle resourceBundle;
 
+  List<NodeComparaison> selectedNodes = new ArrayList<NodeComparaison>();
+
+  public static String[] SELECTED_NODES_BEAN_FIELD =
+    { "title", "path" };
+
+  public static String[] SELECTED_BEAN_ACTION =
+    { "Delete" };
+
+  private UIGrid selectedNodesGrid;
+
   public PushContentPopupComponent() throws Exception {
+    this.addChild(UIPopupContainer.class, null, "SelectNodesPopupContainer");
+
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
     addUIFormInput(new UIFormStringInput(USERNAME_FIELD_NAME, USERNAME_FIELD_NAME, ""));
     UIFormStringInput pwdInput = new UIFormStringInput(PWD_FIELD_NAME, PWD_FIELD_NAME, "");
@@ -65,8 +94,14 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     addUIFormInput(pwdInput);
 
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
-    addUIFormInput(new UICheckBoxInput(PUBLISH_FIELD_NAME, PUBLISH_FIELD_NAME, false));
+    // addUIFormInput(new UICheckBoxInput(PUBLISH_FIELD_NAME,
+    // PUBLISH_FIELD_NAME, false));
+
+    selectedNodesGrid = addChild(UIGrid.class, "selectedNodesGrid", "selectedNodesGrid");
+    selectedNodesGrid.configure("path", SELECTED_NODES_BEAN_FIELD, SELECTED_BEAN_ACTION);
+
     resourceBundle = WebuiRequestContext.getCurrentInstance().getApplicationResourceBundle();
+    NodeComparaison.resourceBundle = resourceBundle;
   }
 
   public void init() throws Exception {
@@ -82,15 +117,171 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       SelectItemOption<String> selectItemOption = new SelectItemOption<String>(targetServer.getName(), targetServer.getId());
       itemOptions.add(selectItemOption);
     }
+    NodeComparaison nodeComparaison = new NodeComparaison();
+    nodeComparaison.setTitle("Current Node");
+    nodeComparaison.setPath(getCurrentPath());
+    nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
+    defaultSelection.add(nodeComparaison);
+
+    nodeComparaison = new NodeComparaison();
+    nodeComparaison.setTitle("Sub nodes of current node");
+    nodeComparaison.setPath(getCurrentPath() + "/*");
+    nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
+    defaultSelection.add(nodeComparaison);
+
+    selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, defaultSelection), 10));
   }
 
-  public ResourceBundle getResourceBundle() {
-    return resourceBundle;
+  public void addSelection(NodeComparaison nodeComparaison) {
+    selectedNodes.add(nodeComparaison);
+    selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, selectedNodes), 10));
+  }
+
+  public boolean isDefaultEntry(String path) {
+    for (NodeComparaison comparaison : defaultSelection) {
+      if (path.equals(comparaison.getPath())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static public class SelectActionListener extends EventListener<PushContentPopupComponent> {
+    public void execute(Event<PushContentPopupComponent> event) throws Exception {
+      PushContentPopupComponent pushContentPopupComponent = event.getSource();
+      pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+
+      UIPopupContainer popupContainer = pushContentPopupComponent.getChildById("SelectNodesPopupContainer");
+
+      UIPopupWindow popupWindow = popupContainer.getChildById("SelectNodesPopupWindow");
+      if (popupWindow != null) {
+        popupContainer.removeChildById("SelectNodesPopupWindow");
+      }
+      UIPopupWindow selectNodesPopupWindow = popupContainer.addChild(UIPopupWindow.class, null, "SelectNodesPopupWindow");
+      selectNodesPopupWindow.setParent(popupContainer);
+      selectNodesPopupWindow.setShow(false);
+
+      SelectNodesPopupComponent selectNodesPopupComponent = selectNodesPopupWindow.createUIComponent(SelectNodesPopupComponent.class, null, "SelectNodesPopupComponent");
+      selectNodesPopupWindow.setUIComponent(selectNodesPopupComponent);
+      selectNodesPopupComponent.setParent(selectNodesPopupWindow);
+      selectNodesPopupComponent.setPushContentPopupComponent(pushContentPopupComponent);
+
+      UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
+      try {
+        // get username
+        String username = pushContentPopupComponent.getUIStringInput(USERNAME_FIELD_NAME).getValue();
+        if (username == null || username.isEmpty()) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.userNameMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
+          return;
+        }
+
+        // get password
+        String password = pushContentPopupComponent.getUIStringInput(PWD_FIELD_NAME).getValue();
+        if (password == null || password.isEmpty()) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.passwordMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
+          return;
+        }
+
+        // get target server
+        TargetServer targetServer = null;
+        String targetServerId = pushContentPopupComponent.getUIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME).getValue();
+        Iterator<TargetServer> iterator = pushContentPopupComponent.getTargetServers().iterator();
+        while (iterator.hasNext() && targetServer == null) {
+          TargetServer itTargetServer = iterator.next();
+          if (itTargetServer.getId().equals(targetServerId)) {
+            targetServer = itTargetServer;
+          }
+        }
+        if (targetServer == null) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.targetServerMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
+          return;
+        }
+        targetServer.setUsername(username);
+        targetServer.setPassword(password);
+
+        List<NodeComparaison> comparaisons = pushContentPopupComponent.getContentsHandler().compareLocalNodesWithTargetServer(pushContentPopupComponent.getWorkspace(),
+            pushContentPopupComponent.getCurrentPath(), targetServer);
+        selectNodesPopupComponent.setComparaisons(comparaisons);
+        selectNodesPopupWindow.setShow(true);
+        selectNodesPopupWindow.setWindowSize(1024, 600);
+        selectNodesPopupWindow.setRendered(true);
+        event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesPopupWindow.getParent());
+        event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME));
+      } catch (Exception ex) {
+        if (ex != null && ex.getMessage() != null && ex.getMessage().contains("java.net.ConnectException")) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        } else {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        }
+        LOG.error("Comparaison of '" + pushContentPopupComponent.getCurrentPath() + "' error:", ex);
+      }
+    }
+  }
+
+  static public class DeleteActionListener extends EventListener<PushContentPopupComponent> {
+    public void execute(Event<PushContentPopupComponent> event) throws Exception {
+      PushContentPopupComponent pushContentPopupComponent = event.getSource();
+      String path = event.getRequestContext().getRequestParameter(OBJECTID);
+
+      UIPopupContainer popupContainer = pushContentPopupComponent.getChildById("SelectNodesPopupContainer");
+      SelectNodesPopupComponent selectNodesPopupComponent = null;
+      try {
+        UIPopupWindow popupWindow = popupContainer.getChild(UIPopupWindow.class);
+        selectNodesPopupComponent = (SelectNodesPopupComponent) popupWindow.getUIComponent();
+      } catch (Exception e) {
+        // Nothing to do, the component not found
+      }
+      try {
+        Iterator<NodeComparaison> comparaisons = pushContentPopupComponent.getSelectedNodes().iterator();
+        boolean removed = false;
+        while (!removed && comparaisons.hasNext()) {
+          NodeComparaison comparaison = comparaisons.next();
+          if (path.equals(comparaison.getPath())) {
+            comparaisons.remove();
+            removed = true;
+          }
+        }
+        if (removed) {
+          if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
+            pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator()
+                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getDefaultSelection()), 10));
+          } else {
+            pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator()
+                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getSelectedNodes()), 10));
+          }
+        }
+        if (selectNodesPopupComponent != null) {
+          selectNodesPopupComponent.computeComparaisons();
+          event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesPopupComponent.getNodesGrid());
+        }
+        event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getSelectedNodesGrid());
+      } catch (Exception ex) {
+        ApplicationMessage message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
+        message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        LOG.error("Error while deleting '" + path + "' from selected contents:", ex);
+      }
+    }
   }
 
   static public class PushActionListener extends EventListener<PushContentPopupComponent> {
     public void execute(Event<PushContentPopupComponent> event) throws Exception {
       PushContentPopupComponent pushContentPopupComponent = event.getSource();
+      pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+
       UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
       UIApplication uiApp = pushContentPopupComponent.getAncestorOfType(UIApplication.class);
       try {
@@ -115,7 +306,9 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         }
 
         // get cleanupPublication checkbox value
-        boolean cleanupPublication = pushContentPopupComponent.getUICheckBoxInput(PUBLISH_FIELD_NAME).getValue();
+        // boolean cleanupPublication =
+        // pushContentPopupComponent.getUICheckBoxInput(PUBLISH_FIELD_NAME).getValue();
+        boolean cleanupPublication = false;
 
         // get target server
         TargetServer targetServer = null;
@@ -137,22 +330,51 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         targetServer.setUsername(username);
         targetServer.setPassword(password);
 
-        List<Resource> resources = new ArrayList<Resource>();
-        resources.add(new Resource(pushContentPopupComponent.getContentsHandler().getPath() + "/shared", "shared", "shared"));
+        @SuppressWarnings("unchecked")
+        List<NodeComparaison> selectedComparaisons = (List<NodeComparaison>) pushContentPopupComponent.getSelectedNodesGrid().getBeans();
+        // If default selection
+        if (pushContentPopupComponent.getDefaultSelection() == selectedComparaisons) {
+          List<Resource> resources = new ArrayList<Resource>();
+          resources.add(new Resource(pushContentPopupComponent.getContentsHandler().getPath() + "/shared", "shared", "shared"));
 
-        Map<String, String> exportOptions = new HashMap<String, String>();
-        String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
-        exportOptions.put("filter/query", sqlQueryFilter);
-        exportOptions.put("filter/taxonomy", "false");
-        exportOptions.put("filter/no-history", "" + cleanupPublication);
+          Map<String, String> exportOptions = new HashMap<String, String>();
+          String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
+          exportOptions.put("filter/query", sqlQueryFilter);
+          exportOptions.put("filter/taxonomy", "false");
+          exportOptions.put("filter/no-history", "" + cleanupPublication);
 
-        Map<String, String> importOptions = new HashMap<String, String>();
+          Map<String, String> importOptions = new HashMap<String, String>();
 
-        importOptions.put("filter/cleanPublication", "" + cleanupPublication);
+          // importOptions.put("filter/cleanPublication", "" +
+          // cleanupPublication);
 
-        pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
-        uiPopupContainer.deActivate();
-        uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
+          pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
+          uiPopupContainer.deActivate();
+          uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
+        } else {
+          // Different contents was selected
+
+          for (NodeComparaison nodeComparaison : selectedComparaisons) {
+            List<Resource> resources = new ArrayList<Resource>();
+            resources.add(new Resource(pushContentPopupComponent.getContentsHandler().getPath() + "/shared", "shared", "shared"));
+
+            Map<String, String> exportOptions = new HashMap<String, String>();
+            String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparaison.getPath() + "'";
+            exportOptions.put("filter/query", sqlQueryFilter);
+            exportOptions.put("filter/taxonomy", "false");
+            exportOptions.put("filter/no-history", "" + cleanupPublication);
+
+            Map<String, String> importOptions = new HashMap<String, String>();
+
+            // importOptions.put("filter/cleanPublication", "" +
+            // cleanupPublication);
+
+            pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
+          }
+
+          uiPopupContainer.deActivate();
+          uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
+        }
       } catch (Exception ex) {
         if (ex != null && ex.getMessage() != null && ex.getMessage().contains("java.net.ConnectException")) {
           ApplicationMessage message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
@@ -190,15 +412,27 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       { "Push", "Close" };
   }
 
+  public List<NodeComparaison> getSelectedNodes() {
+    return selectedNodes;
+  }
+
+  public UIGrid getSelectedNodesGrid() {
+    return selectedNodesGrid;
+  }
+
+  public ResourceBundle getResourceBundle() {
+    return resourceBundle;
+  }
+
   public List<TargetServer> getTargetServers() {
     return targetServers;
   }
 
-  public void setContentsHandler(ResourceHandler contentsHandler) {
+  public void setContentsHandler(SiteContentsHandler contentsHandler) {
     contentsHandler_ = contentsHandler;
   }
 
-  public ResourceHandler getContentsHandler() {
+  public SiteContentsHandler getContentsHandler() {
     return this.contentsHandler_;
   }
 
@@ -213,4 +447,17 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   public String getCurrentPath() {
     return this.currentPath;
   }
+
+  public String getWorkspace() {
+    return workspace;
+  }
+
+  public void setWorkspace(String workspace) {
+    this.workspace = workspace;
+  }
+
+  public List<NodeComparaison> getDefaultSelection() {
+    return defaultSelection;
+  }
+
 }

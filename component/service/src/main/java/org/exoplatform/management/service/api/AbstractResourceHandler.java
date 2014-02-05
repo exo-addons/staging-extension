@@ -122,7 +122,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     deleteTempFilesStartingWith("gatein-export");
   }
 
-  private String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
+  protected String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
     String targetServerURL = "http";
     if (targetServer.isSsl()) {
       targetServerURL += "s";

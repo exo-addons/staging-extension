@@ -19,6 +19,14 @@
 			<passwordMandatory>Password is mandatory</passwordMandatory>
 			<synchronizationDone>Synhronization done successfully.</synchronizationDone>
 		</msg>
+		<state>
+			<not_found_source>Not found on source</not_found_source>
+			<not_found_target>Not found on target</not_found_target>
+			<modified_source>Modified in source</modified_source>
+			<modified_target>Modified in target</modified_target>
+			<same>Same</same>
+			<unkown>Unknown</unkown>
+		</state>
 	</PushContent>
 	<PushContentPopupComponent>
 		<label>
@@ -29,10 +37,43 @@
 			<publishOnTarget>Publish on target server</publishOnTarget>
 		</label>
 		<action>
+			<Select>Select contents manually</Select>
 			<Push>Push</Push>
 			<Close>Close</Close>
+			<title>
+				<delete>Delete</delete>
+			</title>
 		</action>
+		<header>
+			<title>Title</title>
+			<path>Path</path>
+			<action>Action</action>
+		</header>
 	</PushContentPopupComponent>
+	<SelectNodesPopupWindow>
+		<title>
+			<SelectNodesPopupComponent>Select Nodes to synchronize</SelectNodesPopupComponent>
+		</title>
+	</SelectNodesPopupWindow>
+	<SelectNodesPopupComponent>
+		<header>
+			<title>Title</title>
+			<path>Path</path>
+			<lastModifierUserName>Modified by</lastModifierUserName>
+			<sourceModificationDate>Modified (here)</sourceModificationDate>
+			<targetModificationDate>Modified (distant)</targetModificationDate>
+			<stateLocalized>State</stateLocalized>
+			<action>Action</action>
+		</header>
+		<action>
+			<title>
+				<Select>Select content</Select>
+			</title>
+		</action>
+		<label>
+			<seeOnlyDifferent>Show only different</seeOnlyDifferent>
+		</label>
+	</SelectNodesPopupComponent>
 	<UIPopupWindow>
 		<title>
 			<PushContentPopupComponent>Push Content</PushContentPopupComponent>

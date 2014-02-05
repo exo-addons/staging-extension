@@ -1,27 +1,28 @@
 <div class="uiForm $uicomponent.id">
+	<% uicomponent.renderChild("SelectNodesPopupContainer") %>
 	<% uiform.begin() %>
 		<div class="form-horizontal resizable">
-			<div class="control-group">
-				<label class="control-label">
-					<%=uicomponent.getLabel("synchronizationNode") +": "%>
-				</label>
-				<div class="controls">
-					<b><%=uicomponent.getCurrentPath()%></b>
-				</div>
-			</div>
 			<% 
 				for(field in uiform.getChildren()) {
 					if(field.isRendered()) {
 			%>
 						<div class="control-group">
-							<% if(!uicomponent.getLabel(field.getName()).equals(uicomponent.getId()) && !uicomponent.getLabel(field.getName()).equals("info")) { %>
+							<% if(!uicomponent.getLabel(field.getName()).equals(uicomponent.getId()) && !uicomponent.getLabel(field.getName()).equals("info") && !uicomponent.getLabel(field.getName()).equals("UIPopupContainer") && !uicomponent.getLabel(field.getName()).equals("UIGrid")) { %>
 								<label class="control-label" for="<%=field.getId()%>">
 										<%=uicomponent.getLabel(field.getName()) +": " %>
 								</label>
 							<% } %>
+							<% if(uicomponent.getLabel(field.getName()).equals("UIGrid")) {
+								 uiform.renderField(field) ;
+								 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action.Select") 
+								 String link = uicomponent.event("Select");
+								%>
+				 				<button type="button" onclick="$link" class="btn"  href="javascript:void(0);">$actionLabel</button>
+							<% } else if(!uicomponent.getLabel(field.getName()).equals("UIPopupContainer")) { %>
 							<div class="controls">
 								<%uiform.renderField(field) ; %>
 							</div>
+							<% } %>
 						</div>
 			<%
 					}
