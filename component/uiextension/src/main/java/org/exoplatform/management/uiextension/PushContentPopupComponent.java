@@ -342,6 +342,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           exportOptions.put("filter/query", sqlQueryFilter);
           exportOptions.put("filter/taxonomy", "false");
           exportOptions.put("filter/no-history", "" + cleanupPublication);
+          exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
 
           Map<String, String> importOptions = new HashMap<String, String>();
 
@@ -363,6 +364,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
             exportOptions.put("filter/query", sqlQueryFilter);
             exportOptions.put("filter/taxonomy", "false");
             exportOptions.put("filter/no-history", "" + cleanupPublication);
+            exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
 
             Map<String, String> importOptions = new HashMap<String, String>();
 
