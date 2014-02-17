@@ -1,5 +1,21 @@
 package org.exoplatform.management.service.api;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.filefilter.PrefixFileFilter;
 import org.apache.http.NameValuePair;
@@ -13,14 +29,8 @@ import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.controller.ManagedRequest;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
+import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
-
-import java.io.File;
-import java.io.FileFilter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.*;
-import java.util.Map.Entry;
 
 public abstract class AbstractResourceHandler implements ResourceHandler {
 
@@ -44,15 +54,58 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     return managementController;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) {
-    for(Resource resource : resources) {
+    for (Resource resource : resources) {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
       sendData(managedResponse, importOptions, targetServer);
     }
   }
 
   /**
+   * {@inheritDoc}
+   */
+  public void export(String path, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
+    FileOutputStream outputStream = null;
+    FileInputStream inputStream = null;
+    File tmpFile = null;
+    try {
+      ManagedResponse managedResponse = getExportedResourceFromOperation(path, exportOptions);
+      tmpFile = File.createTempFile("staging", "-export.zip");
+
+      outputStream = new FileOutputStream(tmpFile);
+      managedResponse.writeResult(outputStream);
+
+      outputStream.flush();
+      outputStream.close();
+      outputStream = null;
+
+      inputStream = new FileInputStream(tmpFile);
+
+      Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
+
+      inputStream.close();
+      inputStream = null;
+    } catch (Exception ex) {
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + path, ex);
+    } finally {
+      if (outputStream != null) {
+        outputStream.close();
+      }
+      if (inputStream != null) {
+        inputStream.close();
+      }
+      if (tmpFile != null) {
+        tmpFile.delete();
+      }
+    }
+  }
+
+  /**
    * Sends data (exported zip) to the target server
+   * 
    * @param response
    * @param options
    * @param targetServer
@@ -174,13 +227,13 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       String optionName;
       String optionValue;
       String[] optionParts = option.getKey().split("/", 2);
-      if(optionParts.length == 1) {
+      if (optionParts.length == 1) {
         optionName = option.getKey();
         optionValue = option.getValue();
-      } else if(optionParts.length == 2) {
+      } else if (optionParts.length == 2) {
         optionName = optionParts[0];
         optionValue = optionParts[1];
-        if(option.getValue() != null) {
+        if (option.getValue() != null) {
           optionValue += ":" + option.getValue();
         }
       } else {
@@ -202,7 +255,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     String tempDirPath = System.getProperty("java.io.tmpdir");
     File file = new File(tempDirPath);
 
-    if(log.isDebugEnabled()) {
+    if (log.isDebugEnabled()) {
       log.debug("Delete files '" + prefix + "*' under " + tempDirPath);
     }
 

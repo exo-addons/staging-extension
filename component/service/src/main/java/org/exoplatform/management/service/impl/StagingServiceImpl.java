@@ -1,9 +1,26 @@
 package org.exoplatform.management.service.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipOutputStream;
+
+import javax.inject.Singleton;
+import javax.jcr.NodeIterator;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
+import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -16,15 +33,9 @@ import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.controller.ManagedRequest;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
+import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ReadResourceModel;
-
-import javax.inject.Singleton;
-import javax.jcr.NodeIterator;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-import java.io.IOException;
-import java.util.*;
 
 /**
  * Staging service
@@ -42,6 +53,50 @@ public class StagingServiceImpl implements StagingService {
     this.managementController = managementController;
     this.wcmConfigurationService = wcmConfigurationService;
     this.repositoryService = repositoryService;
+  }
+
+  /**
+   * Export selected resources with selected options.
+   * 
+   * @param resourcesPaths
+   * @param exportOptions
+   * @return
+   * @throws Exception
+   */
+  public File export(List<ResourceCategory> selectedResourceCategories) throws Exception {
+
+    File file = null;
+    ZipOutputStream exportFileOS = null;
+    try {
+      file = File.createTempFile("staging", "-export.zip");
+      file.deleteOnExit();
+      exportFileOS = new ZipOutputStream(new FileOutputStream(file));
+    } catch (Exception ex) {
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while creating a zip temp file to export resources", ex);
+    }
+
+    for (ResourceCategory selectedResourceCategory : selectedResourceCategories) {
+      // Gets the right resource handler thanks to the Service Locator
+      ResourceHandler resourceHandler = ResourceHandlerLocator.getResourceHandler(selectedResourceCategory.getPath());
+
+      List<Resource> resources = selectedResourceCategory.getResources();
+      for (Resource resource : resources) {
+        if (resourceHandler != null) {
+          resourceHandler.export(resource.getPath(), exportFileOS, selectedResourceCategory.getExportOptions());
+        } else {
+          log.error("No handler for " + selectedResourceCategory.getPath());
+          throw new Exception("No handler for " + selectedResourceCategory.getPath());
+        }
+      }
+    }
+
+    try {
+      exportFileOS.flush();
+      exportFileOS.close();
+    } catch (Exception ex) {
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while closing exported zip temp file." + file.getPath(), ex);
+    }
+    return file;
   }
 
   /**
@@ -93,20 +148,6 @@ public class StagingServiceImpl implements StagingService {
       }
     }
     return paths;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath) {
-    Set<String> filteredSelectedResources = new HashSet<String>();
-    for (String resourcePath : selectedResources) {
-      if (resourcePath.contains(parentPath)) {
-        filteredSelectedResources.add(resourcePath);
-      }
-    }
-    return filteredSelectedResources;
   }
 
   public Set<Resource> getResources(String path) {

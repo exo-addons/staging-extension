@@ -1,12 +1,12 @@
 package org.exoplatform.management.service.api;
 
-import org.apache.commons.fileupload.FileItem;
-
+import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.fileupload.FileItem;
 
 public interface StagingService {
 
@@ -34,7 +34,18 @@ public interface StagingService {
   public static final String ROLE_PATH = "/organization/role";
 
   /**
+   * Export selected resources with selected options.
+   * 
+   * @param resourcesPaths
+   * @param exportOptions
+   * @return
+   * @throws Exception
+   */
+  public File export(List<ResourceCategory> selectedResourceCategoriesWithExceptions) throws Exception;
+
+  /**
    * Import resources
+   * 
    * @param selectedResourcePath
    * @param file
    * @throws IOException
@@ -43,7 +54,7 @@ public interface StagingService {
 
   /**
    * Returns the list of sub resources of the given path
-   *
+   * 
    * @return list of resources
    */
   public Set<Resource> getResources(String path);
@@ -189,8 +200,8 @@ public interface StagingService {
   Set<Resource> getViewConfigurationResources();
 
   /**
-   * Returns the list of sub resources of /gadget managed resources
-   * computed from GateIN Management SPI
+   * Returns the list of sub resources of /gadget managed resources computed
+   * from GateIN Management SPI
    * 
    * @return list of Gadgets managed paths.
    */
@@ -221,23 +232,11 @@ public interface StagingService {
   Set<Resource> getRoleResources();
 
   /**
-   * Filters subresources of parentPath. This operation retains only paths that
-   * contains parentPath.
-   * 
-   * @param selectedResources
-   *          Set of managed resources paths
-   * @param parentPath
-   *          parent resource path
-   * @return Set of sub resources path of type String
-   */
-  Set<String> filterSelectedResources(Collection<String> selectedResources, String parentPath);
-
-  /**
    * Execute an SQL JCR Query
    * 
    * @param sql
-   * @param selectedResources 
-   * @throws Exception 
+   * @param selectedResources
+   * @throws Exception
    */
   Set<String> executeSQL(String sql, Set<String> sites) throws Exception;
 

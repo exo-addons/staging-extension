@@ -1,12 +1,36 @@
 package org.exoplatform.management.portlet;
 
-import juzu.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.inject.Inject;
+
+import juzu.Action;
+import juzu.Path;
+import juzu.Response;
+import juzu.Route;
+import juzu.SessionScoped;
+import juzu.View;
 import juzu.impl.request.Request;
 import juzu.template.Template;
+
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
-import org.exoplatform.management.service.api.*;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.StagingService;
+import org.exoplatform.management.service.api.SynchronizationService;
+import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ManagedResource;
@@ -14,12 +38,6 @@ import org.gatein.management.api.ManagementService;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
-
-import javax.inject.Inject;
-import java.io.IOException;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @SessionScoped
 public class StagingExtensionController {
@@ -128,13 +146,13 @@ public class StagingExtensionController {
                 .append(subcategory.getLabel())
                 .append("\"},");
       }
-      if(!category.getSubResourceCategories().isEmpty()) {
-        jsonCategories.deleteCharAt(jsonCategories.length()-1);
+      if (!category.getSubResourceCategories().isEmpty()) {
+        jsonCategories.deleteCharAt(jsonCategories.length() - 1);
       }
       jsonCategories.append("]},");
     }
-    if(!resourceCategories.isEmpty()) {
-      jsonCategories.deleteCharAt(jsonCategories.length()-1);
+    if (!resourceCategories.isEmpty()) {
+      jsonCategories.deleteCharAt(jsonCategories.length() - 1);
     }
     jsonCategories.append("]}");
 
@@ -149,17 +167,12 @@ public class StagingExtensionController {
     StringBuilder jsonResources = new StringBuilder(50);
     jsonResources.append("{\"resources\":[");
 
-    for(Resource resource : resources) {
-      jsonResources.append("{\"path\":\"")
-                .append(resource.getPath())
-                .append("\",\"description\":\"")
-                .append(resource.getDescription())
-                .append("\",\"text\":\"")
-                .append(resource.getText())
-                .append("\"},");
+    for (Resource resource : resources) {
+      jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText())
+          .append("\"},");
     }
-    if(!resources.isEmpty()) {
-      jsonResources.deleteCharAt(jsonResources.length()-1);
+    if (!resources.isEmpty()) {
+      jsonResources.deleteCharAt(jsonResources.length() - 1);
     }
     jsonResources.append("]}");
 
@@ -180,11 +193,11 @@ public class StagingExtensionController {
     String[] fileNameParts = fileName.split("/");
     List<String> foundResources = new ArrayList<String>();
 
-    for(int i=fileNameParts.length-1; i>=0; i--) {
+    for (int i = fileNameParts.length - 1; i >= 0; i--) {
       PathAddress address = PathAddress.pathAddress(Arrays.copyOfRange(fileNameParts, 0, i));
 
       String pathException = IMPORT_ZIP_PATH_EXCEPTIONS.get(address.toString());
-      if(pathException != null) {
+      if (pathException != null) {
         // Got it !
         foundResources.add(pathException);
         // Manage only one resource at a time for the moment
@@ -193,9 +206,9 @@ public class StagingExtensionController {
 
       ManagedResource managedResource = managementService.getManagedResource(address);
 
-      if(managedResource != null) {
+      if (managedResource != null) {
         OperationHandler operationHandler = managedResource.getOperationHandler(PathAddress.EMPTY_ADDRESS, OperationNames.IMPORT_RESOURCE);
-        if(operationHandler != null) {
+        if (operationHandler != null) {
           // Got it !
           foundResources.add(address.toString());
           // Manage only one resource at a time for the moment
@@ -210,7 +223,7 @@ public class StagingExtensionController {
 
     zipInputStream.close();
 
-    if(!foundResourcesWithExceptions.isEmpty()) {
+    if (!foundResourcesWithExceptions.isEmpty()) {
       return Response.ok(foundResourcesWithExceptions.get(0));
     } else {
       return Response.content(500, "Zip file does not contain known resources to import");
@@ -218,41 +231,102 @@ public class StagingExtensionController {
   }
 
   /*
-   * Handle exceptions in resources paths (ex : /content/sites/intranet -> /content/sites)
+   * Handle exceptions in resources paths (ex : /content/sites/intranet ->
+   * /content/sites)
    */
   private List<String> getResourcesWithExceptions(List<String> foundResources) {
     List<String> foundResourcesWithExceptions = new ArrayList<String>(foundResources);
 
     boolean categoryExists = false;
-    for(ResourceCategory resourceCategory : resourceCategories) {
-      for(ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
-        if(foundResources.get(0).equals(subResourceCategory.getPath())) {
+    for (ResourceCategory resourceCategory : resourceCategories) {
+      for (ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
+        if (foundResources.get(0).equals(subResourceCategory.getPath())) {
           categoryExists = true;
           break;
         }
       }
-      if(categoryExists) {
+      if (categoryExists) {
         break;
       }
     }
 
-    if(!categoryExists) {
+    if (!categoryExists) {
       boolean categoryFound = false;
-      for(ResourceCategory resourceCategory : resourceCategories) {
-        for(ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
-          if(foundResources.get(0).startsWith(subResourceCategory.getPath())) {
+      for (ResourceCategory resourceCategory : resourceCategories) {
+        for (ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
+          if (foundResources.get(0).startsWith(subResourceCategory.getPath())) {
             foundResourcesWithExceptions.set(0, subResourceCategory.getPath());
             categoryFound = true;
             break;
           }
         }
-        if(categoryFound) {
+        if (categoryFound) {
           break;
         }
       }
     }
 
     return foundResourcesWithExceptions;
+  }
+
+  @Ajax
+  @juzu.Resource
+  public Response.Content<?> export(String[] resourceCategories, String[] resources, String[] options) throws IOException {
+    // Create selected resources categories
+    List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
+    for (String selectedResourcesCategory : resourceCategories) {
+      ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
+      selectedResourceCategories.add(resourceCategory);
+    }
+
+    // Dispatch selected resources in resources categories
+    for (String selectedResource : resources) {
+      for (ResourceCategory resourceCategory : selectedResourceCategories) {
+        if (selectedResource.startsWith(resourceCategory.getPath())) {
+          resourceCategory.getResources().add(new Resource(selectedResource, null, null));
+          break;
+        }
+      }
+    }
+
+    // Dispatch selected options in resources categories
+    for (String selectedOption : options) {
+      int indexColon = selectedOption.indexOf(":");
+      if (indexColon > 0) {
+        String optionName = selectedOption.substring(0, indexColon);
+        String optionValue = selectedOption.substring(indexColon + 1);
+
+        String optionParts[] = optionName.split("_");
+        for (ResourceCategory resourceCategory : selectedResourceCategories) {
+          if (optionParts[0].equals(resourceCategory.getPath())) {
+            if (optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
+              resourceCategory.getExportOptions().put(optionParts[2], optionValue);
+            } else if (optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
+              resourceCategory.getImportOptions().put(optionParts[2], optionValue);
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // Manage paths exceptions (/site/portalsites -> /site)
+    List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
+    for (ResourceCategory resourceCategory : selectedResourceCategories) {
+      if (IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
+        resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+      }
+      selectedResourceCategoriesWithExceptions.add(resourceCategory);
+    }
+
+    try {
+      File file = stagingService.export(selectedResourceCategoriesWithExceptions);
+      return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/")
+          .withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
+    } catch (Exception e) {
+      log.error("Error while exporting resources, ", e);
+      return Response.content(500, "Error occured while exporting Managed Resources: " + e.getMessage());
+    }
   }
 
   @Ajax
@@ -268,21 +342,21 @@ public class StagingExtensionController {
     if (selectedResourcesCategories == null || selectedResourcesCategories.length == 0) {
       return Response.content(500, "You must select a resource category.");
     }
-    if(selectedResourcesCategories.length > 1) {
+    if (selectedResourcesCategories.length > 1) {
       return Response.content(500, "Only one resource can be imported at a time.");
     }
 
     try {
       Map<String, List<String>> attributes = new HashMap<String, List<String>>();
-      for(String param : parameters.keySet()) {
-        if(param.startsWith(PARAM_PREFIX_OPTION)) {
+      for (String param : parameters.keySet()) {
+        if (param.startsWith(PARAM_PREFIX_OPTION)) {
           attributes.put(param.substring(PARAM_PREFIX_OPTION.length()), Arrays.asList(parameters.get(param)));
         }
       }
 
       String selectedResourcesCategory = selectedResourcesCategories[0];
       String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
-      if(exceptionPathCategory != null) {
+      if (exceptionPathCategory != null) {
         selectedResourcesCategory = exceptionPathCategory;
       }
 
@@ -309,25 +383,13 @@ public class StagingExtensionController {
 
     StringBuilder jsonServers = new StringBuilder(50);
     jsonServers.append("{\"synchronizationServers\":[");
-    for(TargetServer targetServer : synchronizationServers) {
-      jsonServers.append("{\"id\":\"")
-        .append(targetServer.getId())
-        .append("\",\"name\":\"")
-        .append(targetServer.getName())
-        .append("\",\"host\":\"")
-        .append(targetServer.getHost())
-        .append("\",\"port\":\"")
-        .append(targetServer.getPort())
-        .append("\",\"username\":\"")
-        .append(targetServer.getUsername())
-        .append("\",\"password\":\"")
-        .append(targetServer.getPassword())
-        .append("\",\"ssl\":")
-        .append(targetServer.isSsl())
-        .append("},");
+    for (TargetServer targetServer : synchronizationServers) {
+      jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost())
+          .append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword())
+          .append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
     }
-    if(!synchronizationServers.isEmpty()) {
-      jsonServers.deleteCharAt(jsonServers.length()-1);
+    if (!synchronizationServers.isEmpty()) {
+      jsonServers.deleteCharAt(jsonServers.length() - 1);
     }
     jsonServers.append("]}");
 
@@ -357,15 +419,15 @@ public class StagingExtensionController {
 
     // Create selected resources categories
     List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
-    for(String selectedResourcesCategory : resourceCategories) {
+    for (String selectedResourcesCategory : resourceCategories) {
       ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
       selectedResourceCategories.add(resourceCategory);
     }
 
     // Dispatch selected resources in resources categories
-    for(String selectedResource : resources) {
-      for(ResourceCategory resourceCategory : selectedResourceCategories) {
-        if(selectedResource.startsWith(resourceCategory.getPath())) {
+    for (String selectedResource : resources) {
+      for (ResourceCategory resourceCategory : selectedResourceCategories) {
+        if (selectedResource.startsWith(resourceCategory.getPath())) {
           resourceCategory.getResources().add(new Resource(selectedResource, null, null));
           break;
         }
@@ -373,18 +435,18 @@ public class StagingExtensionController {
     }
 
     // Dispatch selected options in resources categories
-    for(String selectedOption : options) {
+    for (String selectedOption : options) {
       int indexColon = selectedOption.indexOf(":");
-      if(indexColon > 0) {
+      if (indexColon > 0) {
         String optionName = selectedOption.substring(0, indexColon);
         String optionValue = selectedOption.substring(indexColon + 1);
 
         String optionParts[] = optionName.split("_");
-        for(ResourceCategory resourceCategory : selectedResourceCategories) {
-          if(optionParts[0].equals(resourceCategory.getPath())) {
-            if(optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
+        for (ResourceCategory resourceCategory : selectedResourceCategories) {
+          if (optionParts[0].equals(resourceCategory.getPath())) {
+            if (optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
               resourceCategory.getExportOptions().put(optionParts[2], optionValue);
-            } else if(optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
+            } else if (optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
               resourceCategory.getImportOptions().put(optionParts[2], optionValue);
             }
             break;
@@ -395,8 +457,8 @@ public class StagingExtensionController {
 
     // Manage paths exceptions (/site/portalsites -> /site)
     List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
-    for(ResourceCategory resourceCategory : selectedResourceCategories) {
-      if(IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
+    for (ResourceCategory resourceCategory : selectedResourceCategories) {
+      if (IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
         resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
       }
       selectedResourceCategoriesWithExceptions.add(resourceCategory);

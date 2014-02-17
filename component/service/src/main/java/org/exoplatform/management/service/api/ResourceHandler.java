@@ -2,6 +2,7 @@ package org.exoplatform.management.service.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipOutputStream;
 
 public interface ResourceHandler {
 
@@ -13,14 +14,22 @@ public interface ResourceHandler {
   /**
    * Synchronise selected resources with host identified by host and port, by
    * using the selected options.
-   *
-   *
-   *
+   * 
    * @param resourcesPaths
    * @param exportOptions
    * @param importOptions
    * @param targetServer
-   * @return
    */
   public abstract void synchronize(List<Resource> resourcesPaths, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer);
+
+  /**
+   * Export selected resources with selected options.
+   * 
+   * @param path : Path of the resource
+   * @param exportFileOS : Write in this zip file the entries
+   * @param exportOptions export options
+   * 
+   * @throws Exception if an error occurs
+   */
+  public void export(String path, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception;
 }

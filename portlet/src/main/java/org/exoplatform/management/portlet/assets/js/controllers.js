@@ -9,7 +9,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.changeMode = function(mode) {
       $scope.mode = mode;
       $scope.readyToImport = false;
-      if(mode === 'synchronize') {
+      if(mode == 'synchronize') {
         $scope.syncServersMessage = "";
         $scope.loadServers();
       }
@@ -161,32 +161,11 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.getSelectedCategories = function() {
       var selectedCategories = [];
       for(var category in $scope.categoriesModel) {
-        if($scope.categoriesModel[category] === true) {
+        if($scope.categoriesModel[category]) {
           selectedCategories.push(category);
         }
       }
       return selectedCategories;
-    };
-
-    // export action
-    $scope.exportResources = function() {
-      var selectedCategories = $scope.getSelectedCategories();
-      var nbOfSelectedCategories = selectedCategories.length;
-
-      if(nbOfSelectedCategories === 0) {
-        alert('No resource category selected');
-        return;
-      } else if(nbOfSelectedCategories > 1) {
-        alert('Only one resource category can be exported at a time');
-        return;
-      }
-
-      var queryParams = stagingService.getOptionsAsQueryString($scope.optionsModel, selectedCategories[0], "EXPORT", false);
-      if(queryParams !== "") {
-        queryParams = "?" + queryParams;
-      }
-
-      location.href = '/portal/rest/managed-components' + selectedCategories[0] + '.zip' + queryParams;
     };
 
     // import action
@@ -219,8 +198,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           // expand/unexpand first level resources categories
           for(var i=0; i<$scope.categories.length; i++) {
             // exception : /gadget and /registry are not really under /application
-            if($scope.categories[i].path === "/application") {
-              $scope.categories[i].expanded = (data === "/gadget" || data === "/registry");
+            if($scope.categories[i].path == "/application") {
+              $scope.categories[i].expanded = (data == "/gadget" || data == "/registry");
             } else {
               $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
             }
@@ -243,7 +222,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       var selectedCategories = $scope.getSelectedCategories();
       var nbOfSelectedCategories = selectedCategories.length;
 
-      if(nbOfSelectedCategories === 0) {
+      if(nbOfSelectedCategories == 0) {
         $scope.setResultMessage("No resource category selected", "error");
         return;
       } else if(nbOfSelectedCategories > 1) {
@@ -283,12 +262,63 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         });
     };
 
+    // export action
+    $scope.exportResources = function() {
+      var selectedResources = [];
+      for(categoryResources in $scope.resources) {
+        var selectedCategoryResources = $scope.resources[categoryResources].filter(function(element) { return element.selected; });
+        for(var i=0; i<selectedCategoryResources.length; i++) {
+          selectedResources.push(selectedCategoryResources[i]);
+        }
+      }
+
+      if(selectedResources.length == 0) {
+        $scope.setResultMessage("No resources selected", "error");
+        return;
+      }
+
+      // Request parameters
+
+      // resource categories
+      var selectedCategories = $scope.getSelectedCategories();
+      var paramsResourceCategories = "";
+      for(var i=0; i<selectedCategories.length; i++) {
+        paramsResourceCategories += "&resourceCategories=" + selectedCategories[i];
+      }
+
+      // resources
+      var paramsResources = "";
+      for(var i=0; i<selectedResources.length; i++) {
+        paramsResources += "&resources=" + selectedResources[i].path;
+      }
+
+      // options
+      var paramsOptions = "";
+      for(optionName in $scope.optionsModel) {
+        paramsOptions += "&options=" + optionName + ":" + $scope.optionsModel[optionName];
+      }
+
+      // Launch synchronization...
+      $scope.setResultMessage("Proceeding...", "info");
+	  $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export')+paramsResourceCategories + paramsResources + paramsOptions , {
+		 successCallback: function (url) {
+		   $scope.setResultMessage("Successfully exported.", "success");
+		 },
+		 failCallback: function (html, url) {
+		   $scope.setResultMessage(html, "error");
+		 }
+	  });
+	  // FIXME this have to be deleted, once 'successCallback' and 'failCallback' will work
+	  $scope.setResultMessage("", "");
+
+    };
+
     // synchronize action
     $scope.synchronizeResources = function() {
       var targetServer;
       if($scope.selectedServer) {
         targetServer = $scope.selectedServer;
-      } else if($scope.servers.length === 0 || $scope.isNewServerFormDisplayed) {
+      } else if($scope.servers.length == 0 || $scope.isNewServerFormDisplayed) {
         if(!$scope.validateSyncServerForm($scope.newServer, false)) {
           return;
         }
@@ -300,13 +330,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
       var selectedResources = [];
       for(categoryResources in $scope.resources) {
-        var selectedCategoryResources = $scope.resources[categoryResources].filter(function(element) { return element.selected === true; });
+        var selectedCategoryResources = $scope.resources[categoryResources].filter(function(element) { return element.selected; });
         for(var i=0; i<selectedCategoryResources.length; i++) {
           selectedResources.push(selectedCategoryResources[i]);
         }
       }
 
-      if(selectedResources.length === 0) {
+      if(selectedResources.length == 0) {
         $scope.setResultMessage("No resources selected", "error");
         return;
       }
@@ -357,12 +387,12 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
     $scope.validateQuery = function() {
       var sql = $scope.optionsModel["/content/sites_EXPORT_filter/query"];
-      if(sql == null || sql === "") {
+      if(sql == null || sql == "") {
         $scope.validateQueryResultMessageClass = "alert-error";
         $scope.validateQueryResultMessage = "Error : Empty query";
       } else {
 
-        var selectedSites = $scope.resources["/content/sites"].filter(function(element) { return element.selected === true && element.path.indexOf("/content/sites") == 0; });
+        var selectedSites = $scope.resources["/content/sites"].filter(function(element) { return element.selected && element.path.indexOf("/content/sites") == 0; });
         var paramsSites = "";
         for(var i=0; i<selectedSites.length; i++) {
           paramsSites += "&sites=" + selectedSites[i].path;
