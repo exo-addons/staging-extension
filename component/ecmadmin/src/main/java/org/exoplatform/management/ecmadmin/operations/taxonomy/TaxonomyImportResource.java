@@ -110,9 +110,22 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
 
         SessionProvider sessionProvider = SessionProvider.createSystemProvider();
         Session session = sessionProvider.getSession(metaData.getTaxoTreeWorkspace(), repositoryService.getCurrentRepository());
+        if (session.itemExists(metaData.getTaxoTreeHomePath())) {
+          // Delete the nodes defined here without testing on replaceExisting
+          // because the nodes here aren't defind in a taxonomy tree
+          Node node = (Node) session.getItem(metaData.getTaxoTreeHomePath());
+          log.info("Delete old taxonomy node '" + node.getPath() + "'");
+          node.remove();
+
+          session.save();
+        }
+
         int length = metaData.getTaxoTreeHomePath().lastIndexOf("/" + taxonomyName) + 1;
         String absolutePath = metaData.getTaxoTreeHomePath().substring(0, length);
         FileInputStream fis = new FileInputStream(exportMap.get(taxonomyName));
+
+        log.info("Import taxonomy tree '" + metaData.getTaxoTreeHomePath() + "' into '" + absolutePath + "'.");
+
         session.importXML(absolutePath, fis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
         session.save();
 
