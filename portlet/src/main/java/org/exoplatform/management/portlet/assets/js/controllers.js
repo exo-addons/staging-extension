@@ -125,7 +125,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
             $scope.resources[selectedCategory].push({
               "path": data.resources[i].path,
               "text": data.resources[i].text,
-              "selected": true
+              "selected": false
             });
           }
           $scope.loadingResources[selectedCategory] = false;
