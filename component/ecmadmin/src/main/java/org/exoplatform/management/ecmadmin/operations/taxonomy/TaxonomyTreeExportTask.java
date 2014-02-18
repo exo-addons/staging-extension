@@ -35,7 +35,9 @@ public class TaxonomyTreeExportTask implements ExportTask {
     SessionProvider sessionProvider = SessionProvider.createSystemProvider();
     try {
       Session session = sessionProvider.getSession(metaData.getTaxoTreeWorkspace(), repositoryService.getCurrentRepository());
-      session.exportSystemView(metaData.getTaxoTreeHomePath(), outputStream, false, false);
+
+      // Workaround: use docview instead of sysview
+      session.exportDocumentView(metaData.getTaxoTreeHomePath(), outputStream, false, false);
     } catch (Exception exception) {
       exception.printStackTrace();
       throw new RuntimeException(exception);
