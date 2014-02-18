@@ -21,5 +21,9 @@
 			<groupId>org.gatein.portal</groupId>
 			<artifactId>exo.portal.component.common</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.gatein.portal</groupId>
+			<artifactId>exo.portal.component.portal</artifactId>
+		</dependency>
 	</dependencies>
 </project>
