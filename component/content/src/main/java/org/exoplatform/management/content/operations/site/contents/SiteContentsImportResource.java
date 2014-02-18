@@ -308,7 +308,7 @@ public class SiteContentsImportResource implements OperationHandler {
           Node oldNode = (Node) session.getItem(targetNodePath);
           oldNode.remove();
           session.save();
-          session.refresh(true);
+          session.refresh(false);
         }
       } catch (Exception e) {
         log.error("Error when trying to find and delete the node: " + targetNodePath, e);
@@ -326,8 +326,9 @@ public class SiteContentsImportResource implements OperationHandler {
 
       // Create the parent path
       Node currentNode = createJCRPath(session, path);
-
       try {
+        session.refresh(false);
+
         session.importXML(path, new ByteArrayInputStream(nodes.get(name).getBytes("UTF-8")), uuidBehaviorValue);
         session.save();
 
