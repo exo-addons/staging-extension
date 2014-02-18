@@ -35,7 +35,7 @@ public class RegistryImportResource implements OperationHandler {
     if (applicationRegistryService == null) {
       applicationRegistryService = operationContext.getRuntimeContext().getRuntimeComponent(ApplicationRegistryService.class);
       if (applicationRegistryService == null) {
-        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Cannot get ApplicationRegistryService instance.");
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot get ApplicationRegistryService instance.");
       }
     }
     OperationAttributes attributes = operationContext.getAttributes();
