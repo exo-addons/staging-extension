@@ -78,16 +78,7 @@ public class StagingServiceImpl implements StagingService {
     for (ResourceCategory selectedResourceCategory : selectedResourceCategories) {
       // Gets the right resource handler thanks to the Service Locator
       ResourceHandler resourceHandler = ResourceHandlerLocator.getResourceHandler(selectedResourceCategory.getPath());
-
-      List<Resource> resources = selectedResourceCategory.getResources();
-      for (Resource resource : resources) {
-        if (resourceHandler != null) {
-          resourceHandler.export(resource.getPath(), exportFileOS, selectedResourceCategory.getExportOptions());
-        } else {
-          log.error("No handler for " + selectedResourceCategory.getPath());
-          throw new Exception("No handler for " + selectedResourceCategory.getPath());
-        }
-      }
+      resourceHandler.export(selectedResourceCategory.getResources(), exportFileOS, selectedResourceCategory.getExportOptions());
     }
 
     try {

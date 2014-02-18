@@ -67,38 +67,40 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   /**
    * {@inheritDoc}
    */
-  public void export(String path, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
-    FileOutputStream outputStream = null;
-    FileInputStream inputStream = null;
-    File tmpFile = null;
-    try {
-      ManagedResponse managedResponse = getExportedResourceFromOperation(path, exportOptions);
-      tmpFile = File.createTempFile("staging", "-export.zip");
+  public void export(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
+    for (Resource resource : resources) {
+      FileOutputStream outputStream = null;
+      FileInputStream inputStream = null;
+      File tmpFile = null;
+      try {
+        ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
+        tmpFile = File.createTempFile("staging", "-export.zip");
 
-      outputStream = new FileOutputStream(tmpFile);
-      managedResponse.writeResult(outputStream);
+        outputStream = new FileOutputStream(tmpFile);
+        managedResponse.writeResult(outputStream);
 
-      outputStream.flush();
-      outputStream.close();
-      outputStream = null;
-
-      inputStream = new FileInputStream(tmpFile);
-
-      Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
-
-      inputStream.close();
-      inputStream = null;
-    } catch (Exception ex) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + path, ex);
-    } finally {
-      if (outputStream != null) {
+        outputStream.flush();
         outputStream.close();
-      }
-      if (inputStream != null) {
+        outputStream = null;
+
+        inputStream = new FileInputStream(tmpFile);
+
+        Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
+
         inputStream.close();
-      }
-      if (tmpFile != null) {
-        tmpFile.delete();
+        inputStream = null;
+      } catch (Exception ex) {
+        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
+      } finally {
+        if (outputStream != null) {
+          outputStream.close();
+        }
+        if (inputStream != null) {
+          inputStream.close();
+        }
+        if (tmpFile != null) {
+          tmpFile.delete();
+        }
       }
     }
   }
