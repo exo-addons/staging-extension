@@ -1,14 +1,27 @@
 package org.exoplatform.management.service.handler;
 
 import org.exoplatform.management.service.api.ResourceHandler;
+import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
-import org.exoplatform.management.service.handler.ecmadmin.*;
+import org.exoplatform.management.service.handler.ecmadmin.ActionNodeTypeHandler;
+import org.exoplatform.management.service.handler.ecmadmin.CLVTemplatesHandler;
+import org.exoplatform.management.service.handler.ecmadmin.DrivesHandler;
+import org.exoplatform.management.service.handler.ecmadmin.JCRQueryHandler;
+import org.exoplatform.management.service.handler.ecmadmin.MetadataTemplatesHandler;
+import org.exoplatform.management.service.handler.ecmadmin.NodeTypeHandler;
+import org.exoplatform.management.service.handler.ecmadmin.NodeTypeTemplatesHandler;
+import org.exoplatform.management.service.handler.ecmadmin.ScriptsHandler;
+import org.exoplatform.management.service.handler.ecmadmin.SearchTemplatesHandler;
+import org.exoplatform.management.service.handler.ecmadmin.SiteExplorerTemplatesHandler;
+import org.exoplatform.management.service.handler.ecmadmin.SiteExplorerViewHandler;
+import org.exoplatform.management.service.handler.ecmadmin.TaxonomyHandler;
 import org.exoplatform.management.service.handler.gadget.GadgetHandler;
 import org.exoplatform.management.service.handler.mop.MOPSiteHandler;
 import org.exoplatform.management.service.handler.organization.GroupsHandler;
 import org.exoplatform.management.service.handler.organization.RolesHandler;
 import org.exoplatform.management.service.handler.organization.UsersHandler;
 import org.exoplatform.management.service.handler.registry.ApplicationRegistryHandler;
+import org.exoplatform.management.service.handler.wiki.WikiHandler;
 import org.exoplatform.portal.mop.SiteType;
 
 /**
@@ -21,7 +34,13 @@ public class ResourceHandlerLocator {
 
   static {
     registry = new ResourceHandlerRegistry();
-
+    
+    // Wiki
+    //registry.register(new WikiHandler());
+    registry.register(new WikiHandler(StagingService.PORTAL_WIKIS_PATH));
+    registry.register(new WikiHandler(StagingService.GROUP_WIKIS_PATH));
+    registry.register(new WikiHandler(StagingService.USER_WIKIS_PATH));
+    
     // Organization Handlers
     registry.register(new UsersHandler());
     registry.register(new GroupsHandler());

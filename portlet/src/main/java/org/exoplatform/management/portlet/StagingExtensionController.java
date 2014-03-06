@@ -84,6 +84,12 @@ public class StagingExtensionController {
     ResourceCategory contents = new ResourceCategory("Contents", "/content");
     contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
     resourceCategories.add(contents);
+    
+    ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
+    wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
+    wikis.getSubResourceCategories().add(new ResourceCategory("Group wikis", StagingService.GROUP_WIKIS_PATH));
+    wikis.getSubResourceCategories().add(new ResourceCategory("Portal wikis", StagingService.PORTAL_WIKIS_PATH));
+    resourceCategories.add(wikis);
 
     ResourceCategory sites = new ResourceCategory("Sites", "/site");
     sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
