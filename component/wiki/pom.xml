@@ -17,6 +17,10 @@
 			<groupId>org.exoplatform.wiki</groupId>
 			<artifactId>wiki-service</artifactId>
 		</dependency>
+    <dependency>		
+		  <groupId>org.exoplatform.social</groupId>
+		  <artifactId>social-component-core</artifactId>
+    </dependency>		
 		<dependency>
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-webui</artifactId>
