@@ -141,9 +141,13 @@ public class SiteContentsExportResource implements OperationHandler {
       boolean exportVersionHistory = !filters.contains("no-history:true");
       // Exports only metadata
       boolean exportOnlyMetadata = filters.contains("only-metadata:true");
+      // Validate Structure. Defaults to true.
+      boolean validateStructure = !filters.contains("validate-structure:false");
 
-      // Validate Site Structure
-      validateSiteStructure(siteName, metaData);
+      if (validateStructure) {
+        // Validate Site Structure
+        validateSiteStructure(siteName, metaData);
+      }
 
       // Site contents
       if (!StringUtils.isEmpty(jcrQuery)) {
