@@ -59,7 +59,7 @@ public class WikiDataExportResource implements OperationHandler {
         exportTasks.add(new WikiExportTask(mowService, wikiType, wiki.getOwner()));
       }
     } catch (Exception exception) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while retrieving script", exception);
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while retrieving wiki", exception);
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }

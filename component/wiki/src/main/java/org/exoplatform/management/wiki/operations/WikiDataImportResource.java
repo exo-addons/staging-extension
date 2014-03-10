@@ -36,7 +36,6 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
-import org.exoplatform.wiki.mow.core.api.wiki.WikiContainer;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationAttachment;
@@ -94,7 +93,7 @@ public class WikiDataImportResource implements OperationHandler {
         String nodePath = wiki.getWikiHome().getJCRPageNode().getParent().getPath();
         if (wiki != null) {
           if (replaceExisting) {
-            log.info("Overwrite existing script '" + path + "'.");
+            log.info("Overwrite existing wiki '" + path + "'.");
             wiki.getWikiHome().getJCRPageNode().remove();
             
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -113,7 +112,7 @@ public class WikiDataImportResource implements OperationHandler {
             session.save();
             zin.closeEntry();
           } else {
-            log.info("Ignore existing script'" + path + "'.");
+            log.info("Ignore existing wiki'" + path + "'.");
             continue;
           }
         }

@@ -36,7 +36,6 @@ public class ResourceHandlerLocator {
     registry = new ResourceHandlerRegistry();
     
     // Wiki
-    //registry.register(new WikiHandler());
     registry.register(new WikiHandler(StagingService.PORTAL_WIKIS_PATH));
     registry.register(new WikiHandler(StagingService.GROUP_WIKIS_PATH));
     registry.register(new WikiHandler(StagingService.USER_WIKIS_PATH));
