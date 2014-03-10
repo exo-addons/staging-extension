@@ -1,5 +1,6 @@
 package org.exoplatform.management.uiextension;
 
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
 import org.exoplatform.management.service.api.Resource;
@@ -339,7 +341,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
           Map<String, String> exportOptions = new HashMap<String, String>();
           String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
-          exportOptions.put("filter/query", sqlQueryFilter);
+          exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
           exportOptions.put("filter/taxonomy", "false");
           exportOptions.put("filter/no-history", "" + cleanupPublication);
           exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
@@ -361,7 +363,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
             Map<String, String> exportOptions = new HashMap<String, String>();
             String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparaison.getPath() + "'";
-            exportOptions.put("filter/query", sqlQueryFilter);
+            exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
             exportOptions.put("filter/taxonomy", "false");
             exportOptions.put("filter/no-history", "" + cleanupPublication);
             exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
