@@ -75,6 +75,12 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-wiki</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>    
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>staging-extension-config</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>

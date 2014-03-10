@@ -168,6 +168,23 @@ public class StagingServiceImpl implements StagingService {
    * {@inheritDoc}
    */
   @Override
+  public Set<Resource> getWikiPortalResources() {
+    return getResources(PORTAL_WIKIS_PATH);
+  }
+  
+  @Override
+  public Set<Resource> getWikiGroupResources() {
+    return getResources(GROUP_WIKIS_PATH);
+  }
+  @Override
+  public Set<Resource> getWikiUserResources() {
+    return getResources(USER_WIKIS_PATH);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
   public Set<Resource> getPortalSiteResources() {
     return getResources(SITES_PORTAL_PATH);
   }

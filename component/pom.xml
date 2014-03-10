@@ -19,5 +19,6 @@
 		<module>site</module>
 		<module>service</module>
 		<module>uiextension</module>
+		<module>wiki</module>
 	</modules>
 </project>
