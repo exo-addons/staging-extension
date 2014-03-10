@@ -132,7 +132,7 @@ public class SiteContentsImportResource implements OperationHandler {
           importContentNodes(operationContext, siteData.getSiteMetadata(), siteData.getNodeExportFiles(), siteData.getNodeExportHistoryFiles(), workspace, uuidBehaviorValue, isCleanPublication);
           log.info("Content import has been finished");
         } catch (Exception e) {
-          throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to create import task", e);
+          log.error("Unable to create import task", e);
         }
       }
     } finally {
@@ -343,9 +343,9 @@ public class SiteContentsImportResource implements OperationHandler {
           cleanPublication(targetNodePath, session);
         }
       } catch (Exception e) {
+        log.error("Error when trying to import node: " + targetNodePath, e);
         // Revert changes
         session.refresh(false);
-        throw e;
       } finally {
         if (session != null) {
           session.logout();
