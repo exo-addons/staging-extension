@@ -51,7 +51,7 @@ public class SiteContentsExportTask implements ExportTask {
       log.info("Export: " + workspace + ":" + absolutePath);
 
       session = getSession(workspace);
-      session.exportSystemView(absolutePath, outputStream, false, !recurse);
+      session.exportDocumentView(absolutePath, outputStream, false, !recurse);
     } catch (RepositoryException exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);
     } finally {
