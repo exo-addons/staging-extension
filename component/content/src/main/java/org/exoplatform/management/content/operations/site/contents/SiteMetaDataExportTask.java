@@ -2,6 +2,7 @@ package org.exoplatform.management.content.operations.site.contents;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.gatein.management.api.operation.model.ExportTask;
@@ -31,8 +32,9 @@ public class SiteMetaDataExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     xStream.alias("metadata", SiteMetaData.class);
-    String xmlContent = xStream.toXML(metaData);
-    outputStream.write(xmlContent.getBytes());
+    OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
+    xStream.toXML(metaData, writer);
+    writer.flush();
   }
 
   public SiteMetaData getMetaData() {
