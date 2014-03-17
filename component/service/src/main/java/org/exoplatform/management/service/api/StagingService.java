@@ -10,6 +10,10 @@ import org.apache.commons.fileupload.FileItem;
 
 public interface StagingService {
 
+  public static final String WIKIS_PARENT_PATH = "/wiki";
+  public static final String USER_WIKIS_PATH = "/wiki/user";
+  public static final String GROUP_WIKIS_PATH = "/wiki/group";
+  public static final String PORTAL_WIKIS_PATH = "/wiki/portal";
   public static final String SITES_PARENT_PATH = "/site";
   public static final String SITES_PORTAL_PATH = "/site/portalsites";
   public static final String SITES_GROUP_PATH = "/site/groupsites";
@@ -59,6 +63,16 @@ public interface StagingService {
    */
   public Set<Resource> getResources(String path);
 
+  /**
+   * Returns the list of sub resources of portal wikis computed from
+   * GateIN Management SPI
+   * 
+   * @return list of portal sites managed paths.
+   */
+  Set<Resource> getWikiPortalResources();
+  Set<Resource> getWikiGroupResources();
+  Set<Resource> getWikiUserResources();
+  
   /**
    * Execute an SQL JCR Query
    * 

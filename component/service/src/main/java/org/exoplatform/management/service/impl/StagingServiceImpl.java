@@ -164,6 +164,23 @@ public class StagingServiceImpl implements StagingService {
     return children;
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public Set<Resource> getWikiPortalResources() {
+    return getResources(PORTAL_WIKIS_PATH);
+  }
+  
+  @Override
+  public Set<Resource> getWikiGroupResources() {
+    return getResources(GROUP_WIKIS_PATH);
+  }
+  @Override
+  public Set<Resource> getWikiUserResources() {
+    return getResources(USER_WIKIS_PATH);
+  }
+
   private ManagementController getManagementController() {
     if (managementController == null) {
       managementController = (ManagementController) PortalContainer.getInstance().getComponentInstanceOfType(ManagementController.class);
