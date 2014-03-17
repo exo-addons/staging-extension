@@ -17,7 +17,8 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.filefilter.PrefixFileFilter;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.message.BasicNameValuePair;
@@ -57,10 +58,33 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   /**
    * {@inheritDoc}
    */
-  public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) {
+  public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
     for (Resource resource : resources) {
-      ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
-      sendData(managedResponse, importOptions, targetServer);
+      FileOutputStream outputStream = null;
+      File tmpFile = null;
+      try {
+        ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
+
+        tmpFile = File.createTempFile(resource.getText(), ".zip");
+        tmpFile.deleteOnExit();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+        managedResponse.writeResult(fileOutputStream);
+
+        getLogger().info("Export operation finished.");
+
+        sendData(tmpFile, importOptions, targetServer);
+
+      } catch (Exception ex) {
+        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
+      } finally {
+        if (outputStream != null) {
+          outputStream.close();
+        }
+        if (tmpFile != null) {
+          tmpFile.delete();
+        }
+      }
     }
   }
 
@@ -83,6 +107,8 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         outputStream.close();
         outputStream = null;
 
+        getLogger().info("Export operation finished.");
+
         inputStream = new FileInputStream(tmpFile);
 
         Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
@@ -101,6 +127,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         if (tmpFile != null) {
           tmpFile.delete();
         }
+        clearTempFiles();
       }
     }
   }
@@ -113,30 +140,37 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * @param targetServer
    * @return
    */
-  protected boolean sendData(ManagedResponse response, Map<String, String> options, TargetServer targetServer) {
+  protected boolean sendData(File file, Map<String, String> options, TargetServer targetServer) throws Exception {
+    FileInputStream fileInputStream = null;
     try {
+      getLogger().info("Sending data to server: " + targetServer.getHost());
+
       String targetServerURL = getServerURL(targetServer, getPath(), options);
       URL url = new URL(targetServerURL);
+
+      fileInputStream = new FileInputStream(file);
 
       HttpURLConnection conn = (HttpURLConnection) url.openConnection();
       conn.setRequestMethod("PUT");
       String passString = targetServer.getUsername() + ":" + targetServer.getPassword();
       String basicAuth = "Basic " + new String(Base64.encodeBase64(passString.getBytes()));
       conn.setRequestProperty("Authorization", basicAuth);
-      conn.setUseCaches(false);
-      conn.setRequestProperty("Connection", "Keep-Alive");
-      conn.setDoOutput(true);
+      conn.setFixedLengthStreamingMode(fileInputStream.available());
       conn.setRequestProperty("Content-Type", "application/zip");
+      conn.setDoOutput(true);
 
-      response.writeResult(conn.getOutputStream());
+      IOUtils.copy(fileInputStream, conn.getOutputStream());
+      fileInputStream.close();
 
       if (conn.getResponseCode() != 200) {
         throw new IllegalStateException("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
       }
     } catch (Exception e) {
-      getLogger().error("Error while synchronizing the content", e);
-      throw new RuntimeException(e);
+      throw new RuntimeException("Error while synchronizing the content", e);
     } finally {
+      if (fileInputStream != null) {
+        fileInputStream.close();
+      }
       clearTempFiles();
     }
     return true;
@@ -174,7 +208,8 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * 
    */
   protected void clearTempFiles() {
-    deleteTempFilesStartingWith("gatein-export");
+    deleteTempFilesStartingWith("gatein-export(.*)\\.zip");
+    deleteTempFilesStartingWith("data(.*)\\.xml");
   }
 
   protected String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
@@ -211,13 +246,10 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
   /**
    * Convert map of option to a map of attributes for the export operation.
-   * Example :
-   * * filter/with-membership -> true
-   * * filter/replace-existing -> true
-   * * importMode -> merge
-   * is converted to
-   * * filter -> {with-membership:true, replace-existing}
-   * * importMode -> {merge}
+   * Example : * filter/with-membership -> true * filter/replace-existing ->
+   * true * importMode -> merge is converted to * filter ->
+   * {with-membership:true, replace-existing} * importMode -> {merge}
+   * 
    * @param selectedOptions
    * @return
    */
@@ -253,15 +285,15 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     return attributes;
   }
 
-  protected void deleteTempFilesStartingWith(String prefix) {
+  protected void deleteTempFilesStartingWith(String regex) {
     String tempDirPath = System.getProperty("java.io.tmpdir");
     File file = new File(tempDirPath);
 
     if (log.isDebugEnabled()) {
-      log.debug("Delete files '" + prefix + "*' under " + tempDirPath);
+      log.debug("Delete files with regex '" + regex + "*' under " + tempDirPath);
     }
 
-    File[] listFiles = file.listFiles((FileFilter) new PrefixFileFilter(prefix));
+    File[] listFiles = file.listFiles((FileFilter) new RegexFileFilter(regex));
     for (File tempFile : listFiles) {
       deleteFile(tempFile);
     }
@@ -277,5 +309,4 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       }
     }
   }
-
 }

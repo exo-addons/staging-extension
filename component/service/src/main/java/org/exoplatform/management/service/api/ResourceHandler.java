@@ -20,7 +20,7 @@ public interface ResourceHandler {
    * @param importOptions
    * @param targetServer
    */
-  public abstract void synchronize(List<Resource> resourcesPaths, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer);
+  public abstract void synchronize(List<Resource> resourcesPaths, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception;
 
   /**
    * Export selected resources with selected options.

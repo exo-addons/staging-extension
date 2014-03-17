@@ -17,7 +17,7 @@ public class GroupsHandler extends AbstractResourceHandler {
   }
 
   @Override
-  public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) {
+  public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
     for (Resource resource : resources) {
       resource.setPath(resource.getPath().replaceAll("//", "/"));
     }

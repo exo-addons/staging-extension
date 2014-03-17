@@ -1,6 +1,6 @@
 package org.exoplatform.management.content.operations.site.contents;
 
-import java.io.ByteArrayInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -62,6 +62,7 @@ import com.thoughtworks.xstream.XStream;
 public class SiteContentsImportResource implements OperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(SiteContentsImportResource.class);
+  final private static int BUFFER = 2048000;
 
   private static SEOService seoService = null;
 
@@ -154,6 +155,13 @@ public class SiteContentsImportResource implements OperationHandler {
           }
         }
       }
+      if (attachmentInputStream != null) {
+        try {
+          attachmentInputStream.close();
+        } catch (IOException e) {
+          // Nothing to do
+        }
+      }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
   }
@@ -167,14 +175,27 @@ public class SiteContentsImportResource implements OperationHandler {
   public static Map<String, SiteData> extractDataFromZip(InputStream attachmentInputStream, String importedSiteName) {
 
     Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
-
-    final NonCloseableZipInputStream zis = new NonCloseableZipInputStream(attachmentInputStream);
+    NonCloseableZipInputStream zis = null;
 
     try {
+      // Store attachement in local File
+      File tmpZipFile = File.createTempFile("staging-content", ".zip");
+      tmpZipFile.deleteOnExit();
+
+      FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
+      IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
+      tmpFileOutputStream.close();
+      attachmentInputStream.close();
+
+      String targetFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "") + "/";
+
+      zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
+
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         // Skip directories
         if (entry.isDirectory()) {
+          createFile(new File(targetFolderPath + replaceSpecialChars(entry.getName())), true);
           continue;
         }
         String filePath = entry.getName();
@@ -191,6 +212,8 @@ public class SiteContentsImportResource implements OperationHandler {
         if (importedSiteName != null && !importedSiteName.equals(siteName)) {
           continue;
         }
+
+        log.info("Processing the node " + filePath);
 
         // metadata file ?
         if (filePath.endsWith(SiteMetaDataExportTask.FILENAME)) {
@@ -225,36 +248,37 @@ public class SiteContentsImportResource implements OperationHandler {
         }
         // sysview file ?
         else if (filePath.endsWith(".xml")) {
-          // Unmarshall sysview xml file to String
-          log.info("Collecting the node " + filePath);
-          String nodeContent = IOUtils.toString(zis, "UTF-8");
+          // Put XML Export file in temp folder
+          copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
 
           // Save unmarshalled sysview
           SiteData siteData = sitesData.get(siteName);
           if (siteData == null) {
             siteData = new SiteData();
           }
-          siteData.getNodeExportFiles().put(filePath, nodeContent);
+          siteData.getNodeExportFiles().put(filePath, targetFolderPath + replaceSpecialChars(filePath));
           sitesData.put(siteName, siteData);
         } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
           // Put Version History file in temp folder
-          File tempFile = File.createTempFile("JCR", "-VersionHistory.zip");
-          tempFile.deleteOnExit();
-          FileOutputStream outputStream = new FileOutputStream(tempFile);
-          IOUtils.copy(zis, outputStream);
-          outputStream.flush();
-          outputStream.close();
+          copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+
           SiteData siteData = sitesData.get(siteName);
           if (siteData == null) {
             siteData = new SiteData();
           }
-          siteData.getNodeExportHistoryFiles().put(filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"), tempFile.getAbsolutePath());
+          siteData.getNodeExportHistoryFiles().put(filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"), targetFolderPath + replaceSpecialChars(filePath));
         }
       }
-
-      zis.reallyClose();
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Exception when reading the underlying data stream from import.", e);
+    } finally {
+      if (zis != null) {
+        try {
+          zis.reallyClose();
+        } catch (IOException e) {
+          log.warn("Can't close inputStream of attachement.");
+        }
+      }
     }
 
     return sitesData;
@@ -295,6 +319,11 @@ public class SiteContentsImportResource implements OperationHandler {
       String name = entry.getKey();
       String path = metaData.getExportedFiles().get(name);
 
+      if (StringUtils.isEmpty(nodes.get(name))) {
+        log.warn("can't get temporary file for content: " + name + ". Ignore import operation for this file.");
+        continue;
+      }
+
       String targetNodePath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
       if (targetNodePath.contains("//")) {
         targetNodePath = targetNodePath.replaceAll("//", "/");
@@ -326,18 +355,25 @@ public class SiteContentsImportResource implements OperationHandler {
 
       // Create the parent path
       Node currentNode = createJCRPath(session, path);
-      try {
-        session.refresh(false);
+      FileInputStream fis = null, historyFis1 = null, historyFis2 = null;
+      File xmlFile = new File(nodes.get(name));
+      File historyFile = historyFiles.containsKey(name) ? new File(historyFiles.get(name)) : null;
 
-        session.importXML(path, new ByteArrayInputStream(nodes.get(name).getBytes("UTF-8")), uuidBehaviorValue);
+      try {
+        fis = new FileInputStream(nodes.get(name));
+        session.refresh(false);
+        session.importXML(path, fis, uuidBehaviorValue);
         session.save();
 
         if (historyFiles.containsKey(name)) {
           log.info("Importing history of the node " + path);
           String historyFilePath = historyFiles.get(name);
 
-          Map<String, String> mapHistoryValue = org.exoplatform.services.cms.impl.Utils.getMapImportHistory(new FileInputStream(historyFilePath));
-          org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, new FileInputStream(historyFilePath), mapHistoryValue);
+          historyFis1 = new FileInputStream(historyFilePath);
+          Map<String, String> mapHistoryValue = org.exoplatform.services.cms.impl.Utils.getMapImportHistory(historyFis1);
+
+          historyFis2 = new FileInputStream(historyFilePath);
+          org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, historyFis2, mapHistoryValue);
         } else if (isCleanPublication) {
           // Clean publication information
           cleanPublication(targetNodePath, session);
@@ -347,11 +383,25 @@ public class SiteContentsImportResource implements OperationHandler {
         // Revert changes
         session.refresh(false);
       } finally {
+        if (fis != null) {
+          fis.close();
+        }
+        if (historyFis1 != null) {
+          historyFis1.close();
+        }
+        if (historyFis2 != null) {
+          historyFis2.close();
+        }
         if (session != null) {
           session.logout();
         }
+        if (xmlFile != null) {
+          xmlFile.delete();
+        }
+        if (historyFile != null) {
+          historyFile.delete();
+        }
       }
-
     }
   }
 
@@ -497,4 +547,35 @@ public class SiteContentsImportResource implements OperationHandler {
     return session;
   }
 
+  private static void copyToDisk(InputStream input, String output) throws Exception {
+    byte data[] = new byte[BUFFER];
+    BufferedOutputStream dest = null;
+    try {
+      FileOutputStream fileOuput = new FileOutputStream(createFile(new File(output), false));
+      dest = new BufferedOutputStream(fileOuput, BUFFER);
+      int count = 0;
+      while ((count = input.read(data, 0, BUFFER)) != -1)
+        dest.write(data, 0, count);
+    } finally {
+      if (dest != null) {
+        dest.close();
+      }
+    }
+  }
+
+  private static String replaceSpecialChars(String name) {
+    return name.replaceAll(":", "_");
+  }
+
+  private static File createFile(File file, boolean folder) throws Exception {
+    if (file.getParentFile() != null)
+      createFile(file.getParentFile(), true);
+    if (file.exists())
+      return file;
+    if (file.isDirectory() || folder)
+      file.mkdir();
+    else
+      file.createNewFile();
+    return file;
+  }
 }

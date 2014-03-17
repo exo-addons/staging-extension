@@ -1,18 +1,22 @@
 package org.exoplatform.management.service.impl;
 
-import juzu.impl.bridge.spi.portlet.PortletRequestBridge;
-import juzu.impl.request.Request;
-import org.exoplatform.management.service.api.*;
-import org.exoplatform.management.service.handler.ResourceHandlerLocator;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-
-import javax.portlet.PortletPreferences;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import javax.portlet.PortletPreferences;
+
+import juzu.impl.bridge.spi.portlet.PortletRequestBridge;
+import juzu.impl.request.Request;
+
+import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.ResourceHandler;
+import org.exoplatform.management.service.api.SynchronizationService;
+import org.exoplatform.management.service.api.TargetServer;
+import org.exoplatform.management.service.handler.ResourceHandlerLocator;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 
 public class SynchronizationServicePortletPrefsImpl implements SynchronizationService {
 
@@ -93,7 +97,7 @@ public class SynchronizationServicePortletPrefsImpl implements SynchronizationSe
    * {@inheritDoc}
    */
   @Override
-  public void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws IOException {
+  public void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws Exception {
     for (ResourceCategory selectedResourceCategory : selectedResourcesCategories) {
       // Gets the right resource handler thanks to the Service Locator
       ResourceHandler resourceHandler = ResourceHandlerLocator.getResourceHandler(selectedResourceCategory.getPath());
