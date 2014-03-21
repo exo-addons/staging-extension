@@ -1,19 +1,25 @@
 package org.exoplatform.management.content.operations.site.seo;
 
+import static org.exoplatform.portal.mop.Utils.objectType;
+
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
+import javax.jcr.Node;
+import javax.jcr.Session;
+
 import org.exoplatform.portal.config.DataStorage;
-import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.mop.SiteType;
-import org.exoplatform.portal.mop.page.PageContext;
-import org.exoplatform.portal.mop.page.PageService;
+import org.exoplatform.portal.pom.config.POMSession;
+import org.exoplatform.portal.pom.config.POMSessionManager;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.ext.app.SessionProviderService;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.resources.LocaleConfig;
 import org.exoplatform.services.resources.LocaleConfigService;
 import org.exoplatform.services.seo.PageMetadataModel;
-import org.exoplatform.services.seo.SEOService;
+import org.exoplatform.services.seo.impl.SEOServiceImpl;
 import org.exoplatform.services.wcm.core.WCMConfigurationService;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
@@ -23,6 +29,10 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
+import org.gatein.mop.api.workspace.Navigation;
+import org.gatein.mop.api.workspace.ObjectType;
+import org.gatein.mop.api.workspace.Site;
+import org.gatein.mop.api.workspace.Workspace;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
@@ -34,8 +44,10 @@ import org.gatein.management.api.operation.model.ExportTask;
 public class SiteSEOExportResource implements OperationHandler {
 
   private DataStorage dataStorage = null;
-  private PageService pageService = null;
   private WCMConfigurationService wcmConfigurationService = null;
+  private SessionProviderService sessionProviderService = null;
+  private RepositoryService repositoryService = null;
+  private POMSessionManager pomSessionManager = null;
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
@@ -45,8 +57,10 @@ public class SiteSEOExportResource implements OperationHandler {
 
       if (dataStorage == null) {
         dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-        pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
         wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
+        sessionProviderService = operationContext.getRuntimeContext().getRuntimeComponent(SessionProviderService.class);
+        repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+        pomSessionManager = operationContext.getRuntimeContext().getRuntimeComponent(POMSessionManager.class);
       }
       String siteName = address.resolvePathTemplate("site-name");
       if (siteName == null) {
@@ -69,27 +83,84 @@ public class SiteSEOExportResource implements OperationHandler {
   }
 
   private SiteSEOExportTask getSEOExportTask(OperationContext operationContext, String siteName, String lang) throws Exception {
-    DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-    SEOService seoService = operationContext.getRuntimeContext().getRuntimeComponent(SEOService.class);
+    // FIXME comment this until ECMS-4030 get fixed
+    // SEOService seoService =
+    // operationContext.getRuntimeContext().getRuntimeComponent(SEOService.class);
     List<PageMetadataModel> pageMetadataModels = new ArrayList<PageMetadataModel>();
 
-    // pages
-    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null).iterator();
-    while (pagesQueryResult.hasNext()) {
-      PageContext pageContext = (PageContext) pagesQueryResult.next();
-      Page page = dataStorage.getPage(pageContext.getKey().format());
+    List<Navigation> navigations = getSiteNavigations(siteName);
 
+    for (Navigation navigation : navigations) {
       PageMetadataModel pageMetadataModel = null;
-      try {
-        pageMetadataModel = seoService.getPageMetadata(page.getPageId(), lang);
-      } catch (Exception e) {
-        // TODO: Bug ECMS-4030
-      }
+      // FIXME use this once ECMS-4030 get fixed
+      // pageMetadataModel = seoService.getPageMetadata(page.getPageId(), lang);
+      // System.out.println(page.getStorageId());
+      pageMetadataModel = getPageMetadata(navigation.getObjectId(), lang);
+
       if (pageMetadataModel != null && pageMetadataModel.getKeywords() != null && !pageMetadataModel.getKeywords().isEmpty()) {
         pageMetadataModels.add(pageMetadataModel);
       }
     }
-
     return new SiteSEOExportTask(pageMetadataModels, siteName, lang);
   }
+
+  private List<Navigation> getSiteNavigations(String siteName) {
+    POMSession session = pomSessionManager.getSession();
+    ObjectType<Site> objectType = objectType(SiteType.PORTAL);
+    Workspace workspace = session.getWorkspace();
+    Site site = workspace.getSite(objectType, siteName);
+    Navigation rootNode = site.getRootNavigation();
+    Navigation defaultNode = rootNode.getChild("default");
+    List<Navigation> navigations = new ArrayList<Navigation>(defaultNode.getChildren());
+    int i = 0;
+    computeAllNavigations(navigations, i);
+    return navigations;
+  }
+
+  private void computeAllNavigations(List<Navigation> navigations, int i) {
+    if (i >= navigations.size()) {
+      return;
+    }
+    Navigation navigation = navigations.get(i);
+    if (navigation.getChildren() != null && !navigation.getChildren().isEmpty()) {
+      navigations.addAll(navigation.getChildren());
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public PageMetadataModel getPageMetadata(String pageUUID, String language) throws Exception {
+    PageMetadataModel metaModel = null;
+    if (metaModel == null) {
+      SessionProvider sessionProvider = sessionProviderService.getSystemSessionProvider(null);
+      Session session = sessionProvider.getSession("portal-system", repositoryService.getCurrentRepository());
+
+      Node pageNode = session.getNodeByUUID(pageUUID);
+      if (pageNode != null && pageNode.hasNode(SEOServiceImpl.LANGUAGES + "/" + language)) {
+        Node seoNode = pageNode.getNode(SEOServiceImpl.LANGUAGES + "/" + language);
+        if (seoNode.isNodeType("exo:pageMetadata")) {
+          metaModel = new PageMetadataModel();
+          if (seoNode.hasProperty("exo:metaTitle"))
+            metaModel.setTitle((seoNode.getProperty("exo:metaTitle")).getString());
+          if (seoNode.hasProperty("exo:metaKeywords"))
+            metaModel.setKeywords((seoNode.getProperty("exo:metaKeywords")).getString());
+          if (seoNode.hasProperty("exo:metaDescription"))
+            metaModel.setDescription((seoNode.getProperty("exo:metaDescription")).getString());
+          if (seoNode.hasProperty("exo:metaRobots"))
+            metaModel.setRobotsContent((seoNode.getProperty("exo:metaRobots")).getString());
+          if (seoNode.hasProperty("exo:metaSitemap"))
+            metaModel.setSiteMap(Boolean.parseBoolean((seoNode.getProperty("exo:metaSitemap")).getString()));
+          if (seoNode.hasProperty("exo:metaPriority"))
+            metaModel.setPriority(Long.parseLong((seoNode.getProperty("exo:metaPriority")).getString()));
+          if (seoNode.hasProperty("exo:metaFrequency"))
+            metaModel.setFrequency((seoNode.getProperty("exo:metaFrequency")).getString());
+          if (seoNode.hasProperty("exo:metaFully"))
+            metaModel.setFullStatus((seoNode.getProperty("exo:metaFully")).getString());
+        }
+      }
+    }
+    return metaModel;
+  }
+
 }
