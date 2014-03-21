@@ -8,13 +8,14 @@ import java.util.Map;
 /**
  * User: Thomas Delhoménie
  */
-public class ResourceCategory {
+public class ResourceCategory implements Comparable<ResourceCategory> {
   private String label;
   private String path;
   private List<ResourceCategory> subResourceCategories;
   private List<Resource> resources;
   private Map<String, String> exportOptions;
   private Map<String, String> importOptions;
+  private short order;
 
   public ResourceCategory(String path) {
     this.path = path;
@@ -22,6 +23,7 @@ public class ResourceCategory {
     this.resources = new ArrayList<Resource>();
     this.exportOptions = new HashMap<String, String>();
     this.importOptions = new HashMap<String, String>();
+    this.order = getOrder(path);
   }
 
   public ResourceCategory(String label, String path) {
@@ -75,5 +77,66 @@ public class ResourceCategory {
 
   public void setImportOptions(Map<String, String> importOptions) {
     this.importOptions = importOptions;
+  }
+
+  public short getOrder() {
+    return order;
+  }
+
+  public static short getOrder(String path) {
+    short i = 0;
+    // JCR NodeType and Namespaces has to be imported at first place
+    if (path.startsWith(StagingService.ECM_NODETYPE_PATH)) {
+      return i;
+    }
+    i++;
+    // SCRIPTS has to be imported before action script
+    if (path.startsWith(StagingService.ECM_SCRIPT_PATH)) {
+      return i;
+    }
+    i++;
+    // Action Nodetypes has to be imported before any content
+    if (path.startsWith(StagingService.ECM_ACTION_PATH)) {
+      return i;
+    }
+    i++;
+    // Gadgets has to be imported before sites
+    if (path.startsWith(StagingService.GADGET_PATH)) {
+      return i;
+    }
+    i++;
+    // Sites has to be imported before nodetypes
+    if (path.startsWith(StagingService.SITES_PORTAL_PATH)) {
+      return i;
+    }
+    i++;
+    // Sites has to be imported before nodetypes
+    if (path.startsWith(StagingService.SITES_GROUP_PATH)) {
+      return i;
+    }
+    i++;
+    // Sites has to be imported before nodetypes
+    if (path.startsWith(StagingService.SITES_USER_PATH)) {
+      return i;
+    }
+    i++;
+    // View templates has to be imported before View Configuration
+    if (path.startsWith(StagingService.ECM_VIEW_TEMPLATES_PATH)) {
+      return i;
+    }
+    i++;
+    // View templates Configuration has to be imported before Drives configuration
+    if (path.startsWith(StagingService.ECM_VIEW_CONFIGURATION_PATH)) {
+      return i;
+    }
+    return 100;
+  }
+
+  @Override
+  public int compareTo(ResourceCategory o) {
+    if (o == null) {
+      return 1;
+    }
+    return order - o.getOrder();
   }
 }

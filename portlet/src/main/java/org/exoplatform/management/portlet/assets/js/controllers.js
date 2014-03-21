@@ -209,9 +209,12 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	              $scope.categories[i].expanded = (data == "/gadget" || data == "/registry");
 	            } else {
 	              $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+		          // select category
+		          $scope.categoriesModel[$scope.categories[i].path] = true;
 	            }
 	          }
-	          $scope.onToggleCategorySelection(data);
+
+          	  $scope.onToggleCategorySelection(data);
           }
         }).error(function (data) {
           $scope.setResultMessage("Prepare Import failed. " + data, "error");

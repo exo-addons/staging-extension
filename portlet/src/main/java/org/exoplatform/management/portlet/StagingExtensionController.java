@@ -5,6 +5,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -213,7 +215,7 @@ public class StagingExtensionController {
       entry = zipInputStream.getNextEntry();
     }
 
-    log.info("Found resource path in imported zip : {}", foundResources);
+    log.info("Found resources zip file : {}", foundResources);
 
     zipInputStream.close();
 
@@ -298,6 +300,14 @@ public class StagingExtensionController {
       return Response.content(500, "You must select a resource category.");
     }
 
+    List<String> selectedResourcesCategoriesList = new ArrayList<String>(Arrays.asList(selectedResourcesCategories));
+    Collections.sort(selectedResourcesCategoriesList, new Comparator<String>() {
+      @Override
+      public int compare(String o1, String o2) {
+        return ResourceCategory.getOrder(o1) - ResourceCategory.getOrder(o1);
+      }
+    });
+
     try {
       Map<String, List<String>> attributes = new HashMap<String, List<String>>();
       for (String param : parameters.keySet()) {
@@ -306,7 +316,8 @@ public class StagingExtensionController {
         }
       }
 
-      for (String selectedResourcesCategory : selectedResourcesCategories) {
+      for (String selectedResourcesCategory : selectedResourcesCategoriesList) {
+        log.info("inporting resources for : " + selectedResourcesCategory);
         String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
         if (exceptionPathCategory != null) {
           selectedResourcesCategory = exceptionPathCategory;
@@ -415,6 +426,9 @@ public class StagingExtensionController {
       }
       selectedResourceCategoriesWithExceptions.add(resourceCategory);
     }
+
+    // Sort categories with order of export/import operation dependency
+    Collections.sort(selectedResourceCategoriesWithExceptions);
 
     try {
       synchronizationService.synchronize(selectedResourceCategoriesWithExceptions, targetServer);
