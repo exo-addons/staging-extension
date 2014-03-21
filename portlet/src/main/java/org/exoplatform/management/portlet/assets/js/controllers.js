@@ -185,27 +185,34 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           method : 'POST',
           headers : {'Content-Type':undefined},
           transformRequest: function(data) { return data; }
-        }).success(function (data) {
+        }).success(function (dataList) {
           $scope.setResultMessage("", "info");
 
           $scope.readyToImport = true;
 
           // reset all selected categories
           $scope.categoriesModel = [];
-          // select category
-          $scope.categoriesModel[data] = true;
-
-          // expand/unexpand first level resources categories
-          for(var i=0; i<$scope.categories.length; i++) {
-            // exception : /gadget and /registry are not really under /application
-            if($scope.categories[i].path == "/application") {
-              $scope.categories[i].expanded = (data == "/gadget" || data == "/registry");
-            } else {
-              $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
-            }
+          
+    	  var datas = dataList.split(',');
+    	  for (index in datas) {
+    		  var data = datas[index];
+          	  if(data == '') {
+          		  continue;
+          	  }
+	          // select category
+	          $scope.categoriesModel[data] = true;
+	          
+	          // expand/unexpand first level resources categories
+	          for(var i=0; i<$scope.categories.length; i++) {
+	            // exception : /gadget and /registry are not really under /application
+	            if($scope.categories[i].path == "/application") {
+	              $scope.categories[i].expanded = (data == "/gadget" || data == "/registry");
+	            } else {
+	              $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+	            }
+	          }
+	          $scope.onToggleCategorySelection(data);
           }
-
-          $scope.onToggleCategorySelection(data);
         }).error(function (data) {
           $scope.setResultMessage("Prepare Import failed. " + data, "error");
           $scope.readyToImport = false;
@@ -225,22 +232,28 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       if(nbOfSelectedCategories == 0) {
         $scope.setResultMessage("No resource category selected", "error");
         return;
-      } else if(nbOfSelectedCategories > 1) {
-        $scope.setResultMessage("Only one resource category can be imported at a time", "error");
-        return;
       }
 
       var form = new FormData();
       form.append('file', $scope.importFile);
 
-      // options
-      var queryParams = stagingService.getOptionsAsQueryString($scope.optionsModel, selectedCategories[0], "IMPORT", true);
-      if(queryParams !== "") {
-        queryParams = "&" + queryParams;
+      var queryParams = "";
+      for(index in selectedCategories) {
+    	  selectedCategory = selectedCategories[index];
+
+	      if(queryParams != "") {
+		        queryParams = queryParams + "&";
+		  }
+	      // options
+	      queryParams += stagingService.getOptionsAsQueryString($scope.optionsModel, selectedCategory, "IMPORT", true);
+	      if(queryParams != "") {
+	        queryParams = "&" + queryParams;
+	      }
+	      // resource category
+	      queryParams += "&staging:resourceCategory=" + selectedCategory;
       }
 
-      // resource category
-      queryParams += "&staging:resourceCategory=" + selectedCategories[0];
+      console.log(queryParams);
 
       $scope.setResultMessage("Importing ...", "info");
       $http({

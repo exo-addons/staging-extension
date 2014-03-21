@@ -84,7 +84,7 @@ public class StagingExtensionController {
     ResourceCategory contents = new ResourceCategory("Contents", "/content");
     contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
     resourceCategories.add(contents);
-    
+
     ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
     wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
     wikis.getSubResourceCategories().add(new ResourceCategory("Group wikis", StagingService.GROUP_WIKIS_PATH));
@@ -139,18 +139,10 @@ public class StagingExtensionController {
     StringBuilder jsonCategories = new StringBuilder(50);
     jsonCategories.append("{\"categories\":[");
 
-    for(ResourceCategory category : resourceCategories) {
-      jsonCategories.append("{\"path\":\"")
-              .append(category.getPath())
-              .append("\",\"label\":\"")
-              .append(category.getLabel())
-              .append("\",\"subcategories\":[");
-      for(ResourceCategory subcategory : category.getSubResourceCategories()) {
-        jsonCategories.append("{\"path\":\"")
-                .append(subcategory.getPath())
-                .append("\",\"label\":\"")
-                .append(subcategory.getLabel())
-                .append("\"},");
+    for (ResourceCategory category : resourceCategories) {
+      jsonCategories.append("{\"path\":\"").append(category.getPath()).append("\",\"label\":\"").append(category.getLabel()).append("\",\"subcategories\":[");
+      for (ResourceCategory subcategory : category.getSubResourceCategories()) {
+        jsonCategories.append("{\"path\":\"").append(subcategory.getPath()).append("\",\"label\":\"").append(subcategory.getLabel()).append("\"},");
       }
       if (!category.getSubResourceCategories().isEmpty()) {
         jsonCategories.deleteCharAt(jsonCategories.length() - 1);
@@ -192,87 +184,44 @@ public class StagingExtensionController {
       return Response.content(500, "File is empty");
     }
 
-    //
     ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
     ZipEntry entry = zipInputStream.getNextEntry();
-    String fileName = entry.getName();
-    String[] fileNameParts = fileName.split("/");
-    List<String> foundResources = new ArrayList<String>();
-
-    for (int i = fileNameParts.length - 1; i >= 0; i--) {
-      PathAddress address = PathAddress.pathAddress(Arrays.copyOfRange(fileNameParts, 0, i));
-
-      String pathException = IMPORT_ZIP_PATH_EXCEPTIONS.get(address.toString());
-      if (pathException != null) {
+    Set<String> foundResources = new HashSet<String>();
+    while (entry != null) {
+      String fileName = entry.getName();
+      String[] fileNameParts = fileName.split("/");
+      fileName = fileName.startsWith("/") ? "" : "/" + fileName;
+      String resourcePath = transformSpecialPath(fileName);
+      // If resource path transformed and treated with Exceptions Resource Paths
+      if (!resourcePath.equals(fileName)) {
         // Got it !
-        foundResources.add(pathException);
+        foundResources.add(resourcePath);
         // Manage only one resource at a time for the moment
-        break;
-      }
-
-      ManagedResource managedResource = managementService.getManagedResource(address);
-
-      if (managedResource != null) {
-        OperationHandler operationHandler = managedResource.getOperationHandler(PathAddress.EMPTY_ADDRESS, OperationNames.IMPORT_RESOURCE);
-        if (operationHandler != null) {
-          // Got it !
-          foundResources.add(address.toString());
-          // Manage only one resource at a time for the moment
-          break;
+      } else if (!parentAlreadyAddedInList(foundResources, resourcePath)) {
+        RESOURCE: for (int i = fileNameParts.length - 1; i >= 0; i--) {
+          PathAddress address = PathAddress.pathAddress(Arrays.copyOfRange(fileNameParts, 0, i));
+          ManagedResource managedResource = managementService.getManagedResource(address);
+          if (managedResource != null) {
+            OperationHandler operationHandler = managedResource.getOperationHandler(PathAddress.EMPTY_ADDRESS, OperationNames.IMPORT_RESOURCE);
+            if (operationHandler != null) {
+              foundResources.add(address.toString());
+              break RESOURCE;
+            }
+          }
         }
       }
+      entry = zipInputStream.getNextEntry();
     }
 
-    List<String> foundResourcesWithExceptions = getResourcesWithExceptions(foundResources);
-
-    log.info("Found resource path in imported zip : {}", foundResourcesWithExceptions);
+    log.info("Found resource path in imported zip : {}", foundResources);
 
     zipInputStream.close();
 
-    if (!foundResourcesWithExceptions.isEmpty()) {
-      return Response.ok(foundResourcesWithExceptions.get(0));
+    if (!foundResources.isEmpty()) {
+      return Response.ok(toString(foundResources));
     } else {
       return Response.content(500, "Zip file does not contain known resources to import");
     }
-  }
-
-  /*
-   * Handle exceptions in resources paths (ex : /content/sites/intranet ->
-   * /content/sites)
-   */
-  private List<String> getResourcesWithExceptions(List<String> foundResources) {
-    List<String> foundResourcesWithExceptions = new ArrayList<String>(foundResources);
-
-    boolean categoryExists = false;
-    for (ResourceCategory resourceCategory : resourceCategories) {
-      for (ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
-        if (foundResources.get(0).equals(subResourceCategory.getPath())) {
-          categoryExists = true;
-          break;
-        }
-      }
-      if (categoryExists) {
-        break;
-      }
-    }
-
-    if (!categoryExists) {
-      boolean categoryFound = false;
-      for (ResourceCategory resourceCategory : resourceCategories) {
-        for (ResourceCategory subResourceCategory : resourceCategory.getSubResourceCategories()) {
-          if (foundResources.get(0).startsWith(subResourceCategory.getPath())) {
-            foundResourcesWithExceptions.set(0, subResourceCategory.getPath());
-            categoryFound = true;
-            break;
-          }
-        }
-        if (categoryFound) {
-          break;
-        }
-      }
-    }
-
-    return foundResourcesWithExceptions;
   }
 
   @Ajax
@@ -348,9 +297,6 @@ public class StagingExtensionController {
     if (selectedResourcesCategories == null || selectedResourcesCategories.length == 0) {
       return Response.content(500, "You must select a resource category.");
     }
-    if (selectedResourcesCategories.length > 1) {
-      return Response.content(500, "Only one resource can be imported at a time.");
-    }
 
     try {
       Map<String, List<String>> attributes = new HashMap<String, List<String>>();
@@ -360,14 +306,14 @@ public class StagingExtensionController {
         }
       }
 
-      String selectedResourcesCategory = selectedResourcesCategories[0];
-      String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
-      if (exceptionPathCategory != null) {
-        selectedResourcesCategory = exceptionPathCategory;
+      for (String selectedResourcesCategory : selectedResourcesCategories) {
+        String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
+        if (exceptionPathCategory != null) {
+          selectedResourcesCategory = exceptionPathCategory;
+        }
+
+        stagingService.importResource(selectedResourcesCategory, file, attributes);
       }
-
-      stagingService.importResource(selectedResourcesCategory, file, attributes);
-
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
@@ -497,4 +443,33 @@ public class StagingExtensionController {
       return Response.content(500, "Error while executing request: " + e.getMessage());
     }
   }
+
+  private boolean parentAlreadyAddedInList(Set<String> foundResources, String address) {
+    for (String path : foundResources) {
+      if (address.startsWith(path)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private CharSequence toString(Set<String> foundResources) {
+    StringBuilder result = new StringBuilder();
+    for (String string : foundResources) {
+      result.append(string + ",");
+    }
+    return result;
+  }
+
+  private String transformSpecialPath(String resourcePath) {
+    Set<String> keys = IMPORT_ZIP_PATH_EXCEPTIONS.keySet();
+    KEYS: for (String key : keys) {
+      if (resourcePath.startsWith(key)) {
+        resourcePath = IMPORT_ZIP_PATH_EXCEPTIONS.get(key);
+        break KEYS;
+      }
+    }
+    return resourcePath;
+  }
+
 }
