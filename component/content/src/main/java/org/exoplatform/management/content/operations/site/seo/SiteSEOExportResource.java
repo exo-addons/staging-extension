@@ -58,7 +58,7 @@ public class SiteSEOExportResource implements OperationHandler {
         LocaleConfigService localeConfigService = operationContext.getRuntimeContext().getRuntimeComponent(LocaleConfigService.class);
         Collection<LocaleConfig> localeConfigs = localeConfigService.getLocalConfigs();
         for (LocaleConfig localeConfig : localeConfigs) {
-          exportTasks.add(getSEOExportTask(operationContext, siteName, localeConfig.getLanguage()));
+          exportTasks.add(getSEOExportTask(operationContext, siteName, localeConfig.getLocale().toString()));
         }
       }
 
