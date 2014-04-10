@@ -15,7 +15,6 @@
 			</includes>
 			<scope>provided</scope>
 			<outputFileNameMapping>gatein-management-cli.war</outputFileNameMapping>
-			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
 		<dependencySet>
 			<useProjectArtifact>false</useProjectArtifact>
@@ -25,7 +24,6 @@
 			</includes>
 			<scope>provided</scope>
 			<outputFileNameMapping>staging-extension-portlet.war</outputFileNameMapping>
-			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
 		<!-- Libraries -->
 		<dependencySet>
@@ -36,7 +34,6 @@
 			</includes>
 			<scope>provided</scope>
 			<outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}.${artifact.extension}</outputFileNameMapping>
-			<useProjectArtifact>false</useProjectArtifact>
 		</dependencySet>
 	</dependencySets>
 </assembly>
