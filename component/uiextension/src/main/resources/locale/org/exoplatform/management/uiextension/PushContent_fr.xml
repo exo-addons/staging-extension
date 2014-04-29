@@ -26,6 +26,7 @@
 			<modified_target>Modifié dans le serveur cible</modified_target>
 			<same>Egaux</same>
 			<unkown>Inconnu</unkown>
+			<all>Tout</all>
 		</state>
 	</PushContent>
 	<PushContentPopupComponent>
@@ -71,7 +72,15 @@
 			</title>
 		</action>
 		<label>
-			<seeOnlyDifferent>Voir seulement les contenus différents</seeOnlyDifferent>
+			<contentState>Etat</contentState>
+			<search>Rechercher</search>
+			<filter>Filtrer</filter>
+			<modifiedAfter>Modifié sur ce serveur, après</modifiedAfter>
+			<publishedContentOnly>Contenu publié seulement</publishedContentOnly>
+			<selectContent>Selectionner contenu</selectContent>
+			<selectedContent>Contenus sélectionnés</selectedContent>
+			<selectAll>Sélectionner tout</selectAll>
+			<deleteAll>Supprimer Tout</deleteAll>
 		</label>
 	</SelectNodesPopupComponent>
 	<UIPopupWindow>

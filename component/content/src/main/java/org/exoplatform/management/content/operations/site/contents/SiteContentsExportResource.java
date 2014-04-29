@@ -438,6 +438,9 @@ public class SiteContentsExportResource implements OperationHandler {
         if (childNode.hasProperty("exo:lastModifier")) {
           nodeMetadata.setLastModifier(childNode.getProperty("exo:lastModifier").getString());
         }
+        if (childNode.hasProperty("publication:currentState")) {
+          nodeMetadata.setPublished(childNode.getProperty("publication:currentState").getString().equals("published"));
+        }
         if (childNode.hasProperty("exo:dateModified")) {
           nodeMetadata.setDateModified(childNode.getProperty("exo:dateModified").getDate());
         }

@@ -14,7 +14,7 @@
    else if(beanFields != null && beanFields.length > 0)
       colnum = beanFields.length;
 
-   def colWidth = ["100px", "245px", "80px", "145px", "145px", "130px"];
+   def colWidth = ["100px", "220px", "80px", "145px", "145px", "130px"];
 
    UIComponent uiParent = uicomponent.getParent();
    String name = uicomponent.getLabel();
@@ -22,7 +22,7 @@
 %>
 <div id="$uicomponent.id">
 <div class="uiListGrid" style="width: auto;">
-	<div class="uiBox noRounded">
+	<div class="uiBox noRounded" style="margin-bottom:7px;">
 		<div class="titleTable clearfix">
 			<div class="lineLeft" style="cursor:default;"><span></span></div>
          <% 
@@ -42,7 +42,7 @@
 
       <% if (uicomponent.getUIPageIterator().getAvailable() < 1)
       { %>
-      	 <div class="rowView odd clearfix">
+      	 <div class="rowView odd clearfix" style="text-align: center;">
             <%=_ctx.appRes("UIGrid.msg.empty")%>
          </div>
       <% }

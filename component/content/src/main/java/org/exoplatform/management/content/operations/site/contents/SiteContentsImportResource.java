@@ -450,6 +450,7 @@ public class SiteContentsImportResource implements OperationHandler {
             log.info("Creating folder: " + ancestors[i] + " in node : " + current.getPath());
           }
           current = current.addNode(ancestors[i], "nt:unstructured");
+          session.save();
         }
       }
     }

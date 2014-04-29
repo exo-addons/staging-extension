@@ -1,17 +1,27 @@
 package org.exoplatform.management.service.handler.content;
 
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.ResourceBundle;
 
 public class NodeComparaison implements Comparable<NodeComparaison>, Serializable {
   private static final long serialVersionUID = -3678314428635211056L;
+
+  private static final DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy (HH:mm:ss)");
+
   public static ResourceBundle resourceBundle;
 
   String title;
   String path;
   String lastModifierUserName;
+  Calendar sourceModificationDateCalendar;
+  Calendar targetModificationDateCalendar;
+
   String sourceModificationDate;
   String targetModificationDate;
+  boolean publishedOnSource;
   NodeComparaisonState state;
 
   public String getTitle() {
@@ -34,23 +44,12 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
     return sourceModificationDate;
   }
 
-  public void setSourceModificationDate(String sourceModificationDate) {
-    this.sourceModificationDate = sourceModificationDate;
-  }
-
   public String getTargetModificationDate() {
     return targetModificationDate;
   }
 
-  public void setTargetModificationDate(String targetModificationDate) {
-    this.targetModificationDate = targetModificationDate;
-  }
-
   public String getStateLocalized() {
-    if (resourceBundle != null) {
-      return resourceBundle.getString("PushContent.state." + state.getKey());
-    }
-    return state.getKey();
+    return state.getLabel(resourceBundle);
   }
 
   // fakeMethod
@@ -74,6 +73,32 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
     this.path = path;
   }
 
+  public boolean isPublishedOnSource() {
+    return publishedOnSource;
+  }
+
+  public void setPublishedOnSource(boolean publishedOnSource) {
+    this.publishedOnSource = publishedOnSource;
+  }
+
+  public void setSourceModificationDateCalendar(Calendar sourceModificationDateCalendar) {
+    this.sourceModificationDate = (sourceModificationDateCalendar != null ? dateFormat.format(sourceModificationDateCalendar.getTime()) : null);
+    this.sourceModificationDateCalendar = sourceModificationDateCalendar;
+  }
+
+  public Calendar getSourceModificationDateCalendar() {
+    return sourceModificationDateCalendar;
+  }
+
+  public void setTargetModificationDateCalendar(Calendar targetModificationDateCalendar) {
+    this.targetModificationDate = (targetModificationDateCalendar != null ? dateFormat.format(targetModificationDateCalendar.getTime()) : null);
+    this.targetModificationDateCalendar = targetModificationDateCalendar;
+  }
+
+  public Calendar getTargetModificationDateCalendar() {
+    return targetModificationDateCalendar;
+  }
+
   @Override
   public int compareTo(NodeComparaison o) {
     return path.compareTo(o.getPath());
@@ -87,4 +112,5 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
     String otherPath = ((NodeComparaison) obj).getPath();
     return path != null && otherPath != null && otherPath.equals(path);
   }
+
 }

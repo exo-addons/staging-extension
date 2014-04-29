@@ -14,10 +14,9 @@
 							<% } %>
 							<% if(uicomponent.getLabel(field.getName()).equals("UIGrid")) {
 								 uiform.renderField(field) ;
-								 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action.Select") 
 								 String link = uicomponent.event("Select");
 								%>
-				 				<button type="button" onclick="$link" class="btn"  href="javascript:void(0);">$actionLabel</button>
+				 				<button type="button" onclick="$link" class="btn"  href="javascript:void(0);"><%=_ctx.appRes(uicomponent.getName() + ".action.Select")%></button>
 							<% } else if(!uicomponent.getLabel(field.getName()).equals("UIPopupContainer")) { %>
 							<div class="controls">
 								<%uiform.renderField(field) ; %>
@@ -35,7 +34,7 @@
 				 String link = uicomponent.event(action) ;
 			%>
 				 <button type="button" onclick="$link" class="btn"  href="javascript:void(0);">$actionLabel</button>
-			<%}%>					
+			<% } %>					
 		</div>
 	<%uiform.end()%>
 </div>

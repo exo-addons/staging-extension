@@ -5,8 +5,6 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,8 +26,6 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
 
 public class SiteContentsHandler extends AbstractResourceHandler {
 
-  private static final DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy (HH:mm:ss)");
-
   @Override
   public String getPath() {
     return StagingService.CONTENT_SITES_PATH;
@@ -38,7 +34,7 @@ public class SiteContentsHandler extends AbstractResourceHandler {
   public List<NodeComparaison> compareLocalNodesWithTargetServer(String workspace, String nodePathToCompare, TargetServer targetServer) throws Exception {
     Map<String, String> exportOptions = new HashMap<String, String>();
     // Select all descendants
-    String sqlQueryFilter = "query:select * from publication:publication where jcr:path like '" + nodePathToCompare + "/%'";
+    String sqlQueryFilter = "query:select * from nt:base where publication:currentState IS NOT NULL and jcr:path like '" + nodePathToCompare + "/%' ";
     exportOptions.put("filter/workspace", workspace);
     exportOptions.put("filter/query", sqlQueryFilter);
     exportOptions.put("filter/only-metadata", "true");
@@ -47,7 +43,7 @@ public class SiteContentsHandler extends AbstractResourceHandler {
 
     exportOptions = new HashMap<String, String>();
     // Select the current node
-    sqlQueryFilter = "query:select * from publication:publication where jcr:path = '" + nodePathToCompare + "'";
+    sqlQueryFilter = "query:select * from nt:base where publication:currentState IS NOT NULL and jcr:path = '" + nodePathToCompare + "'";
     exportOptions.put("filter/workspace", workspace);
     exportOptions.put("filter/query", sqlQueryFilter);
     exportOptions.put("filter/only-metadata", "true");
@@ -70,11 +66,14 @@ public class SiteContentsHandler extends AbstractResourceHandler {
       NodeComparaison comparaison = new NodeComparaison();
       comparaison.setTitle(sourceNodeMetadata.getTitle());
       comparaison.setPath(path);
-      comparaison.setLastModifierUserName(targetNodeMetadata != null ? targetNodeMetadata.getLastModifier() : null);
-      comparaison.setTargetModificationDate(targetNodeMetadata != null && targetNodeMetadata.getDateModified() != null ? dateFormat.format(targetNodeMetadata.getDateModified().getTime()) : null);
-      comparaison.setSourceModificationDate(sourceNodeMetadata.getDateModified() != null ? dateFormat.format(sourceNodeMetadata.getDateModified().getTime()) : null);
+      comparaison.setPublishedOnSource(sourceNodeMetadata.isPublished());
+
+      comparaison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getDateModified() != null ? targetNodeMetadata.getDateModified() : null);
+      comparaison.setSourceModificationDateCalendar(sourceNodeMetadata.getDateModified() != null ? sourceNodeMetadata.getDateModified() : null);
+
       if (targetNodeMetadata == null) {
         comparaison.setState(NodeComparaisonState.NOT_FOUND_ON_TARGET);
+        comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
       } else {
         boolean sameDate = false;
         if (targetNodeMetadata.getDateModified() != null && sourceNodeMetadata.getDateModified() != null) {
@@ -82,26 +81,35 @@ public class SiteContentsHandler extends AbstractResourceHandler {
           sameDate = comp == 0;
           if (!sameDate) {
             comparaison.setState(comp > 0 ? NodeComparaisonState.MODIFIED_ON_TARGET : NodeComparaisonState.MODIFIED_ON_SOURCE);
+            comparaison.setLastModifierUserName(comp > 0 ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata.getLastModifier());
           }
         } else if (targetNodeMetadata.getDateModified() == null && sourceNodeMetadata.getDateModified() == null) {
           sameDate = true;
         } else {
           // If one date is null and the other not, state = uknown
           comparaison.setState(NodeComparaisonState.UNKNOWN);
+          comparaison.setLastModifierUserName((targetNodeMetadata != null && targetNodeMetadata.getLastModifier() != null) ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata
+              .getLastModifier());
         }
         if (comparaison.getState() == null) {
           if (targetNodeMetadata.getPublicationHistory() != null && sourceNodeMetadata.getPublicationHistory() != null) {
             if (targetNodeMetadata.getPublicationHistory().length() > sourceNodeMetadata.getPublicationHistory().length()) {
               comparaison.setState(NodeComparaisonState.MODIFIED_ON_TARGET);
+              comparaison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
             } else if (targetNodeMetadata.getPublicationHistory().length() < sourceNodeMetadata.getPublicationHistory().length()) {
               comparaison.setState(NodeComparaisonState.MODIFIED_ON_SOURCE);
+              comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
             } else {
               comparaison.setState(NodeComparaisonState.SAME);
+              comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
             }
           } else if (targetNodeMetadata.getPublicationHistory() == null && sourceNodeMetadata.getPublicationHistory() == null) {
             comparaison.setState(NodeComparaisonState.SAME);
+            comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
           } else {
             comparaison.setState(NodeComparaisonState.UNKNOWN);
+            comparaison.setLastModifierUserName((targetNodeMetadata != null && targetNodeMetadata.getLastModifier() != null) ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata
+                .getLastModifier());
           }
         }
       }
@@ -117,9 +125,11 @@ public class SiteContentsHandler extends AbstractResourceHandler {
         NodeComparaison comparaison = new NodeComparaison();
         comparaison.setTitle(targetNodeMetadata.getTitle());
         comparaison.setPath(path);
+        comparaison.setPublishedOnSource(false);
         comparaison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
-        comparaison.setTargetModificationDate(targetNodeMetadata.getDateModified() != null ? dateFormat.format(targetNodeMetadata.getDateModified().getTime()) : null);
-        comparaison.setSourceModificationDate(null);
+        comparaison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getDateModified() : null);
+        comparaison.setSourceModificationDateCalendar(null);
+
         comparaison.setState(NodeComparaisonState.NOT_FOUND_ON_SOURCE);
         nodesComparaison.add(comparaison);
       }

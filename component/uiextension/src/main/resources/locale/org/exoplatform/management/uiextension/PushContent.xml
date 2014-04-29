@@ -26,6 +26,7 @@
 			<modified_target>Modified in target</modified_target>
 			<same>Same</same>
 			<unkown>Unknown</unkown>
+			<all>All</all>
 		</state>
 	</PushContent>
 	<PushContentPopupComponent>
@@ -71,7 +72,15 @@
 			</title>
 		</action>
 		<label>
-			<seeOnlyDifferent>Show only different</seeOnlyDifferent>
+			<contentState>State</contentState>
+			<search>Search</search>
+			<filter>Filter</filter>
+			<modifiedAfter>Modified here after</modifiedAfter>
+			<publishedContentOnly>Published content only</publishedContentOnly>
+			<selectContent>Select content</selectContent>
+			<selectedContent>Selected contents</selectedContent>
+			<selectAll>Select all</selectAll>
+			<deleteAll>Delete all</deleteAll>
 		</label>
 	</SelectNodesPopupComponent>
 	<UIPopupWindow>

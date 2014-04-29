@@ -66,6 +66,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   // private static final String PUBLISH_FIELD_NAME = "publishOnTarget";
 
   private static final String INFO_FIELD_NAME = "info";
+
   private List<NodeComparaison> defaultSelection = new ArrayList<NodeComparaison>();
 
   private SiteContentsHandler contentsHandler_;
@@ -131,12 +132,12 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
     defaultSelection.add(nodeComparaison);
 
-    selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, defaultSelection), 10));
+    selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, defaultSelection), 5));
   }
 
   public void addSelection(NodeComparaison nodeComparaison) {
     selectedNodes.add(nodeComparaison);
-    selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, selectedNodes), 10));
+    selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, selectedNodes), 5));
   }
 
   public boolean isDefaultEntry(String path) {
@@ -148,9 +149,15 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     return false;
   }
 
-  static public class SelectActionListener extends EventListener<PushContentPopupComponent> {
-    public void execute(Event<PushContentPopupComponent> event) throws Exception {
-      PushContentPopupComponent pushContentPopupComponent = event.getSource();
+  static public class SelectActionListener extends EventListener<UIForm> {
+    public void execute(Event<UIForm> event) throws Exception {
+      UIForm uiForm = event.getSource();
+      PushContentPopupComponent pushContentPopupComponent = null;
+      if (uiForm instanceof PushContentPopupComponent) {
+        pushContentPopupComponent = (PushContentPopupComponent) uiForm;
+      } else if (uiForm instanceof SelectNodesPopupComponent) {
+        pushContentPopupComponent = ((SelectNodesPopupComponent) uiForm).getPushContentPopupComponent();
+      }
       pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
 
       UIPopupContainer popupContainer = pushContentPopupComponent.getChildById("SelectNodesPopupContainer");
@@ -233,9 +240,15 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     }
   }
 
-  static public class DeleteActionListener extends EventListener<PushContentPopupComponent> {
-    public void execute(Event<PushContentPopupComponent> event) throws Exception {
-      PushContentPopupComponent pushContentPopupComponent = event.getSource();
+  static public class DeleteActionListener extends EventListener<UIForm> {
+    public void execute(Event<UIForm> event) throws Exception {
+      UIForm uiForm = event.getSource();
+      PushContentPopupComponent pushContentPopupComponent = null;
+      if (uiForm instanceof PushContentPopupComponent) {
+        pushContentPopupComponent = (PushContentPopupComponent) uiForm;
+      } else if (uiForm instanceof SelectNodesPopupComponent) {
+        pushContentPopupComponent = ((SelectNodesPopupComponent) uiForm).getPushContentPopupComponent();
+      }
       String path = event.getRequestContext().getRequestParameter(OBJECTID);
 
       UIPopupContainer popupContainer = pushContentPopupComponent.getChildById("SelectNodesPopupContainer");
@@ -259,15 +272,17 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         if (removed) {
           if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
             pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator()
-                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getDefaultSelection()), 10));
+                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getDefaultSelection()), 5));
           } else {
             pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator()
-                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getSelectedNodes()), 10));
+                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getSelectedNodes()), 5));
           }
         }
         if (selectNodesPopupComponent != null) {
           selectNodesPopupComponent.computeComparaisons();
+
           event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesPopupComponent.getNodesGrid());
+          event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesPopupComponent.getSelectedNodesGrid());
         }
         event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getSelectedNodesGrid());
       } catch (Exception ex) {
@@ -332,10 +347,10 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         targetServer.setUsername(username);
         targetServer.setPassword(password);
 
-        @SuppressWarnings("unchecked")
-        List<NodeComparaison> selectedComparaisons = (List<NodeComparaison>) pushContentPopupComponent.getSelectedNodesGrid().getBeans();
+        @SuppressWarnings({ "unchecked", "deprecation" })
+        List<NodeComparaison> selectedComparaisons = (List<NodeComparaison>) pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator().getPageList().getAll();
         // If default selection
-        if (pushContentPopupComponent.getDefaultSelection() == selectedComparaisons) {
+        if (pushContentPopupComponent.getDefaultSelection().equals(selectedComparaisons)) {
           List<Resource> resources = new ArrayList<Resource>();
           resources.add(new Resource(pushContentPopupComponent.getContentsHandler().getPath() + "/shared", "shared", "shared"));
 
