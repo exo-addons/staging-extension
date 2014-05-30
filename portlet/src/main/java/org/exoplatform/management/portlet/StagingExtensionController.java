@@ -309,16 +309,41 @@ public class StagingExtensionController {
     });
 
     try {
-      Map<String, List<String>> attributes = new HashMap<String, List<String>>();
-      for (String param : parameters.keySet()) {
-        if (param.startsWith(PARAM_PREFIX_OPTION)) {
-          attributes.put(param.substring(PARAM_PREFIX_OPTION.length()), Arrays.asList(parameters.get(param)));
-        }
-      }
-
       for (String selectedResourcesCategory : selectedResourcesCategoriesList) {
         log.info("inporting resources for : " + selectedResourcesCategory);
         String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
+
+        // filter ResourceCategory options coming from request
+        Map<String, List<String>> attributes = new HashMap<String, List<String>>();
+        for (String param : parameters.keySet()) {
+          if (param.startsWith(PARAM_PREFIX_OPTION)) {
+            String paramPath = param.replace(PARAM_PREFIX_OPTION, "");
+            if (parameters.get(param) == null || parameters.get(param).length == 0) {
+              log.error("Can't parse empty parameters for filter: " + paramPath);
+              continue;
+            }
+            String categoryPath = paramPath.substring(0, paramPath.indexOf("_"));
+            if (categoryPath.equals(selectedResourcesCategory) || (exceptionPathCategory != null && categoryPath.equals(exceptionPathCategory))) {
+              String attributeName = paramPath.substring(paramPath.indexOf("_") + 1);
+              if (attributeName.startsWith("filter/")) {
+                if (!attributes.containsKey("filter")) {
+                  attributes.put("filter", new ArrayList<String>());
+                }
+                List<String> values = attributes.get("filter");
+                if (parameters.get(param).length > 1) {
+                  log.error("Can't parse all parameters for filter: '" + paramPath + "' with values = " + parameters.get(param) + ". Only first parameter will be used: " + parameters.get(param)[0]);
+                }
+                String value = parameters.get(param)[0];
+                attributeName = attributeName.replace("filter/", "");
+                value = attributeName + ":" + value;
+                values.add(value);
+              } else {
+                attributes.put(attributeName, Arrays.asList(parameters.get(param)));
+              }
+            }
+          }
+        }
+
         if (exceptionPathCategory != null) {
           selectedResourcesCategory = exceptionPathCategory;
         }

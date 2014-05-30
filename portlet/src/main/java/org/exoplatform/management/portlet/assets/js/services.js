@@ -12,9 +12,9 @@ var stagingService = function() {
         if(optionsQuery !== "") {
           optionsQuery += "&";
         }
-        var optionFullName = optionName.substring((selectedResourcesCategoryPath + "_" + type + "_").length, optionName.length);
+        var optionFullName = optionName.replace((selectedResourcesCategoryPath + "_" + type + "_"), (selectedResourcesCategoryPath + "_"));
         var fieldValue = options[optionName];
-
+        
         var indexSlash = optionFullName.indexOf("/");
         if(indexSlash > 0) {
           var optionName = optionFullName.substring(0, indexSlash);

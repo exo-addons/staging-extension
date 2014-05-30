@@ -210,7 +210,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	            } else {
 	              $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
 		          // select category
-		          $scope.categoriesModel[$scope.categories[i].path] = true;
+		          $scope.categoriesModel[$scope.categories[i].path] = (data === $scope.categories[i].path);
 	            }
 	          }
 
@@ -255,8 +255,6 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	      // resource category
 	      queryParams += "&staging:resourceCategory=" + selectedCategory;
       }
-
-      console.log(queryParams);
 
       $scope.setResultMessage("Importing ...", "info");
       $http({
