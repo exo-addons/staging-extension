@@ -52,7 +52,7 @@ public class WikiHandler extends AbstractResourceHandler {
     }
 
     List<Resource> allResources = new ArrayList<Resource>();
-    allResources.add(new Resource(getPath(), null, null));
+    allResources.add(new Resource(getPath(), "wiki", "Wiki Resource"));
 
     super.synchronize(allResources, exportOptions, importOptions, targetServer);
   }
@@ -64,7 +64,7 @@ public class WikiHandler extends AbstractResourceHandler {
     }
 
     List<Resource> allResources = new ArrayList<Resource>();
-    allResources.add(new Resource(getPath(), null, null));
+    allResources.add(new Resource(getPath(), "wiki", "Wiki Resource"));
 
     super.export(allResources, exportFileOS, exportOptions);
   }

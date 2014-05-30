@@ -329,11 +329,12 @@ public class SiteContentsImportResource implements OperationHandler {
         targetNodePath = targetNodePath.replaceAll("//", "/");
       }
 
-      log.info("Deleting the node " + workspace + ":" + targetNodePath);
-
+      List<String> proceededPaths = new ArrayList<String>();
       Session session = getSession(workspace, repositoryService);
       try {
-        if (session.itemExists(targetNodePath) && session.getItem(targetNodePath) instanceof Node) {
+        if (!proceededPaths.contains(targetNodePath) && session.itemExists(targetNodePath) && session.getItem(targetNodePath) instanceof Node) {
+          log.info("Deleting the node " + workspace + ":" + targetNodePath);
+
           Node oldNode = (Node) session.getItem(targetNodePath);
           oldNode.remove();
           session.save();
