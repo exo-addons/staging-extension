@@ -30,16 +30,14 @@ import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
+import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.ManagementService;
-import org.gatein.management.api.PathAddress;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
 
 @SessionScoped
 public class StagingExtensionController {
@@ -196,7 +194,6 @@ public class StagingExtensionController {
     Set<String> foundResources = new HashSet<String>();
     while (entry != null) {
       String fileName = entry.getName();
-      String[] fileNameParts = fileName.split("/");
       fileName = fileName.startsWith("/") ? "" : "/" + fileName;
       String resourcePath = transformSpecialPath(fileName);
       // If resource path transformed and treated with Exceptions Resource Paths
@@ -205,17 +202,8 @@ public class StagingExtensionController {
         foundResources.add(resourcePath);
         // Manage only one resource at a time for the moment
       } else if (!parentAlreadyAddedInList(foundResources, resourcePath)) {
-        RESOURCE: for (int i = fileNameParts.length - 1; i >= 0; i--) {
-          PathAddress address = PathAddress.pathAddress(Arrays.copyOfRange(fileNameParts, 0, i));
-          ManagedResource managedResource = managementService.getManagedResource(address);
-          if (managedResource != null) {
-            OperationHandler operationHandler = managedResource.getOperationHandler(PathAddress.EMPTY_ADDRESS, OperationNames.IMPORT_RESOURCE);
-            if (operationHandler != null) {
-              foundResources.add(address.toString());
-              break RESOURCE;
-            }
-          }
-        }
+        ResourceHandler resourceHandler = ResourceHandlerLocator.findResourceByPath(resourcePath);
+        foundResources.add(resourceHandler.getPath());
       }
       entry = zipInputStream.getNextEntry();
     }
