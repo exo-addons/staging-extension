@@ -1,5 +1,8 @@
 package org.exoplatform.management.service.handler;
 
+import java.util.Arrays;
+
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
@@ -15,6 +18,7 @@ import org.exoplatform.management.service.handler.ecmadmin.SearchTemplatesHandle
 import org.exoplatform.management.service.handler.ecmadmin.SiteExplorerTemplatesHandler;
 import org.exoplatform.management.service.handler.ecmadmin.SiteExplorerViewHandler;
 import org.exoplatform.management.service.handler.ecmadmin.TaxonomyHandler;
+import org.exoplatform.management.service.handler.forum.ForumHandler;
 import org.exoplatform.management.service.handler.gadget.GadgetHandler;
 import org.exoplatform.management.service.handler.mop.MOPSiteHandler;
 import org.exoplatform.management.service.handler.organization.GroupsHandler;
@@ -26,7 +30,7 @@ import org.exoplatform.portal.mop.SiteType;
 
 /**
  * Service Locator for resources handlers, based on the resource category's path
- *
+ * 
  * @author Thomas Delhoménie
  */
 public class ResourceHandlerLocator {
@@ -34,12 +38,16 @@ public class ResourceHandlerLocator {
 
   static {
     registry = new ResourceHandlerRegistry();
-    
+
     // Wiki
     registry.register(new WikiHandler(StagingService.PORTAL_WIKIS_PATH));
     registry.register(new WikiHandler(StagingService.GROUP_WIKIS_PATH));
     registry.register(new WikiHandler(StagingService.USER_WIKIS_PATH));
-    
+
+    // Forum
+    registry.register(new ForumHandler(StagingService.PUBLIC_FORUM_PATH));
+    registry.register(new ForumHandler(StagingService.SPACE_FORUM_PATH));
+
     // Organization Handlers
     registry.register(new UsersHandler());
     registry.register(new GroupsHandler());
@@ -77,5 +85,17 @@ public class ResourceHandlerLocator {
 
   public static ResourceHandler getResourceHandler(String name) {
     return registry.get(name);
+  }
+
+  public static ResourceHandler findResourceByPath(String path) {
+    String[] fileNameParts = path.split("/");
+    for (int i = fileNameParts.length; i > 0; i--) {
+      String tmpPath = StringUtils.join(Arrays.copyOfRange(fileNameParts, 0, i), "/");
+      ResourceHandler handler = getResourceHandler(tmpPath);
+      if (handler != null) {
+        return handler;
+      }
+    }
+    return null;
   }
 }

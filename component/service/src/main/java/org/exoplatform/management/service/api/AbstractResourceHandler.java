@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -60,31 +61,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    */
   public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
     for (Resource resource : resources) {
-      FileOutputStream outputStream = null;
-      File tmpFile = null;
-      try {
-        ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
-
-        tmpFile = File.createTempFile(resource.getText(), ".zip");
-        tmpFile.deleteOnExit();
-
-        FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
-        managedResponse.writeResult(fileOutputStream);
-
-        getLogger().info("Export operation finished.");
-
-        sendData(tmpFile, importOptions, targetServer);
-
-      } catch (Exception ex) {
-        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
-      } finally {
-        if (outputStream != null) {
-          outputStream.close();
-        }
-        if (tmpFile != null) {
-          tmpFile.delete();
-        }
-      }
+      synchronize(resource, exportOptions, importOptions, targetServer);
     }
   }
 
@@ -93,45 +70,40 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    */
   public void export(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
     for (Resource resource : resources) {
-      FileOutputStream outputStream = null;
-      FileInputStream inputStream = null;
-      File tmpFile = null;
-      try {
-        ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
-        tmpFile = File.createTempFile("staging", "-export.zip");
-
-        outputStream = new FileOutputStream(tmpFile);
-        managedResponse.writeResult(outputStream);
-
-        outputStream.flush();
-        outputStream.close();
-        outputStream = null;
-
-        getLogger().info("Export operation finished.");
-
-        inputStream = new FileInputStream(tmpFile);
-
-        Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
-
-        inputStream.close();
-        inputStream = null;
-      } catch (Exception ex) {
-        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
-      } finally {
-        if (outputStream != null) {
-          outputStream.close();
-        }
-        if (inputStream != null) {
-          inputStream.close();
-        }
-        if (tmpFile != null) {
-          tmpFile.delete();
-        }
-        clearTempFiles();
-      }
+      export(resource, exportFileOS, exportOptions);
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public void synchronizeResourcesInFilter(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
+    for (Resource resource : resources) {
+      String resourcePath = resource.getPath().replace(getPath() + "/", "");
+
+      // Add specific filter to select forum category
+      Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
+      exportOptionsTmp.put("filter/" + resourcePath, null);
+
+      synchronize(new Resource(getPath(), getPath(), getPath()), exportOptions, importOptions, targetServer);
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  public void exportResourcesInFilter(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
+    for (Resource resource : resources) {
+      String resourcePath = resource.getPath().replace(getPath() + "/", "");
+
+      // Add specific filter to select forum category
+      Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
+      exportOptionsTmp.put("filter/" + resourcePath, null);
+
+      export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
+    }
+  }
+  
   /**
    * Sends data (exported zip) to the target server
    * 
@@ -227,6 +199,73 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       targetServerURL += "?" + optionsString;
     }
     return targetServerURL;
+  }
+
+  private void export(Resource resource, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws IOException {
+    FileOutputStream outputStream = null;
+    FileInputStream inputStream = null;
+    File tmpFile = null;
+    try {
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
+      tmpFile = File.createTempFile("staging", "-export.zip");
+
+      outputStream = new FileOutputStream(tmpFile);
+      managedResponse.writeResult(outputStream);
+
+      outputStream.flush();
+      outputStream.close();
+      outputStream = null;
+
+      getLogger().info("Export operation finished.");
+
+      inputStream = new FileInputStream(tmpFile);
+
+      Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
+
+      inputStream.close();
+      inputStream = null;
+    } catch (Exception ex) {
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
+    } finally {
+      if (outputStream != null) {
+        outputStream.close();
+      }
+      if (inputStream != null) {
+        inputStream.close();
+      }
+      if (tmpFile != null) {
+        tmpFile.delete();
+      }
+      clearTempFiles();
+    }
+  }
+
+  private void synchronize(Resource resource, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws IOException {
+    FileOutputStream outputStream = null;
+    File tmpFile = null;
+    try {
+      ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
+
+      tmpFile = File.createTempFile(resource.getText(), ".zip");
+      tmpFile.deleteOnExit();
+
+      FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+      managedResponse.writeResult(fileOutputStream);
+
+      getLogger().info("Export operation finished.");
+
+      sendData(tmpFile, importOptions, targetServer);
+
+    } catch (Exception ex) {
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
+    } finally {
+      if (outputStream != null) {
+        outputStream.close();
+      }
+      if (tmpFile != null) {
+        tmpFile.delete();
+      }
+    }
   }
 
   private String encodeURLParameters(Map<String, String> options) {

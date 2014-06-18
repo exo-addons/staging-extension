@@ -2,6 +2,8 @@ package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -23,6 +25,9 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @version $Revision$
  */
 public class ApplicationTemplatesExportResource implements OperationHandler {
+
+  private Pattern templateEntryPattern = Pattern.compile("(.*)/(.*)/(.*)\\.gtmpl");
+
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     String operationName = operationContext.getOperationName();
@@ -33,6 +38,15 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
       throw new OperationException(operationName, "No application name specified.");
     }
 
+    Matcher matcher = templateEntryPattern.matcher(applicationName);
+    String categoryName = null;
+    String templateName = null;
+    if (matcher.find()) {
+      applicationName = matcher.group(1);
+      categoryName = matcher.group(2);
+      templateName = matcher.group(3) + ".gtmpl";
+    }
+
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     ApplicationTemplateManagerService applicationTemplateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(ApplicationTemplateManagerService.class);
@@ -40,15 +54,21 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
       Node templatesHome = applicationTemplateManagerService.getApplicationTemplateHome(applicationName, SessionProvider.createSystemProvider());
       if (templatesHome != null) {
         ApplicationTemplatesMetadata metadata = new ApplicationTemplatesMetadata();
-        if (applicationName.endsWith(".gtmpl")) {
-          exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, templatesHome.getParent().getParent().getName(), templatesHome.getParent().getName(), templatesHome
-              .getName(), metadata));
+        if (templateName != null) {
+          exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryName, templateName, metadata));
         } else {
-          NodeIterator nodeIterator = templatesHome.getNodes();
+
+          NodeIterator nodeIterator = null;
+          if (categoryName == null) {
+            nodeIterator = templatesHome.getNodes();
+          } else {
+            nodeIterator = templatesHome.getNode(categoryName).getNodes();
+          }
           while (nodeIterator.hasNext()) {
             Node categoryNode = nodeIterator.nextNode();
             if (categoryNode.getName().endsWith(".gtmpl")) {
               Node templateNode = categoryNode;
+              categoryNode = templateNode.getParent();
               exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryNode.getName(), templateNode.getName(), metadata));
             } else {
               NodeIterator templatesIterator = categoryNode.getNodes();
