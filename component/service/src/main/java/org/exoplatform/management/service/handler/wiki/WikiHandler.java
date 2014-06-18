@@ -16,7 +16,6 @@
  */
 package org.exoplatform.management.service.handler.wiki;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipOutputStream;
@@ -46,26 +45,12 @@ public class WikiHandler extends AbstractResourceHandler {
 
   @Override
   public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
-    for (Resource resource : resources) {
-      String resourcePath = resource.getPath().replace(getPath() + "/", "");
-      exportOptions.put("filter/" + resourcePath, null);
-    }
-
-    List<Resource> allResources = new ArrayList<Resource>();
-    allResources.add(new Resource(getPath(), "wiki", "Wiki Resource"));
-
-    super.synchronize(allResources, exportOptions, importOptions, targetServer);
+    super.synchronizeResourcesInFilter(resources, exportOptions, importOptions, targetServer);
   }
-  
+
+  @Override
   public void export(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
-    for (Resource resource : resources) {
-      String resourcePath = resource.getPath().replace(getPath() + "/", "");
-      exportOptions.put("filter/" + resourcePath, null);
-    }
-
-    List<Resource> allResources = new ArrayList<Resource>();
-    allResources.add(new Resource(getPath(), "wiki", "Wiki Resource"));
-
-    super.export(allResources, exportFileOS, exportOptions);
+    super.exportResourcesInFilter(resources, exportFileOS, exportOptions);
   }
+
 }
