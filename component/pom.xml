@@ -20,5 +20,6 @@
 		<module>service</module>
 		<module>uiextension</module>
 		<module>wiki</module>
+		<module>forum</module>
 	</modules>
 </project>

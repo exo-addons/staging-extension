@@ -10,6 +10,9 @@ import org.apache.commons.fileupload.FileItem;
 
 public interface StagingService {
 
+  public static final String FORUMS_PARENT_PATH = "/forum";
+  public static final String PUBLIC_FORUM_PATH = "/forum/public";
+  public static final String SPACE_FORUM_PATH = "/forum/space";
   public static final String WIKIS_PARENT_PATH = "/wiki";
   public static final String USER_WIKIS_PATH = "/wiki/user";
   public static final String GROUP_WIKIS_PATH = "/wiki/group";
