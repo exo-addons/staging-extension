@@ -96,10 +96,10 @@ public class WikiDataExportResource implements OperationHandler {
 
       if (WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith("/spaces/")) {
         Space space = spaceService.getSpaceByGroupId(wiki.getOwner());
-        exportTasks.add(new SpaceMetadataExportTask(space, wikiType, wiki.getOwner()));
+        exportTasks.add(new SpaceMetadataExportTask(space, wiki.getOwner()));
       }
     } catch (Exception exception) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while retrieving wiki", exception);
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting wiki", exception);
     }
   }
 

@@ -35,18 +35,16 @@ public class SpaceMetadataExportTask implements ExportTask {
   public static final String FILENAME = "space.metadata";
 
   private final String wikiName;
-  private final WikiType wikiType;
   private final Space space;
 
-  public SpaceMetadataExportTask(Space space, WikiType wikiType, String wikiName) {
+  public SpaceMetadataExportTask(Space space, String wikiName) {
     this.space = space;
-    this.wikiType = wikiType;
     this.wikiName = wikiName;
   }
 
   @Override
   public String getEntry() {
-    return getEntryPath(wikiType, wikiName);
+    return getEntryPath(WikiType.GROUP, wikiName);
   }
 
   public static String getEntryPath(WikiType wikiType, String wikiName) {

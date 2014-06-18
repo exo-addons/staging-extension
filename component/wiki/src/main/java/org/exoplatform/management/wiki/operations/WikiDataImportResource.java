@@ -16,8 +16,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
@@ -204,7 +202,7 @@ public class WikiDataImportResource implements OperationHandler {
     parentNodePath = parentNodePath.replaceAll("//", "/");
 
     // Delete old node
-    Session session = getSession(workspace, repositoryService);
+    Session session = getSession(workspace);
     try {
       if (session.itemExists(nodePath) && session.getItem(nodePath) instanceof Node) {
         log.info("Deleting the node " + workspace + ":" + nodePath);
@@ -224,7 +222,7 @@ public class WikiDataImportResource implements OperationHandler {
     }
 
     // Import Node from Extracted Zip file
-    session = getSession(workspace, repositoryService);
+    session = getSession(workspace);
     FileInputStream fis = null;
     File xmlFile = null;
     try {
@@ -398,7 +396,7 @@ public class WikiDataImportResource implements OperationHandler {
     }
   }
 
-  private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+  private Session getSession(String workspace) throws Exception {
     SessionProvider provider = SessionProvider.createSystemProvider();
     ManageableRepository repository = repositoryService.getCurrentRepository();
     Session session = provider.getSession(workspace, repository);
