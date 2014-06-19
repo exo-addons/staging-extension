@@ -50,8 +50,9 @@ public class ResourceHandlerLocator {
     registry.register(new ForumHandler(StagingService.SPACE_FORUM_PATH));
 
     // Answer
-    registry.register(new AnswerHandler(StagingService.PUBLIC_ANSWER_PATH));
-    registry.register(new AnswerHandler(StagingService.SPACE_ANSWER_PATH));
+    registry.register(new AnswerHandler(StagingService.PUBLIC_ANSWER_PATH, false));
+    registry.register(new AnswerHandler(StagingService.SPACE_ANSWER_PATH, false));
+    registry.register(new AnswerHandler(StagingService.FAQ_TEMPLATE_PATH, true));
 
     // Organization Handlers
     registry.register(new UsersHandler());

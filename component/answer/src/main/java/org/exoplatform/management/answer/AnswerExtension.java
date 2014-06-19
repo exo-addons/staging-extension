@@ -16,12 +16,14 @@
  */
 package org.exoplatform.management.answer;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 import org.exoplatform.management.answer.operations.AnswerDataExportResource;
 import org.exoplatform.management.answer.operations.AnswerDataImportResource;
 import org.exoplatform.management.answer.operations.AnswerDataReadResource;
-import org.exoplatform.management.answer.operations.AnswerReadResource;
+import org.exoplatform.management.answer.operations.FAQTemplateExportResource;
+import org.exoplatform.management.answer.operations.FAQTemplateImportResource;
 import org.gatein.management.api.ComponentRegistration;
 import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
@@ -43,6 +45,7 @@ public class AnswerExtension implements ManagementExtension {
 
   public static final String PUBLIC_FAQ_TYPE = "public";
   public static final String SPACE_FAQ_TYPE = "space";
+  public static final String FAQ_TEMPLATE = "template";
 
   public static final String ROOT_CATEGORY = "Default category";
 
@@ -52,12 +55,12 @@ public class AnswerExtension implements ManagementExtension {
 
     ManagedResource.Registration faq = faqRegistration.registerManagedResource(description("Forum resources."));
 
-    faq.registerOperationHandler(OperationNames.READ_RESOURCE, new AnswerReadResource(), description("Lists available faqs"));
+    faq.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Answer resources", PUBLIC_FAQ_TYPE, SPACE_FAQ_TYPE, FAQ_TEMPLATE), description("Lists available faqs"));
 
-//    ManagedResource.Registration settings = faq.registerSubResource("settings", description("portal faq"));
-//    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Forum settings"));
-//    settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(), description("export faq category"));
-//    settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumSettingsImportResource(), description("import faq category"));
+    ManagedResource.Registration settings = faq.registerSubResource(FAQ_TEMPLATE, description("FAQ Template"));
+    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("FAQ Template", "Template"), description("FAQ Template"));
+    settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new FAQTemplateExportResource(), description("export faq category"));
+    settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new FAQTemplateImportResource(), description("import faq category"));
 
     ManagedResource.Registration portal = faq.registerSubResource(PUBLIC_FAQ_TYPE, description("public faq"));
     portal.registerOperationHandler(OperationNames.READ_RESOURCE, new AnswerDataReadResource(false), description("Read non spaces faq categories"));
@@ -83,10 +86,18 @@ public class AnswerExtension implements ManagementExtension {
     };
   }
 
-  public static class EmptyReadResource implements OperationHandler {
+  public static class ReadResource implements OperationHandler {
+    private String[] values;
+    private String description;
+
+    public ReadResource(String description, String... values) {
+      this.values = values;
+      this.description = description;
+    }
+
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
+      resultHandler.completed(new ReadResourceModel(description, values == null ? new HashSet<String>() : new HashSet<String>(Arrays.asList(values))));
     }
 
   }

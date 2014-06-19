@@ -13,6 +13,7 @@ public interface StagingService {
   public static final String ANSWERS_PARENT_PATH = "/answer";
   public static final String PUBLIC_ANSWER_PATH = "/answer/public";
   public static final String SPACE_ANSWER_PATH = "/answer/space";
+  public static final String FAQ_TEMPLATE_PATH = "/answer/template";
   public static final String FORUMS_PARENT_PATH = "/forum";
   public static final String PUBLIC_FORUM_PATH = "/forum/public";
   public static final String SPACE_FORUM_PATH = "/forum/space";
