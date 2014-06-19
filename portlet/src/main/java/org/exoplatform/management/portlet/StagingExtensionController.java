@@ -85,6 +85,11 @@ public class StagingExtensionController {
     contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
     resourceCategories.add(contents);
 
+    ResourceCategory answers = new ResourceCategory("Answers", StagingService.ANSWERS_PARENT_PATH);
+    answers.getSubResourceCategories().add(new ResourceCategory("Public Answers", StagingService.PUBLIC_ANSWER_PATH));
+    answers.getSubResourceCategories().add(new ResourceCategory("Space Answers", StagingService.SPACE_ANSWER_PATH));
+    resourceCategories.add(answers);
+
     ResourceCategory forums = new ResourceCategory("Forums", StagingService.FORUMS_PARENT_PATH);
     forums.getSubResourceCategories().add(new ResourceCategory("Public Forum", StagingService.PUBLIC_FORUM_PATH));
     forums.getSubResourceCategories().add(new ResourceCategory("Space Forum", StagingService.SPACE_FORUM_PATH));

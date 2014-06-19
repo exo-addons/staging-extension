@@ -81,6 +81,12 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>staging-extension-answer</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>staging-extension-forum</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
