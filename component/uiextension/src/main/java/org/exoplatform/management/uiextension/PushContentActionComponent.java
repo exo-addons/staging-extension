@@ -4,10 +4,7 @@ import org.exoplatform.ecm.webui.component.explorer.UIJCRExplorer;
 import org.exoplatform.ecm.webui.component.explorer.UIWorkingArea;
 import org.exoplatform.ecm.webui.component.explorer.control.UIActionBar;
 import org.exoplatform.ecm.webui.component.explorer.control.listener.UIActionBarActionListener;
-import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
-import org.exoplatform.management.service.handler.ResourceHandlerLocator;
-import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
 import org.exoplatform.webui.config.annotation.EventConfig;
 import org.exoplatform.webui.core.UIComponent;
@@ -24,13 +21,11 @@ import org.exoplatform.webui.event.Event;
       listeners = PushContentActionComponent.PushContentActionListener.class) })
 public class PushContentActionComponent extends UIComponent {
 
-  private static SiteContentsHandler CONTENTS_HANDLER;
   private static SynchronizationService SYNCHRONIZATION_SERVICE;
   private static boolean servicesStarted = false;
 
   public PushContentActionComponent() {
     if (!servicesStarted) {
-      CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);
       SYNCHRONIZATION_SERVICE = getApplicationComponent(SynchronizationService.class);
       servicesStarted = true;
     }
@@ -49,7 +44,6 @@ public class PushContentActionComponent extends UIComponent {
       }
       pushContentPopupContainer = uiActionBar.createUIComponent(PushContentPopupComponent.class, null, null);
 
-      pushContentPopupContainer.setContentsHandler(CONTENTS_HANDLER);
       pushContentPopupContainer.setSynchronizationService(SYNCHRONIZATION_SERVICE);
       pushContentPopupContainer.setCurrentPath(uiExplorer.getCurrentPath());
       pushContentPopupContainer.setWorkspace(uiExplorer.getWorkspaceName());

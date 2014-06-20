@@ -12,11 +12,14 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
-import org.exoplatform.management.service.handler.content.NodeComparaison;
-import org.exoplatform.management.service.handler.content.NodeComparaisonState;
+import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
+import org.exoplatform.management.uiextension.coparaison.NodeComparaison;
+import org.exoplatform.management.uiextension.coparaison.NodeComparaisonState;
+import org.exoplatform.management.uiextension.coparaison.Utils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.wcm.webui.core.UIPopupWindow;
@@ -59,6 +62,8 @@ import org.exoplatform.webui.form.UIFormStringInput;
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
 
+  protected static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
+
   private static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
   private static final String USERNAME_FIELD_NAME = "username";
   private static final String PWD_FIELD_NAME = "password";
@@ -69,7 +74,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   private List<NodeComparaison> defaultSelection = new ArrayList<NodeComparaison>();
 
-  private SiteContentsHandler contentsHandler_;
   private SynchronizationService synchronizationService_;
 
   private List<TargetServer> targetServers;
@@ -217,8 +221,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         targetServer.setUsername(username);
         targetServer.setPassword(password);
 
-        List<NodeComparaison> comparaisons = pushContentPopupComponent.getContentsHandler().compareLocalNodesWithTargetServer(pushContentPopupComponent.getWorkspace(),
-            pushContentPopupComponent.getCurrentPath(), targetServer);
+        List<NodeComparaison> comparaisons = Utils.compareLocalNodesWithTargetServer(pushContentPopupComponent.getWorkspace(), pushContentPopupComponent.getCurrentPath(), targetServer);
         selectNodesPopupComponent.setComparaisons(comparaisons);
         selectNodesPopupWindow.setShow(true);
         selectNodesPopupWindow.setWindowSize(1024, 600);
@@ -347,12 +350,13 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         targetServer.setUsername(username);
         targetServer.setPassword(password);
 
-        @SuppressWarnings({ "unchecked", "deprecation" })
+        @SuppressWarnings(
+          { "unchecked", "deprecation" })
         List<NodeComparaison> selectedComparaisons = (List<NodeComparaison>) pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator().getPageList().getAll();
         // If default selection
         if (pushContentPopupComponent.getDefaultSelection().equals(selectedComparaisons)) {
           List<Resource> resources = new ArrayList<Resource>();
-          resources.add(new Resource(pushContentPopupComponent.getContentsHandler().getPath() + "/shared", "shared", "shared"));
+          resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
 
           Map<String, String> exportOptions = new HashMap<String, String>();
           String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
@@ -366,7 +370,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           // importOptions.put("filter/cleanPublication", "" +
           // cleanupPublication);
 
-          pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
+          CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
           uiPopupContainer.deActivate();
           uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
         } else {
@@ -374,7 +378,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
           for (NodeComparaison nodeComparaison : selectedComparaisons) {
             List<Resource> resources = new ArrayList<Resource>();
-            resources.add(new Resource(pushContentPopupComponent.getContentsHandler().getPath() + "/shared", "shared", "shared"));
+            resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
 
             Map<String, String> exportOptions = new HashMap<String, String>();
             String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparaison.getPath() + "'";
@@ -388,7 +392,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
             // importOptions.put("filter/cleanPublication", "" +
             // cleanupPublication);
 
-            pushContentPopupComponent.getContentsHandler().synchronize(resources, exportOptions, importOptions, targetServer);
+            CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
           }
 
           uiPopupContainer.deActivate();
@@ -445,14 +449,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   public List<TargetServer> getTargetServers() {
     return targetServers;
-  }
-
-  public void setContentsHandler(SiteContentsHandler contentsHandler) {
-    contentsHandler_ = contentsHandler;
-  }
-
-  public SiteContentsHandler getContentsHandler() {
-    return this.contentsHandler_;
   }
 
   public void setSynchronizationService(SynchronizationService synchronizationService) {

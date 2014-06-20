@@ -81,7 +81,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     for (Resource resource : resources) {
       String resourcePath = resource.getPath().replace(getPath() + "/", "");
 
-      // Add specific filter to select forum category
       Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
       exportOptionsTmp.put("filter/" + resourcePath, null);
 
@@ -96,7 +95,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     for (Resource resource : resources) {
       String resourcePath = resource.getPath().replace(getPath() + "/", "");
 
-      // Add specific filter to select forum category
       Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
       exportOptionsTmp.put("filter/" + resourcePath, null);
 
@@ -158,7 +156,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    *          passed to GateIN Management SPI
    * @return archive file exported from GateIN Management Controller call
    */
-  protected ManagedResponse getExportedResourceFromOperation(String path, Map<String, String> selectedOptions) {
+  public ManagedResponse getExportedResourceFromOperation(String path, Map<String, String> selectedOptions) {
     ManagedRequest request = null;
     if (!selectedOptions.isEmpty()) {
       Map<String, List<String>> attributes = extractAttributes(selectedOptions);
@@ -176,15 +174,14 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   }
 
   /**
-   * Delete temp files created by GateIN management operations
+   * Buil server URL
    * 
+   * @param targetServer
+   * @param uri
+   * @param options
+   * @return
    */
-  protected void clearTempFiles() {
-    deleteTempFilesStartingWith("gatein-export(.*)\\.zip");
-    deleteTempFilesStartingWith("data(.*)\\.xml");
-  }
-
-  protected String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
+  public String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
     String targetServerURL = "http";
     if (targetServer.isSsl()) {
       targetServerURL += "s";
@@ -199,6 +196,15 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       targetServerURL += "?" + optionsString;
     }
     return targetServerURL;
+  }
+
+  /**
+   * Delete temp files created by GateIN management operations
+   * 
+   */
+  protected void clearTempFiles() {
+    deleteTempFilesStartingWith("gatein-export(.*)\\.zip");
+    deleteTempFilesStartingWith("data(.*)\\.xml");
   }
 
   private void export(Resource resource, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws IOException {

@@ -1,4 +1,4 @@
-package org.exoplatform.management.service.handler.content;
+package org.exoplatform.management.uiextension.coparaison;
 
 import java.io.Serializable;
 import java.text.DateFormat;
