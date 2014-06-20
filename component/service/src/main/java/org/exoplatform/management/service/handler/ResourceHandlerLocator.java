@@ -6,6 +6,7 @@ import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.handler.answer.AnswerHandler;
+import org.exoplatform.management.service.handler.calendar.CalendarHandler;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.management.service.handler.ecmadmin.ActionNodeTypeHandler;
 import org.exoplatform.management.service.handler.ecmadmin.CLVTemplatesHandler;
@@ -48,6 +49,10 @@ public class ResourceHandlerLocator {
     // Forum
     registry.register(new ForumHandler(StagingService.PUBLIC_FORUM_PATH));
     registry.register(new ForumHandler(StagingService.SPACE_FORUM_PATH));
+
+    // Calendar
+    registry.register(new CalendarHandler(StagingService.GROUP_CALENDAR_PATH));
+    registry.register(new CalendarHandler(StagingService.PERSONAL_FORUM_PATH));
 
     // Answer
     registry.register(new AnswerHandler(StagingService.PUBLIC_ANSWER_PATH, false));

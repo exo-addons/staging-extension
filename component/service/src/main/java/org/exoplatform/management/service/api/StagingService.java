@@ -14,6 +14,9 @@ public interface StagingService {
   public static final String PUBLIC_ANSWER_PATH = "/answer/public";
   public static final String SPACE_ANSWER_PATH = "/answer/space";
   public static final String FAQ_TEMPLATE_PATH = "/answer/template";
+  public static final String CALENDARS_PARENT_PATH = "/calendar";
+  public static final String GROUP_CALENDAR_PATH = "/calendar/group";
+  public static final String PERSONAL_FORUM_PATH = "/calendar/personal";
   public static final String FORUMS_PARENT_PATH = "/forum";
   public static final String PUBLIC_FORUM_PATH = "/forum/public";
   public static final String SPACE_FORUM_PATH = "/forum/space";

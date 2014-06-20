@@ -22,5 +22,6 @@
 		<module>wiki</module>
 		<module>forum</module>
 		<module>answer</module>
+		<module>calendar</module>
 	</modules>
 </project>
