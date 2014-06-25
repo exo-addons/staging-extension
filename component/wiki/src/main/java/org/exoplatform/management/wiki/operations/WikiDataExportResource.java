@@ -72,21 +72,31 @@ public class WikiDataExportResource implements OperationHandler {
 
     String wikiOwner = operationContext.getAttributes().getValue("filter");
 
+    String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
+    boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
+
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
     if (wikiOwner == null || wikiOwner.isEmpty()) {
       log.info("Exporting all WIKI of type: " + wikiType);
       for (Wiki wiki : mowService.getModel().getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
-        exportWiki(exportTasks, wiki);
+        exportWiki(exportTasks, wiki, exportSpaceMetadata);
       }
     } else {
-      exportWiki(exportTasks, mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner));
+      if (wikiType.equals(WikiType.GROUP)) {
+        Space space = spaceService.getSpaceByDisplayName(wikiOwner);
+        if (space != null) {
+          wikiOwner = space.getGroupId();
+        }
+      }
+      Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
+      exportWiki(exportTasks, wiki, exportSpaceMetadata);
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportWiki(List<ExportTask> exportTasks, Wiki wiki) {
+  private void exportWiki(List<ExportTask> exportTasks, Wiki wiki, boolean exportSpaceMetadata) {
     if (wiki == null) {
-      log.warn("Operation exportWiki: Wiki is null.");
+      log.warn("Cannot export Resource: Wiki wasn't found.");
       return;
     }
     try {
@@ -94,7 +104,7 @@ public class WikiDataExportResource implements OperationHandler {
       String workspace = wikiNode.getSession().getWorkspace().getName();
       exportNode(wikiNode, wiki.getOwner(), workspace, exportTasks);
 
-      if (WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith("/spaces/")) {
+      if (exportSpaceMetadata && WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith("/spaces/")) {
         Space space = spaceService.getSpaceByGroupId(wiki.getOwner());
         exportTasks.add(new SpaceMetadataExportTask(space, wiki.getOwner()));
       }

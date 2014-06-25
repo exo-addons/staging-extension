@@ -83,6 +83,9 @@ public class ForumDataExportResource implements OperationHandler {
 
     String name = operationContext.getAttributes().getValue("filter");
 
+    String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
+    boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
+
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     Category spaceCategory = forumService.getCategoryIncludedSpace();
@@ -101,12 +104,13 @@ public class ForumDataExportResource implements OperationHandler {
         if (spaceCategory != null && category.getId().equals(spaceCategory.getId())) {
           continue;
         }
-        exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null);
+        exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
       }
     } else {
       if (isSpaceForumType) {
         if (spaceCategory != null) {
-          exportForum(exportTasks, workspace, categoryHomePath, spaceCategory.getId(), name);
+          Space space = spaceService.getSpaceByDisplayName(name);
+          exportForum(exportTasks, workspace, categoryHomePath, spaceCategory.getId(), space.getPrettyName(), exportSpaceMetadata);
         }
       } else {
         List<Category> categories = forumService.getCategories();
@@ -114,14 +118,14 @@ public class ForumDataExportResource implements OperationHandler {
           if (!category.getCategoryName().equals(name)) {
             continue;
           }
-          exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null);
+          exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
         }
       }
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName) {
+  private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName, boolean exportSpaceMetadata) {
     try {
       String forumId = (spacePrettyName == null ? "" : Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName);
       String parentNodePath = "/" + categoryHomePath + "/" + categoryId + (forumId.isEmpty() ? "" : "/" + forumId);
@@ -129,7 +133,7 @@ public class ForumDataExportResource implements OperationHandler {
       Node parentNode = (Node) session.getItem(parentNodePath);
       exportNode(workspace, parentNode, categoryId, forumId, exportTasks);
 
-      if (isSpaceForumType) {
+      if (exportSpaceMetadata && isSpaceForumType) {
         Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
         exportTasks.add(new SpaceMetadataExportTask(space, forumId));
       }
