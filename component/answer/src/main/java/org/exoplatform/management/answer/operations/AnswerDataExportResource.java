@@ -80,6 +80,9 @@ public class AnswerDataExportResource implements OperationHandler {
 
     String name = operationContext.getAttributes().getValue("filter");
 
+    String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
+    boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
+
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     String workspace = null;
@@ -98,7 +101,7 @@ public class AnswerDataExportResource implements OperationHandler {
           if (category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) {
             continue;
           }
-          exportAnswer(exportTasks, workspace, categoryHomePath, category.getId(), null);
+          exportAnswer(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
         }
       } catch (Exception e) {
         log.error("Error while exporting FAQ categories.", e);
@@ -106,19 +109,19 @@ public class AnswerDataExportResource implements OperationHandler {
     } else {
       if (isSpaceType) {
         Space space = spaceService.getSpaceByDisplayName(name);
-        exportAnswer(exportTasks, workspace, categoryHomePath, Utils.CATE_SPACE_ID_PREFIX + space.getPrettyName(), space);
+        exportAnswer(exportTasks, workspace, categoryHomePath, Utils.CATE_SPACE_ID_PREFIX + space.getPrettyName(), space, exportSpaceMetadata);
       } else {
         try {
           if (name.equals(AnswerExtension.ROOT_CATEGORY)) {
             // Export questions from root category
-            exportAnswer(exportTasks, workspace, categoryHomePath, Utils.QUESTION_HOME, null);
+            exportAnswer(exportTasks, workspace, categoryHomePath, Utils.QUESTION_HOME, null, exportSpaceMetadata);
           } else {
             List<Category> categories = faqService.getAllCategories();
             for (Category category : categories) {
               if (!category.getName().equals(name)) {
                 continue;
               }
-              exportAnswer(exportTasks, workspace, categoryHomePath, category.getId(), null);
+              exportAnswer(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
             }
           }
         } catch (Exception e) {
@@ -129,7 +132,7 @@ public class AnswerDataExportResource implements OperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportAnswer(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, Space space) {
+  private void exportAnswer(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, Space space, boolean exportSpaceMetadata) {
     try {
       String parentNodePath = "/" + categoryHomePath + "/" + categoryId;
       Session session = getSession(workspace);
@@ -140,7 +143,7 @@ public class AnswerDataExportResource implements OperationHandler {
       Node parentNode = (Node) session.getItem(parentNodePath);
       exportNode(workspace, parentNode, categoryId, exportTasks);
 
-      if (isSpaceType) {
+      if (exportSpaceMetadata && isSpaceType) {
         exportTasks.add(new SpaceMetadataExportTask(space));
       }
     } catch (Exception exception) {

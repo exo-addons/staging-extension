@@ -53,7 +53,7 @@ public class AnswerExtension implements ManagementExtension {
   public void initialize(ExtensionContext context) {
     ComponentRegistration faqRegistration = context.registerManagedComponent("answer");
 
-    ManagedResource.Registration faq = faqRegistration.registerManagedResource(description("Forum resources."));
+    ManagedResource.Registration faq = faqRegistration.registerManagedResource(description("Answer resources."));
 
     faq.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Answer resources", PUBLIC_FAQ_TYPE, SPACE_FAQ_TYPE, FAQ_TEMPLATE), description("Lists available faqs"));
 
