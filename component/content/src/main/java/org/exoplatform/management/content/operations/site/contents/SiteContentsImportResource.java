@@ -29,6 +29,7 @@ import javax.jcr.Value;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.content.operations.site.SiteUtil;
@@ -69,8 +70,7 @@ public class SiteContentsImportResource implements OperationHandler {
   private String importedSiteName = null;
   private String filePath = null;
 
-  public SiteContentsImportResource() {
-  }
+  public SiteContentsImportResource() {}
 
   public SiteContentsImportResource(String siteName, String filePath) {
     this.importedSiteName = siteName;
@@ -96,6 +96,7 @@ public class SiteContentsImportResource implements OperationHandler {
     InputStream attachmentInputStream = null;
     if (filePath != null) {
       try {
+        // attachmentInputStream closed in finally block
         attachmentInputStream = new FileInputStream(filePath);
       } catch (FileNotFoundException exception) {
         throw new OperationException(OperationNames.IMPORT_RESOURCE, "File not found to import.");
@@ -112,10 +113,11 @@ public class SiteContentsImportResource implements OperationHandler {
       }
     }
 
-    Map<String, SiteData> sitesData = null;
+    Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
+    String tempParentFolderPath = null;
     try {
       // extract data from zip
-      sitesData = extractDataFromZip(attachmentInputStream, importedSiteName);
+      tempParentFolderPath = extractDataFromZip(attachmentInputStream, importedSiteName, sitesData);
 
       // import data of each site
       for (String site : sitesData.keySet()) {
@@ -162,6 +164,16 @@ public class SiteContentsImportResource implements OperationHandler {
           // Nothing to do
         }
       }
+      if (tempParentFolderPath != null) {
+        File tempFolderFile = new File(tempParentFolderPath);
+        if (tempFolderFile.exists()) {
+          try {
+            FileUtils.deleteDirectory(tempFolderFile);
+          } catch (IOException e) {
+            log.warn("Unable to delete temp folder: " + tempParentFolderPath + ". Not blocker.");
+          }
+        }
+      }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
   }
@@ -169,17 +181,19 @@ public class SiteContentsImportResource implements OperationHandler {
   /**
    * Extract data from zip
    * 
+   * @param sitesData
+   * 
    * @param attachment
    * @return
    */
-  public static Map<String, SiteData> extractDataFromZip(InputStream attachmentInputStream, String importedSiteName) {
+  public static String extractDataFromZip(InputStream attachmentInputStream, String importedSiteName, Map<String, SiteData> sitesData) {
 
-    Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
+    String tempParentFolderPath = null;
     NonCloseableZipInputStream zis = null;
-
+    File tmpZipFile = null;
     try {
       // Store attachement in local File
-      File tmpZipFile = File.createTempFile("staging-content", ".zip");
+      tmpZipFile = File.createTempFile("staging-content", ".zip");
       tmpZipFile.deleteOnExit();
 
       FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
@@ -279,10 +293,17 @@ public class SiteContentsImportResource implements OperationHandler {
           log.warn("Can't close inputStream of attachement.");
         }
       }
+      if (tmpZipFile != null) {
+        tempParentFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "");
+        try {
+          FileUtils.forceDelete(tmpZipFile);
+        } catch (IOException e) {
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
+          tmpZipFile.deleteOnExit();
+        }
+      }
     }
-
-    return sitesData;
-
+    return tempParentFolderPath;
   }
 
   /**
@@ -429,8 +450,7 @@ public class SiteContentsImportResource implements OperationHandler {
       Value[] values = node.getProperty("publication:revisionData").getValues();
       if (values.length < 2) {
         String user = node.getProperty("publication:lastUser").getString();
-        node.setProperty("publication:revisionData", new String[]
-          { node.getUUID() + ",published," + user });
+        node.setProperty("publication:revisionData", new String[] { node.getUUID() + ",published," + user });
       }
       node.setProperty("publication:liveRevision", "");
       node.setProperty("publication:currentState", "published");
@@ -534,8 +554,7 @@ public class SiteContentsImportResource implements OperationHandler {
     }
 
     @Override
-    public void close() throws IOException {
-    }
+    public void close() throws IOException {}
 
     private void reallyClose() throws IOException {
       super.close();

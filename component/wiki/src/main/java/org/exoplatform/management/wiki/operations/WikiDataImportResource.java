@@ -103,6 +103,8 @@ public class WikiDataImportResource implements OperationHandler {
             log.info("Ignore existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=false).");
             continue;
           }
+        } else {
+          mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
         }
 
         if (WikiType.GROUP.equals(wikiType)) {
@@ -161,7 +163,7 @@ public class WikiDataImportResource implements OperationHandler {
     } finally {
       if (tmpZipFile != null) {
         try {
-          tmpZipFile.delete();
+          FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
           log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
           tmpZipFile.deleteOnExit();
@@ -256,50 +258,55 @@ public class WikiDataImportResource implements OperationHandler {
   }
 
   private void extractFilesByWikiOwner(File tmpZipFile, String targetFolderPath, Map<String, List<String>> contentsByOwner) throws FileNotFoundException, IOException, Exception {
-    NonCloseableZipInputStream zis;
     // Open an input stream on local zip file
-    zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
+    NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
 
-    ZipEntry entry;
-    while ((entry = zis.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      // Skip entries not managed by this extension
-      if (filePath.equals("") || !filePath.startsWith("wiki/" + wikiType.name().toLowerCase() + "/")) {
-        continue;
+    try {
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        String filePath = entry.getName();
+        // Skip entries not managed by this extension
+        if (filePath.equals("") || !filePath.startsWith("wiki/" + wikiType.name().toLowerCase() + "/")) {
+          continue;
+        }
+
+        // Skip directories
+        if (entry.isDirectory()) {
+          // Create directory in unzipped folder location
+          createFile(new File(targetFolderPath + replaceSpecialChars(filePath)), true);
+          continue;
+        }
+
+        // Skip non managed
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+          log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
+          continue;
+        }
+
+        log.info("Receiving content " + filePath);
+
+        // Put XML Export file in temp folder
+        copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+
+        // Extract wiki owner
+        String wikiOwner = extractWikiOwnerFromPath(filePath);
+
+        // Skip metadata file
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+          continue;
+        }
+
+        // Add nodePath by WikiOwner
+        if (!contentsByOwner.containsKey(wikiOwner)) {
+          contentsByOwner.put(wikiOwner, new ArrayList<String>());
+        }
+        String nodePath = filePath.substring(filePath.indexOf("---/") + 4, filePath.lastIndexOf(".xml"));
+        contentsByOwner.get(wikiOwner).add(nodePath);
       }
-
-      // Skip directories
-      if (entry.isDirectory()) {
-        // Create directory in unzipped folder location
-        createFile(new File(targetFolderPath + replaceSpecialChars(filePath)), true);
-        continue;
+    } finally {
+      if (zis != null) {
+        zis.reallyClose();
       }
-
-      // Skip non managed
-      if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-        log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
-        continue;
-      }
-
-      log.info("Receiving content " + filePath);
-
-      // Put XML Export file in temp folder
-      copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
-
-      // Extract wiki owner
-      String wikiOwner = extractWikiOwnerFromPath(filePath);
-
-      // Skip metadata file
-      if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-        continue;
-      }
-
-      // Add nodePath by WikiOwner
-      if (!contentsByOwner.containsKey(wikiOwner)) {
-        contentsByOwner.put(wikiOwner, new ArrayList<String>());
-      }
-      String nodePath = filePath.substring(filePath.indexOf("---/") + 4, filePath.lastIndexOf(".xml"));
-      contentsByOwner.get(wikiOwner).add(nodePath);
     }
   }
 
@@ -349,8 +356,7 @@ public class WikiDataImportResource implements OperationHandler {
     }
 
     @Override
-    public void close() throws IOException {
-    }
+    public void close() throws IOException {}
 
     private void reallyClose() throws IOException {
       super.close();

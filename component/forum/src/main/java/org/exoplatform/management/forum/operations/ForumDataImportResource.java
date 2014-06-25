@@ -189,7 +189,7 @@ public class ForumDataImportResource implements OperationHandler {
     } finally {
       if (tmpZipFile != null) {
         try {
-          tmpZipFile.delete();
+          FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
           log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
           tmpZipFile.deleteOnExit();
@@ -284,50 +284,55 @@ public class ForumDataImportResource implements OperationHandler {
   }
 
   private void extractFilesById(File tmpZipFile, String targetFolderPath, Map<String, List<String>> contentsByOwner) throws FileNotFoundException, IOException, Exception {
-    NonCloseableZipInputStream zis;
     // Open an input stream on local zip file
-    zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
+    NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
 
-    ZipEntry entry;
-    while ((entry = zis.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      // Skip entries not managed by this extension
-      if (filePath.equals("") || !filePath.startsWith("forum/" + type + "/")) {
-        continue;
+    try {
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        String filePath = entry.getName();
+        // Skip entries not managed by this extension
+        if (filePath.equals("") || !filePath.startsWith("forum/" + type + "/")) {
+          continue;
+        }
+
+        // Skip directories
+        if (entry.isDirectory()) {
+          // Create directory in unzipped folder location
+          createFile(new File(targetFolderPath + replaceSpecialChars(filePath)), true);
+          continue;
+        }
+
+        // Skip non managed
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+          log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
+          continue;
+        }
+
+        log.info("Receiving content " + filePath);
+
+        // Put XML Export file in temp folder
+        copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+
+        // Extract ID owner
+        String id = extractIdFromPath(filePath);
+
+        // Skip metadata file
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+          continue;
+        }
+
+        // Add nodePath by WikiOwner
+        if (!contentsByOwner.containsKey(id)) {
+          contentsByOwner.put(id, new ArrayList<String>());
+        }
+        String nodePath = filePath.substring(filePath.indexOf(id + "/") + (id + "/").length(), filePath.lastIndexOf(".xml"));
+        contentsByOwner.get(id).add(nodePath);
       }
-
-      // Skip directories
-      if (entry.isDirectory()) {
-        // Create directory in unzipped folder location
-        createFile(new File(targetFolderPath + replaceSpecialChars(filePath)), true);
-        continue;
+    } finally {
+      if (zis != null) {
+        zis.reallyClose();
       }
-
-      // Skip non managed
-      if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-        log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
-        continue;
-      }
-
-      log.info("Receiving content " + filePath);
-
-      // Put XML Export file in temp folder
-      copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
-
-      // Extract ID owner
-      String id = extractIdFromPath(filePath);
-
-      // Skip metadata file
-      if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-        continue;
-      }
-
-      // Add nodePath by WikiOwner
-      if (!contentsByOwner.containsKey(id)) {
-        contentsByOwner.put(id, new ArrayList<String>());
-      }
-      String nodePath = filePath.substring(filePath.indexOf(id + "/") + (id + "/").length(), filePath.lastIndexOf(".xml"));
-      contentsByOwner.get(id).add(nodePath);
     }
   }
 
@@ -377,8 +382,7 @@ public class ForumDataImportResource implements OperationHandler {
     }
 
     @Override
-    public void close() throws IOException {
-    }
+    public void close() throws IOException {}
 
     private void reallyClose() throws IOException {
       super.close();
