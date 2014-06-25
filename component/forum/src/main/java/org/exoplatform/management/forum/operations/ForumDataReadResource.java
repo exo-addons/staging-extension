@@ -24,6 +24,8 @@ import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
@@ -31,6 +33,7 @@ import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
+import org.mortbay.log.Log;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -48,6 +51,7 @@ public class ForumDataReadResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>();
     ForumService forumService = operationContext.getRuntimeContext().getRuntimeComponent(ForumService.class);
+    SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     Category spaceCategory = forumService.getCategoryIncludedSpace();
     if (isSpaceForumType) {
       if (spaceCategory != null) {
@@ -58,7 +62,12 @@ public class ForumDataReadResource implements OperationHandler {
           throw new OperationException(OperationNames.READ_RESOURCE, "Error while getting space forums", e);
         }
         for (Forum forum : forums) {
-          children.add(getSpacePrettyName(forum));
+          String spaceDisplayName = getSpaceDisplayName(spaceService, forum);
+          if (spaceDisplayName == null) {
+            Log.warn("Cannot find space for forum: " + forum.getForumName());
+          } else {
+            children.add(spaceDisplayName);
+          }
         }
       }
     } else {
@@ -73,9 +82,13 @@ public class ForumDataReadResource implements OperationHandler {
     resultHandler.completed(new ReadResourceModel("All forums:", children));
   }
 
-  private String getSpacePrettyName(Forum forum) {
+  private String getSpaceDisplayName(SpaceService spaceService, Forum forum) {
     if (forum.getId().startsWith(Utils.FORUM_SPACE_ID_PREFIX)) {
-      return forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+      String spacePrettyName = forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+      Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
+      if (space != null) {
+        return space.getDisplayName();
+      }
     }
     return null;
   }

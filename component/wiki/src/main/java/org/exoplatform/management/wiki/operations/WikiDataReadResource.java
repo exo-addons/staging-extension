@@ -19,6 +19,8 @@ package org.exoplatform.management.wiki.operations;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
@@ -30,29 +32,34 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
 /**
- * Created by The eXo Platform SAS
- * Author : eXoPlatform
- *          exo@exoplatform.com
- * Mar 5, 2014  
+ * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
+ * 5, 2014
  */
 public class WikiDataReadResource implements OperationHandler {
-  
+
+  private SpaceService spaceService;
   private WikiType wikiType;
-  
+
   public WikiDataReadResource(WikiType wikiType) {
     this.wikiType = wikiType;
   }
-  
+
   @Override
-  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-      OperationException {
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
+    spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
+
     Set<String> children = new LinkedHashSet<String>();
-    MOWService mowService = operationContext.getRuntimeContext()
-        .getRuntimeComponent(MOWService.class);
+    MOWService mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
     for (Wiki wiki : mowService.getModel().getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
-      children.add(wiki.getOwner());
+      String wikiOwner = wiki.getOwner();
+      if (wikiType.equals(WikiType.GROUP)) {
+        Space space = spaceService.getSpaceByGroupId(wikiOwner);
+        if (space != null) {
+          wikiOwner = space.getDisplayName();
+        }
+      }
+      children.add(wikiOwner);
     }
-    
     resultHandler.completed(new ReadResourceModel("All wikis:", children));
   }
 
