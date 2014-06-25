@@ -2,6 +2,24 @@
     <i>No resource selected</i>
   </div>
   
+  <div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
+    <a ng-click="unselectCategory('/social/space')" class="unselect-resources-category">Remove</a>
+    <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Spaces</label>
+    <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
+      <div ng-show="mode == 'import' || mode == 'synchronize'">
+        <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
+          ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+      </div>
+      <div class="selected-resource-table">
+        <table class="table table-striped table-condensed">
+          <tr ng-repeat="resource in resources['/social/space'] | filter:{selected:true}">
+            <td>{{resource.text}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  
   <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/group']">
     <a ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category">Remove</a>
     <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Group Calendar</label>

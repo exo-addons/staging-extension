@@ -23,5 +23,6 @@
 		<module>forum</module>
 		<module>answer</module>
 		<module>calendar</module>
+		<module>social</module>
 	</modules>
 </project>

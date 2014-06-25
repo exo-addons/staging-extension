@@ -27,6 +27,7 @@ import org.exoplatform.management.service.handler.organization.GroupsHandler;
 import org.exoplatform.management.service.handler.organization.RolesHandler;
 import org.exoplatform.management.service.handler.organization.UsersHandler;
 import org.exoplatform.management.service.handler.registry.ApplicationRegistryHandler;
+import org.exoplatform.management.service.handler.social.SocialHandler;
 import org.exoplatform.management.service.handler.wiki.WikiHandler;
 import org.exoplatform.portal.mop.SiteType;
 
@@ -40,6 +41,9 @@ public class ResourceHandlerLocator {
 
   static {
     registry = new ResourceHandlerRegistry();
+
+    // Social
+    registry.register(new SocialHandler());
 
     // Wiki
     registry.register(new WikiHandler(StagingService.PORTAL_WIKIS_PATH));
