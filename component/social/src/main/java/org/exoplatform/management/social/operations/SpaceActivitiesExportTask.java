@@ -52,6 +52,7 @@ public class SpaceActivitiesExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
+    xStream.omitField(ExoSocialActivity.class, "id");
     xStream.toXML(activities, writer);
     writer.flush();
   }
