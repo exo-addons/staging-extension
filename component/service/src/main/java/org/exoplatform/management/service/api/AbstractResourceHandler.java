@@ -252,7 +252,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     try {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
 
-      tmpFile = File.createTempFile(resource.getText(), ".zip");
+      tmpFile = File.createTempFile(resource.getPath().replace("/", ""), ".zip");
       tmpFile.deleteOnExit();
 
       FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
