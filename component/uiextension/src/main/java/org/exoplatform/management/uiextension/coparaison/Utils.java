@@ -1,5 +1,6 @@
 package org.exoplatform.management.uiextension.coparaison;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.exoplatform.management.content.operations.site.contents.NodeMetadata;
 import org.exoplatform.management.content.operations.site.contents.SiteContentsImportResource;
 import org.exoplatform.management.content.operations.site.contents.SiteData;
@@ -165,9 +167,42 @@ public class Utils {
       throw new IllegalStateException("Comparaison operation error, HTTP error code from target server : " + conn.getResponseCode());
     }
 
-    Map<String, SiteData> siteDataMap = SiteContentsImportResource.extractDataFromZip(conn.getInputStream(), "shared");
-    SiteData siteData = siteDataMap.get("shared");
-    Map<String, NodeMetadata> targetServerMetadata = siteData.getSiteMetadata().getNodesMetadata();
-    return targetServerMetadata;
+    Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
+    String tempParentFolderPath = null;
+    try {
+      // extract data from zip
+      tempParentFolderPath = SiteContentsImportResource.extractDataFromZip(conn.getInputStream(), "shared", sitesData);
+      SiteData siteData = sitesData.get("shared");
+      return siteData.getSiteMetadata().getNodesMetadata();
+    } finally {
+      if (sitesData != null && !sitesData.isEmpty()) {
+        // import data of each site
+        for (String site : sitesData.keySet()) {
+          SiteData siteData = sitesData.get(site);
+          if (siteData.getNodeExportHistoryFiles() != null && !siteData.getNodeExportHistoryFiles().isEmpty()) {
+            for (String tempAbsPath : siteData.getNodeExportHistoryFiles().values()) {
+              File file = new File(tempAbsPath);
+              if (file.exists() && !file.isDirectory()) {
+                try {
+                  file.delete();
+                } catch (Exception e) {
+                  // Nothing to do, deleteOnExit is called
+                }
+              }
+            }
+          }
+        }
+      }
+      if (tempParentFolderPath != null) {
+        File tempFolderFile = new File(tempParentFolderPath);
+        if (tempFolderFile.exists()) {
+          try {
+            FileUtils.deleteDirectory(tempFolderFile);
+          } catch (IOException e) {
+            // Nothing to do
+          }
+        }
+      }
+    }
   }
 }
