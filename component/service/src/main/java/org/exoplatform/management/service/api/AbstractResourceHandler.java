@@ -101,7 +101,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
     }
   }
-  
+
   /**
    * Sends data (exported zip) to the target server
    * 
@@ -131,6 +131,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
       IOUtils.copy(fileInputStream, conn.getOutputStream());
       fileInputStream.close();
+
+      getLogger().info("Content sent to target server: " + targetServer.getHost());
+      getLogger().info("Importing content in target server, please wait ...");
 
       if (conn.getResponseCode() != 200) {
         throw new IllegalStateException("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
@@ -247,7 +250,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   }
 
   private void synchronize(Resource resource, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws IOException {
-    FileOutputStream outputStream = null;
+    FileOutputStream fileOutputStream = null;
     File tmpFile = null;
     try {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
@@ -255,8 +258,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       tmpFile = File.createTempFile(resource.getPath().replace("/", ""), ".zip");
       tmpFile.deleteOnExit();
 
-      FileOutputStream fileOutputStream = new FileOutputStream(tmpFile);
+      fileOutputStream = new FileOutputStream(tmpFile);
       managedResponse.writeResult(fileOutputStream);
+      fileOutputStream.close();
 
       getLogger().info("Export operation finished.");
 
@@ -265,9 +269,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     } catch (Exception ex) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
     } finally {
-      if (outputStream != null) {
-        outputStream.close();
-      }
       if (tmpFile != null) {
         tmpFile.delete();
       }

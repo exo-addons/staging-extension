@@ -49,6 +49,7 @@ public class SocialExtension implements ManagementExtension {
   public static final String ANSWERS_PORTLET = "AnswersPortlet";
   public static final String FAQ_PORTLET = "FAQPortlet";
 
+  public static final String SPACE_RESOURCE_PARENT_PATH = "social/space";
   public static final String SPACE_RESOURCE_PATH = "/social/space";
   public static final String FORUM_RESOURCE_PATH = "/forum/space";
   public static final String CALENDAR_RESOURCE_PATH = "/calendar/group";

@@ -21,6 +21,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.model.Profile;
+import org.exoplatform.social.core.manager.IdentityManager;
 import org.gatein.management.api.operation.model.ExportTask;
 
 import com.thoughtworks.xstream.XStream;
@@ -33,14 +36,16 @@ public class SpaceActivitiesExportTask implements ExportTask {
 
   public static final String FILENAME = "activities";
 
+  private final IdentityManager identityManager;
   private final ExoSocialActivity[] activities;
   private final String spacePrettyName;
   private final Integer index;
 
-  public SpaceActivitiesExportTask(ExoSocialActivity[] activities, String spacePrettyName, int index) {
+  public SpaceActivitiesExportTask(IdentityManager identityManager, ExoSocialActivity[] activities, String spacePrettyName, int index) {
     this.index = index;
     this.spacePrettyName = spacePrettyName;
     this.activities = activities;
+    this.identityManager = identityManager;
   }
 
   @Override
@@ -52,7 +57,18 @@ public class SpaceActivitiesExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
-    xStream.omitField(ExoSocialActivity.class, "id");
+    if (activities != null && activities.length > 0) {
+      for (ExoSocialActivity activity : activities) {
+        activity.setId(null);
+        Identity identity = identityManager.getIdentity(activity.getUserId(), true);
+        String username = (String) identity.getProfile().getProperty(Profile.USERNAME);
+        activity.setUserId(username);
+
+        identity = identityManager.getIdentity(activity.getPosterId(), true);
+        username = (String) identity.getProfile().getProperty(Profile.USERNAME);
+        activity.setPosterId(username);
+      }
+    }
     xStream.toXML(activities, writer);
     writer.flush();
   }

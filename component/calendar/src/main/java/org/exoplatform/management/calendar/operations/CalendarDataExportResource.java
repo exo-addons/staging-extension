@@ -31,6 +31,8 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
@@ -75,6 +77,14 @@ public class CalendarDataExportResource implements OperationHandler {
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
         }
       } else {
+        if (!groupId.startsWith("/")) {
+          SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
+          Space space = spaceService.getSpaceByDisplayName(groupId);
+          if (space == null) {
+            throw new OperationException(OperationNames.EXPORT_RESOURCE, "Cannot find space with display name = " + groupId);
+          }
+          groupId = space.getGroupId();
+        }
         exportGroupCalendar(calendarService, userACL, exportTasks, groupId);
       }
     } else {

@@ -16,8 +16,11 @@
  */
 package org.exoplatform.management.social.operations;
 
+import java.io.InputStream;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,6 +37,7 @@ import javax.jcr.Session;
 
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionManager;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionMode;
@@ -45,6 +49,7 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.model.AvatarAttachment;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
@@ -130,7 +135,7 @@ public class SocialDataExportResource implements OperationHandler {
         // }
       }
 
-      log.info("export space JCR data");
+      log.info("export space JCR private data");
       computeContentFilters(space, filters);
       addResourceExportTasks(exportTasks, attributesMap, SocialExtension.CONTENT_RESOURCE_PATH, space.getPrettyName());
 
@@ -138,17 +143,41 @@ public class SocialDataExportResource implements OperationHandler {
       attributesMap.clear();
       addResourceExportTasks(exportTasks, attributesMap, SocialExtension.SITES_RESOURCE_PATH + space.getGroupId(), space.getPrettyName());
 
+      log.info("export space metadata");
       exportTasks.add(new SpaceMetadataExportTask(space));
 
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), false);
+
+      // No method to get avatar using Social API, so we have to use JCR
+      String avatarURL = spaceIdentity.getProfile().getAvatarUrl();
+      avatarURL = avatarURL == null ? null : URLDecoder.decode(avatarURL, "UTF-8");
+      if (avatarURL != null && avatarURL.contains(space.getPrettyName())) {
+        log.info("export space avatar");
+
+        int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
+        int endIndexAvatarPath = avatarURL.indexOf("?");
+        String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
+        Session session = getSession("social");
+        Node avatarNode = (Node) session.getItem(avatarNodePath);
+        Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
+        String fileName = "avatar";
+        String mimeType = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:mimeType").getString() : null;
+        InputStream inputStream = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:data").getStream() : null;
+        Calendar lastModified = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:lastModified").getDate() : null;
+
+        AvatarAttachment avatar = new AvatarAttachment(null, fileName, mimeType, inputStream, null, lastModified.getTimeInMillis());
+        exportTasks.add(new SpaceAvatarExportTask(space.getPrettyName(), avatar));
+      }
+
       RealtimeListAccess<ExoSocialActivity> spaceList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
 
+      log.info("export space activities");
       ExoSocialActivity[] activities = null;
       int size = spaceList.getSize(), i = 0;
       while (i < size) {
         int length = i + 10 < size ? 10 : size - i;
         activities = spaceList.load(0, length);
-        exportTasks.add(new SpaceActivitiesExportTask(activities, space.getPrettyName(), i));
+        exportTasks.add(new SpaceActivitiesExportTask(identityManager, activities, space.getPrettyName(), i));
         i += length;
       }
     } catch (Exception e) {
@@ -199,9 +228,17 @@ public class SocialDataExportResource implements OperationHandler {
     ManagedResponse response = managementController.execute(request);
     ExportResourceModel model = (ExportResourceModel) response.getResult();
     List<ExportTask> entryExportTasks = model.getTasks();
-    String basePath = SocialExtension.SPACE_RESOURCE_PATH + "/" + spaceId + "/";
+    String basePath = SocialExtension.SPACE_RESOURCE_PARENT_PATH + "/" + spaceId + "/";
     for (ExportTask exportTask : entryExportTasks) {
       exportTasks.add(new SocialExportTaskWrapper(exportTask, basePath));
     }
   }
+
+  private Session getSession(String workspace) throws Exception {
+    SessionProvider provider = SessionProvider.createSystemProvider();
+    ManageableRepository repository = repositoryService.getCurrentRepository();
+    Session session = provider.getSession(workspace, repository);
+    return session;
+  }
+
 }

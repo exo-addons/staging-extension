@@ -21,15 +21,19 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.model.Dashboard;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.model.AvatarAttachment;
+import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -114,16 +118,16 @@ public class SocialDataImportResource implements OperationHandler {
         Collections.sort(filesKeysList, new Comparator<String>() {
           @Override
           public int compare(String o1, String o2) {
-            if(o1.contains(SocialDashboardExportTask.FILENAME)) {
+            if (o1.contains(SocialDashboardExportTask.FILENAME)) {
               return 1;
             }
-            if(o2.contains(SocialDashboardExportTask.FILENAME)) {
+            if (o2.contains(SocialDashboardExportTask.FILENAME)) {
               return -1;
             }
             return o1.compareTo(o2);
           }
         });
-        
+
         for (String fileKey : filesKeysList) {
           File fileToImport = spaceFiles.get(fileKey);
           if (fileKey.equals(SocialExtension.ANSWER_RESOURCE_PATH) || fileKey.equals(SocialExtension.CALENDAR_RESOURCE_PATH) || fileKey.equals(SocialExtension.CONTENT_RESOURCE_PATH)
@@ -135,6 +139,8 @@ public class SocialDataImportResource implements OperationHandler {
               createActivities(extractedSpacePrettyName, fileToImport);
             } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
               updateDashboard(space.getGroupId(), fileToImport);
+            } else if (fileToImport.getAbsolutePath().contains(SpaceAvatarExportTask.FILENAME)) {
+              updateAvatar(space, fileToImport);
             } else {
               log.warn("Cannot handle file: " + fileToImport.getAbsolutePath() + ". Ignore it.");
             }
@@ -166,6 +172,29 @@ public class SocialDataImportResource implements OperationHandler {
     }
 
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void updateAvatar(Space space, File fileToImport) {
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(fileToImport);
+
+      XStream xstream = new XStream();
+      AvatarAttachment avatarAttachment = (AvatarAttachment) xstream.fromXML(inputStream);
+      space.setAvatarAttachment(avatarAttachment);
+
+      spaceService.updateSpaceAvatar(space);
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while updating Space '" + space.getDisplayName() + "' avatar.", e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + fileToImport.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
   }
 
   private void updateDashboard(String spaceGroupId, File fileToImport) {
@@ -214,8 +243,27 @@ public class SocialDataImportResource implements OperationHandler {
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
       ExoSocialActivity[] activities = (ExoSocialActivity[]) xstream.fromXML(inputStream);
+      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+      ProfileFilter profileFilter = new ProfileFilter();
+      Identity identity = null;
+      for (ExoSocialActivity activity : activities) {
+        profileFilter.setName(activity.getUserId());
+        identity = getIdentity(profileFilter);
+
+        if (identity != null) {
+          activity.setUserId(identity.getId());
+
+          profileFilter.setName(activity.getPosterId());
+          identity = getIdentity(profileFilter);
+
+          if (identity != null) {
+            activity.setPosterId(identity.getId());
+            activitiesList.add(activity);
+          }
+        }
+      }
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
-      for (ExoSocialActivity exoSocialActivity : activities) {
+      for (ExoSocialActivity exoSocialActivity : activitiesList) {
         activityManager.saveActivityNoReturn(spaceIdentity, exoSocialActivity);
       }
     } catch (FileNotFoundException e) {
@@ -229,6 +277,18 @@ public class SocialDataImportResource implements OperationHandler {
         }
       }
     }
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter) {
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+    try {
+      if (identities.getSize() > 0) {
+        return identities.load(0, 1)[0];
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
+    return null;
   }
 
   private void createOrReplaceSpace(String spacePrettyName, InputStream inputStream) throws IOException {
