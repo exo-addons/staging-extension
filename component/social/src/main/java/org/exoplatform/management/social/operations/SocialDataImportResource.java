@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,11 +22,15 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.model.Dashboard;
+import org.exoplatform.portal.mop.importer.ImportMode;
+import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
@@ -37,6 +42,8 @@ import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
+import org.exoplatform.social.core.storage.cache.CachedActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.ContentType;
@@ -135,7 +142,17 @@ public class SocialDataImportResource implements OperationHandler {
               || fileKey.equals(SocialExtension.SITES_IMPORT_RESOURCE_PATH)) {
             importSubResource(fileToImport, fileKey);
           } else {
-            if (fileToImport.getAbsolutePath().contains(SpaceActivitiesExportTask.FILENAME)) {
+            if (fileKey.contains(SpaceActivitiesExportTask.FILENAME)) {
+              ActivityStorage activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
+              if (activityStorage instanceof CachedActivityStorage) {
+                ((CachedActivityStorage) activityStorage).clearCache();
+              }
+              Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, extractedSpacePrettyName, false);
+              RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
+              ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
+              for (ExoSocialActivity activity : activities) {
+                activityManager.deleteActivity(activity);
+              }
               createActivities(extractedSpacePrettyName, fileToImport);
             } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
               updateDashboard(space.getGroupId(), fileToImport);
@@ -178,11 +195,13 @@ public class SocialDataImportResource implements OperationHandler {
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(fileToImport);
+      InputStreamReader reader = new InputStreamReader(inputStream, "UTF-8");
 
       XStream xstream = new XStream();
-      AvatarAttachment avatarAttachment = (AvatarAttachment) xstream.fromXML(inputStream);
+      AvatarAttachment avatarAttachment = (AvatarAttachment) xstream.fromXML(reader);
       space.setAvatarAttachment(avatarAttachment);
 
+      spaceService.updateSpace(space);
       spaceService.updateSpaceAvatar(space);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while updating Space '" + space.getDisplayName() + "' avatar.", e);
@@ -240,6 +259,7 @@ public class SocialDataImportResource implements OperationHandler {
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(activitiesFile);
+
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
       ExoSocialActivity[] activities = (ExoSocialActivity[]) xstream.fromXML(inputStream);
@@ -259,6 +279,23 @@ public class SocialDataImportResource implements OperationHandler {
           if (identity != null) {
             activity.setPosterId(identity.getId());
             activitiesList.add(activity);
+
+            Set<String> keys = activity.getTemplateParams().keySet();
+            for (String key : keys) {
+              String value = activity.getTemplateParams().get(key);
+              if (value != null) {
+                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+              }
+            }
+            if (StringUtils.isNotEmpty(activity.getTitle())) {
+              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+            }
+            if (StringUtils.isNotEmpty(activity.getBody())) {
+              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+            }
+            if (StringUtils.isNotEmpty(activity.getSummary())) {
+              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+            }
           }
         }
       }
@@ -324,6 +361,7 @@ public class SocialDataImportResource implements OperationHandler {
   private void importSubResource(File tempFile, String subResourcePath) {
     Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
     attributesMap.put("filter", Collections.singletonList("replace-existing:true"));
+    attributesMap.put("importMode", Collections.singletonList(ImportMode.OVERWRITE.name()));
 
     // This will be closed in sub resources, don't close it here
     InputStream inputStream = null;
@@ -361,6 +399,14 @@ public class SocialDataImportResource implements OperationHandler {
       return extractFilesById(tmpZipFile, spacePrettyName);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error occured while handling attachement", e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream.");
+        }
+      }
     }
   }
 
