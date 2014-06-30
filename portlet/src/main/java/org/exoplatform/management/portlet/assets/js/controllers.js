@@ -13,6 +13,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         $scope.syncServersMessage = "";
         $scope.loadServers();
       }
+      $scope.setResultMessage("", "info");
     };
 
     /**********************************************************************/
@@ -314,17 +315,22 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
       // Launch synchronization...
       $scope.setResultMessage("Proceeding...", "info");
-	  $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export')+paramsResourceCategories + paramsResources + paramsOptions , {
-		 successCallback: function (url) {
-		   $scope.setResultMessage("Successfully exported.", "success");
-		 },
-		 failCallback: function (html, url) {
-		   $scope.setResultMessage(html, "error");
-		 }
-	  });
-	  // FIXME this have to be deleted, once 'successCallback' and 'failCallback' will work
-	  $scope.setResultMessage("", "");
 
+	  $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export')+paramsResourceCategories + paramsResources + paramsOptions)
+	  	.done(function () {
+	  		$scope.setResultMessage("Successfully exported.", "success");
+	  		// FIXME setResultMessage doesn't update message, this is a workaround
+	  		$("#resultMessage").removeClass("alert-info");
+	  		$("#resultMessage").addClass("alert-success");
+	  		$("#resultMessage").html("Successfully exported.");
+	  	})
+	  	.fail(function () {
+	  		$scope.setResultMessage(html, "error");
+	  		// FIXME setResultMessage doesn't update message, this is a workaround
+	  		$("#resultMessage").removeClass("alert-info");
+	  		$("#resultMessage").addClass("alert-error");
+	  		$("#resultMessage").html(html);
+	  	});
     };
 
     // synchronize action
