@@ -99,16 +99,16 @@ public class CalendarDataImportResource implements OperationHandler {
           final ControllerContext controllerContext = new ControllerContext(null, null, new MockHttpServletRequest(), new MockHttpServletResponse(), null);
           PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(),
               portalConfigService.getDefaultPortal(), "/portal/" + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
-            @SuppressWarnings("unchecked")
             @Override
             public <R, U extends PortalURL<R, U>> U newURL(ResourceType<R, U> resourceType, URLFactory urlFactory) {
               if (resourceType.equals(NodeURL.TYPE)) {
-
-                return ((U) new NodeURL(new PortalURLContext(controllerContext, null) {
+                @SuppressWarnings("unchecked")
+                U u = (U) new NodeURL(new PortalURLContext(controllerContext, null) {
                   public <S extends Object, V extends org.exoplatform.web.url.PortalURL<S, V>> String render(V url) {
                     return "";
                   };
-                }));
+                });
+                return u;
               }
               return super.newURL(resourceType, urlFactory);
             }
