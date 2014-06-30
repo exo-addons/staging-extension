@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -19,6 +20,18 @@ import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
 import org.exoplatform.management.calendar.CalendarExtension;
+import org.exoplatform.portal.application.PortalRequestContext;
+import org.exoplatform.portal.config.UserPortalConfigService;
+import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.portal.url.PortalURLContext;
+import org.exoplatform.web.ControllerContext;
+import org.exoplatform.web.application.RequestContext;
+import org.exoplatform.web.url.PortalURL;
+import org.exoplatform.web.url.ResourceType;
+import org.exoplatform.web.url.URLFactory;
+import org.exoplatform.web.url.navigation.NodeURL;
+import org.exoplatform.webui.application.WebuiApplication;
+import org.exoplatform.webui.application.WebuiRequestContext;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -53,6 +66,7 @@ public class CalendarDataImportResource implements OperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
+    UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -72,9 +86,36 @@ public class CalendarDataImportResource implements OperationHandler {
 
     String tempFolderPath = null;
     Set<String> contentsByOwner = new HashSet<String>();
+
+    RequestContext originalRequestContext = WebuiRequestContext.getCurrentInstance();
     try {
       // extract data from zip
       tempFolderPath = extractDataFromZip(attachmentInputStream, contentsByOwner);
+
+      // FIXME: INTEG-333. Add this to not have a null pointer exception while
+      // importing
+      if (!contentsByOwner.isEmpty()) {
+        if (originalRequestContext == null) {
+          final ControllerContext controllerContext = new ControllerContext(null, null, new MockHttpServletRequest(), new MockHttpServletResponse(), null);
+          PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(),
+              portalConfigService.getDefaultPortal(), "/portal/" + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
+            @SuppressWarnings("unchecked")
+            @Override
+            public <R, U extends PortalURL<R, U>> U newURL(ResourceType<R, U> resourceType, URLFactory urlFactory) {
+              if (resourceType.equals(NodeURL.TYPE)) {
+
+                return ((U) new NodeURL(new PortalURLContext(controllerContext, null) {
+                  public <S extends Object, V extends org.exoplatform.web.url.PortalURL<S, V>> String render(V url) {
+                    return "";
+                  };
+                }));
+              }
+              return super.newURL(resourceType, urlFactory);
+            }
+          };
+          WebuiRequestContext.setCurrentInstance(portalRequestContext);
+        }
+      }
 
       for (String tempFilePath : contentsByOwner) {
         importCalendar(calendarService, tempFilePath, replaceExisting);
@@ -83,6 +124,7 @@ public class CalendarDataImportResource implements OperationHandler {
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import calendar contents", e);
     } finally {
+      WebuiRequestContext.setCurrentInstance(originalRequestContext);
       if (tempFolderPath != null) {
         try {
           FileUtils.deleteDirectory(new File(tempFolderPath));
@@ -98,7 +140,6 @@ public class CalendarDataImportResource implements OperationHandler {
           // Nothing to do
         }
       }
-
     }
     resultHandler.completed(NoResultModel.INSTANCE);
   }
