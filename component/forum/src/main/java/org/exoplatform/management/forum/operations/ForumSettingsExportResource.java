@@ -37,7 +37,7 @@ public class ForumSettingsExportResource implements OperationHandler {
     }
 
     if (getBooleanValue(operationContext, "banned-ip")) {
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, BANNED_IP, workspace, "/" + dataLocation.getForumBanIPLocation()));
+      exportTasks.add(new ForumSettingsExportTask(repositoryService, BANNED_IP, workspace, "/" + dataLocation.getBanIPLocation()));
     }
 
     if (getBooleanValue(operationContext, "user-profiles")) {
