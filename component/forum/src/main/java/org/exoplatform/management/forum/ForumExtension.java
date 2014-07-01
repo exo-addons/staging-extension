@@ -16,12 +16,15 @@
  */
 package org.exoplatform.management.forum;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 import org.exoplatform.management.forum.operations.ForumDataExportResource;
 import org.exoplatform.management.forum.operations.ForumDataImportResource;
 import org.exoplatform.management.forum.operations.ForumDataReadResource;
 import org.exoplatform.management.forum.operations.ForumReadResource;
+import org.exoplatform.management.forum.operations.ForumSettingsExportResource;
+import org.exoplatform.management.forum.operations.ForumSettingsImportResource;
 import org.gatein.management.api.ComponentRegistration;
 import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
@@ -52,10 +55,10 @@ public class ForumExtension implements ManagementExtension {
 
     forum.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumReadResource(), description("Lists available forums"));
 
-//    ManagedResource.Registration settings = forum.registerSubResource("settings", description("portal forums"));
-//    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Forum settings"));
-//    settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(), description("export forum category"));
-//    settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumSettingsImportResource(), description("import forum category"));
+    ManagedResource.Registration settings = forum.registerSubResource("settings", description("Forum settings"));
+    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "Settings"), description("Forum settings"));
+    settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(), description("export forum category"));
+    settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumSettingsImportResource(), description("import forum category"));
 
     ManagedResource.Registration portal = forum.registerSubResource(PUBLIC_FORUM_TYPE, description("public forum"));
     portal.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(false), description("Read non spaces forum categories"));
@@ -69,8 +72,7 @@ public class ForumExtension implements ManagementExtension {
   }
 
   @Override
-  public void destroy() {
-  }
+  public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {
@@ -81,10 +83,18 @@ public class ForumExtension implements ManagementExtension {
     };
   }
 
-  public static class EmptyReadResource implements OperationHandler {
+  public static class ReadResource implements OperationHandler {
+    private String[] values;
+    private String description;
+
+    public ReadResource(String description, String... values) {
+      this.values = values;
+      this.description = description;
+    }
+
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
+      resultHandler.completed(new ReadResourceModel(description, values == null ? new HashSet<String>() : new HashSet<String>(Arrays.asList(values))));
     }
 
   }

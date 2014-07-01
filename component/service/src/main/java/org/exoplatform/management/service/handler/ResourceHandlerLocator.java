@@ -53,6 +53,7 @@ public class ResourceHandlerLocator {
     // Forum
     registry.register(new ForumHandler(StagingService.PUBLIC_FORUM_PATH));
     registry.register(new ForumHandler(StagingService.SPACE_FORUM_PATH));
+    registry.register(new ForumHandler(StagingService.FORUM_SETTINGS));
 
     // Calendar
     registry.register(new CalendarHandler(StagingService.GROUP_CALENDAR_PATH));

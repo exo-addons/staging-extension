@@ -94,6 +94,7 @@ public class StagingExtensionController {
     ResourceCategory forums = new ResourceCategory("Forums", StagingService.FORUMS_PARENT_PATH);
     forums.getSubResourceCategories().add(new ResourceCategory("Public Forum", StagingService.PUBLIC_FORUM_PATH));
     forums.getSubResourceCategories().add(new ResourceCategory("Space Forum", StagingService.SPACE_FORUM_PATH));
+    forums.getSubResourceCategories().add(new ResourceCategory("Forum settings", StagingService.FORUM_SETTINGS));
     resourceCategories.add(forums);
 
     ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);

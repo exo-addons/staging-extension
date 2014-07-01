@@ -79,12 +79,16 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    */
   public void synchronizeResourcesInFilter(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
     for (Resource resource : resources) {
-      String resourcePath = resource.getPath().replace(getPath() + "/", "");
+      if (getPath().equals(resource.getPath())) {
+        synchronize(new Resource(getPath(), getPath(), getPath()), exportOptions, importOptions, targetServer);
+      } else {
+        String resourcePath = resource.getPath().replace(getPath() + "/", "");
 
-      Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
-      exportOptionsTmp.put("filter/" + resourcePath, null);
+        Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
+        exportOptionsTmp.put("filter/" + resourcePath, null);
 
-      synchronize(new Resource(getPath(), getPath(), getPath()), exportOptions, importOptions, targetServer);
+        synchronize(new Resource(getPath(), getPath(), getPath()), exportOptionsTmp, importOptions, targetServer);
+      }
     }
   }
 
@@ -93,12 +97,16 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    */
   public void exportResourcesInFilter(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
     for (Resource resource : resources) {
-      String resourcePath = resource.getPath().replace(getPath() + "/", "");
+      if (getPath().equals(resource.getPath())) {
+        export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptions);
+      } else {
+        String resourcePath = resource.getPath().replace(getPath() + "/", "");
 
-      Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
-      exportOptionsTmp.put("filter/" + resourcePath, null);
+        Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
+        exportOptionsTmp.put("filter/" + resourcePath, null);
 
-      export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
+        export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
+      }
     }
   }
 

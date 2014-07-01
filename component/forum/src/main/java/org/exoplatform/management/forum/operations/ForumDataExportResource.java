@@ -29,7 +29,6 @@ import javax.jcr.nodetype.NodeType;
 
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.Category;
-import org.exoplatform.forum.service.DataStorage;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.management.forum.ForumExtension;
@@ -60,7 +59,6 @@ public class ForumDataExportResource implements OperationHandler {
   private RepositoryService repositoryService;
   private SpaceService spaceService;
   private ForumService forumService;
-  private DataStorage dataStorage;
   private KSDataLocation dataLocation;
 
   private boolean isSpaceForumType;
@@ -77,7 +75,6 @@ public class ForumDataExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     forumService = operationContext.getRuntimeContext().getRuntimeComponent(ForumService.class);
-    dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
 
@@ -89,12 +86,7 @@ public class ForumDataExportResource implements OperationHandler {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     Category spaceCategory = forumService.getCategoryIncludedSpace();
-    String workspace = null;
-    try {
-      workspace = dataStorage.getWorkspace();
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't get Forum workspace", e);
-    }
+    String workspace = dataLocation.getWorkspace();
     String categoryHomePath = dataLocation.getForumCategoriesLocation();
 
     if (name == null || name.isEmpty()) {
