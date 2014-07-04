@@ -56,9 +56,14 @@ public class ForumExtension implements ManagementExtension {
     forum.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumReadResource(), description("Lists available forums"));
 
     ManagedResource.Registration settings = forum.registerSubResource("settings", description("Forum settings"));
-    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "Settings"), description("Forum settings"));
-    settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(), description("export forum category"));
-    settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumSettingsImportResource(), description("import forum category"));
+    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "general-administration", "banned-ip", "user-profiles", "bb-codes", "tags"),
+        description("Forum settings"));
+    settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(), description("export forum settings"));
+    settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumSettingsImportResource(), description("import forum settings"));
+
+    ManagedResource.Registration setting = settings.registerSubResource("{resource-name: .*}", description("Forum settings"));
+    setting.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "Settings"), description("Forum settings"));
+    setting.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(true), description("export forum setting"));
 
     ManagedResource.Registration portal = forum.registerSubResource(PUBLIC_FORUM_TYPE, description("public forum"));
     portal.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(false), description("Read non spaces forum categories"));

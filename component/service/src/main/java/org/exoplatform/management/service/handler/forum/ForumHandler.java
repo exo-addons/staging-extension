@@ -22,6 +22,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.exoplatform.management.service.api.AbstractResourceHandler;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.TargetServer;
 
 public class ForumHandler extends AbstractResourceHandler {
@@ -39,12 +40,20 @@ public class ForumHandler extends AbstractResourceHandler {
 
   @Override
   public void synchronize(List<Resource> resources, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
-    super.synchronizeResourcesInFilter(resources, exportOptions, importOptions, targetServer);
+    if (StagingService.FORUM_SETTINGS.equals(forumPath)) {
+      super.synchronize(resources, exportOptions, importOptions, targetServer);
+    } else {
+      super.synchronizeResourcesInFilter(resources, exportOptions, importOptions, targetServer);
+    }
   }
 
   @Override
   public void export(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
-    super.exportResourcesInFilter(resources, exportFileOS, exportOptions);
+    if (StagingService.FORUM_SETTINGS.equals(forumPath)) {
+      super.export(resources, exportFileOS, exportOptions);
+    } else {
+      super.exportResourcesInFilter(resources, exportFileOS, exportOptions);
+    }
   }
 
 }
