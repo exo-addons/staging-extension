@@ -12,6 +12,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/social/space'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No space selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/social/space'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -30,6 +33,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/calendar/group'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No group selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/calendar/group'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -48,6 +54,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/calendar/personal'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No calendar selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/calendar/personal'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -62,6 +71,9 @@
     <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/answer/template'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No template selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/answer/template'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -80,6 +92,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/answer/public'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No answer category selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/answer/public'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -98,6 +113,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/answer/space'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No answer space selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/answer/space'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -116,6 +134,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/forum/public'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No forum selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/forum/public'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -134,6 +155,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/forum/space'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No forum space selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/forum/space'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -168,6 +192,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/forum/settings'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No forum setting selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/forum/settings'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -186,6 +213,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/wiki/user'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No wiki selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/wiki/user'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -204,6 +234,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/wiki/group'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No wiki selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/wiki/group'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -222,6 +255,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/wiki/portal'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No wiki selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/wiki/portal'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -249,6 +285,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/organization/user'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No user selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/organization/user'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -273,6 +312,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/organization/group'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No group selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/organization/group'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -291,6 +333,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/organization/role'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No role selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/organization/role'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -316,6 +361,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/site/portalsites'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No site selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/site/portalsites'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -341,6 +389,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/site/groupsites'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No site selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/site/groupsites'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -366,6 +417,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/site/usersites'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No site selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/site/usersites'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -423,6 +477,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/content/sites'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No site selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/content/sites'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -441,6 +498,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No template selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -459,6 +519,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/templates/applications/search'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No template selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/templates/applications/search'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -477,6 +540,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/templates/nodetypes'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No template selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/templates/nodetypes'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -495,6 +561,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/templates/metadata'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No metadata selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/templates/metadata'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -513,6 +582,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/taxonomy'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No taxonomy selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/taxonomy'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -531,6 +603,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/queries'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No query selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/queries'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -549,6 +624,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/drive'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No drive selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/drive'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -567,6 +645,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/script'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No script selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/script'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -585,6 +666,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/view/templates'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No template selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/view/templates'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -603,6 +687,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/ecmadmin/view/configuration'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No view selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/ecmadmin/view/configuration'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -617,9 +704,12 @@
     <div class="selected-resource-details" ng-show="resourceDetailsActionNodetypesVisible">
       <div class="selected-resource-table">
 		  <table class="table table-striped table-condensed">
-			<tr ng-repeat="resource in resources['/ecmadmin/action'] | filter:{selected:true}">
-			  <td>{{resource.text}}</td>
-			</tr>
+        <tr ng-show="!(resources['/ecmadmin/action'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No action selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/ecmadmin/action'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
 		  </table>
 		</div>
     </div>
@@ -631,9 +721,12 @@
     <div class="selected-resource-details" ng-show="resourceDetailsNodetypesVisible">
       <div class="selected-resource-table">
 		  <table class="table table-striped table-condensed">
-			<tr ng-repeat="resource in resources['/ecmadmin/nodetype'] | filter:{selected:true}">
-			  <td>{{resource.text}}</td>
-			</tr>
+        <tr ng-show="!(resources['/ecmadmin/nodetype'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No node type selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/ecmadmin/nodetype'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
 		  </table>
 	  </div>
     </div>
@@ -649,6 +742,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/registry'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No application category selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/registry'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
@@ -667,6 +763,9 @@
       </div>
       <div class="selected-resource-table">
         <table class="table table-striped table-condensed">
+          <tr ng-show="!(resources['/gadget'] | filter:{selected:true}).length">
+            <td class="no-element-selected">No gadget selected</td>
+          </tr>
           <tr ng-repeat="resource in resources['/gadget'] | filter:{selected:true}">
             <td>{{resource.text}}</td>
           </tr>
