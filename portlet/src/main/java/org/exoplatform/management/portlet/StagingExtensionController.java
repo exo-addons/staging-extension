@@ -1,43 +1,24 @@
 package org.exoplatform.management.portlet;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.inject.Inject;
-
-import juzu.Action;
-import juzu.Path;
-import juzu.Response;
-import juzu.Route;
-import juzu.SessionScoped;
-import juzu.View;
+import juzu.*;
 import juzu.impl.request.Request;
 import juzu.template.Template;
-
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
 import org.exoplatform.management.service.api.Resource;
-import org.exoplatform.management.service.api.ResourceCategory;
-import org.exoplatform.management.service.api.ResourceHandler;
-import org.exoplatform.management.service.api.StagingService;
-import org.exoplatform.management.service.api.SynchronizationService;
-import org.exoplatform.management.service.api.TargetServer;
+import org.exoplatform.management.service.api.*;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ManagementService;
+
+import javax.inject.Inject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @SessionScoped
 public class StagingExtensionController {
@@ -102,14 +83,14 @@ public class StagingExtensionController {
     resourceCategories.add(social);
 
     ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
-    calendars.getSubResourceCategories().add(new ResourceCategory("Group Calendar", StagingService.GROUP_CALENDAR_PATH));
+    calendars.getSubResourceCategories().add(new ResourceCategory("Space/Group Calendar", StagingService.GROUP_CALENDAR_PATH));
     calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
     resourceCategories.add(calendars);
 
     ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
-    wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
-    wikis.getSubResourceCategories().add(new ResourceCategory("Group wikis", StagingService.GROUP_WIKIS_PATH));
     wikis.getSubResourceCategories().add(new ResourceCategory("Portal wikis", StagingService.PORTAL_WIKIS_PATH));
+    wikis.getSubResourceCategories().add(new ResourceCategory("Space wikis", StagingService.GROUP_WIKIS_PATH));
+    wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
     resourceCategories.add(wikis);
 
     ResourceCategory sites = new ResourceCategory("Sites", "/site");
