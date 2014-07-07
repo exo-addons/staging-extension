@@ -33,6 +33,7 @@ import org.exoplatform.webui.form.UIFormInputInfo;
 import org.exoplatform.webui.form.UIFormSelectBox;
 import org.exoplatform.webui.form.UIFormStringInput;
 
+import java.net.ConnectException;
 import java.net.URLDecoder;
 import java.util.*;
 
@@ -225,16 +226,15 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesPopupWindow.getParent());
         event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME));
       } catch (Exception ex) {
-        if (ex != null && ex.getMessage() != null && ex.getMessage().contains("java.net.ConnectException")) {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        ApplicationMessage message;
+        if(isConnectionException(ex)) {
+          message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
         } else {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
         }
-        LOG.error("Comparaison of '" + pushContentPopupComponent.getCurrentPath() + "' error:", ex);
+        message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        LOG.error("Comparaison of '" + pushContentPopupComponent.getCurrentPath() + "' failed:", ex);
       }
     }
   }
@@ -394,21 +394,39 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           uiPopupContainer.deActivate();
           uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
         }
+        LOG.info("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' done.");
       } catch (Exception ex) {
-        if (ex != null && ex.getMessage() != null && ex.getMessage().contains("java.net.ConnectException")) {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        ApplicationMessage message;
+        if(isConnectionException(ex)) {
+          message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
         } else {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
         }
-        LOG.error("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' error:", ex);
+        message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        LOG.error("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' failed:", ex);
       }
       event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
-      LOG.info("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' done.");
     }
+  }
+
+  /**
+   * Check if the exception has a ConnectionException cause
+   * @param ex
+   * @return
+   */
+  private static boolean isConnectionException(Exception ex) {
+    boolean connectionException = false;
+    Throwable throwable = ex;
+    do {
+      if(throwable instanceof ConnectException) {
+        connectionException = true;
+      } else {
+        throwable = throwable.getCause();
+      }
+    } while (!connectionException && throwable != null);
+
+    return connectionException;
   }
 
   static public class CloseActionListener extends EventListener<PushContentPopupComponent> {
