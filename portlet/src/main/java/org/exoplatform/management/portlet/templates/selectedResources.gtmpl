@@ -145,6 +145,7 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/forum/space']">
   <a ng-click="unselectCategory('/forum/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Space Forum</label>
+  <div class="alert"><strong>Warning!</strong><br/>Spaces forums will be overriden if the whole space is also imported (Social > Spaces). Also, importing spaces forums will automatically create the space if it does not exist.</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/replace-existing"
@@ -183,6 +184,8 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
   <a ng-click="unselectCategory('/social/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Spaces</label>
+  <div class="alert"><strong>Warning!</strong><br/>Importing a space will override all its data (forum, agenda, FAQ, documents, activity stream and wiki).
+  </div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
@@ -204,6 +207,7 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/group']">
   <a ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Group Calendar</label>
+  <div class="alert"><strong>Warning!</strong><br/>Spaces calendars will be overriden if the whole space is also imported (Social > Spaces). Also, importing spaces calendars will automatically create the space if it does not exist.</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/group_IMPORT_filter/replace-existing"
@@ -267,6 +271,7 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/group']">
   <a ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Group wiki</label>
+  <div id="resultMessage" class="result-message alert">Spaces wikis will be overriden if the whole space is also imported (Social > Spaces). Also, importing spaces wikis will automatically create the space if it does not exist.</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/replace-existing"
