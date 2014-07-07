@@ -89,13 +89,14 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   public PushContentPopupComponent() throws Exception {
     this.addChild(UIPopupContainer.class, null, "SelectNodesPopupContainer");
 
+    addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
+
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
     addUIFormInput(new UIFormStringInput(USERNAME_FIELD_NAME, USERNAME_FIELD_NAME, ""));
     UIFormStringInput pwdInput = new UIFormStringInput(PWD_FIELD_NAME, PWD_FIELD_NAME, "");
     pwdInput.setType(UIFormStringInput.PASSWORD_TYPE);
     addUIFormInput(pwdInput);
 
-    addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
     // addUIFormInput(new UICheckBoxInput(PUBLISH_FIELD_NAME,
     // PUBLISH_FIELD_NAME, false));
 
