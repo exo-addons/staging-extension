@@ -316,21 +316,17 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       // Launch synchronization...
       $scope.setResultMessage("Proceeding...", "info");
 
-	  $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export')+paramsResourceCategories + paramsResources + paramsOptions)
-	  	.done(function () {
-	  		$scope.setResultMessage("Successfully exported.", "success");
-	  		// FIXME setResultMessage doesn't update message, this is a workaround
-	  		$("#resultMessage").removeClass("alert-info");
-	  		$("#resultMessage").addClass("alert-success");
-	  		$("#resultMessage").html("Successfully exported.");
-	  	})
-	  	.fail(function () {
-	  		$scope.setResultMessage(html, "error");
-	  		// FIXME setResultMessage doesn't update message, this is a workaround
-	  		$("#resultMessage").removeClass("alert-info");
-	  		$("#resultMessage").addClass("alert-error");
-	  		$("#resultMessage").html(html);
-	  	});
+      $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions)
+        .done(function () {
+          $scope.$apply(function(scope) {
+            scope.setResultMessage("Successfully exported.", "success");
+          });
+        })
+        .fail(function () {
+          $scope.$apply(function(scope) {
+            scope.setResultMessage("Error while exporting the data", "error");
+          });
+        });
     };
 
     // synchronize action
