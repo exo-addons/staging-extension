@@ -1,13 +1,5 @@
 package org.exoplatform.management.uiextension;
 
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.ResourceBundle;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
@@ -40,6 +32,9 @@ import org.exoplatform.webui.form.UIForm;
 import org.exoplatform.webui.form.UIFormInputInfo;
 import org.exoplatform.webui.form.UIFormSelectBox;
 import org.exoplatform.webui.form.UIFormStringInput;
+
+import java.net.URLDecoder;
+import java.util.*;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -125,13 +120,13 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       itemOptions.add(selectItemOption);
     }
     NodeComparaison nodeComparaison = new NodeComparaison();
-    nodeComparaison.setTitle("Current Node");
+    nodeComparaison.setTitle("Current Content");
     nodeComparaison.setPath(getCurrentPath());
     nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
     defaultSelection.add(nodeComparaison);
 
     nodeComparaison = new NodeComparaison();
-    nodeComparaison.setTitle("Sub nodes of current node");
+    nodeComparaison.setTitle("Sub contents of current content");
     nodeComparaison.setPath(getCurrentPath() + "/*");
     nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
     defaultSelection.add(nodeComparaison);
