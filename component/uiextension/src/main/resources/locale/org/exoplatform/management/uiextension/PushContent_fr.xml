@@ -13,17 +13,17 @@
 	<PushContent>
 		<msg>
 			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
-			<synchronizationError>Une erreur est survenu lors de la synchronisation</synchronizationError>
+			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
 			<userNameMandatory>Le nom de l'utilisateur est obligatoire</userNameMandatory>
 			<passwordMandatory>Le mot de passe est obligatoire</passwordMandatory>
-			<synchronizationDone>La synhronisation est terminée avec succès.</synchronizationDone>
+			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
 		</msg>
 		<state>
 			<not_found_source>Manquant ici</not_found_source>
 			<not_found_target>Manquant sur le serveur cible</not_found_target>
 			<modified_source>Modifié ici</modified_source>
-			<modified_target>Modifié dans le serveur cible</modified_target>
+			<modified_target>Modifié sur le serveur cible</modified_target>
 			<same>Egaux</same>
 			<unkown>Inconnu</unkown>
 			<all>Tout</all>
@@ -62,7 +62,7 @@
 			<path>Chemin</path>
 			<lastModifierUserName>Modifié par</lastModifierUserName>
 			<sourceModificationDate>Modifié le (ici)</sourceModificationDate>
-			<targetModificationDate>Modifié le (Distant)</targetModificationDate>
+			<targetModificationDate>Modifié le (distant)</targetModificationDate>
 			<stateLocalized>Etat</stateLocalized>
 			<action>Action</action>
 		</header>
