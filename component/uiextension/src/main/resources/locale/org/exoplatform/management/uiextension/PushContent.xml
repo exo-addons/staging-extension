@@ -36,6 +36,8 @@
 			<password>Password</password>
 			<synchronizationNode>Node</synchronizationNode>
 			<publishOnTarget>Publish on target server</publishOnTarget>
+			<currentContent>Current Content</currentContent>
+			<currentSubContents>Subcontents of the current content</currentSubContents>
 		</label>
 		<action>
 			<Select>Select contents manually</Select>

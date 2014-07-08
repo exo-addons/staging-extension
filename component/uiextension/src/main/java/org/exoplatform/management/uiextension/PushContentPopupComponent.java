@@ -122,13 +122,13 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       itemOptions.add(selectItemOption);
     }
     NodeComparaison nodeComparaison = new NodeComparaison();
-    nodeComparaison.setTitle("Current Content");
+    nodeComparaison.setTitle(resourceBundle.getString("PushContentPopupComponent.label.currentContent"));
     nodeComparaison.setPath(getCurrentPath());
     nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
     defaultSelection.add(nodeComparaison);
 
     nodeComparaison = new NodeComparaison();
-    nodeComparaison.setTitle("Sub contents of current content");
+    nodeComparaison.setTitle(resourceBundle.getString("PushContentPopupComponent.label.currentSubContents"));
     nodeComparaison.setPath(getCurrentPath() + "/*");
     nodeComparaison.setState(NodeComparaisonState.UNKNOWN);
     defaultSelection.add(nodeComparaison);

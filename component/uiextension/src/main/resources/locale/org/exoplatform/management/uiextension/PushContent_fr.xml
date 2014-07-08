@@ -36,6 +36,8 @@
 			<password>Mot de passe</password>
 			<synchronizationNode>Noeud</synchronizationNode>
 			<publishOnTarget>Publier sur le serveur cible</publishOnTarget>
+      <currentContent>Contenu courant</currentContent>
+      <currentSubContents>Sous-contenus du contenu courant</currentSubContents>
 		</label>
 		<action>
 			<Select>Sélectionner manuellement les contenus</Select>
