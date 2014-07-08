@@ -224,7 +224,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         selectNodesPopupWindow.setWindowSize(1024, 600);
         selectNodesPopupWindow.setRendered(true);
         event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesPopupWindow.getParent());
-        event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME));
+        event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
       } catch (Exception ex) {
         ApplicationMessage message;
         if(isConnectionException(ex)) {
