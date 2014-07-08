@@ -22,7 +22,9 @@
                  uiform.renderField(field) ;
                  String link = uicomponent.event("Select");
                 %>
+              <div class="pull-right">
                 <button type="button" onclick="$link" class="btn"  href="javascript:void(0);"><%=_ctx.appRes(uicomponent.getName() + ".action.Select")%></button>
+              </div>
               <% } else if(!uicomponent.getLabel(field.getName()).equals("UIPopupContainer") && !PushContentPopupComponent.INFO_FIELD_NAME.equals(field.getName())) { %>
               <div class="controls">
                 <%uiform.renderField(field) ; %>
