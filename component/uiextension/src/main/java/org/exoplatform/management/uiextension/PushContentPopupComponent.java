@@ -102,7 +102,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     // PUBLISH_FIELD_NAME, false));
 
     selectedNodesGrid = addChild(UIGrid.class, "selectedNodesGrid", "selectedNodesGrid");
-    selectedNodesGrid.configure("path", SELECTED_NODES_BEAN_FIELD, SELECTED_BEAN_ACTION);
+    selectedNodesGrid.configure("path", SELECTED_NODES_BEAN_FIELD, null);
 
     resourceBundle = WebuiRequestContext.getCurrentInstance().getApplicationResourceBundle();
     NodeComparaison.resourceBundle = resourceBundle;
