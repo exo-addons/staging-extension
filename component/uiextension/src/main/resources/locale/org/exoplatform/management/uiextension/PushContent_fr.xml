@@ -20,9 +20,9 @@
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
 		</msg>
 		<state>
-			<not_found_source>Manquant ici</not_found_source>
+			<not_found_source>Manquant sur le server source</not_found_source>
 			<not_found_target>Manquant sur le serveur cible</not_found_target>
-			<modified_source>Modifié ici</modified_source>
+			<modified_source>Modifié sur le server source</modified_source>
 			<modified_target>Modifié sur le serveur cible</modified_target>
 			<same>Egaux</same>
 			<unkown>Inconnu</unkown>
@@ -40,7 +40,7 @@
       <currentSubContents>Sous-contenus du contenu courant</currentSubContents>
 		</label>
 		<action>
-			<Select>Sélectionner manuellement les contenus</Select>
+			<Select>Modifier la sélection</Select>
 			<Push>Synchroniser</Push>
 			<Close>Fermer</Close>
 			<title>
@@ -63,14 +63,14 @@
 			<title>Titre</title>
 			<path>Chemin</path>
 			<lastModifierUserName>Modifié par</lastModifierUserName>
-			<sourceModificationDate>Modifié le (ici)</sourceModificationDate>
-			<targetModificationDate>Modifié le (distant)</targetModificationDate>
+			<sourceModificationDate>Modifié le (source)</sourceModificationDate>
+			<targetModificationDate>Modifié le (cible)</targetModificationDate>
 			<stateLocalized>Etat</stateLocalized>
 			<action>Action</action>
 		</header>
 		<action>
 			<title>
-				<Select>Sélectionner un contenu</Select>
+				<Select>Sélectionner le contenu</Select>
 			</title>
 		</action>
 		<label>
@@ -79,7 +79,7 @@
 			<filter>Filtrer</filter>
 			<modifiedAfter>Modifié sur ce serveur, après</modifiedAfter>
 			<publishedContentOnly>Contenu publié seulement</publishedContentOnly>
-			<selectContent>Selectionner contenu</selectContent>
+			<selectContent>Résultat du filtre</selectContent>
 			<selectedContent>Contenus sélectionnés</selectedContent>
 			<selectAll>Sélectionner tout</selectAll>
 			<deleteAll>Supprimer Tout</deleteAll>

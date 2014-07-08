@@ -17,13 +17,13 @@
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<userNameMandatory>Login is mandatory</userNameMandatory>
 			<passwordMandatory>Password is mandatory</passwordMandatory>
-			<synchronizationDone>Synhronization done successfully.</synchronizationDone>
+			<synchronizationDone>Synhronization done successfully</synchronizationDone>
 		</msg>
 		<state>
 			<not_found_source>Not found on source</not_found_source>
 			<not_found_target>Not found on target</not_found_target>
-			<modified_source>Modified in source</modified_source>
-			<modified_target>Modified in target</modified_target>
+			<modified_source>Modified on source</modified_source>
+			<modified_target>Modified on target</modified_target>
 			<same>Same</same>
 			<unkown>Unknown</unkown>
 			<all>All</all>
@@ -40,7 +40,7 @@
       <currentSubContents>Subcontents of the current content</currentSubContents>
 		</label>
 		<action>
-			<Select>Select contents manually</Select>
+			<Select>Edit selection</Select>
 			<Push>Push</Push>
 			<Close>Close</Close>
 			<title>
@@ -63,8 +63,8 @@
 			<title>Title</title>
 			<path>Path</path>
 			<lastModifierUserName>Modified by</lastModifierUserName>
-			<sourceModificationDate>Modified (here)</sourceModificationDate>
-			<targetModificationDate>Modified (distant)</targetModificationDate>
+			<sourceModificationDate>Modified (source)</sourceModificationDate>
+			<targetModificationDate>Modified (target)</targetModificationDate>
 			<stateLocalized>State</stateLocalized>
 			<action>Action</action>
 		</header>
@@ -79,7 +79,7 @@
 			<filter>Filter</filter>
 			<modifiedAfter>Modified here after</modifiedAfter>
 			<publishedContentOnly>Published content only</publishedContentOnly>
-			<selectContent>Select content</selectContent>
+			<selectContent>Filter results</selectContent>
 			<selectedContent>Selected contents</selectedContent>
 			<selectAll>Select all</selectAll>
 			<deleteAll>Delete all</deleteAll>
