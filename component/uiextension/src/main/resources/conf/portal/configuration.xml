@@ -62,4 +62,56 @@
 			</init-params>
 		</component-plugin>
 	</external-component-plugins>
+	<external-component-plugins>
+		<target-component>org.exoplatform.services.cms.views.ManageViewService</target-component>
+		<component-plugin>
+			<name>manage.view.plugin</name>
+			<set-method>setManageViewPlugin</set-method>
+			<type>org.exoplatform.services.cms.views.impl.ManageViewPlugin</type>
+			<description>this plugin add push button to Web View</description>
+			<!--  should be -1 to be loaded first -->
+			<priority>-1</priority>
+			<init-params>
+				<value-param>
+					<name>autoCreateInNewRepository</name>
+					<value>true</value>
+				</value-param>
+				<value-param>
+					<name>predefinedViewsLocation</name>
+					<value>war:/conf/dms-extension/dms/artifacts</value>
+				</value-param>
+				<object-param>
+					<name>Web</name>
+					<description>View configuration of WCM administrator</description>
+					<object type="org.exoplatform.services.cms.views.ViewConfig">
+						<field name="name">
+							<string>Web</string>
+						</field>
+						<field name="permissions">
+							<string>*:/platform/web-contributors</string>
+						</field>
+						<field name="template">
+							<string>/exo:ecm/views/templates/ecm-explorer/Content</string>
+						</field>
+						<field name="tabList">
+							<collection type="java.util.ArrayList">
+								<value>
+									<object type="org.exoplatform.services.cms.views.ViewConfig$Tab">
+										<field name="tabName">
+											<string>Authoring</string>
+										</field>
+										<field name="buttons">
+											<string>
+                    	 	 addCategory; addFolder; addDocument; editDocument; upload; pushContent; viewPermissions; managePublications; manageCategories; taggingDocument; vote; watchDocument; publicationRequestApproval; publicationApproveContent; publicationPublish; addLocalizationLink; comment  
+																						</string>
+										</field>
+									</object>
+								</value>
+							</collection>
+						</field>
+					</object>
+				</object-param>
+			</init-params>
+		</component-plugin>
+	</external-component-plugins>
 </configuration>
