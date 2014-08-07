@@ -78,6 +78,9 @@ public class WikiDataImportResource implements OperationHandler {
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
 
+    // "create-space" attribute. Defaults to false.
+    boolean createSpace = filters.contains("create-space:true");
+
     OperationAttachment attachment = operationContext.getAttachment(false);
     if (attachment == null) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for Wiki import.");
@@ -95,6 +98,14 @@ public class WikiDataImportResource implements OperationHandler {
       tempFolderPath = extractDataFromZip(attachmentInputStream, contentsByOwner);
 
       for (String wikiOwner : contentsByOwner.keySet()) {
+        if (WikiType.GROUP.equals(wikiType)) {
+          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, wikiOwner, createSpace);
+          if (!spaceCreatedOrAlreadyExists) {
+            log.warn("Import of wiki '" + wikiOwner + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+            continue;
+          }
+        }
+
         Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
         if (wiki != null) {
           if (replaceExisting) {
@@ -105,10 +116,6 @@ public class WikiDataImportResource implements OperationHandler {
           }
         } else {
           mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
-        }
-
-        if (WikiType.GROUP.equals(wikiType)) {
-          createSpaceIfNotExists(tempFolderPath, wikiOwner);
         }
 
         String workspace = mowService.getSession().getJCRSession().getWorkspace().getName();
@@ -363,9 +370,9 @@ public class WikiDataImportResource implements OperationHandler {
     }
   }
 
-  private void createSpaceIfNotExists(String tempFolderPath, String wikiOwner) throws IOException {
+  private boolean createSpaceIfNotExists(String tempFolderPath, String wikiOwner, boolean createSpace) throws IOException {
     Space space = spaceService.getSpaceByGroupId(wikiOwner);
-    if (space == null) {
+    if (space == null && createSpace) {
       FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(wikiType, wikiOwner));
       try {
         // Unmarshall metadata xml file
@@ -390,6 +397,7 @@ public class WikiDataImportResource implements OperationHandler {
         space.setPriority(spaceMetaData.getPriority());
         space.setUrl(spaceMetaData.getUrl());
         spaceService.createSpace(space, space.getEditor());
+        return true;
       } finally {
         if (spaceMetadataFile != null) {
           try {
@@ -400,6 +408,7 @@ public class WikiDataImportResource implements OperationHandler {
         }
       }
     }
+    return false;
   }
 
   private Session getSession(String workspace) throws Exception {

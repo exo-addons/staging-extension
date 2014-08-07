@@ -62,6 +62,16 @@ public class StagingExtensionController {
     IMPORT_PATH_EXCEPTIONS.put("/site/usersites", "/site");
 
     // RESOURCES CATEGORIES
+    ResourceCategory sites = new ResourceCategory("Sites", "/site");
+    sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
+    sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
+    sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
+    resourceCategories.add(sites);
+
+    ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);
+    social.getSubResourceCategories().add(new ResourceCategory("Spaces", StagingService.SOCIAL_SPACE_PATH));
+    resourceCategories.add(social);
+
     ResourceCategory contents = new ResourceCategory("Contents", "/content");
     contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
     resourceCategories.add(contents);
@@ -78,10 +88,6 @@ public class StagingExtensionController {
     forums.getSubResourceCategories().add(new ResourceCategory("Forum settings", StagingService.FORUM_SETTINGS));
     resourceCategories.add(forums);
 
-    ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);
-    social.getSubResourceCategories().add(new ResourceCategory("Spaces", StagingService.SOCIAL_SPACE_PATH));
-    resourceCategories.add(social);
-
     ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
     calendars.getSubResourceCategories().add(new ResourceCategory("Space/Group Calendar", StagingService.GROUP_CALENDAR_PATH));
     calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
@@ -92,12 +98,6 @@ public class StagingExtensionController {
     wikis.getSubResourceCategories().add(new ResourceCategory("Space wikis", StagingService.GROUP_WIKIS_PATH));
     wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
     resourceCategories.add(wikis);
-
-    ResourceCategory sites = new ResourceCategory("Sites", "/site");
-    sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
-    sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
-    sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
-    resourceCategories.add(sites);
 
     ResourceCategory organization = new ResourceCategory("Organization", "/organization");
     organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));

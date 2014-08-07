@@ -85,6 +85,9 @@ public class AnswerDataImportResource implements OperationHandler {
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
 
+    // "create-space" attribute. Defaults to false.
+    boolean createSpace = filters.contains("create-space:true");
+
     OperationAttachment attachment = operationContext.getAttachment(false);
     if (attachment == null) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for FAQ import.");
@@ -105,7 +108,11 @@ public class AnswerDataImportResource implements OperationHandler {
       for (String categoryId : contentsByOwner.keySet()) {
         boolean isSpaceFAQ = categoryId.contains(Utils.CATE_SPACE_ID_PREFIX);
         if (isSpaceFAQ) {
-          createSpaceIfNotExists(tempFolderPath, categoryId);
+          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, categoryId, createSpace);
+          if (!spaceCreatedOrAlreadyExists) {
+            log.warn("Import of Answer category '" + categoryId + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+            continue;
+          }
 
           if (replaceExisting) {
             log.info("Overwrite existing Space FAQ Category: '" + categoryId + "'  (replace-existing=true)");
@@ -383,10 +390,10 @@ public class AnswerDataImportResource implements OperationHandler {
     }
   }
 
-  private void createSpaceIfNotExists(String tempFolderPath, String faqId) throws IOException {
+  private boolean createSpaceIfNotExists(String tempFolderPath, String faqId, boolean createSpace) throws IOException {
     String spaceId = faqId.replace(Utils.CATE_SPACE_ID_PREFIX, "");
     Space space = spaceService.getSpaceByPrettyName(spaceId);
-    if (space == null) {
+    if (space == null && createSpace) {
       FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(faqId));
       try {
         // Unmarshall metadata xml file
@@ -411,6 +418,7 @@ public class AnswerDataImportResource implements OperationHandler {
         space.setPriority(spaceMetaData.getPriority());
         space.setUrl(spaceMetaData.getUrl());
         spaceService.createSpace(space, space.getEditor());
+        return true;
       } finally {
         if (spaceMetadataFile != null) {
           try {
@@ -421,6 +429,7 @@ public class AnswerDataImportResource implements OperationHandler {
         }
       }
     }
+    return false;
   }
 
   private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {

@@ -2,6 +2,113 @@
   <i>No selected resources</i>
 </div>
 
+<div class="uiBox selected-resource" ng-show="categoriesModel['/site/portalsites']">
+  <a ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">Remove</a>
+  <label class="selected-resource-title clickable" ng-init="resourceDetailsPortalSitesVisible=true" ng-click="resourceDetailsPortalSitesVisible = !resourceDetailsPortalSitesVisible">Portal Sites</label>
+  <div class="selected-resource-details" ng-show="resourceDetailsPortalSitesVisible">
+    <div ng-show="mode == 'import' || mode == 'synchronize'">
+      <label>Import Mode
+        <select class="option" name="/site/portalsites_IMPORT_importMode"
+                ng-model="optionsModel['/site/portalsites_IMPORT_importMode']">
+          <option value="merge">Merge</option>
+          <option value="conserve">Conserve</option>
+          <option value="insert">Insert</option>
+          <option value="overwrite">Overwrite</option>
+        </select>
+      </label>
+    </div>
+    <div class="selected-resource-table" ng-show="mode != 'import'">
+      <table class="table table-striped table-condensed">
+        <tr ng-show="!(resources['/site/portalsites'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No site selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/site/portalsites'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="uiBox selected-resource" ng-show="categoriesModel['/site/groupsites']">
+  <a ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">Remove</a>
+  <label class="selected-resource-title clickable" ng-init="resourceDetailsGroupSitesVisible=true" ng-click="resourceDetailsGroupSitesVisible = !resourceDetailsGroupSitesVisible">Group Sites</label>
+  <div class="selected-resource-details" ng-show="resourceDetailsGroupSitesVisible">
+    <div ng-show="mode == 'import' || mode == 'synchronize'">
+      <label>Import Mode
+        <select class="option" name="/site/groupsites_IMPORT_importMode"
+                ng-model="optionsModel['/site/groupsites_IMPORT_importMode']">
+          <option value="merge">Merge</option>
+          <option value="conserve">Conserve</option>
+          <option value="insert">Insert</option>
+          <option value="overwrite">Overwrite</option>
+        </select>
+      </label>
+    </div>
+    <div class="selected-resource-table" ng-show="mode != 'import'">
+      <table class="table table-striped table-condensed">
+        <tr ng-show="!(resources['/site/groupsites'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No site selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/site/groupsites'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="uiBox selected-resource" ng-show="categoriesModel['/site/usersites']">
+  <a ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">Remove</a>
+  <label class="selected-resource-title clickable" ng-init="resourceDetailsUserSitesVisible=true" ng-click="resourceDetailsUserSitesVisible = !resourceDetailsUserSitesVisible">User Sites</label>
+  <div class="selected-resource-details" ng-show="resourceDetailsUserSitesVisible">
+    <div ng-show="mode == 'import' || mode == 'synchronize'">
+      <label>Import Mode
+        <select class="option" name="/site/usersites_IMPORT_importMode"
+                ng-model="optionsModel['/site/usersites_IMPORT_importMode']">
+          <option value="merge">Merge</option>
+          <option value="conserve">Conserve</option>
+          <option value="insert">Insert</option>
+          <option value="overwrite">Overwrite</option>
+        </select>
+      </label>
+    </div>
+    <div class="selected-resource-table" ng-show="mode != 'import'">
+      <table class="table table-striped table-condensed">
+        <tr ng-show="!(resources['/site/usersites'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No site selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/site/usersites'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
+  <a ng-click="unselectCategory('/social/space')" class="unselect-resources-category">Remove</a>
+  <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Spaces</label>
+  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Importing a space will override all its data (forum, agenda, FAQ, documents, activity stream and wiki).
+  </div>
+  <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
+    <div ng-show="mode == 'import' || mode == 'synchronize'">
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
+                                                ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+    </div>
+    <div class="selected-resource-table" ng-show="mode != 'import'">
+      <table class="table table-striped table-condensed">
+        <tr ng-show="!(resources['/social/space'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No space selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/social/space'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
 <div class="uiBox selected-resource sites-content" ng-show="categoriesModel['/content/sites']">
   <a ng-click="unselectCategory('/content/sites')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSitesContentVisible=true" ng-click="resourceDetailsSitesContentVisible = !resourceDetailsSitesContentVisible">Sites Contents</label>
@@ -86,10 +193,13 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/answer/space']">
   <a ng-click="unselectCategory('/answer/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Space Answers</label>
+  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces FAQ answers will be overriden if the whole space is also imported (Social > Spaces).</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/answer/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/space_IMPORT_filter/create-space"
+                                                ng-model="optionsModel['/answer/space_IMPORT_filter/create-space']"><span>Create new space if not exists</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
@@ -145,16 +255,18 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/forum/space']">
   <a ng-click="unselectCategory('/forum/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Space Forum</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces forums will be overriden if the whole space is also imported (Social > Spaces). Also, importing spaces forums will automatically create the space if it does not exist.</div>
+  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces forums will be overriden if the whole space is also imported (Social > Spaces).</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/forum/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/create-space"
+                                                ng-model="optionsModel['/forum/space_IMPORT_filter/create-space']"><span>Create new space if not exists</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
         <tr ng-show="!(resources['/forum/space'] | filter:{selected:true}).length">
-          <td class="no-element-selected">No forum space selected</td>
+          <td class="no-element-selected">No space forum selected</td>
         </tr>
         <tr ng-repeat="resource in resources['/forum/space'] | filter:{selected:true}">
           <td>{{resource.text}}</td>
@@ -181,33 +293,9 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
-  <a ng-click="unselectCategory('/social/space')" class="unselect-resources-category">Remove</a>
-  <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Spaces</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Importing a space will override all its data (forum, agenda, FAQ, documents, activity stream and wiki).
-  </div>
-  <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
-    <div ng-show="mode == 'import' || mode == 'synchronize'">
-      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
-                                                ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
-    </div>
-    <div class="selected-resource-table" ng-show="mode != 'import'">
-      <table class="table table-striped table-condensed">
-        <tr ng-show="!(resources['/social/space'] | filter:{selected:true}).length">
-          <td class="no-element-selected">No space selected</td>
-        </tr>
-        <tr ng-repeat="resource in resources['/social/space'] | filter:{selected:true}">
-          <td>{{resource.text}}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-</div>
-
 <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/group']">
   <a ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Group Calendar</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces calendars will be overriden if the whole space is also imported (Social > Spaces). Also, importing spaces calendars will automatically create the space if it does not exist.</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/group_IMPORT_filter/replace-existing"
@@ -271,11 +359,13 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/group']">
   <a ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Group wiki</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces wikis will be overriden if the whole space is also imported (Social > Spaces). Also, importing spaces wikis will automatically create the space if it does not exist.</div>
+  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces wikis will be overriden if the whole space is also imported (Social > Spaces).</div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/wiki/group_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/create-space"
+                                                ng-model="optionsModel['/wiki/group_IMPORT_filter/create-space']"><span>Create new space if not exists</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
@@ -304,90 +394,6 @@
           <td class="no-element-selected">No wiki selected</td>
         </tr>
         <tr ng-repeat="resource in resources['/wiki/portal'] | filter:{selected:true}">
-          <td>{{resource.text}}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="uiBox selected-resource" ng-show="categoriesModel['/site/portalsites']">
-  <a ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">Remove</a>
-  <label class="selected-resource-title clickable" ng-init="resourceDetailsPortalSitesVisible=true" ng-click="resourceDetailsPortalSitesVisible = !resourceDetailsPortalSitesVisible">Portal Sites</label>
-  <div class="selected-resource-details" ng-show="resourceDetailsPortalSitesVisible">
-    <div ng-show="mode == 'import' || mode == 'synchronize'">
-      <label>Import Mode
-        <select class="option" name="/site/portalsites_IMPORT_importMode"
-                ng-model="optionsModel['/site/portalsites_IMPORT_importMode']">
-          <option value="merge">Merge</option>
-          <option value="conserve">Conserve</option>
-          <option value="insert">Insert</option>
-          <option value="overwrite">Overwrite</option>
-        </select>
-      </label>
-    </div>
-    <div class="selected-resource-table" ng-show="mode != 'import'">
-      <table class="table table-striped table-condensed">
-        <tr ng-show="!(resources['/site/portalsites'] | filter:{selected:true}).length">
-          <td class="no-element-selected">No site selected</td>
-        </tr>
-        <tr ng-repeat="resource in resources['/site/portalsites'] | filter:{selected:true}">
-          <td>{{resource.text}}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="uiBox selected-resource" ng-show="categoriesModel['/site/groupsites']">
-  <a ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">Remove</a>
-  <label class="selected-resource-title clickable" ng-init="resourceDetailsGroupSitesVisible=true" ng-click="resourceDetailsGroupSitesVisible = !resourceDetailsGroupSitesVisible">Group Sites</label>
-  <div class="selected-resource-details" ng-show="resourceDetailsGroupSitesVisible">
-    <div ng-show="mode == 'import' || mode == 'synchronize'">
-      <label>Import Mode
-        <select class="option" name="/site/groupsites_IMPORT_importMode"
-                ng-model="optionsModel['/site/groupsites_IMPORT_importMode']">
-          <option value="merge">Merge</option>
-          <option value="conserve">Conserve</option>
-          <option value="insert">Insert</option>
-          <option value="overwrite">Overwrite</option>
-        </select>
-      </label>
-    </div>
-    <div class="selected-resource-table" ng-show="mode != 'import'">
-      <table class="table table-striped table-condensed">
-        <tr ng-show="!(resources['/site/groupsites'] | filter:{selected:true}).length">
-          <td class="no-element-selected">No site selected</td>
-        </tr>
-        <tr ng-repeat="resource in resources['/site/groupsites'] | filter:{selected:true}">
-          <td>{{resource.text}}</td>
-        </tr>
-      </table>
-    </div>
-  </div>
-</div>
-
-<div class="uiBox selected-resource" ng-show="categoriesModel['/site/usersites']">
-  <a ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">Remove</a>
-  <label class="selected-resource-title clickable" ng-init="resourceDetailsUserSitesVisible=true" ng-click="resourceDetailsUserSitesVisible = !resourceDetailsUserSitesVisible">User Sites</label>
-  <div class="selected-resource-details" ng-show="resourceDetailsUserSitesVisible">
-    <div ng-show="mode == 'import' || mode == 'synchronize'">
-      <label>Import Mode
-        <select class="option" name="/site/usersites_IMPORT_importMode"
-                ng-model="optionsModel['/site/usersites_IMPORT_importMode']">
-          <option value="merge">Merge</option>
-          <option value="conserve">Conserve</option>
-          <option value="insert">Insert</option>
-          <option value="overwrite">Overwrite</option>
-        </select>
-      </label>
-    </div>
-    <div class="selected-resource-table" ng-show="mode != 'import'">
-      <table class="table table-striped table-condensed">
-        <tr ng-show="!(resources['/site/usersites'] | filter:{selected:true}).length">
-          <td class="no-element-selected">No site selected</td>
-        </tr>
-        <tr ng-repeat="resource in resources['/site/usersites'] | filter:{selected:true}">
           <td>{{resource.text}}</td>
         </tr>
       </table>

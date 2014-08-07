@@ -85,6 +85,9 @@ public class ForumDataImportResource implements OperationHandler {
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
 
+    // "create-space" attribute. Defaults to false.
+    boolean createSpace = filters.contains("create-space:true");
+
     OperationAttachment attachment = operationContext.getAttachment(false);
     if (attachment == null) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for forum import.");
@@ -106,8 +109,12 @@ public class ForumDataImportResource implements OperationHandler {
         boolean isSpaceForum = categoryId.contains(Utils.FORUM_SPACE_ID_PREFIX);
         if (isSpaceForum) {
           String forumId = categoryId;
-          createSpaceIfNotExists(tempFolderPath, forumId);
-
+          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, forumId, createSpace);
+          if (!spaceCreatedOrAlreadyExists) {
+            log.warn("Import of forum category '" + categoryId + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+            continue;
+          }
+          
           Category spaceCategory = forumService.getCategoryIncludedSpace();
           Forum forum = forumService.getForum(spaceCategory.getId(), forumId);
           if (forum != null) {
@@ -389,10 +396,10 @@ public class ForumDataImportResource implements OperationHandler {
     }
   }
 
-  private void createSpaceIfNotExists(String tempFolderPath, String forumId) throws IOException {
+  private boolean createSpaceIfNotExists(String tempFolderPath, String forumId, boolean createSpace) throws IOException {
     String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
     Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
-    if (space == null) {
+    if (space == null && createSpace) {
       FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(forumId));
       try {
         // Unmarshall metadata xml file
@@ -417,6 +424,7 @@ public class ForumDataImportResource implements OperationHandler {
         space.setPriority(spaceMetaData.getPriority());
         space.setUrl(spaceMetaData.getUrl());
         spaceService.createSpace(space, space.getEditor());
+        return true;
       } finally {
         if (spaceMetadataFile != null) {
           try {
@@ -427,6 +435,7 @@ public class ForumDataImportResource implements OperationHandler {
         }
       }
     }
+    return false;
   }
 
   private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
