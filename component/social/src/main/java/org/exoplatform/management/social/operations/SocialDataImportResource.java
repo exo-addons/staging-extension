@@ -262,7 +262,9 @@ public class SocialDataImportResource implements OperationHandler {
 
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
-      ExoSocialActivity[] activities = (ExoSocialActivity[]) xstream.fromXML(inputStream);
+
+      @SuppressWarnings("unchecked")
+      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
       List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
       ProfileFilter profileFilter = new ProfileFilter();
       Identity identity = null;

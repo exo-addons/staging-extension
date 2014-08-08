@@ -89,12 +89,20 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
   <a ng-click="unselectCategory('/social/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Spaces</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Importing a space will override all its data (forum, agenda, FAQ, documents, activity stream and wiki).
-  </div>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+    </div>
+    <div ng-show="mode == 'export'">
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_EXPORT_filter/export-wiki" checked="checked"
+                                                ng-model="optionsModel['/social/space_EXPORT_filter/export-wiki']"><span>Export wiki</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_EXPORT_filter/export-forum" checked="checked"
+                                                ng-model="optionsModel['/social/space_EXPORT_filter/export-forum']"><span>Export Forum</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_EXPORT_filter/export-calendar" checked="checked"
+                                                ng-model="optionsModel['/social/space_EXPORT_filter/export-calendar']"><span>Export Calendar</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_EXPORT_filter/export-answer" checked="checked"
+                                                ng-model="optionsModel['/social/space_EXPORT_filter/export-answer']"><span>Export Answer</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
@@ -199,7 +207,7 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/answer/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/space_IMPORT_filter/create-space"
-                                                ng-model="optionsModel['/answer/space_IMPORT_filter/create-space']"><span>Create new space if not exists</span></label>
+                                                ng-model="optionsModel['/answer/space_IMPORT_filter/create-space']"><span>Create space if not exists</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
@@ -261,7 +269,7 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/forum/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/create-space"
-                                                ng-model="optionsModel['/forum/space_IMPORT_filter/create-space']"><span>Create new space if not exists</span></label>
+                                                ng-model="optionsModel['/forum/space_IMPORT_filter/create-space']"><span>Create space if not exists</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
@@ -286,6 +294,30 @@
           <td class="no-element-selected">No forum setting selected</td>
         </tr>
         <tr ng-repeat="resource in resources['/forum/settings'] | filter:{selected:true}">
+          <td>{{resource.text}}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/space']">
+  <a ng-click="unselectCategory('/calendar/space')" class="unselect-resources-category">Remove</a>
+  <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">Space Calendar</label>
+  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces calendars will be overriden if the space is imported with its calendar data (Social > Spaces).</div>
+  <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
+    <div ng-show="mode == 'import' || mode == 'synchronize'">
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/space_IMPORT_filter/replace-existing"
+                                                ng-model="optionsModel['/calendar/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/space_IMPORT_filter/create-space"
+                                                ng-model="optionsModel['/calendar/space_IMPORT_filter/create-space']"><span>Create space if not exists</span></label>
+    </div>
+    <div class="selected-resource-table" ng-show="mode != 'import'">
+      <table class="table table-striped table-condensed">
+        <tr ng-show="!(resources['/calendar/space'] | filter:{selected:true}).length">
+          <td class="no-element-selected">No space selected</td>
+        </tr>
+        <tr ng-repeat="resource in resources['/calendar/space'] | filter:{selected:true}">
           <td>{{resource.text}}</td>
         </tr>
       </table>
@@ -365,7 +397,7 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/wiki/group_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/create-space"
-                                                ng-model="optionsModel['/wiki/group_IMPORT_filter/create-space']"><span>Create new space if not exists</span></label>
+                                                ng-model="optionsModel['/wiki/group_IMPORT_filter/create-space']"><span>Create space if not exists</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">

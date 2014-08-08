@@ -19,6 +19,7 @@ package org.exoplatform.management.social.operations;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.List;
 
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
@@ -37,14 +38,14 @@ public class SpaceActivitiesExportTask implements ExportTask {
   public static final String FILENAME = "activities";
 
   private final IdentityManager identityManager;
-  private final ExoSocialActivity[] activities;
+  private final List<ExoSocialActivity> activities;
   private final String spacePrettyName;
   private final Integer index;
 
-  public SpaceActivitiesExportTask(IdentityManager identityManager, ExoSocialActivity[] activities, String spacePrettyName, int index) {
+  public SpaceActivitiesExportTask(IdentityManager identityManager, List<ExoSocialActivity> activitiesList, String spacePrettyName, int index) {
     this.index = index;
     this.spacePrettyName = spacePrettyName;
-    this.activities = activities;
+    this.activities = activitiesList;
     this.identityManager = identityManager;
   }
 
@@ -57,7 +58,7 @@ public class SpaceActivitiesExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
-    if (activities != null && activities.length > 0) {
+    if (activities != null && activities.size() > 0) {
       for (ExoSocialActivity activity : activities) {
         activity.setId(null);
         Identity identity = identityManager.getIdentity(activity.getUserId(), true);

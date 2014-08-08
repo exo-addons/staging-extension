@@ -61,6 +61,7 @@ import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
+import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
@@ -100,6 +101,18 @@ public class SocialDataExportResource implements OperationHandler {
     // dataStorage =
     // operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
 
+    OperationAttributes attributes = operationContext.getAttributes();
+    List<String> operationFilters = attributes.getValues("filter");
+
+    // "replace-existing" attribute. Defaults to false.
+    boolean exportWiki = false, exportAnswer = false, exportCalendar = false, exportForum = false;
+    if (operationFilters != null) {
+      exportWiki = operationFilters.contains("export-wiki:true");
+      exportForum = operationFilters.contains("export-forum:true");
+      exportCalendar = operationFilters.contains("export-calendar:true");
+      exportAnswer = operationFilters.contains("export-answer:true");
+    }
+
     String spaceDisplayName = operationContext.getAddress().resolvePathTemplate("space-name");
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
@@ -116,9 +129,12 @@ public class SocialDataExportResource implements OperationHandler {
 
       for (String application : appsSet) {
         String path = getEntryResourcePath(application);
-        if (path != null) {
-          addResourceExportTasks(exportTasks, attributesMap, path, space.getPrettyName());
+        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.WIKI_RESOURCE_PATH) && !exportWiki)
+            || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer)
+            || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
+          continue;
         }
+        addResourceExportTasks(exportTasks, attributesMap, path, space.getPrettyName());
         // TODO Export/import Dashboard gadgets
         // else if (application.contains(SocialExtension.DASHBOARD_PORTLET)) {
         // Dashboard dashboard =
@@ -173,11 +189,23 @@ public class SocialDataExportResource implements OperationHandler {
 
       log.info("export space activities");
       ExoSocialActivity[] activities = null;
+
       int size = spaceList.getSize(), i = 0;
       while (i < size) {
         int length = i + 10 < size ? 10 : size - i;
         activities = spaceList.load(0, length);
-        exportTasks.add(new SpaceActivitiesExportTask(identityManager, activities, space.getPrettyName(), i));
+        List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+        for (ExoSocialActivity exoSocialActivity : activities) {
+          if ((exoSocialActivity.getType().equals(SocialExtension.FORUM_ACTIVITY_TYPE) && !exportForum) || (exoSocialActivity.getType().equals(SocialExtension.WIKI_ACTIVITY_TYPE) && !exportWiki)
+              || (exoSocialActivity.getType().equals(SocialExtension.ANSWER_ACTIVITY_TYPE) && !exportAnswer)
+              || (exoSocialActivity.getType().equals(SocialExtension.CALENDAR_ACTIVITY_TYPE) && !exportCalendar)) {
+            continue;
+          }
+          activitiesList.add(exoSocialActivity);
+        }
+        if (!activitiesList.isEmpty()) {
+          exportTasks.add(new SpaceActivitiesExportTask(identityManager, activitiesList, space.getPrettyName(), i));
+        }
         i += length;
       }
     } catch (Exception e) {
