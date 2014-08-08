@@ -52,7 +52,7 @@ public class SocialExtension implements ManagementExtension {
   public static final String SPACE_RESOURCE_PARENT_PATH = "social/space";
   public static final String SPACE_RESOURCE_PATH = "/social/space";
   public static final String FORUM_RESOURCE_PATH = "/forum/space";
-  public static final String CALENDAR_RESOURCE_PATH = "/calendar/group";
+  public static final String CALENDAR_RESOURCE_PATH = "/calendar/space";
   public static final String ANSWER_RESOURCE_PATH = "/answer/space";
   public static final String FAQ_RESOURCE_PATH = "/answer/template";
   public static final String WIKI_RESOURCE_PATH = "/wiki/group";
@@ -60,6 +60,12 @@ public class SocialExtension implements ManagementExtension {
   public static final String SITES_RESOURCE_PATH = "/site/groupsites";
   public static final String SITES_IMPORT_RESOURCE_PATH = "/site";
   public static final String GROUP_SITE_RESOURCE_PATH = "/group/spaces";
+
+  public static final String FORUM_ACTIVITY_TYPE = "ks-forum:spaces";
+  public static final String CALENDAR_ACTIVITY_TYPE = "cs-calendar:spaces";
+  public static final String ANSWER_ACTIVITY_TYPE = "ks-answer:spaces";
+  public static final String WIKI_ACTIVITY_TYPE = "ks-wiki:spaces";
+
 
   @Override
   public void initialize(ExtensionContext context) {

@@ -57,6 +57,7 @@ public class ResourceHandlerLocator {
 
     // Calendar
     registry.register(new CalendarHandler(StagingService.GROUP_CALENDAR_PATH));
+    registry.register(new CalendarHandler(StagingService.SPACE_CALENDAR_PATH));
     registry.register(new CalendarHandler(StagingService.PERSONAL_FORUM_PATH));
 
     // Answer

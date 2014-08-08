@@ -89,7 +89,8 @@ public class StagingExtensionController {
     resourceCategories.add(forums);
 
     ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
-    calendars.getSubResourceCategories().add(new ResourceCategory("Space/Group Calendar", StagingService.GROUP_CALENDAR_PATH));
+    calendars.getSubResourceCategories().add(new ResourceCategory("Group Calendar", StagingService.GROUP_CALENDAR_PATH));
+    calendars.getSubResourceCategories().add(new ResourceCategory("Space Calendar", StagingService.SPACE_CALENDAR_PATH));
     calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
     resourceCategories.add(calendars);
 
