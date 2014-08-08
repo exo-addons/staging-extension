@@ -61,11 +61,16 @@ public class AnswerDataReadResource implements OperationHandler {
         if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
           continue;
         }
-        Space space = spaceService.getSpaceByDisplayName(category.getName());
-        if (space == null) {
-          continue;
+        String name = category.getName();
+        if (isSpaceType) {
+          String spaceGroupId = "/spaces/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
+          Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+          if (space == null) {
+            continue;
+          }
+          name = space.getDisplayName();
         }
-        children.add(category.getName());
+        children.add(name);
       }
       if (!isSpaceType) {
         children.add(AnswerExtension.ROOT_CATEGORY);

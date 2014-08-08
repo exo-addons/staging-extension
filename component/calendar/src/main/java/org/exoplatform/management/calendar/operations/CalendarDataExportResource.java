@@ -144,7 +144,7 @@ public class CalendarDataExportResource implements OperationHandler {
           if (exportSpaceMetadata && spaceCalendar) {
             Space space = spaceService.getSpaceByGroupId(groupId);
             if (space != null) {
-              exportTasks.add(new SpaceMetadataExportTask(space));
+              exportTasks.add(new SpaceMetadataExportTask(space, groupId.replace("/spaces/", "")));
             }
           }
         }

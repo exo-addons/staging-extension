@@ -192,6 +192,10 @@ public class StagingExtensionController {
     Set<String> foundResources = new HashSet<String>();
     while (entry != null) {
       String fileName = entry.getName();
+      if(entry.isDirectory()) {
+        entry = zipInputStream.getNextEntry();
+        continue;
+      }
       fileName = fileName.startsWith("/") ? "" : "/" + fileName;
       String resourcePath = transformSpecialPath(fileName);
       // If resource path transformed and treated with Exceptions Resource Paths

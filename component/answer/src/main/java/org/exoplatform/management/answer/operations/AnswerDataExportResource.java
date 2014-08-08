@@ -109,7 +109,8 @@ public class AnswerDataExportResource implements OperationHandler {
     } else {
       if (isSpaceType) {
         Space space = spaceService.getSpaceByDisplayName(name);
-        exportAnswer(exportTasks, workspace, categoryHomePath, Utils.CATE_SPACE_ID_PREFIX + space.getPrettyName(), space, exportSpaceMetadata);
+        String groupName = space.getGroupId().replace("/spaces/", "");
+        exportAnswer(exportTasks, workspace, categoryHomePath, Utils.CATE_SPACE_ID_PREFIX + groupName, space, exportSpaceMetadata);
       } else {
         try {
           if (name.equals(AnswerExtension.ROOT_CATEGORY)) {
@@ -144,7 +145,7 @@ public class AnswerDataExportResource implements OperationHandler {
       exportNode(workspace, parentNode, categoryId, exportTasks);
 
       if (exportSpaceMetadata && isSpaceType) {
-        exportTasks.add(new SpaceMetadataExportTask(space));
+        exportTasks.add(new SpaceMetadataExportTask(space, categoryId));
       }
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting FAQ", exception);

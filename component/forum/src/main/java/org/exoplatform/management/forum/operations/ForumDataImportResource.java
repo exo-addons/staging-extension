@@ -114,7 +114,7 @@ public class ForumDataImportResource implements OperationHandler {
             log.warn("Import of forum category '" + categoryId + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
             continue;
           }
-          
+
           Category spaceCategory = forumService.getCategoryIncludedSpace();
           Forum forum = forumService.getForum(spaceCategory.getId(), forumId);
           if (forum != null) {
@@ -396,7 +396,7 @@ public class ForumDataImportResource implements OperationHandler {
     }
   }
 
-  private boolean createSpaceIfNotExists(String tempFolderPath, String forumId, boolean createSpace) throws IOException {
+  private boolean createSpaceIfNotExists(String tempFolderPath, String forumId, boolean createSpace) throws Exception {
     String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
     Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
     if (space == null && createSpace) {
@@ -409,7 +409,13 @@ public class ForumDataImportResource implements OperationHandler {
 
         log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
         space = new Space();
-        space.setPrettyName(spaceMetaData.getPrettyName());
+
+        String originalSpacePrettyName = spaceMetaData.getGroupId().replace("/spaces/", "");
+        if (originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
+          space.setPrettyName(spaceMetaData.getPrettyName());
+        } else {
+          space.setPrettyName(originalSpacePrettyName);
+        }
         space.setDisplayName(spaceMetaData.getDisplayName());
         space.setGroupId("/space/" + spacePrettyName);
         space.setTag(spaceMetaData.getTag());
@@ -424,6 +430,9 @@ public class ForumDataImportResource implements OperationHandler {
         space.setPriority(spaceMetaData.getPriority());
         space.setUrl(spaceMetaData.getUrl());
         spaceService.createSpace(space, space.getEditor());
+        if (!originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
+          spaceService.renameSpace(space, spaceMetaData.getDisplayName());
+        }
         return true;
       } finally {
         if (spaceMetadataFile != null) {

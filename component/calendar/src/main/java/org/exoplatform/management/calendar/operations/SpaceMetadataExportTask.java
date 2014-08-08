@@ -34,14 +34,17 @@ public class SpaceMetadataExportTask implements ExportTask {
   public static final String FILENAME = "space.metadata";
 
   private final Space space;
+  // Used when space is renamed, the space pretty name still the old one
+  private final String spacePrettyName;
 
-  public SpaceMetadataExportTask(Space space) {
+  public SpaceMetadataExportTask(Space space, String spacePrettyName) {
     this.space = space;
+    this.spacePrettyName = spacePrettyName;
   }
 
   @Override
   public String getEntry() {
-    return getEntryPath(space.getPrettyName());
+    return getEntryPath(spacePrettyName);
   }
 
   public static String getEntryPath(String spacePrettyName) {

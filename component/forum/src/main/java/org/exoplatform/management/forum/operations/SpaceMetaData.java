@@ -25,10 +25,10 @@ public class SpaceMetaData implements Serializable {
   private String tag;
   private String type;
   private String url;
+  private String groupId;
   private String visibility;
 
-  public SpaceMetaData() {
-  }
+  public SpaceMetaData() {}
 
   public SpaceMetaData(Space space) {
     this.displayName = space.getDisplayName();
@@ -45,6 +45,7 @@ public class SpaceMetaData implements Serializable {
     this.type = space.getType();
     this.url = space.getUrl();
     this.visibility = space.getVisibility();
+    this.groupId = space.getGroupId();
   }
 
   public String getDisplayName() {
@@ -157,5 +158,13 @@ public class SpaceMetaData implements Serializable {
 
   public void setInvitedUsers(String[] invitedUsers) {
     this.invitedUsers = invitedUsers;
+  }
+
+  public String getGroupId() {
+    return groupId;
+  }
+
+  public void setGroupId(String groupId) {
+    this.groupId = groupId;
   }
 }

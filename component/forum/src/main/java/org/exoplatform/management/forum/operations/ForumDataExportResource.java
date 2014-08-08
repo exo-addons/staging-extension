@@ -120,15 +120,19 @@ public class ForumDataExportResource implements OperationHandler {
   private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName, boolean exportSpaceMetadata) {
     try {
       String forumId = (spacePrettyName == null ? "" : Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName);
+      if (exportSpaceMetadata && isSpaceForumType) {
+        Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
+        spacePrettyName = space.getGroupId().replace("/spaces/", "");
+
+        forumId = Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName;
+        exportTasks.add(new SpaceMetadataExportTask(space, forumId));
+      }
+
       String parentNodePath = "/" + categoryHomePath + "/" + categoryId + (forumId.isEmpty() ? "" : "/" + forumId);
       Session session = getSession(workspace);
       Node parentNode = (Node) session.getItem(parentNodePath);
       exportNode(workspace, parentNode, categoryId, forumId, exportTasks);
 
-      if (exportSpaceMetadata && isSpaceForumType) {
-        Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
-        exportTasks.add(new SpaceMetadataExportTask(space, forumId));
-      }
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting forum", exception);
     }

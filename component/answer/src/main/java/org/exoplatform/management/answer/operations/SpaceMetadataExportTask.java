@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
-import org.exoplatform.faq.service.Utils;
 import org.exoplatform.social.core.space.model.Space;
 import org.gatein.management.api.operation.model.ExportTask;
 
@@ -35,14 +34,16 @@ public class SpaceMetadataExportTask implements ExportTask {
   public static final String FILENAME = "space.metadata";
 
   private final Space space;
+  private final String faqId;
 
-  public SpaceMetadataExportTask(Space space) {
+  public SpaceMetadataExportTask(Space space, String faqId) {
     this.space = space;
+    this.faqId = faqId;
   }
 
   @Override
   public String getEntry() {
-    return getEntryPath(Utils.CATE_SPACE_ID_PREFIX + space.getPrettyName());
+    return getEntryPath(faqId);
   }
 
   public static String getEntryPath(String faqId) {

@@ -84,8 +84,8 @@ public class ForumDataReadResource implements OperationHandler {
 
   private String getSpaceDisplayName(SpaceService spaceService, Forum forum) {
     if (forum.getId().startsWith(Utils.FORUM_SPACE_ID_PREFIX)) {
-      String spacePrettyName = forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-      Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
+      String spaceGroupId = "/spaces/" + forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+      Space space = spaceService.getSpaceByGroupId(spaceGroupId);
       if (space != null) {
         return space.getDisplayName();
       }
