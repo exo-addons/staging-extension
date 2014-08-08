@@ -49,43 +49,59 @@ import org.gatein.management.api.operation.model.ExportTask;
 public class CalendarDataExportResource implements OperationHandler {
 
   private boolean groupCalendar;
+  private boolean spaceCalendar;
   private String type;
 
-  public CalendarDataExportResource(boolean groupCalendar) {
+  private SpaceService spaceService;
+
+  public CalendarDataExportResource(boolean groupCalendar, boolean spaceCalendar) {
     this.groupCalendar = groupCalendar;
-    type = groupCalendar ? CalendarExtension.GROUP_CALENDAR_TYPE : CalendarExtension.PERSONAL_CALENDAR_TYPE;
+    this.spaceCalendar = spaceCalendar;
+    type = groupCalendar ? spaceCalendar ? CalendarExtension.SPACE_CALENDAR_TYPE : CalendarExtension.GROUP_CALENDAR_TYPE : CalendarExtension.PERSONAL_CALENDAR_TYPE;
   }
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
+    spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     UserACL userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
+
+    String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
+    boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     if (groupCalendar) {
       String groupId = operationContext.getAttributes().getValue("filter");
+      if (spaceCalendar) {
+        String displayName = groupId;
+        Space space = spaceService.getSpaceByDisplayName(displayName);
+        if (space == null) {
+          throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't find space with display name: " + displayName);
+        }
+        groupId = space.getGroupId();
+      }
       if (groupId == null || groupId.trim().isEmpty()) {
         OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
         try {
           @SuppressWarnings("unchecked")
           Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
           for (Group group : groups) {
-            exportGroupCalendar(calendarService, userACL, exportTasks, group.getId());
+            if (spaceCalendar) {
+              if (group.getId().startsWith("/spaces/")) {
+                exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), exportSpaceMetadata);
+              }
+            } else {
+              if (!group.getId().startsWith("/spaces/")) {
+                exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), exportSpaceMetadata);
+              }
+            }
           }
         } catch (Exception e) {
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
         }
       } else {
-        if (!groupId.startsWith("/")) {
-          SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
-          Space space = spaceService.getSpaceByDisplayName(groupId);
-          if (space == null) {
-            throw new OperationException(OperationNames.EXPORT_RESOURCE, "Cannot find space with display name = " + groupId);
-          }
-          groupId = space.getGroupId();
-        }
-        exportGroupCalendar(calendarService, userACL, exportTasks, groupId);
+        exportGroupCalendar(calendarService, userACL, exportTasks, groupId, exportSpaceMetadata);
       }
     } else {
       String username = operationContext.getAttributes().getValue("filter");
@@ -111,7 +127,7 @@ public class CalendarDataExportResource implements OperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportGroupCalendar(CalendarService calendarService, UserACL userACL, List<ExportTask> exportTasks, String groupId) {
+  private void exportGroupCalendar(CalendarService calendarService, UserACL userACL, List<ExportTask> exportTasks, String groupId, boolean exportSpaceMetadata) {
     try {
       List<GroupCalendarData> groupCalendars = calendarService.getGroupCalendars(new String[] { groupId }, true, userACL.getSuperUser());
       if (groupCalendars.size() > 1) {
@@ -123,6 +139,13 @@ public class CalendarDataExportResource implements OperationHandler {
           for (Calendar calendar : calendars) {
             List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
             exportTasks.add(new CalendarExportTask(type, calendar, events));
+          }
+
+          if (exportSpaceMetadata && spaceCalendar) {
+            Space space = spaceService.getSpaceByGroupId(groupId);
+            if (space != null) {
+              exportTasks.add(new SpaceMetadataExportTask(space));
+            }
           }
         }
       }

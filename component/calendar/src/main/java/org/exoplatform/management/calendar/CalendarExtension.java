@@ -41,6 +41,7 @@ import org.gatein.management.spi.ManagementExtension;
  */
 public class CalendarExtension implements ManagementExtension {
 
+  public static final String SPACE_CALENDAR_TYPE = "space";
   public static final String GROUP_CALENDAR_TYPE = "group";
   public static final String PERSONAL_CALENDAR_TYPE = "personal";
 
@@ -50,18 +51,23 @@ public class CalendarExtension implements ManagementExtension {
 
     ManagedResource.Registration calendar = calendarRegistration.registerManagedResource(description("calendar resources."));
 
-    calendar.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Lists available calendars", GROUP_CALENDAR_TYPE, PERSONAL_CALENDAR_TYPE),
+    calendar.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Lists available calendars", SPACE_CALENDAR_TYPE, GROUP_CALENDAR_TYPE, PERSONAL_CALENDAR_TYPE),
         description("Lists available calendars"));
 
+    ManagedResource.Registration space = calendar.registerSubResource(SPACE_CALENDAR_TYPE, description("space calendar"));
+    space.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(true, true), description("Read space calendars"));
+    space.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(true, true), description("export space calendar"));
+    space.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(true, true), description("import space calendar"));
+
     ManagedResource.Registration group = calendar.registerSubResource(GROUP_CALENDAR_TYPE, description("group calendar"));
-    group.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(true), description("Read group calendars"));
-    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(true), description("export group calendar"));
-    group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(true), description("import group calendar"));
+    group.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(true, false), description("Read group calendars"));
+    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(true, false), description("export group calendar"));
+    group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(true, false), description("import group calendar"));
 
     ManagedResource.Registration personal = calendar.registerSubResource(PERSONAL_CALENDAR_TYPE, description("personal calendar"));
-    personal.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(false), description("Read personal calendars"));
-    personal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(false), description("export personal calendar"));
-    personal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(false), description("import personal calendar"));
+    personal.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(false, false), description("Read personal calendars"));
+    personal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(false, false), description("export personal calendar"));
+    personal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(false, false), description("import personal calendar"));
   }
 
   @Override

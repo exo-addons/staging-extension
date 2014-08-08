@@ -21,9 +21,12 @@ import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
 import org.exoplatform.management.calendar.CalendarExtension;
 import org.exoplatform.portal.application.PortalRequestContext;
+import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.UserPortalConfigService;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.url.PortalURLContext;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.web.ControllerContext;
 import org.exoplatform.web.application.RequestContext;
 import org.exoplatform.web.url.PortalURL;
@@ -55,17 +58,24 @@ public class CalendarDataImportResource implements OperationHandler {
 
   final private static int BUFFER = 2048000;
 
+  private SpaceService spaceService;
+  private UserACL userACL;
+
   private boolean groupCalendar;
+  private boolean spaceCalendar;
   private String type;
 
-  public CalendarDataImportResource(boolean groupCalendar) {
+  public CalendarDataImportResource(boolean groupCalendar, boolean spaceCalendar) {
     this.groupCalendar = groupCalendar;
-    type = groupCalendar ? CalendarExtension.GROUP_CALENDAR_TYPE : CalendarExtension.PERSONAL_CALENDAR_TYPE;
+    this.spaceCalendar = spaceCalendar;
+    type = groupCalendar ? spaceCalendar ? CalendarExtension.SPACE_CALENDAR_TYPE : CalendarExtension.GROUP_CALENDAR_TYPE : CalendarExtension.PERSONAL_CALENDAR_TYPE;
   }
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
+    spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
+    userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -73,6 +83,9 @@ public class CalendarDataImportResource implements OperationHandler {
 
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
+
+    // "create-space" attribute. Defaults to false.
+    boolean createSpace = filters.contains("create-space:true");
 
     OperationAttachment attachment = operationContext.getAttachment(false);
     if (attachment == null) {
@@ -118,7 +131,7 @@ public class CalendarDataImportResource implements OperationHandler {
       }
 
       for (String tempFilePath : contentsByOwner) {
-        importCalendar(calendarService, tempFilePath, replaceExisting);
+        importCalendar(calendarService, tempFolderPath, tempFilePath, replaceExisting, createSpace);
       }
 
     } catch (Exception e) {
@@ -198,7 +211,48 @@ public class CalendarDataImportResource implements OperationHandler {
     return tmpZipFile;
   }
 
-  private void importCalendar(CalendarService calendarService, String tempFilePath, boolean replaceExisting) throws Exception {
+  private boolean createSpaceIfNotExists(String tempFolderPath, String spacePrettyName, String groupId, boolean createSpace) throws IOException {
+    Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
+    if (space == null && createSpace) {
+      FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(spacePrettyName));
+      try {
+        // Unmarshall metadata xml file
+        XStream xstream = new XStream();
+        xstream.alias("metadata", SpaceMetaData.class);
+        SpaceMetaData spaceMetaData = (SpaceMetaData) xstream.fromXML(spaceMetadataFile);
+
+        log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
+        space = new Space();
+        space.setPrettyName(spaceMetaData.getPrettyName());
+        space.setDisplayName(spaceMetaData.getDisplayName());
+        space.setGroupId(groupId);
+        space.setTag(spaceMetaData.getTag());
+        space.setApp(spaceMetaData.getApp());
+        space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userACL.getSuperUser());
+        space.setManagers(spaceMetaData.getManagers());
+        space.setInvitedUsers(spaceMetaData.getInvitedUsers());
+        space.setRegistration(spaceMetaData.getRegistration());
+        space.setDescription(spaceMetaData.getDescription());
+        space.setType(spaceMetaData.getType());
+        space.setVisibility(spaceMetaData.getVisibility());
+        space.setPriority(spaceMetaData.getPriority());
+        space.setUrl(spaceMetaData.getUrl());
+        spaceService.createSpace(space, space.getEditor());
+        return true;
+      } finally {
+        if (spaceMetadataFile != null) {
+          try {
+            spaceMetadataFile.close();
+          } catch (Exception e) {
+            log.warn(e);
+          }
+        }
+      }
+    }
+    return (space != null);
+  }
+
+  private void importCalendar(CalendarService calendarService, String tempFolderPath, String tempFilePath, boolean replaceExisting, boolean createSpace) throws Exception {
     // Unmarshall calendar data file
     XStream xStream = new XStream();
     xStream.alias("Calendar", Calendar.class);
@@ -225,6 +279,17 @@ public class CalendarDataImportResource implements OperationHandler {
     } else {
       log.info("Create calendar: " + calendar.getName());
       if (groupCalendar) {
+        if (spaceCalendar) {
+          String groupId = calendar.getCalendarOwner();
+          String spacePrettyName = groupId.replace("/spaces/", "");
+
+          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, spacePrettyName, groupId, createSpace);
+          if (!spaceCreatedOrAlreadyExists) {
+            log.warn("Import of Calendar of space '" + spacePrettyName + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+            return;
+          }
+          calendarService.removePublicCalendar(calendar.getId());
+        }
         calendarService.savePublicCalendar(calendar, true);
       } else {
         calendarService.saveUserCalendar(calendar.getCalendarOwner(), calendar, true);
@@ -263,7 +328,7 @@ public class CalendarDataImportResource implements OperationHandler {
         }
 
         // Skip non managed
-        if (!filePath.endsWith(".xml") && !filePath.contains(CalendarExportTask.CALENDAR_SEPARATOR)) {
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(CalendarExportTask.CALENDAR_SEPARATOR)) {
           log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
           continue;
         }
@@ -272,6 +337,11 @@ public class CalendarDataImportResource implements OperationHandler {
 
         // Put XML Export file in temp folder
         copyToDisk(zis, targetFolderPath + filePath);
+
+        // Skip metadata file
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+          continue;
+        }
 
         contentsByOwner.add(targetFolderPath + filePath);
       }

@@ -24,6 +24,8 @@ import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
@@ -39,22 +41,37 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class CalendarDataReadResource implements OperationHandler {
 
   private boolean groupCalendar;
+  private boolean spaceCalendar;
 
-  public CalendarDataReadResource(boolean groupCalendar) {
+  public CalendarDataReadResource(boolean groupCalendar, boolean spaceCalendar) {
     this.groupCalendar = groupCalendar;
+    this.spaceCalendar = spaceCalendar;
   }
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>();
     OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
+    SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
 
     try {
       if (groupCalendar) {
         @SuppressWarnings("unchecked")
         Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
         for (Group group : groups) {
-          children.add(group.getId());
+          if (spaceCalendar) {
+            if (group.getId().startsWith("/spaces/")) {
+              Space space = spaceService.getSpaceByGroupId(group.getId());
+              if(space == null) {
+                continue;
+              }
+              children.add(space.getDisplayName());
+            }
+          } else {
+            if (!group.getId().startsWith("/spaces/")) {
+              children.add(group.getId());
+            }
+          }
         }
       } else {
         ListAccess<User> users = organizationService.getUserHandler().findAllUsers();
