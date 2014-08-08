@@ -408,7 +408,7 @@ public class WikiDataImportResource implements OperationHandler {
         }
       }
     }
-    return false;
+    return (space != null);
   }
 
   private Session getSession(String workspace) throws Exception {

@@ -435,7 +435,7 @@ public class ForumDataImportResource implements OperationHandler {
         }
       }
     }
-    return false;
+    return (space != null);
   }
 
   private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
