@@ -195,6 +195,12 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           $scope.categoriesModel = [];
           
     	  var datas = dataList.split(',');
+
+          // expand/unexpand first level resources categories
+          for(var i=0; i<$scope.categories.length; i++) {
+        	  $scope.categories[i].expanded = false;
+          }
+
     	  for (index in datas) {
     		  var data = datas[index];
           	  if(data == '') {
@@ -207,9 +213,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	          for(var i=0; i<$scope.categories.length; i++) {
 	            // exception : /gadget and /registry are not really under /application
 	            if($scope.categories[i].path == "/application") {
-	              $scope.categories[i].expanded = (data == "/gadget" || data == "/registry");
+            	  if(data == "/gadget" || data == "/registry") {
+            	    $scope.categories[i].expanded = true;
+            	  }
 	            } else {
-	              $scope.categories[i].expanded = (data.indexOf($scope.categories[i].path) == 0);
+	              if(data.indexOf($scope.categories[i].path) == 0) {
+		              $scope.categories[i].expanded = true;
+	              }
 		          // select category
 		          $scope.categoriesModel[$scope.categories[i].path] = (data === $scope.categories[i].path);
 	            }
