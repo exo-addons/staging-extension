@@ -24,6 +24,8 @@ import org.exoplatform.faq.service.Category;
 import org.exoplatform.faq.service.FAQService;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -51,15 +53,21 @@ public class AnswerDataReadResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>();
     FAQService faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
+    SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
+
     try {
       List<Category> categories = faqService.getAllCategories();
       for (Category category : categories) {
         if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
           continue;
         }
+        Space space = spaceService.getSpaceByDisplayName(category.getName());
+        if (space == null) {
+          continue;
+        }
         children.add(category.getName());
       }
-      if(!isSpaceType) {
+      if (!isSpaceType) {
         children.add(AnswerExtension.ROOT_CATEGORY);
       }
     } catch (Exception e) {

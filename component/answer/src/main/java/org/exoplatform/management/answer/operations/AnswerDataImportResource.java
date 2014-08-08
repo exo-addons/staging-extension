@@ -317,13 +317,13 @@ public class AnswerDataImportResource implements OperationHandler {
         // Put XML Export file in temp folder
         copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
 
-        // Extract ID owner
-        String id = extractIdFromPath(filePath);
-
         // Skip metadata file
         if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
           continue;
         }
+
+        // Extract ID owner
+        String id = extractIdFromPath(filePath);
 
         // Add nodePath by WikiOwner
         if (!contentsByOwner.containsKey(id)) {
@@ -429,7 +429,7 @@ public class AnswerDataImportResource implements OperationHandler {
         }
       }
     }
-    return false;
+    return (space != null);
   }
 
   private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
