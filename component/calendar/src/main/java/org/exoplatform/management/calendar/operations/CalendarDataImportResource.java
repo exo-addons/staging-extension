@@ -259,7 +259,7 @@ public class CalendarDataImportResource implements OperationHandler {
     xStream.alias("Event", CalendarEvent.class);
 
     @SuppressWarnings("unchecked")
-    List<Object> objects = (List<Object>) xStream.fromXML(FileUtils.readFileToString(new File(tempFilePath)));
+    List<Object> objects = (List<Object>) xStream.fromXML(FileUtils.readFileToString(new File(tempFilePath), "UTF-8"));
 
     Calendar calendar = (Calendar) objects.get(0);
     Calendar toReplaceCalendar = calendarService.getCalendarById(calendar.getId());
