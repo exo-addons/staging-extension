@@ -94,7 +94,7 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
     </div>
-    <div ng-show="mode == 'export'">
+    <div ng-show="mode == 'export' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_EXPORT_filter/export-wiki" checked="checked"
                                                 ng-model="optionsModel['/social/space_EXPORT_filter/export-wiki']"><span>Export wiki</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_EXPORT_filter/export-forum" checked="checked"
