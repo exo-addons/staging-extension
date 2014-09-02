@@ -96,17 +96,17 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * {@inheritDoc}
    */
   public void exportResourcesInFilter(List<Resource> resources, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
+    Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
     for (Resource resource : resources) {
       if (getPath().equals(resource.getPath())) {
         export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptions);
       } else {
         String resourcePath = resource.getPath().replace(getPath() + "/", "");
-
-        Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
         exportOptionsTmp.put("filter/" + resourcePath, null);
-
-        export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
       }
+    }
+    if(!exportOptionsTmp.isEmpty()) {
+      export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
     }
   }
 

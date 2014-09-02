@@ -54,4 +54,9 @@ public class Resource implements Serializable {
   public int hashCode() {
     return path.hashCode();
   }
+  
+  @Override
+  public String toString() {
+    return path;
+  }
 }

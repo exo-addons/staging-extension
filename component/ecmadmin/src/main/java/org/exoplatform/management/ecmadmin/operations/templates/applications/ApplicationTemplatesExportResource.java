@@ -57,7 +57,6 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
         if (templateName != null) {
           exportTasks.add(new ApplicationTemplateExportTask(applicationTemplateManagerService, applicationName, categoryName, templateName, metadata));
         } else {
-
           NodeIterator nodeIterator = null;
           if (categoryName == null) {
             nodeIterator = templatesHome.getNodes();
@@ -79,7 +78,8 @@ public class ApplicationTemplatesExportResource implements OperationHandler {
             }
           }
         }
-        exportTasks.add(new ApplicationTemplatesMetaDataExportTask(metadata, applicationName));
+        String applicationPath = applicationName + (categoryName == null ? "" : "/" + categoryName + (templateName == null ? "" : "/" + templateName.replaceAll(".gtmpl", "") + "/"));
+        exportTasks.add(new ApplicationTemplatesMetaDataExportTask(metadata, applicationPath));
       }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));

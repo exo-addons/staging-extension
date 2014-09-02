@@ -11,8 +11,8 @@ import org.exoplatform.services.cms.BasePath;
 import org.exoplatform.services.cms.views.ManageViewService;
 import org.exoplatform.services.cms.views.TemplateConfig;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
@@ -31,19 +31,19 @@ public class ViewTemplatesExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
       ManageViewService manageViewService = operationContext.getRuntimeContext().getRuntimeComponent(ManageViewService.class);
-      PathAddress address = operationContext.getAddress();
+
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-      String templateName = address.resolvePathTemplate("template-name");
       List<Node> selectedTemplates = null;
       List<Node> templates = manageViewService.getAllTemplates(BasePath.ECM_EXPLORER_TEMPLATES, SessionProvider.createSystemProvider());
-      if (templateName != null && !templateName.trim().isEmpty()) {
+      if (filters != null && !filters.isEmpty()) {
         selectedTemplates = new ArrayList<Node>();
         for (Node templateNode : templates) {
-          if (templateNode.getName().equals(templateName)) {
+          if (filters.contains(templateNode.getName())) {
             selectedTemplates.add(templateNode);
-            break;
           }
         }
       } else {

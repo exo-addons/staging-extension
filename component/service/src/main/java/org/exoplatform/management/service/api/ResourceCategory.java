@@ -139,4 +139,9 @@ public class ResourceCategory implements Comparable<ResourceCategory> {
     }
     return order - o.getOrder();
   }
+  
+  @Override
+  public String toString() {
+    return (resources != null && !resources.isEmpty() ? resources.toString() : ((subResourceCategories != null && !subResourceCategories.isEmpty()) ? subResourceCategories.toString() : ""));
+  }
 }

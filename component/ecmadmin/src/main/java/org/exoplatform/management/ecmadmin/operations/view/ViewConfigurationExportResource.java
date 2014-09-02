@@ -11,8 +11,8 @@ import org.exoplatform.services.cms.views.ManageViewService;
 import org.exoplatform.services.cms.views.ViewConfig;
 import org.exoplatform.services.cms.views.ViewConfig.Tab;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
@@ -30,18 +30,19 @@ public class ViewConfigurationExportResource implements OperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
+
       ManageViewService manageViewService = operationContext.getRuntimeContext().getRuntimeComponent(ManageViewService.class);
-      PathAddress address = operationContext.getAddress();
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-      String configurationName = address.resolvePathTemplate("configuration-name");
       List<ViewConfig> viewConfigs = null;
       List<ViewConfig> configs = manageViewService.getAllViews();
-      if (configurationName != null && !configurationName.trim().isEmpty()) {
+      if (filters != null && !filters.isEmpty()) {
         viewConfigs = new ArrayList<ViewConfig>();
         for (ViewConfig config : configs) {
-          if (config.getName().equals(configurationName)) {
+          if (filters.contains(config.getName())) {
             viewConfigs.add(config);
             Node node = manageViewService.getViewByName(config.getName(), SessionProvider.createSystemProvider());
             for (Tab tab : config.getTabList()) {
@@ -50,7 +51,6 @@ public class ViewConfigurationExportResource implements OperationHandler {
                 tab.setButtons(tabNode.getProperty("exo:buttons").getValue().getString());
               }
             }
-            break;
           }
         }
       } else {
