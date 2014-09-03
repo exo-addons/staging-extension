@@ -24,6 +24,7 @@ import org.exoplatform.faq.service.Category;
 import org.exoplatform.faq.service.FAQService;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
@@ -63,7 +64,7 @@ public class AnswerDataReadResource implements OperationHandler {
         }
         String name = category.getName();
         if (isSpaceType) {
-          String spaceGroupId = "/spaces/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
+          String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
           Space space = spaceService.getSpaceByGroupId(spaceGroupId);
           if (space == null) {
             continue;

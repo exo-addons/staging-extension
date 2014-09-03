@@ -33,6 +33,7 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
@@ -391,7 +392,7 @@ public class AnswerDataImportResource implements OperationHandler {
 
   private boolean createSpaceIfNotExists(String tempFolderPath, String faqId, boolean createSpace) throws Exception {
     String spaceId = faqId.replace(Utils.CATE_SPACE_ID_PREFIX, "");
-    Space space = spaceService.getSpaceByGroupId("/spaces/" + spaceId);
+    Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spaceId);
     if (space == null && createSpace) {
       FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(faqId));
       try {
@@ -403,7 +404,7 @@ public class AnswerDataImportResource implements OperationHandler {
         log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
         space = new Space();
 
-        String originalSpacePrettyName = spaceMetaData.getGroupId().replace("/spaces/", "");
+        String originalSpacePrettyName = spaceMetaData.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
         if (originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
           space.setPrettyName(spaceMetaData.getPrettyName());
         } else {

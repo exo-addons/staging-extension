@@ -34,6 +34,7 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
@@ -111,7 +112,7 @@ public class ForumDataImportResource implements OperationHandler {
           String forumId = categoryId;
           boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, forumId, createSpace);
           if (!spaceCreatedOrAlreadyExists) {
-            log.warn("Import of forum category '" + categoryId + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+            log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
             continue;
           }
 
@@ -398,7 +399,7 @@ public class ForumDataImportResource implements OperationHandler {
 
   private boolean createSpaceIfNotExists(String tempFolderPath, String forumId, boolean createSpace) throws Exception {
     String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-    Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
+    Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spacePrettyName);
     if (space == null && createSpace) {
       FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(forumId));
       try {
@@ -410,7 +411,7 @@ public class ForumDataImportResource implements OperationHandler {
         log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
         space = new Space();
 
-        String originalSpacePrettyName = spaceMetaData.getGroupId().replace("/spaces/", "");
+        String originalSpacePrettyName = spaceMetaData.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
         if (originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
           space.setPrettyName(spaceMetaData.getPrettyName());
         } else {

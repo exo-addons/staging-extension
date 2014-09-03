@@ -24,6 +24,7 @@ import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
@@ -60,7 +61,7 @@ public class CalendarDataReadResource implements OperationHandler {
         Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
         for (Group group : groups) {
           if (spaceCalendar) {
-            if (group.getId().startsWith("/spaces/")) {
+            if (group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
               Space space = spaceService.getSpaceByGroupId(group.getId());
               if(space == null) {
                 continue;
@@ -68,7 +69,7 @@ public class CalendarDataReadResource implements OperationHandler {
               children.add(space.getDisplayName());
             }
           } else {
-            if (!group.getId().startsWith("/spaces/")) {
+            if (!group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
               children.add(group.getId());
             }
           }

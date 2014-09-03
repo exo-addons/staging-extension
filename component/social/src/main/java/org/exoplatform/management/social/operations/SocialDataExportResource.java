@@ -87,6 +87,7 @@ public class SocialDataExportResource implements OperationHandler {
   private DataDistributionManager dataDistributionManager;
   private RepositoryService repositoryService;
 
+  // TODO For Space Dashboard export/import
   // private DataStorage dataStorage;
 
   @Override
@@ -98,6 +99,7 @@ public class SocialDataExportResource implements OperationHandler {
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    // TODO For Space Dashboard export/import
     // dataStorage =
     // operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
 
@@ -107,7 +109,10 @@ public class SocialDataExportResource implements OperationHandler {
     // "replace-existing" attribute. Defaults to false.
     boolean exportWiki = false, exportAnswer = false, exportCalendar = false, exportForum = false;
     if (operationFilters != null) {
-      exportWiki = operationFilters.contains("export-wiki:true");
+      // FIXME (exportWiki should be always equal to false) wiki is automatically exported because the space wiki content is inside Space JCR
+      // Path, so it's exported with space documents
+      // exportWiki = operationFilters.contains("export-wiki:true");
+
       exportForum = operationFilters.contains("export-forum:true");
       exportCalendar = operationFilters.contains("export-calendar:true");
       exportAnswer = operationFilters.contains("export-answer:true");

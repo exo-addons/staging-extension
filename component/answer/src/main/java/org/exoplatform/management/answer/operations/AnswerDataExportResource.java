@@ -35,6 +35,7 @@ import org.exoplatform.management.answer.AnswerExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
@@ -109,7 +110,7 @@ public class AnswerDataExportResource implements OperationHandler {
     } else {
       if (isSpaceType) {
         Space space = spaceService.getSpaceByDisplayName(name);
-        String groupName = space.getGroupId().replace("/spaces/", "");
+        String groupName = space.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
         exportAnswer(exportTasks, workspace, categoryHomePath, Utils.CATE_SPACE_ID_PREFIX + groupName, space, exportSpaceMetadata);
       } else {
         try {

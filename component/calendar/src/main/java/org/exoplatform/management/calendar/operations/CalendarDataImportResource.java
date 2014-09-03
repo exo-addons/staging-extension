@@ -25,6 +25,7 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.UserPortalConfigService;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.url.PortalURLContext;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.web.ControllerContext;
@@ -281,7 +282,7 @@ public class CalendarDataImportResource implements OperationHandler {
       if (groupCalendar) {
         if (spaceCalendar) {
           String groupId = calendar.getCalendarOwner();
-          String spacePrettyName = groupId.replace("/spaces/", "");
+          String spacePrettyName = groupId.replace(SpaceUtils.SPACE_GROUP + "/", "");
 
           boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, spacePrettyName, groupId, createSpace);
           if (!spaceCreatedOrAlreadyExists) {

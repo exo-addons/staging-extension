@@ -35,6 +35,7 @@ import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.common.logging.Logger;
@@ -120,12 +121,14 @@ public class ForumDataExportResource implements OperationHandler {
   private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName, boolean exportSpaceMetadata) {
     try {
       String forumId = (spacePrettyName == null ? "" : Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName);
-      if (exportSpaceMetadata && isSpaceForumType) {
+      if (isSpaceForumType) {
         Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
-        spacePrettyName = space.getGroupId().replace("/spaces/", "");
+        spacePrettyName = space.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
 
         forumId = Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName;
-        exportTasks.add(new SpaceMetadataExportTask(space, forumId));
+        if (exportSpaceMetadata) {
+          exportTasks.add(new SpaceMetadataExportTask(space, forumId));
+        }
       }
 
       String parentNodePath = "/" + categoryHomePath + "/" + categoryId + (forumId.isEmpty() ? "" : "/" + forumId);

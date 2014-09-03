@@ -24,6 +24,7 @@ import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
@@ -84,7 +85,7 @@ public class ForumDataReadResource implements OperationHandler {
 
   private String getSpaceDisplayName(SpaceService spaceService, Forum forum) {
     if (forum.getId().startsWith(Utils.FORUM_SPACE_ID_PREFIX)) {
-      String spaceGroupId = "/spaces/" + forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+      String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");
       Space space = spaceService.getSpaceByGroupId(spaceGroupId);
       if (space != null) {
         return space.getDisplayName();

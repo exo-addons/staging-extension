@@ -31,6 +31,7 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
@@ -88,11 +89,11 @@ public class CalendarDataExportResource implements OperationHandler {
           Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
           for (Group group : groups) {
             if (spaceCalendar) {
-              if (group.getId().startsWith("/spaces/")) {
+              if (group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
                 exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), exportSpaceMetadata);
               }
             } else {
-              if (!group.getId().startsWith("/spaces/")) {
+              if (!group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
                 exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), exportSpaceMetadata);
               }
             }
@@ -144,7 +145,7 @@ public class CalendarDataExportResource implements OperationHandler {
           if (exportSpaceMetadata && spaceCalendar) {
             Space space = spaceService.getSpaceByGroupId(groupId);
             if (space != null) {
-              exportTasks.add(new SpaceMetadataExportTask(space, groupId.replace("/spaces/", "")));
+              exportTasks.add(new SpaceMetadataExportTask(space, groupId.replace(SpaceUtils.SPACE_GROUP + "/", "")));
             }
           }
         }

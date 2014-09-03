@@ -94,16 +94,24 @@ public class SocialDataImportResource implements OperationHandler {
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
 
-    String spaceDisplayName = operationContext.getAddress().resolvePathTemplate("space-name");
-    String spacePrettyName = null;
-    if (spaceDisplayName != null) {
-      Space space = spaceService.getSpaceByDisplayName(spaceDisplayName);
+    // space-name = spaceDisplayName || spacePrettyName ||
+    // spaceOriginalPrettyName (before renaming)
+    String spaceName = operationContext.getAddress().resolvePathTemplate("space-name");
+    if (spaceName != null) {
+      Space space = spaceService.getSpaceByDisplayName(spaceName);
+      if (space == null) {
+        space = spaceService.getSpaceByPrettyName(spaceName);
+        if (space == null) {
+          space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spaceName);
+        }
+      }
       if (space != null) {
         if (!replaceExisting) {
+          log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space '" + spaceName + "' import.");
           resultHandler.completed(NoResultModel.INSTANCE);
           return;
         }
-        spacePrettyName = space.getPrettyName();
+        spaceName = space.getPrettyName();
       }
     }
 
@@ -111,11 +119,11 @@ public class SocialDataImportResource implements OperationHandler {
     try {
       // Copy attachement to local temporary File
       tmpZipFile = File.createTempFile("staging-social", ".zip");
-      Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZip(operationContext.getAttachment(false), spacePrettyName, tmpZipFile);
+      Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZipAndCreateSpaces(operationContext.getAttachment(false), spaceName, replaceExisting, tmpZipFile);
       Set<String> spacePrettyNames = fileToImportByOwner.keySet();
       for (String extractedSpacePrettyName : spacePrettyNames) {
         Space space = spaceService.getSpaceByPrettyName(extractedSpacePrettyName);
-        if (space != null && !replaceExisting) {
+        if (space == null || !replaceExisting) {
           continue;
         }
 
@@ -330,22 +338,42 @@ public class SocialDataImportResource implements OperationHandler {
     return null;
   }
 
-  private void createOrReplaceSpace(String spacePrettyName, InputStream inputStream) throws IOException {
-    Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
+  private boolean createOrReplaceSpace(String spacePrettyName, String targetSpaceName, boolean replaceExisting, InputStream inputStream) throws Exception {
     // Unmarshall metadata xml file
     XStream xstream = new XStream();
     xstream.alias("metadata", SpaceMetaData.class);
     SpaceMetaData spaceMetaData = (SpaceMetaData) xstream.fromXML(inputStream);
+    String newSpacePrettyName = spaceMetaData.getPrettyName();
+    String oldSpacePrettyName = spaceMetaData.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
 
+    // If selected space doesn't fit the found space, ignore it
+    if (targetSpaceName != null && !(targetSpaceName.equals(spaceMetaData.getDisplayName()) || targetSpaceName.equals(oldSpacePrettyName) || targetSpaceName.equals(newSpacePrettyName))) {
+      return true;
+    }
+
+    Space space = spaceService.getSpaceByGroupId(spaceMetaData.getGroupId());
     if (space != null) {
-      log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
-      spaceService.deleteSpace(space);
+      if (replaceExisting) {
+        log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
+        spaceService.deleteSpace(space);
+        // FIXME Answer Bug: deleting a space don't delete answers category
+      } else {
+        log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space import.");
+        return true;
+      }
     }
     log.info("Create new space: '" + spaceMetaData.getPrettyName() + "'.");
     space = new Space();
-    space.setPrettyName(spaceMetaData.getPrettyName());
-    space.setDisplayName(spaceMetaData.getDisplayName());
-    space.setGroupId(SpaceUtils.SPACE_GROUP + "/" + spacePrettyName);
+
+    boolean isRenamed = !newSpacePrettyName.equals(oldSpacePrettyName);
+
+    space.setPrettyName(oldSpacePrettyName);
+    if (isRenamed) {
+      space.setDisplayName(oldSpacePrettyName);
+    } else {
+      space.setDisplayName(spaceMetaData.getDisplayName());
+    }
+    space.setGroupId(spaceMetaData.getGroupId());
     space.setTag(spaceMetaData.getTag());
     space.setApp(spaceMetaData.getApp());
     space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userACL.getSuperUser());
@@ -358,6 +386,10 @@ public class SocialDataImportResource implements OperationHandler {
     space.setPriority(spaceMetaData.getPriority());
     space.setUrl(spaceMetaData.getUrl());
     spaceService.createSpace(space, space.getEditor());
+    if (isRenamed) {
+      spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
+    }
+    return false;
   }
 
   private void importSubResource(File tempFile, String subResourcePath) {
@@ -388,7 +420,7 @@ public class SocialDataImportResource implements OperationHandler {
     }
   }
 
-  private Map<String, Map<String, File>> extractDataFromZip(OperationAttachment attachment, String spacePrettyName, File tmpZipFile) throws OperationException {
+  private Map<String, Map<String, File>> extractDataFromZipAndCreateSpaces(OperationAttachment attachment, String spaceName, boolean replaceExisting, File tmpZipFile) throws OperationException {
     if (attachment == null || attachment.getStream() == null) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for Social import.");
     }
@@ -397,8 +429,8 @@ public class SocialDataImportResource implements OperationHandler {
       copyAttachementToLocalFolder(inputStream, tmpZipFile);
 
       // Organize File paths by id and extract files from zip to a temp
-      // folder
-      return extractFilesById(tmpZipFile, spacePrettyName);
+      // folder and create spaces
+      return extractFilesByIdAndCreateSpaces(tmpZipFile, spaceName, replaceExisting);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error occured while handling attachement", e);
     } finally {
@@ -430,7 +462,7 @@ public class SocialDataImportResource implements OperationHandler {
     }
   }
 
-  private Map<String, Map<String, File>> extractFilesById(File tmpZipFile, String targetSpacePrettyName) throws Exception {
+  private Map<String, Map<String, File>> extractFilesByIdAndCreateSpaces(File tmpZipFile, String targetSpaceName, boolean replaceExisting) throws Exception {
     // Get path of folder where to unzip files
     String targetFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "") + "/";
 
@@ -438,9 +470,10 @@ public class SocialDataImportResource implements OperationHandler {
     NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
 
     Map<String, Map<String, File>> filesToImportByOwner = new HashMap<String, Map<String, File>>();
+    List<String> ignoredSpaces = new ArrayList<String>();
     try {
       Map<String, ZipOutputStream> zipOutputStreamMap = new HashMap<String, ZipOutputStream>();
-      String managedEntryPathPrefix = "social/space/" + (targetSpacePrettyName == null ? "" : targetSpacePrettyName);
+      String managedEntryPathPrefix = "social/space/";
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         String zipEntryPath = entry.getName();
@@ -457,13 +490,16 @@ public class SocialDataImportResource implements OperationHandler {
         }
         int idBeginIndex = ("social/space/").length();
         String spacePrettyName = zipEntryPath.substring(idBeginIndex, zipEntryPath.indexOf("/", idBeginIndex));
+        if (ignoredSpaces.contains(spacePrettyName)) {
+          continue;
+        }
 
         if (!filesToImportByOwner.containsKey(spacePrettyName)) {
           filesToImportByOwner.put(spacePrettyName, new HashMap<String, File>());
         }
         Map<String, File> ownerFiles = filesToImportByOwner.get(spacePrettyName);
 
-        log.info("Handling content " + zipEntryPath);
+        log.info("Receiving content " + zipEntryPath);
 
         if (zipEntryPath.contains(SocialExtension.ANSWER_RESOURCE_PATH)) {
           putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.ANSWER_RESOURCE_PATH);
@@ -482,7 +518,13 @@ public class SocialDataImportResource implements OperationHandler {
         } else {
           String localFilePath = targetFolderPath + replaceSpecialChars(zipEntryPath);
           if (localFilePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-            createOrReplaceSpace(spacePrettyName, zis);
+            // Create space here to be sure that it's created before importing
+            // other application resources
+            boolean toIgnore = createOrReplaceSpace(spacePrettyName, targetSpaceName, replaceExisting, zis);
+            if (toIgnore) {
+              ignoredSpaces.add(spacePrettyName);
+              filesToImportByOwner.remove(spacePrettyName);
+            }
           } else {
             ownerFiles.put(zipEntryPath, new File(localFilePath));
 

@@ -27,6 +27,7 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.wiki.mow.api.Wiki;
@@ -104,7 +105,7 @@ public class WikiDataExportResource implements OperationHandler {
       String workspace = wikiNode.getSession().getWorkspace().getName();
       exportNode(wikiNode, wiki.getOwner(), workspace, exportTasks);
 
-      if (exportSpaceMetadata && WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith("/spaces/")) {
+      if (exportSpaceMetadata && WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
         Space space = spaceService.getSpaceByGroupId(wiki.getOwner());
         exportTasks.add(new SpaceMetadataExportTask(space, wiki.getOwner()));
       }

@@ -146,6 +146,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       if (conn.getResponseCode() != 200) {
         throw new IllegalStateException("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
       }
+      getLogger().info("Import in target server finished successfully.");
     } catch (Exception e) {
       throw new RuntimeException("Error while synchronizing the content", e);
     } finally {
