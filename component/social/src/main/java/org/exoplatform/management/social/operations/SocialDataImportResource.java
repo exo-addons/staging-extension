@@ -122,6 +122,8 @@ public class SocialDataImportResource implements OperationHandler {
       Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZipAndCreateSpaces(operationContext.getAttachment(false), spaceName, replaceExisting, tmpZipFile);
       Set<String> spacePrettyNames = fileToImportByOwner.keySet();
       for (String extractedSpacePrettyName : spacePrettyNames) {
+        log.info("Importing applications data for space: " + extractedSpacePrettyName + " ...");
+
         Space space = spaceService.getSpaceByPrettyName(extractedSpacePrettyName);
         if (space == null || !replaceExisting) {
           continue;
@@ -176,8 +178,9 @@ public class SocialDataImportResource implements OperationHandler {
             log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
           }
         }
-        log.info("Import operation finished.");
+        log.info("Import operation finished successfully for space: " + extractedSpacePrettyName);
       }
+      log.info("Import operation finished successfully.");
     } catch (IOException e) {
       log.warn("Cannot create temporary file.", e);
     } finally {

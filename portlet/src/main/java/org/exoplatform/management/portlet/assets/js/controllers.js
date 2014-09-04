@@ -5,6 +5,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     var stagingContainer = $('#staging');
 
     $scope.mode = "export";
+    $scope.button_clicked = false;
 
     $scope.changeMode = function(mode) {
       $scope.mode = mode;
@@ -37,6 +38,14 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $http.get(stagingContainer.jzURL('StagingExtensionController.getSynchonizationServers')).success(function (data) {
         $scope.servers = data.synchronizationServers;
       });
+    };
+
+    $scope.refreshController = function() {
+    	try{
+    		$scope.$digest()
+    	} catch(excep){
+    		// No need to display errors in console
+    	}
     };
 
     $scope.displayServerForm = function() {
@@ -267,18 +276,29 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	      queryParams += "&staging:resourceCategory=" + selectedCategory;
       }
 
-      $scope.setResultMessage("Importing ...", "info");
-      $http({
-          url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
-          data : form,
-          method : 'POST',
-          headers : {'Content-Type':undefined},
-          transformRequest: function(data) { return data; }
-        }).success(function (data) {
-          $scope.setResultMessage(data, "success");
-        }).error(function (data) {
-          $scope.setResultMessage("Import failed. " + data, "error");
-        });
+  	  $scope.button_clicked = true;
+      $scope.refreshController();
+      try {
+        $scope.setResultMessage("Importing ...", "info");
+        $http({
+            url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
+            data : form,
+            method : 'POST',
+            headers : {'Content-Type':undefined},
+            transformRequest: function(data) { return data; }
+          }).success(function (data) {
+            $scope.setResultMessage(data, "success");
+            $scope.button_clicked = false;
+            $scope.refreshController();
+          }).error(function (data) {
+            $scope.setResultMessage("Import failed. " + data, "error");
+            $scope.button_clicked = false;
+            $scope.refreshController();
+          });
+      } catch(exception) {
+          $scope.button_clicked = false;
+          $scope.refreshController();
+      }
     };
 
     $scope.setFile = function(element) {
@@ -322,22 +342,33 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       for(optionName in $scope.optionsModel) {
         paramsOptions += "&options=" + optionName + ":" + $scope.optionsModel[optionName];
       }
-
+		
+	  $scope.button_clicked = true;
+	  $scope.refreshController();
+	  try {
       // Launch synchronization...
-      $scope.setResultMessage("Proceeding...", "info");
+        $scope.setResultMessage("Proceeding...", "info");
 
-      $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions)
-        .done(function () {
-          $scope.$apply(function(scope) {
-            scope.setResultMessage("Successfully exported.", "success");
+        $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions)
+          .done(function () {
+            $scope.$apply(function(scope) {
+              scope.setResultMessage("Successfully exported.", "success");
+              scope.button_clicked = false;
+              scope.refreshController();
+            });
+          })
+          .fail(function () {
+            $scope.$apply(function(scope) {
+              scope.setResultMessage("Error while exporting the data", "error");
+	          scope.button_clicked = false;
+	          scope.refreshController();
+            });
           });
-        })
-        .fail(function () {
-          $scope.$apply(function(scope) {
-            scope.setResultMessage("Error while exporting the data", "error");
-          });
-        });
-    };
+        } catch(exception) {
+      	  $scope.button_clicked = false;
+	      $scope.refreshController();
+        }
+	};
 
     // synchronize action
     $scope.synchronizeResources = function() {
@@ -395,19 +426,30 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         paramsOptions += "&options=" + optionName + ":" + $scope.optionsModel[optionName];
       }
 
-      // Launch synchronization...
-      $scope.setResultMessage("Proceeding...", "info");
-
-      $http({
-          method: 'POST',
-          url: stagingContainer.jzURL('StagingExtensionController.synchronize'),
-          data: paramsTargetServer + paramsResourceCategories + paramsResources + paramsOptions,
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        }).success(function (data) {
-          $scope.setResultMessage(data, "success");
-        }).error(function (data) {
-          $scope.setResultMessage(data, "error");
-        });
+	   $scope.button_clicked = true;
+	   $scope.refreshController();
+	   try {
+	      // Launch synchronization...
+	      $scope.setResultMessage("Proceeding...", "info");
+	
+	      $http({
+	          method: 'POST',
+	          url: stagingContainer.jzURL('StagingExtensionController.synchronize'),
+	          data: paramsTargetServer + paramsResourceCategories + paramsResources + paramsOptions,
+	          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+	        }).success(function (data) {
+	          $scope.setResultMessage(data, "success");
+    	      $scope.button_clicked = false;
+    	      $scope.refreshController();
+	        }).error(function (data) {
+	          $scope.setResultMessage(data, "error");
+    	      $scope.button_clicked = false;
+    	      $scope.refreshController();
+	        });
+      } catch(exception) {
+  	    $scope.button_clicked = false;
+	    $scope.refreshController();
+      }
     };
 
 
