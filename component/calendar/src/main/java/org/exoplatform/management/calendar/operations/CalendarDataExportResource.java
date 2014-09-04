@@ -54,6 +54,7 @@ public class CalendarDataExportResource implements OperationHandler {
   private String type;
 
   private SpaceService spaceService;
+  private OrganizationService organizationService;
 
   public CalendarDataExportResource(boolean groupCalendar, boolean spaceCalendar) {
     this.groupCalendar = groupCalendar;
@@ -66,6 +67,7 @@ public class CalendarDataExportResource implements OperationHandler {
     CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     UserACL userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
+    organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
 
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
     boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
@@ -73,28 +75,27 @@ public class CalendarDataExportResource implements OperationHandler {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     if (groupCalendar) {
-      String groupId = operationContext.getAttributes().getValue("filter");
+      String filterText = operationContext.getAttributes().getValue("filter");
       if (spaceCalendar) {
-        String displayName = groupId;
+        String displayName = filterText;
         Space space = spaceService.getSpaceByDisplayName(displayName);
         if (space == null) {
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't find space with display name: " + displayName);
         }
-        groupId = space.getGroupId();
+        filterText = space.getGroupId();
       }
-      if (groupId == null || groupId.trim().isEmpty()) {
-        OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
+      if (filterText == null || filterText.trim().isEmpty()) {
         try {
           @SuppressWarnings("unchecked")
           Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
           for (Group group : groups) {
             if (spaceCalendar) {
               if (group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
-                exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), exportSpaceMetadata);
+                exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), null, exportSpaceMetadata);
               }
             } else {
               if (!group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
-                exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), exportSpaceMetadata);
+                exportGroupCalendar(calendarService, userACL, exportTasks, group.getId(), null, exportSpaceMetadata);
               }
             }
           }
@@ -102,7 +103,9 @@ public class CalendarDataExportResource implements OperationHandler {
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
         }
       } else {
-        exportGroupCalendar(calendarService, userACL, exportTasks, groupId, exportSpaceMetadata);
+        // Calendar groupId in case of space or Calendar name in case of simple
+        // Group calendar
+        exportGroupCalendar(calendarService, userACL, exportTasks, spaceCalendar ? filterText : null, spaceCalendar ? null : filterText, exportSpaceMetadata);
       }
     } else {
       String username = operationContext.getAttributes().getValue("filter");
@@ -128,31 +131,54 @@ public class CalendarDataExportResource implements OperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportGroupCalendar(CalendarService calendarService, UserACL userACL, List<ExportTask> exportTasks, String groupId, boolean exportSpaceMetadata) {
+  private void exportGroupCalendar(CalendarService calendarService, UserACL userACL, List<ExportTask> exportTasks, String groupId, String calendarName, boolean exportSpaceMetadata) {
     try {
-      List<GroupCalendarData> groupCalendars = calendarService.getGroupCalendars(new String[] { groupId }, true, userACL.getSuperUser());
-      if (groupCalendars.size() > 1) {
-        throw new OperationException(OperationNames.EXPORT_RESOURCE, "More than one GroupCalendarData was returned by API for calendar: " + groupId);
-      }
-      if (groupCalendars.size() == 1) {
-        for (GroupCalendarData groupCalendarData : groupCalendars) {
-          List<Calendar> calendars = groupCalendarData.getCalendars();
-          for (Calendar calendar : calendars) {
-            List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
-            exportTasks.add(new CalendarExportTask(type, calendar, events));
-          }
+      List<GroupCalendarData> groupCalendars = calendarService.getGroupCalendars(groupId == null ? getAllGroupIDs() : new String[] { groupId }, true, userACL.getSuperUser());
+      List<Calendar> calendars = new ArrayList<Calendar>();
 
-          if (exportSpaceMetadata && spaceCalendar) {
-            Space space = spaceService.getSpaceByGroupId(groupId);
-            if (space != null) {
-              exportTasks.add(new SpaceMetadataExportTask(space, groupId.replace(SpaceUtils.SPACE_GROUP + "/", "")));
+      GROUP_CALENDAR_LOOP: for (GroupCalendarData groupCalendarData : groupCalendars) {
+        if (groupCalendarData.getCalendars() != null) {
+          if (calendarName != null && !calendarName.isEmpty()) {
+            for (Calendar calendar : groupCalendarData.getCalendars()) {
+              if (calendar.getName().equals(calendarName)) {
+                calendars.add(calendar);
+                break GROUP_CALENDAR_LOOP;
+              }
             }
+          } else {
+            calendars.addAll(groupCalendarData.getCalendars());
           }
+        }
+      }
+
+      for (Calendar calendar : calendars) {
+        exportGroupCalendar(calendarService, exportTasks, calendar);
+      }
+
+      if (exportSpaceMetadata && spaceCalendar) {
+        Space space = spaceService.getSpaceByGroupId(groupId);
+        if (space != null) {
+          exportTasks.add(new SpaceMetadataExportTask(space, groupId.replace(SpaceUtils.SPACE_GROUP + "/", "")));
         }
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error occured while exporting Group Calendar data");
     }
+  }
+
+  private String[] getAllGroupIDs() throws Exception {
+    @SuppressWarnings("unchecked")
+    Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
+    List<String> groupIDs = new ArrayList<String>();
+    for (Group group : groups) {
+      groupIDs.add(group.getId());
+    }
+    return groupIDs.toArray(new String[0]);
+  }
+
+  private void exportGroupCalendar(CalendarService calendarService, List<ExportTask> exportTasks, Calendar calendar) throws Exception {
+    List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
+    exportTasks.add(new CalendarExportTask(type, calendar, events));
   }
 
   private void exportUserCalendar(CalendarService calendarService, UserACL userACL, List<ExportTask> exportTasks, String username) {

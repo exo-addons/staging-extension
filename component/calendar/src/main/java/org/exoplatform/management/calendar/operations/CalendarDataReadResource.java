@@ -18,9 +18,14 @@ package org.exoplatform.management.calendar.operations;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.exoplatform.calendar.service.Calendar;
+import org.exoplatform.calendar.service.CalendarService;
+import org.exoplatform.calendar.service.GroupCalendarData;
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
@@ -54,6 +59,8 @@ public class CalendarDataReadResource implements OperationHandler {
     Set<String> children = new LinkedHashSet<String>();
     OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
     SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
+    CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
+    UserACL userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
 
     try {
       if (groupCalendar) {
@@ -63,14 +70,25 @@ public class CalendarDataReadResource implements OperationHandler {
           if (spaceCalendar) {
             if (group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
               Space space = spaceService.getSpaceByGroupId(group.getId());
-              if(space == null) {
+              if (space == null) {
                 continue;
               }
-              children.add(space.getDisplayName());
+              List<GroupCalendarData> calendars = calendarService.getGroupCalendars(new String[] { group.getId() }, true, userACL.getSuperUser());
+              if (calendars != null && calendars.size() > 0) {
+                children.add(space.getDisplayName());
+              }
             }
           } else {
             if (!group.getId().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
-              children.add(group.getId());
+              List<GroupCalendarData> calendarsData = calendarService.getGroupCalendars(new String[] { group.getId() }, true, userACL.getSuperUser());
+              if (calendarsData != null && calendarsData.size() > 0) {
+                for (GroupCalendarData groupCalendarData : calendarsData) {
+                  List<Calendar> calendars = groupCalendarData.getCalendars();
+                  for (Calendar calendar : calendars) {
+                    children.add(calendar.getName());
+                  }
+                }
+              }
             }
           }
         }
