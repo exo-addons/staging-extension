@@ -7,24 +7,44 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.management.calendar.CalendarExtension;
 import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.UserPortalConfigService;
+import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.portal.mop.navigation.NavigationContext;
+import org.exoplatform.portal.mop.navigation.NavigationService;
+import org.exoplatform.portal.mop.navigation.NodeContext;
+import org.exoplatform.portal.mop.navigation.NodeModel;
+import org.exoplatform.portal.mop.navigation.Scope;
+import org.exoplatform.portal.mop.user.UserNavigation;
+import org.exoplatform.portal.mop.user.UserNode;
+import org.exoplatform.portal.mop.user.UserPortal;
 import org.exoplatform.portal.url.PortalURLContext;
+import org.exoplatform.portal.webui.util.Util;
+import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -33,6 +53,7 @@ import org.exoplatform.web.application.RequestContext;
 import org.exoplatform.web.url.PortalURL;
 import org.exoplatform.web.url.ResourceType;
 import org.exoplatform.web.url.URLFactory;
+import org.exoplatform.web.url.navigation.NavigationResource;
 import org.exoplatform.web.url.navigation.NodeURL;
 import org.exoplatform.webui.application.WebuiApplication;
 import org.exoplatform.webui.application.WebuiRequestContext;
@@ -55,10 +76,21 @@ import com.thoughtworks.xstream.XStream;
  */
 public class CalendarDataImportResource implements OperationHandler {
 
+  private static final String INTRANET_SITE_NAME = "intranet";
+
   final private static Logger log = LoggerFactory.getLogger(CalendarDataImportResource.class);
 
   final private static int BUFFER = 2048000;
 
+  private static final String CALENDAR_SPACE_NAGVIGATION = "calendar";
+
+  private static final String CALENDAR_PORTLET_NAME = "CalendarPortlet";
+
+  public static final String INVITATION_DETAIL = "/invitation/detail/";
+
+  public static final String EVENT_LINK_KEY = "EventLink";
+
+  private ActivityManager activityManager;
   private SpaceService spaceService;
   private UserACL userACL;
 
@@ -76,6 +108,7 @@ public class CalendarDataImportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
 
@@ -268,10 +301,24 @@ public class CalendarDataImportResource implements OperationHandler {
       if (replaceExisting) {
         log.info("Overwrite existing calendar: " + toReplaceCalendar.getName());
         if (groupCalendar) {
+          // FIXME event activities aren't deleted
+          List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
+          deleteCalendarActivities(events);
+
+          // Delete Calendar
           calendarService.removePublicCalendar(calendar.getId());
+
+          // Save new Calendar
           calendarService.savePublicCalendar(calendar, true);
         } else {
+          // FIXME event activities aren't deleted
+          List<CalendarEvent> events = calendarService.getUserEventByCalendar(calendar.getCalendarOwner(), Collections.list(calendar.getId()));
+          deleteCalendarActivities(events);
+
+          // Delete Calendar
           calendarService.removeUserCalendar(calendar.getCalendarOwner(), calendar.getId());
+
+          // Save new Calendar
           calendarService.saveUserCalendar(calendar.getCalendarOwner(), calendar, true);
         }
       } else {
@@ -302,8 +349,31 @@ public class CalendarDataImportResource implements OperationHandler {
       log.info("Create calendar event: " + calendar.getName() + "/" + event.getSummary());
       if (groupCalendar) {
         calendarService.savePublicEvent(calendar.getId(), event, true);
+        // FIXME the URL of Stream Activity will use staging URL, modify it
+        updateCalendarActivityURL(event, spaceCalendar ? calendar.getCalendarOwner() : null);
       } else {
         calendarService.saveUserEvent(calendar.getCalendarOwner(), calendar.getId(), event, true);
+        // FIXME the URL of Stream Activity will use staging URL, modify it
+        updateCalendarActivityURL(event, null);
+      }
+    }
+  }
+
+  private void deleteCalendarActivities(List<CalendarEvent> events) {
+    for (CalendarEvent event : events) {
+      if (event != null && event.getActivityId() != null) {
+        activityManager.deleteActivity(event.getActivityId());
+      }
+    }
+  }
+
+  private void updateCalendarActivityURL(CalendarEvent event, String groupId) {
+    ExoSocialActivity activity = activityManager.getActivity(event.getActivityId());
+    if (activity != null) {
+      Map<String, String> templateParams = activity.getTemplateParams();
+      if (templateParams.containsKey(EVENT_LINK_KEY)) {
+        templateParams.put(EVENT_LINK_KEY, getLink(event, groupId));
+        activityManager.updateActivity(activity);
       }
     }
   }
@@ -399,6 +469,75 @@ public class CalendarDataImportResource implements OperationHandler {
     else
       file.createNewFile();
     return file;
+  }
+
+  private String getLink(CalendarEvent event, String spaceGroupId) {
+    if (spaceGroupId == null) {
+      PortalRequestContext prc = Util.getPortalRequestContext();
+      UserPortal userPortal = prc.getUserPortal();
+      UserNavigation userNav = userPortal.getNavigation(SiteKey.portal(INTRANET_SITE_NAME));
+      UserNode userNode = userPortal.getNode(userNav, Scope.ALL, null, null);
+      UserNode calendarNode = userNode.getChild(CALENDAR_SPACE_NAGVIGATION);
+      if (calendarNode != null) {
+        String calendarURI = getNodeURL(calendarNode);
+        return makeEventLink(event, calendarURI);
+      }
+      return StringUtils.EMPTY;
+    } else {
+      String spaceLink = getSpaceHomeURL(spaceGroupId);
+      if (getAnswerPortletInSpace(spaceGroupId).length() == 0) {
+        return StringUtils.EMPTY;
+      }
+      return makeEventLink(event, spaceLink + "/" + getAnswerPortletInSpace(spaceGroupId));
+    }
+  }
+
+  private String makeEventLink(CalendarEvent event, String baseURI) {
+    StringBuffer sb = new StringBuffer("");
+    sb.append(baseURI).append(INVITATION_DETAIL).append(ConversationState.getCurrent().getIdentity().getUserId()).append("/").append(event.getId()).append("/").append(event.getCalType());
+    return sb.toString();
+  }
+
+  private String getSpaceHomeURL(String spaceGroupId) {
+    if (spaceGroupId == null || "".equals(spaceGroupId))
+      return null;
+    String permanentSpaceName = spaceGroupId.split("/")[2];
+    SpaceService spaceService = (SpaceService) ExoContainerContext.getCurrentContainer().getComponentInstanceOfType(SpaceService.class);
+    Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+
+    NodeURL nodeURL = RequestContext.getCurrentInstance().createURL(NodeURL.TYPE);
+    NavigationResource resource = new NavigationResource(SiteType.GROUP, SpaceUtils.SPACE_GROUP + "/" + permanentSpaceName, space.getPrettyName());
+
+    return nodeURL.setResource(resource).toString();
+  }
+
+  private String getAnswerPortletInSpace(String spaceGroupId) {
+    ExoContainer container = ExoContainerContext.getCurrentContainer();
+    NavigationService navService = (NavigationService) container.getComponentInstance(NavigationService.class);
+    NavigationContext nav = navService.loadNavigation(SiteKey.group(spaceGroupId));
+    NodeContext<NodeContext<?>> parentNodeCtx = navService.loadNode(NodeModel.SELF_MODEL, nav, Scope.ALL, null);
+
+    if (parentNodeCtx.getSize() >= 1) {
+      NodeContext<?> nodeCtx = parentNodeCtx.get(0);
+      @SuppressWarnings("unchecked")
+      Collection<NodeContext<?>> children = (Collection<NodeContext<?>>) nodeCtx.getNodes();
+      Iterator<NodeContext<?>> it = children.iterator();
+
+      NodeContext<?> child = null;
+      while (it.hasNext()) {
+        child = it.next();
+        if (CALENDAR_SPACE_NAGVIGATION.equals(child.getName()) || child.getName().indexOf(CALENDAR_PORTLET_NAME) >= 0) {
+          return child.getName();
+        }
+      }
+    }
+    return StringUtils.EMPTY;
+  }
+
+  private String getNodeURL(UserNode node) {
+    RequestContext ctx = RequestContext.getCurrentInstance();
+    NodeURL nodeURL = ctx.createURL(NodeURL.TYPE);
+    return nodeURL.setNode(node).toString();
   }
 
 }
