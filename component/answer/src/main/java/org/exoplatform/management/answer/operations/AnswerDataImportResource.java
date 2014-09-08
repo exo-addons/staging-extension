@@ -7,32 +7,22 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.exoplatform.faq.service.Answer;
 import org.exoplatform.faq.service.Category;
+import org.exoplatform.faq.service.Comment;
 import org.exoplatform.faq.service.FAQService;
+import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.Utils;
-import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.management.answer.AnswerExtension;
 import org.exoplatform.portal.config.UserACL;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -57,10 +47,8 @@ public class AnswerDataImportResource implements OperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataImportResource.class);
 
-  private RepositoryService repositoryService;
   private SpaceService spaceService;
   private FAQService faqService;
-  private KSDataLocation dataLocation;
   private UserACL userACL;
 
   private String type;
@@ -75,8 +63,6 @@ public class AnswerDataImportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
-    repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
-    dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -99,12 +85,10 @@ public class AnswerDataImportResource implements OperationHandler {
     }
 
     String tempFolderPath = null;
-    Map<String, List<String>> contentsByOwner = new HashMap<String, List<String>>();
+    Map<String, String> contentsByOwner = new HashMap<String, String>();
     try {
       // extract data from zip
       tempFolderPath = extractDataFromZip(attachmentInputStream, contentsByOwner);
-      String workspace = dataLocation.getWorkspace();
-
       for (String categoryId : contentsByOwner.keySet()) {
         boolean isSpaceFAQ = categoryId.contains(Utils.CATE_SPACE_ID_PREFIX);
         if (isSpaceFAQ) {
@@ -113,39 +97,16 @@ public class AnswerDataImportResource implements OperationHandler {
             log.warn("Import of Answer category '" + categoryId + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
             continue;
           }
+          String filePath = contentsByOwner.get(categoryId);
 
-          if (replaceExisting) {
-            log.info("Overwrite existing Space FAQ Category: '" + categoryId + "'  (replace-existing=true)");
-          } else {
-            log.info("Ignore existing Space FAQ Category: '" + categoryId + "'  (replace-existing=false)");
-            continue;
-          }
-
-          List<String> paths = contentsByOwner.get(categoryId);
-
-          Collections.sort(paths);
-          for (String nodePath : paths) {
-            importNode(categoryId, nodePath, workspace, tempFolderPath);
-          }
+          importAnswerData(tempFolderPath, filePath, replaceExisting);
         } else {
-          Category category = faqService.getCategoryById(categoryId);
-          if (category != null) {
-            if (replaceExisting) {
-              log.info("Overwrite existing FAQ Category: '" + category.getName() + "'  (replace-existing=true)");
-            } else {
-              log.info("Ignore existing FAQ Category: '" + category.getName() + "'  (replace-existing=false)");
-              continue;
-            }
-          }
-
-          List<String> paths = contentsByOwner.get(categoryId);
-
-          Collections.sort(paths);
-          for (String nodePath : paths) {
-            importNode(categoryId, nodePath, workspace, tempFolderPath);
-          }
+          String filePath = contentsByOwner.get(categoryId);
+          importAnswerData(tempFolderPath, filePath, replaceExisting);
         }
       }
+
+      // To refresh caches
       faqService.calculateDeletedUser("fakeUser" + Utils.DELETED);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import FAQ contents", e);
@@ -176,7 +137,7 @@ public class AnswerDataImportResource implements OperationHandler {
    * @param attachment
    * @return
    */
-  public String extractDataFromZip(InputStream attachmentInputStream, Map<String, List<String>> contentsByOwner) throws Exception {
+  private String extractDataFromZip(InputStream attachmentInputStream, Map<String, String> contentsByOwner) throws Exception {
     File tmpZipFile = null;
     String targetFolderPath = null;
     try {
@@ -224,68 +185,66 @@ public class AnswerDataImportResource implements OperationHandler {
     return tmpZipFile;
   }
 
-  private void importNode(String id, String nodePath, String workspace, String tempFolderPath) throws Exception {
-    if (!nodePath.startsWith("/")) {
-      nodePath = "/" + nodePath;
-    }
-    String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
-    parentNodePath = parentNodePath.replaceAll("//", "/");
+  private void importAnswerData(String targetFolderPath, String filePath, boolean replaceExisting) throws Exception {
+    // Unmarshall answer category data file
+    XStream xStream = new XStream();
 
-    // Delete old node
-    Session session = getSession(workspace, repositoryService);
-    try {
-      if (session.itemExists(nodePath) && session.getItem(nodePath) instanceof Node) {
-        log.info("Deleting the node " + workspace + ":" + nodePath);
+    @SuppressWarnings("unchecked")
+    List<Object> objects = (List<Object>) xStream.fromXML(FileUtils.readFileToString(new File(targetFolderPath + replaceSpecialChars(filePath)), "UTF-8"));
 
-        Node oldNode = (Node) session.getItem(nodePath);
-        oldNode.remove();
-        session.save();
-        session.refresh(false);
-      }
-    } catch (Exception e) {
-      log.error("Error when trying to find and delete the node: '" + parentNodePath + "'. Ignore this node and continue.", e);
+    Category category = (Category) objects.get(0);
+    @SuppressWarnings("unchecked")
+    List<Question> questions = (List<Question>) objects.get(1);
+
+    String parentId = category.getPath().replace("/" + category.getId(), "");
+
+    Category parentCategory = faqService.getCategoryById(parentId);
+    if (parentCategory == null) {
+      log.warn("Parent Answer Category of Category '" + category.getName() + "' doesn't exist, ignore import operation for this category.");
       return;
-    } finally {
-      if (session != null) {
-        session.logout();
+    }
+
+    Category toReplaceCategory = faqService.getCategoryById(category.getId());
+    if (toReplaceCategory != null) {
+      if (replaceExisting) {
+        log.info("Overwrite existing FAQ Category: '" + toReplaceCategory.getName() + "'  (replace-existing=true)");
+        faqService.removeCategory(category.getPath());
+
+        // FIXME Exception swallowed FORUM-971, so we have to make test
+        if (faqService.getCategoryById(category.getId()) != null) {
+          throw new RuntimeException("Cannot delete category: " + category.getName() + ". Internal error.");
+        }
+      } else {
+        log.info("Ignore existing FAQ Category: '" + category.getName() + "'  (replace-existing=false)");
+        return;
       }
     }
 
-    // Import Node from Extracted Zip file
-    session = getSession(workspace, repositoryService);
-    FileInputStream fis = null;
-    File xmlFile = null;
-    try {
-      log.info("Importing the node '" + nodePath + "'");
+    faqService.saveCategory(parentId, category, true);
 
-      // Create the parent path
-      createJCRPath(session, parentNodePath);
+    // FIXME Exception swallowed FORUM-971, so we have to make test
+    if (faqService.getCategoryById(category.getId()) == null) {
+      throw new RuntimeException("Category isn't imported");
+    }
 
-      // Get XML file
-      xmlFile = new File((tempFolderPath + "/" + replaceSpecialChars(AnswerExportTask.getEntryPath(type, id, nodePath))).replaceAll("//", "/"));
-      fis = new FileInputStream(xmlFile);
-
-      session.refresh(false);
-      session.importXML(parentNodePath, fis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-      session.save();
-    } catch (Exception e) {
-      log.error("Error when trying to import node: " + parentNodePath, e);
-      // Revert changes
-      session.refresh(false);
-    } finally {
-      if (session != null) {
-        session.logout();
+    for (Question question : questions) {
+      faqService.saveQuestion(question, true, AnswerExtension.EMPTY_FAQ_SETTIGNS);
+      if (question.getAnswers() != null) {
+        for (Answer answer : question.getAnswers()) {
+          answer.setNew(true);
+          faqService.saveAnswer(question.getPath(), answer, true);
+        }
       }
-      if (fis != null) {
-        fis.close();
-      }
-      if (xmlFile != null) {
-        xmlFile.delete();
+      if (question.getComments() != null) {
+        for (Comment comment : question.getComments()) {
+          comment.setNew(true);
+          faqService.saveComment(question.getPath(), comment, question.getLanguage());
+        }
       }
     }
   }
 
-  private void extractFilesById(File tmpZipFile, String targetFolderPath, Map<String, List<String>> contentsByOwner) throws FileNotFoundException, IOException, Exception {
+  private void extractFilesById(File tmpZipFile, String targetFolderPath, Map<String, String> contentsByOwner) throws FileNotFoundException, IOException, Exception {
     NonCloseableZipInputStream zis;
     // Open an input stream on local zip file
     zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
@@ -325,36 +284,16 @@ public class AnswerDataImportResource implements OperationHandler {
         // Extract ID owner
         String id = extractIdFromPath(filePath);
 
-        // Add nodePath by WikiOwner
-        if (!contentsByOwner.containsKey(id)) {
-          contentsByOwner.put(id, new ArrayList<String>());
+        // Add nodePath by answer ID
+        if (contentsByOwner.containsKey(id)) {
+          log.warn("Two different files was found for Answer category: \r\n\t-" + contentsByOwner.get(id) + "\r\n\t-" + filePath + "\r\n. Ignore the new one.");
+          continue;
         }
-        String nodePath = filePath.substring(filePath.indexOf(id + "/") + (id + "/").length(), filePath.lastIndexOf(".xml"));
-        contentsByOwner.get(id).add(nodePath);
+        contentsByOwner.put(id, filePath);
       }
     } finally {
       zis.reallyClose();
     }
-  }
-
-  private Node createJCRPath(Session session, String path) throws RepositoryException {
-    String[] ancestors = path.split("/");
-    Node current = session.getRootNode();
-    for (int i = 0; i < ancestors.length; i++) {
-      if (!"".equals(ancestors[i])) {
-        if (current.hasNode(ancestors[i])) {
-          current = current.getNode(ancestors[i]);
-        } else {
-          if (log.isInfoEnabled()) {
-            log.info("Creating folder: " + ancestors[i] + " in node : " + current.getPath());
-          }
-          current = current.addNode(ancestors[i], "nt:unstructured");
-          session.save();
-        }
-      }
-    }
-    return current;
-
   }
 
   /**
@@ -439,13 +378,6 @@ public class AnswerDataImportResource implements OperationHandler {
       }
     }
     return (space != null);
-  }
-
-  private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
   }
 
   private static void copyToDisk(InputStream input, String output) throws Exception {

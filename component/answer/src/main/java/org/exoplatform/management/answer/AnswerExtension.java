@@ -19,6 +19,7 @@ package org.exoplatform.management.answer;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.exoplatform.faq.service.FAQSetting;
 import org.exoplatform.management.answer.operations.AnswerDataExportResource;
 import org.exoplatform.management.answer.operations.AnswerDataImportResource;
 import org.exoplatform.management.answer.operations.AnswerDataReadResource;
@@ -42,6 +43,12 @@ import org.gatein.management.spi.ManagementExtension;
  * @version $Revision$
  */
 public class AnswerExtension implements ManagementExtension {
+
+  public static final FAQSetting EMPTY_FAQ_SETTIGNS = new FAQSetting();
+  static {
+    EMPTY_FAQ_SETTIGNS.setDisplayMode("");
+    EMPTY_FAQ_SETTIGNS.setOrderBy("");
+  }
 
   public static final String PUBLIC_FAQ_TYPE = "public";
   public static final String SPACE_FAQ_TYPE = "space";

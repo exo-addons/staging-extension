@@ -18,74 +18,56 @@ package org.exoplatform.management.answer.operations;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.List;
 
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationNames;
+import org.chromattic.common.collection.Collections;
+import org.exoplatform.faq.service.Answer;
+import org.exoplatform.faq.service.Category;
+import org.exoplatform.faq.service.Question;
 import org.gatein.management.api.operation.model.ExportTask;
+
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class AnswerExportTask implements ExportTask {
-  private static final Log log = ExoLogger.getLogger(AnswerExportTask.class);
-
-  private final RepositoryService repositoryService;
   private final String type;
-  private final boolean recursive;
-  private final String workspace;
-  private final String absolutePath;
-  private final String categoryId;
+  private final Category category;
+  private final List<Question> questions;
 
-  public AnswerExportTask(RepositoryService repositoryService, String type, String categoryId, String workspace, String absolutePath, boolean recursive) {
-    this.categoryId = categoryId;
+  public AnswerExportTask(String type, Category category, List<Question> questions) {
+    this.category = category;
     this.type = type;
-    this.recursive = recursive;
-    this.repositoryService = repositoryService;
-    this.workspace = workspace;
-    this.absolutePath = absolutePath;
+    this.questions = questions;
   }
 
   @Override
   public String getEntry() {
-    return getEntryPath(type, categoryId, absolutePath);
+    return getEntryPath(type, category.getId());
   }
 
-  public static String getEntryPath(String type, String id, String absolutePath) {
-    return new StringBuilder("answer/").append(type).append("/").append(id).append(absolutePath).append(".xml").toString();
+  public static String getEntryPath(String type, String id) {
+    return new StringBuilder("answer/").append(type).append("/").append(id).append("/category.xml").toString();
   }
 
   @Override
   public void export(OutputStream outputStream) throws IOException {
-    Session session = null;
-    try {
-      log.info("Export: " + workspace + ":" + absolutePath);
+    XStream xStream = new XStream();
+    OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
 
-      session = getSession(workspace);
-      session.exportDocumentView(absolutePath, outputStream, false, !recursive);
-    } catch (RepositoryException exception) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);
-    } finally {
-      if (session != null) {
-        session.logout();
+    for (Question question : questions) {
+      for (Answer answer : question.getAnswers()) {
+        if (answer.getLanguage() == null) {
+          answer.setLanguage(question.getLanguage());
+        }
       }
     }
-  }
 
-  private Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
+    List<Object> objects = Collections.list(category, questions);
+    xStream.toXML(objects, writer);
+    writer.flush();
   }
 }
