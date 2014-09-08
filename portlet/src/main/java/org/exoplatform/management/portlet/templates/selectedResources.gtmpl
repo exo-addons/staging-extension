@@ -95,6 +95,8 @@
                                                 ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
     </div>
     <div ng-show="mode == 'export' || mode == 'synchronize'">
+      <label class="checkbox uiCheckbox"><input ng-init="optionsModel['/social/space_EXPORT_filter/export-activities']=true" class="option" type="checkbox" name="/social/space_EXPORT_filter/export-activities" ng-checked="optionsModel['/social/space_EXPORT_filter/export-activities']" ng-disabled="true"
+                                                ng-model="optionsModel['/social/space_EXPORT_filter/export-activities']"><span>Activities Stream (Mandatory)</span></label>
       <label class="checkbox uiCheckbox"><input ng-init="optionsModel['/social/space_EXPORT_filter/export-documents']=true" class="option" type="checkbox" name="/social/space_EXPORT_filter/export-documents" ng-checked="optionsModel['/social/space_EXPORT_filter/export-documents']" ng-disabled="true"
                                                 ng-model="optionsModel['/social/space_EXPORT_filter/export-documents']"><span>Documents (Mandatory)</span></label>
       <label class="checkbox uiCheckbox"><input ng-init="optionsModel['/social/space_EXPORT_filter/export-wiki']=true" class="option" type="checkbox" name="/social/space_EXPORT_filter/export-wiki" ng-checked="optionsModel['/social/space_EXPORT_filter/export-wiki']" ng-disabled="true"

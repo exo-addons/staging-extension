@@ -359,7 +359,7 @@ public class SocialDataImportResource implements OperationHandler {
       if (replaceExisting) {
         log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
         spaceService.deleteSpace(space);
-        // FIXME Answer Bug: deleting a space don't delete answers category
+        // Answer Bug: deleting a space don't delete answers category, but it will be deleted if answer data is imported
       } else {
         log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space import.");
         return true;
