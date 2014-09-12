@@ -7,14 +7,19 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.faq.service.Answer;
 import org.exoplatform.faq.service.Category;
 import org.exoplatform.faq.service.Comment;
@@ -23,6 +28,13 @@ import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
 import org.exoplatform.portal.config.UserACL;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -50,6 +62,8 @@ public class AnswerDataImportResource implements OperationHandler {
   private SpaceService spaceService;
   private FAQService faqService;
   private UserACL userACL;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
 
   private String type;
 
@@ -64,6 +78,8 @@ public class AnswerDataImportResource implements OperationHandler {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -108,6 +124,20 @@ public class AnswerDataImportResource implements OperationHandler {
 
       // To refresh caches
       faqService.calculateDeletedUser("fakeUser" + Utils.DELETED);
+
+      Set<String> categoryIds = contentsByOwner.keySet();
+      for (String categoryId : categoryIds) {
+        String activitiesFilePath = tempFolderPath + replaceSpecialChars(AnswerActivitiesExportTask.getEntryPath(type, categoryId));
+        File activitiesFile = new File(activitiesFilePath);
+        if (activitiesFile.exists()) {
+          String spacePrettyName = null;
+          boolean isSpaceFAQ = categoryId.contains(Utils.CATE_SPACE_ID_PREFIX);
+          if (isSpaceFAQ) {
+            spacePrettyName = categoryId.replace(Utils.CATE_SPACE_ID_PREFIX, "");
+          }
+          createActivities(activitiesFile, spacePrettyName);
+        }
+      }
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import FAQ contents", e);
     } finally {
@@ -208,6 +238,7 @@ public class AnswerDataImportResource implements OperationHandler {
     if (toReplaceCategory != null) {
       if (replaceExisting) {
         log.info("Overwrite existing FAQ Category: '" + toReplaceCategory.getName() + "'  (replace-existing=true)");
+        deleteActivities(category.getId(), null);
         faqService.removeCategory(category.getPath());
 
         // FIXME Exception swallowed FORUM-971, so we have to make test
@@ -242,6 +273,206 @@ public class AnswerDataImportResource implements OperationHandler {
         }
       }
     }
+    deleteActivities(category.getId(), questions);
+  }
+
+  private void createActivities(File activitiesFile, String spacePrettyName) {
+    log.info("Importing Answer activities");
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(activitiesFile);
+
+      // Unmarshall metadata xml file
+      XStream xstream = new XStream();
+
+      @SuppressWarnings("unchecked")
+      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+      ProfileFilter profileFilter = new ProfileFilter();
+      Identity identity = null;
+      for (ExoSocialActivity activity : activities) {
+        profileFilter.setName(activity.getUserId());
+        identity = getIdentity(profileFilter);
+
+        if (identity != null) {
+          activity.setUserId(identity.getId());
+
+          profileFilter.setName(activity.getPosterId());
+          identity = getIdentity(profileFilter);
+
+          if (identity != null) {
+            activity.setPosterId(identity.getId());
+            activitiesList.add(activity);
+
+            Set<String> keys = activity.getTemplateParams().keySet();
+            for (String key : keys) {
+              String value = activity.getTemplateParams().get(key);
+              if (value != null) {
+                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+              }
+            }
+            if (StringUtils.isNotEmpty(activity.getTitle())) {
+              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+            }
+            if (StringUtils.isNotEmpty(activity.getBody())) {
+              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+            }
+            if (StringUtils.isNotEmpty(activity.getSummary())) {
+              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+            }
+          }
+          activity.setReplyToId(null);
+          String[] commentedIds = activity.getCommentedIds();
+          if (commentedIds != null && commentedIds.length > 0) {
+            for (int i = 0; i < commentedIds.length; i++) {
+              profileFilter.setName(commentedIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                commentedIds[i] = identity.getId();
+              }
+            }
+            activity.setCommentedIds(commentedIds);
+          }
+          String[] mentionedIds = activity.getMentionedIds();
+          if (mentionedIds != null && mentionedIds.length > 0) {
+            for (int i = 0; i < mentionedIds.length; i++) {
+              profileFilter.setName(mentionedIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                mentionedIds[i] = identity.getId();
+              }
+            }
+            activity.setMentionedIds(mentionedIds);
+          }
+          String[] likeIdentityIds = activity.getLikeIdentityIds();
+          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+            for (int i = 0; i < likeIdentityIds.length; i++) {
+              profileFilter.setName(likeIdentityIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                likeIdentityIds[i] = identity.getId();
+              }
+            }
+            activity.setLikeIdentityIds(likeIdentityIds);
+          }
+        }
+      }
+      ExoSocialActivity questionActivity = null;
+      String questionId = null;
+      Question question = null;
+      for (ExoSocialActivity exoSocialActivity : activitiesList) {
+        exoSocialActivity.setId(null);
+        if (exoSocialActivity.getTemplateParams() == null) {
+          log.warn("Answer Activity TemplateParams is null, can't process activity: '" + exoSocialActivity.getTitle() + "'.");
+          questionActivity = null;
+          question = null;
+          continue;
+        }
+        questionId = exoSocialActivity.getTemplateParams().containsKey("Id") ? exoSocialActivity.getTemplateParams().get("Id") : questionId;
+        String linkId = exoSocialActivity.getTemplateParams().get("Link");
+        if (linkId == null) {
+          if (questionActivity != null && exoSocialActivity.isComment()) {
+            saveComment(questionActivity, exoSocialActivity);
+          } else {
+            log.warn("An activity that is not a question nor a answer nor a comment was found in Answer activities.");
+            questionActivity = null;
+            question = null;
+            continue;
+          }
+        } else {
+          if (exoSocialActivity.isComment()) {
+            if (questionId == null || question == null) {
+              log.warn("Answer Activity comment was found with no question.");
+              continue;
+            }
+            if (linkId != null && linkId.startsWith("Comment")) {
+              Comment comment = faqService.getCommentById(question.getPath(), linkId);
+              if (comment == null) {
+                log.warn("Answer Comment not found. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+                continue;
+              }
+              saveComment(questionActivity, exoSocialActivity);
+              faqService.saveActivityIdForComment(question.getPath(), comment.getId(), question.getLanguage(), exoSocialActivity.getId());
+            } else if (linkId != null && linkId.startsWith("Answer")) {
+              Answer answer = faqService.getAnswerById(question.getPath(), linkId);
+              if (answer == null) {
+                log.warn("Question's answer not found. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+                continue;
+              }
+              saveComment(questionActivity, exoSocialActivity);
+              faqService.saveActivityIdForAnswer(question.getPath(), answer, exoSocialActivity.getId());
+            } else {
+              log.warn("Comment Activity of Type 'Answer application' was found but is not for an answer nor for a comment");
+            }
+          } else {
+            question = faqService.getQuestionById(questionId);
+            if (question == null) {
+              log.warn("Question not found. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+              continue;
+            }
+            saveActivity(exoSocialActivity, spacePrettyName);
+            faqService.saveActivityIdForQuestion(questionId, exoSocialActivity.getId());
+            questionActivity = exoSocialActivity;
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+  }
+
+  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
+    long updatedTime = activity.getUpdated().getTime();
+    if (spacePrettyName == null) {
+      activityManager.saveActivityNoReturn(activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    } else {
+      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    }
+  }
+
+  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveComment(activity, comment);
+    activity.setUpdated(updatedTime);
+    activityManager.updateActivity(activity);
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter) {
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+    try {
+      if (identities.getSize() > 0) {
+        return identities.load(0, 1)[0];
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
+    return null;
+  }
+
+  private void deleteActivities(String categoryId, List<Question> questions) throws Exception {
+    // Delete Answer activity stream
+    if (questions == null) {
+      questions = faqService.getQuestionsByCatetory(categoryId, AnswerExtension.EMPTY_FAQ_SETTIGNS).getAll();
+    }
+    for (Question question : questions) {
+      ExoSocialActivity activity = activityManager.getActivity(faqService.getActivityIdForQuestion(question.getId()));
+      if (activity != null) {
+        activityManager.deleteActivity(activity);
+      }
+    }
   }
 
   private void extractFilesById(File tmpZipFile, String targetFolderPath, Map<String, String> contentsByOwner) throws FileNotFoundException, IOException, Exception {
@@ -266,7 +497,7 @@ public class AnswerDataImportResource implements OperationHandler {
         }
 
         // Skip non managed
-        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.endsWith(AnswerActivitiesExportTask.FILENAME)) {
           log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
           continue;
         }
@@ -277,7 +508,7 @@ public class AnswerDataImportResource implements OperationHandler {
         copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
 
         // Skip metadata file
-        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME) || filePath.endsWith(AnswerActivitiesExportTask.FILENAME)) {
           continue;
         }
 

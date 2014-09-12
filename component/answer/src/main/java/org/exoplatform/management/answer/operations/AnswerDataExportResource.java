@@ -21,12 +21,17 @@ import java.util.List;
 
 import org.apache.poi.util.IOUtils;
 import org.exoplatform.faq.service.Category;
+import org.exoplatform.faq.service.Comment;
 import org.exoplatform.faq.service.FAQService;
 import org.exoplatform.faq.service.FileAttachment;
 import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.QuestionPageList;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
+import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -51,6 +56,8 @@ public class AnswerDataExportResource implements OperationHandler {
 
   private SpaceService spaceService;
   private FAQService faqService;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
 
   private boolean isSpaceType;
   private String type;
@@ -65,6 +72,8 @@ public class AnswerDataExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String name = operationContext.getAttributes().getValue("filter");
 
@@ -133,6 +142,7 @@ public class AnswerDataExportResource implements OperationHandler {
       }
     }
     exportTasks.add(new AnswerExportTask(type, category, questions));
+    exportActivities(exportTasks, category, questions);
 
     if (exportSpaceMetadata && isSpaceType) {
       if (space == null) {
@@ -140,6 +150,39 @@ public class AnswerDataExportResource implements OperationHandler {
       } else {
         exportTasks.add(new SpaceMetadataExportTask(space, category.getId()));
       }
+    }
+  }
+
+  private void exportActivities(List<ExportTask> exportTasks, Category category, List<Question> questions) throws Exception {
+    log.info("export answer activities");
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    for (Question question : questions) {
+      String activityId = faqService.getActivityIdForQuestion(question.getPath());
+      if (activityId == null) {
+        continue;
+      }
+      ExoSocialActivity questionActivity = activityManager.getActivity(activityId);
+      activitiesList.add(questionActivity);
+      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(questionActivity);
+      if (commentsListAccess.getSize() > 0) {
+        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        // set CommentId in Link where QuestionLink is added instead
+        for (ExoSocialActivity exoSocialActivity : comments) {
+          if (exoSocialActivity.getTemplateParams().containsKey("Link") && exoSocialActivity.getTemplateParams().get("Link").contains("questionId=")) {
+            Comment[] questionComments = question.getComments();
+            for (Comment comment : questionComments) {
+              String commentActivityId = faqService.getActivityIdForComment(question.getPath(), comment.getId(), question.getLanguage());
+              if (commentActivityId != null && commentActivityId.equals(exoSocialActivity.getId())) {
+                exoSocialActivity.getTemplateParams().put("Link", comment.getId());
+              }
+            }
+          }
+        }
+        activitiesList.addAll(comments);
+      }
+    }
+    if (!activitiesList.isEmpty()) {
+      exportTasks.add(new AnswerActivitiesExportTask(identityManager, activitiesList, type, category.getId()));
     }
   }
 
