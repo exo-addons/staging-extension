@@ -17,6 +17,7 @@
 package org.exoplatform.management.wiki.operations;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,13 +27,21 @@ import javax.jcr.NodeIterator;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
+import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.wiki.mow.api.Page;
 import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
+import org.exoplatform.wiki.mow.core.api.wiki.PageImpl;
+import org.exoplatform.wiki.service.WikiService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -60,6 +69,9 @@ public class WikiDataExportResource implements OperationHandler {
 
   private RepositoryService repositoryService;
   private SpaceService spaceService;
+  private WikiService wikiService;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
 
   public WikiDataExportResource(WikiType wikiType) {
     this.wikiType = wikiType;
@@ -70,6 +82,9 @@ public class WikiDataExportResource implements OperationHandler {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String wikiOwner = operationContext.getAttributes().getValue("filter");
 
@@ -109,8 +124,52 @@ public class WikiDataExportResource implements OperationHandler {
         Space space = spaceService.getSpaceByGroupId(wiki.getOwner());
         exportTasks.add(new SpaceMetadataExportTask(space, wiki.getOwner()));
       }
+
+      // export Activities
+      exportActivities(exportTasks, wiki);
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting wiki", exception);
+    }
+  }
+
+  private void exportActivities(List<ExportTask> exportTasks, Wiki wiki) throws Exception {
+    log.info("export Wiki activities");
+    // Refresh Wiki
+    wiki = wikiService.getWiki(wiki.getType(), wiki.getOwner());
+
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    List<Page> pages = new ArrayList<Page>();
+    PageImpl homePage = (PageImpl) wiki.getWikiHome();
+    pages.add(homePage);
+
+    computeChildPages(pages, homePage);
+
+    for (Page page : pages) {
+      String activityId = ActivityTypeUtils.getActivityId(page.getJCRPageNode());
+      if (activityId == null || activityId.isEmpty()) {
+        continue;
+      }
+      ExoSocialActivity pageActivity = activityManager.getActivity(activityId);
+      if (pageActivity == null || pageActivity.isComment()) {
+        continue;
+      }
+      activitiesList.add(pageActivity);
+      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(pageActivity);
+      if (commentsListAccess.getSize() > 0) {
+        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        activitiesList.addAll(comments);
+      }
+    }
+    if (!activitiesList.isEmpty()) {
+      exportTasks.add(new WikiActivitiesExportTask(identityManager, activitiesList, wiki.getType(), wiki.getOwner()));
+    }
+  }
+
+  private void computeChildPages(List<Page> pages, PageImpl homePage) throws Exception {
+    Collection<PageImpl> chilPages = homePage.getChildPages().values();
+    for (PageImpl childPageImpl : chilPages) {
+      pages.add(childPageImpl);
+      computeChildPages(pages, childPageImpl);
     }
   }
 

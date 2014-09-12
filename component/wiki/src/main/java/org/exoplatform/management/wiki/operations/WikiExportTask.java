@@ -63,7 +63,7 @@ public class WikiExportTask implements ExportTask {
   }
 
   public static String getEntryPath(WikiType wikiType, String wikiName, String absolutePath) {
-    return new StringBuilder("wiki/").append(wikiType.toString().toLowerCase()).append("/___").append(wikiName).append("---/").append(absolutePath).append(".xml").toString();
+    return new StringBuilder("wiki/").append(wikiType.toString().toLowerCase()).append("/___").append(wikiName).append("---").append(absolutePath).append(".xml").toString();
   }
 
   @Override

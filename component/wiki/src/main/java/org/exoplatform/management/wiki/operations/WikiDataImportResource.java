@@ -8,10 +8,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -22,15 +24,30 @@ import javax.jcr.Session;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
+import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.profile.ProfileFilter;
+import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.wiki.mow.api.Page;
 import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
+import org.exoplatform.wiki.mow.core.api.wiki.PageImpl;
+import org.exoplatform.wiki.service.WikiService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -60,6 +77,9 @@ public class WikiDataImportResource implements OperationHandler {
   private UserACL userAcl;
   private MOWService mowService;
   private RepositoryService repositoryService;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
+  private WikiService wikiService;
 
   public WikiDataImportResource(WikiType wikiType) {
     this.wikiType = wikiType;
@@ -71,6 +91,9 @@ public class WikiDataImportResource implements OperationHandler {
     userAcl = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -110,12 +133,13 @@ public class WikiDataImportResource implements OperationHandler {
         if (wiki != null) {
           if (replaceExisting) {
             log.info("Overwrite existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=true). Delete: " + wiki.getWikiHome().getJCRPageNode().getPath());
+            deleteActivities(wiki.getType(), wiki.getOwner());
           } else {
             log.info("Ignore existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=false).");
             continue;
           }
         } else {
-          mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
+          wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
         }
 
         String workspace = mowService.getSession().getJCRSession().getWorkspace().getName();
@@ -125,6 +149,13 @@ public class WikiDataImportResource implements OperationHandler {
         Collections.sort(paths);
         for (String nodePath : paths) {
           importNode(wikiOwner, nodePath, workspace, tempFolderPath);
+        }
+
+        String activitiesFilePath = tempFolderPath + replaceSpecialChars(WikiActivitiesExportTask.getEntryPath(wiki.getType(), wikiOwner));
+        File activitiesFile = new File(activitiesFilePath);
+        // Import activities
+        if (activitiesFile.exists()) {
+          createActivities(activitiesFile);
         }
       }
     } catch (Exception e) {
@@ -285,7 +316,7 @@ public class WikiDataImportResource implements OperationHandler {
         }
 
         // Skip non managed
-        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(WikiActivitiesExportTask.FILENAME)) {
           log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
           continue;
         }
@@ -299,7 +330,7 @@ public class WikiDataImportResource implements OperationHandler {
         String wikiOwner = extractWikiOwnerFromPath(filePath);
 
         // Skip metadata file
-        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME) || filePath.endsWith(WikiActivitiesExportTask.FILENAME)) {
           continue;
         }
 
@@ -449,4 +480,203 @@ public class WikiDataImportResource implements OperationHandler {
       file.createNewFile();
     return file;
   }
+
+  private void createActivities(File activitiesFile) {
+    log.info("Importing Wiki activities");
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(activitiesFile);
+
+      // Unmarshall metadata xml file
+      XStream xstream = new XStream();
+
+      @SuppressWarnings("unchecked")
+      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+      List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
+
+      ExoSocialActivity pageActivity = null;
+      for (ExoSocialActivity activity : activitiesList) {
+        activity.setId(null);
+        String pageId = activity.getTemplateParams().get("page_id");
+        String pageOwner = activity.getTemplateParams().get("page_owner");
+        String pageType = activity.getTemplateParams().get("page_type");
+        if (pageId == null) {
+          if (activity.isComment()) {
+            if (pageActivity == null) {
+              log.warn("Attempt to add a comment activity to a non existing page activity.");
+            } else {
+              saveComment(pageActivity, activity);
+            }
+          } else {
+            log.warn("An unknown activity for Wiki was found. Ignore it: " + activity.getTitle());
+            pageActivity = null;
+            continue;
+          }
+        } else {
+          Page page = wikiService.getPageById(pageType, pageOwner, pageId);
+          if (page == null) {
+            log.warn("Wiki page not found. Cannot import activity '" + activity.getTitle() + "'.");
+            pageActivity = null;
+            continue;
+          }
+          if (activity.isComment()) {
+            saveComment(pageActivity, activity);
+          } else {
+            pageActivity = null;
+            saveActivity(activity, pageOwner);
+            ActivityTypeUtils.attachActivityId(page.getJCRPageNode(), activity.getId());
+            page.getJCRPageNode().getSession().save();
+            pageActivity = activity;
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+  }
+
+  private void saveActivity(ExoSocialActivity activity, String pageOwner) {
+    long updatedTime = activity.getUpdated().getTime();
+    if (pageOwner == null || !pageOwner.startsWith(SpaceUtils.SPACE_GROUP)) {
+      activityManager.saveActivityNoReturn(activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    } else {
+      String spacePrettyName = pageOwner.replace(SpaceUtils.SPACE_GROUP + "/", "");
+      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    }
+  }
+
+  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveComment(activity, comment);
+    activity.setUpdated(updatedTime);
+    activityManager.updateActivity(activity);
+  }
+
+  private List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    ProfileFilter profileFilter = new ProfileFilter();
+    Identity identity = null;
+    for (ExoSocialActivity activity : activities) {
+      profileFilter.setName(activity.getUserId());
+      identity = getIdentity(profileFilter);
+
+      if (identity != null) {
+        activity.setUserId(identity.getId());
+
+        profileFilter.setName(activity.getPosterId());
+        identity = getIdentity(profileFilter);
+
+        if (identity != null) {
+          activity.setPosterId(identity.getId());
+          activitiesList.add(activity);
+
+          Set<String> keys = activity.getTemplateParams().keySet();
+          for (String key : keys) {
+            String value = activity.getTemplateParams().get(key);
+            if (value != null) {
+              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+            }
+          }
+          if (StringUtils.isNotEmpty(activity.getTitle())) {
+            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+          }
+          if (StringUtils.isNotEmpty(activity.getBody())) {
+            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+          }
+          if (StringUtils.isNotEmpty(activity.getSummary())) {
+            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+          }
+        }
+        activity.setReplyToId(null);
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            profileFilter.setName(commentedIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              commentedIds[i] = identity.getId();
+            }
+          }
+          activity.setCommentedIds(commentedIds);
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            profileFilter.setName(mentionedIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              mentionedIds[i] = identity.getId();
+            }
+          }
+          activity.setMentionedIds(mentionedIds);
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            profileFilter.setName(likeIdentityIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              likeIdentityIds[i] = identity.getId();
+            }
+          }
+          activity.setLikeIdentityIds(likeIdentityIds);
+        }
+      }
+    }
+    return activitiesList;
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter) {
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+    try {
+      if (identities.getSize() > 0) {
+        return identities.load(0, 1)[0];
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
+    return null;
+  }
+
+  private void deleteActivities(String wikiType, String wikiOwner) throws Exception {
+    // Delete Forum activity stream
+    Wiki wiki = wikiService.getWiki(wikiType, wikiOwner);
+    if (wiki == null) {
+      return;
+    }
+    PageImpl homePage = (PageImpl) wiki.getWikiHome();
+    List<Page> pages = new ArrayList<Page>();
+    pages.add(homePage);
+    computeChildPages(pages, homePage);
+
+    for (Page page : pages) {
+      String activityId = ActivityTypeUtils.getActivityId(page.getJCRPageNode());
+      ExoSocialActivity activity = activityManager.getActivity(activityId);
+      if (activity != null) {
+        activityManager.deleteActivity(activity);
+      }
+    }
+  }
+
+  private void computeChildPages(List<Page> pages, PageImpl homePage) throws Exception {
+    Collection<PageImpl> chilPages = homePage.getChildPages().values();
+    for (PageImpl childPageImpl : chilPages) {
+      pages.add(childPageImpl);
+      computeChildPages(pages, childPageImpl);
+    }
+  }
+
 }
