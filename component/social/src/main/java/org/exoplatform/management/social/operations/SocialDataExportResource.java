@@ -17,6 +17,7 @@
 package org.exoplatform.management.social.operations;
 
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +35,7 @@ import javax.jcr.Node;
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.ValueFormatException;
 
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -109,13 +111,10 @@ public class SocialDataExportResource implements OperationHandler {
     // "replace-existing" attribute. Defaults to false.
     boolean exportWiki = false, exportAnswer = false, exportCalendar = false, exportForum = false;
     if (operationFilters != null) {
-      // FIXME (exportWiki should be always equal to false) wiki is automatically exported because the space wiki content is inside Space JCR
-      // Path, so it's exported with space documents
-      // exportWiki = operationFilters.contains("export-wiki:true");
-
+      exportWiki = operationFilters.contains("export-wiki:true");
+      exportAnswer = operationFilters.contains("export-answer:true");
       exportForum = operationFilters.contains("export-forum:true");
       exportCalendar = operationFilters.contains("export-calendar:true");
-      exportAnswer = operationFilters.contains("export-answer:true");
     }
 
     String spaceDisplayName = operationContext.getAddress().resolvePathTemplate("space-name");
@@ -157,7 +156,7 @@ public class SocialDataExportResource implements OperationHandler {
       }
 
       log.info("export space JCR private data");
-      computeContentFilters(space, filters);
+      computeContentFilters(space, attributesMap);
       addResourceExportTasks(exportTasks, attributesMap, SocialExtension.CONTENT_RESOURCE_PATH, space.getPrettyName());
 
       log.info("export space MOP data (layout & Pages & navigation)");
@@ -169,54 +168,68 @@ public class SocialDataExportResource implements OperationHandler {
 
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), false);
 
-      // No method to get avatar using Social API, so we have to use JCR
-      String avatarURL = spaceIdentity.getProfile().getAvatarUrl();
-      avatarURL = avatarURL == null ? null : URLDecoder.decode(avatarURL, "UTF-8");
-      if (avatarURL != null && avatarURL.contains(space.getPrettyName())) {
-        log.info("export space avatar");
-
-        int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
-        int endIndexAvatarPath = avatarURL.indexOf("?");
-        String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
-        Session session = getSession("social");
-        Node avatarNode = (Node) session.getItem(avatarNodePath);
-        Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
-        String fileName = "avatar";
-        String mimeType = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:mimeType").getString() : null;
-        InputStream inputStream = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:data").getStream() : null;
-        Calendar lastModified = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:lastModified").getDate() : null;
-
-        AvatarAttachment avatar = new AvatarAttachment(null, fileName, mimeType, inputStream, null, lastModified.getTimeInMillis());
-        exportTasks.add(new SpaceAvatarExportTask(space.getPrettyName(), avatar));
-      }
-
-      RealtimeListAccess<ExoSocialActivity> spaceList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
+      log.info("export space avatar");
+      exportSpaceAvatar(exportTasks, space, spaceIdentity);
 
       log.info("export space activities");
-      ExoSocialActivity[] activities = null;
-
-      int size = spaceList.getSize(), i = 0;
-      while (i < size) {
-        int length = i + 10 < size ? 10 : size - i;
-        activities = spaceList.load(0, length);
-        List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-        for (ExoSocialActivity exoSocialActivity : activities) {
-          if ((exoSocialActivity.getType().equals(SocialExtension.FORUM_ACTIVITY_TYPE) && !exportForum) || (exoSocialActivity.getType().equals(SocialExtension.WIKI_ACTIVITY_TYPE) && !exportWiki)
-              || (exoSocialActivity.getType().equals(SocialExtension.ANSWER_ACTIVITY_TYPE) && !exportAnswer)
-              || (exoSocialActivity.getType().equals(SocialExtension.CALENDAR_ACTIVITY_TYPE) && !exportCalendar)) {
-            continue;
-          }
-          activitiesList.add(exoSocialActivity);
-        }
-        if (!activitiesList.isEmpty()) {
-          exportTasks.add(new SpaceActivitiesExportTask(identityManager, activitiesList, space.getPrettyName(), i));
-        }
-        i += length;
-      }
+      exportSpaceActivities(exportTasks, space, spaceIdentity, exportWiki);
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't export Space", e);
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
+  }
+
+  private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity, boolean exportWiki) {
+    RealtimeListAccess<ExoSocialActivity> spaceActivitiesList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
+    ExoSocialActivity[] activities = null;
+
+    int size = spaceActivitiesList.getSize(), i = 0;
+    while (i < size) {
+      int length = i + 10 < size ? 10 : size - i;
+      activities = spaceActivitiesList.load(i, length);
+      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+      for (ExoSocialActivity exoSocialActivity : activities) {
+        // Don't export application activities
+        if (exoSocialActivity.isComment() || exoSocialActivity.getType().equals(SocialExtension.SITES_CONTENT_SPACES) || exoSocialActivity.getType().equals(SocialExtension.SITES_FILE_SPACES)
+            || exoSocialActivity.getType().equals(SocialExtension.FORUM_ACTIVITY_TYPE) || exoSocialActivity.getType().equals(SocialExtension.POLL_ACTIVITY_TYPE)
+            || exoSocialActivity.getType().equals(SocialExtension.WIKI_ACTIVITY_TYPE) || exoSocialActivity.getType().equals(SocialExtension.ANSWER_ACTIVITY_TYPE)
+            || exoSocialActivity.getType().equals(SocialExtension.CALENDAR_ACTIVITY_TYPE)) {
+          continue;
+        }
+        activitiesList.add(exoSocialActivity);
+        RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(exoSocialActivity);
+        if (commentsListAccess.getSize() > 0) {
+          List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+          activitiesList.addAll(comments);
+        }
+      }
+      if (!activitiesList.isEmpty()) {
+        exportTasks.add(new SpaceActivitiesExportTask(identityManager, activitiesList, space.getPrettyName(), i));
+      }
+      i += length;
+    }
+  }
+
+  private void exportSpaceAvatar(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) throws UnsupportedEncodingException, Exception, PathNotFoundException, RepositoryException,
+      ValueFormatException {
+    // No method to get avatar using Social API, so we have to use JCR
+    String avatarURL = spaceIdentity.getProfile().getAvatarUrl();
+    avatarURL = avatarURL == null ? null : URLDecoder.decode(avatarURL, "UTF-8");
+    if (avatarURL != null && avatarURL.contains(space.getPrettyName())) {
+      int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
+      int endIndexAvatarPath = avatarURL.indexOf("?");
+      String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
+      Session session = getSession("social");
+      Node avatarNode = (Node) session.getItem(avatarNodePath);
+      Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
+      String fileName = "avatar";
+      String mimeType = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:mimeType").getString() : null;
+      InputStream inputStream = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:data").getStream() : null;
+      Calendar lastModified = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:lastModified").getDate() : null;
+
+      AvatarAttachment avatar = new AvatarAttachment(null, fileName, mimeType, inputStream, null, lastModified.getTimeInMillis());
+      exportTasks.add(new SpaceAvatarExportTask(space.getPrettyName(), avatar));
+    }
   }
 
   private String getEntryResourcePath(String application) {
@@ -240,7 +253,8 @@ public class SocialDataExportResource implements OperationHandler {
     return path;
   }
 
-  private void computeContentFilters(Space space, List<String> filters) throws RepositoryException, LoginException, NoSuchWorkspaceException, PathNotFoundException {
+  private void computeContentFilters(Space space, Map<String, List<String>> attributesMap) throws RepositoryException, LoginException, NoSuchWorkspaceException, PathNotFoundException {
+    List<String> filters = attributesMap.get("filter");
     DataDistributionType dataDistributionType = dataDistributionManager.getDataDistributionType(DataDistributionMode.NONE);
     String contentWorkspace = repositoryService.getCurrentRepository().getConfiguration().getDefaultWorkspaceName();
     String groupsPath = nodeHierarchyCreator.getJcrPath(GROUPS_PATH);
@@ -254,6 +268,8 @@ public class SocialDataExportResource implements OperationHandler {
     filters.add("workspace:" + contentWorkspace);
     filters.add("taxonomy:false");
     filters.add("validate-structure:false");
+
+    attributesMap.put("excludePaths", Collections.singletonList(spaceNode.getPath() + "/ApplicationData/eXoWiki"));
   }
 
   private void addResourceExportTasks(List<ExportTask> exportTasks, Map<String, List<String>> attributesMap, String path, String spaceId) {

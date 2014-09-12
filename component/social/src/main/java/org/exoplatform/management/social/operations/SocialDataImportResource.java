@@ -30,9 +30,13 @@ import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.model.Dashboard;
 import org.exoplatform.portal.mop.importer.ImportMode;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.application.SpaceActivityPublisher;
 import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.model.Profile;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -43,6 +47,7 @@ import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.exoplatform.social.core.storage.cache.CachedActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
@@ -72,21 +77,27 @@ public class SocialDataImportResource implements OperationHandler {
 
   final private static int BUFFER = 2048000;
 
+  private OrganizationService organizationService;
   private SpaceService spaceService;
+  private IdentityStorage identityStorage;
   private ActivityManager activityManager;
   private IdentityManager identityManager;
   private ManagementController managementController;
   private UserACL userACL;
   private DataStorage dataStorage;
+  private ActivityStorage activityStorage;
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
+    organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     managementController = operationContext.getRuntimeContext().getRuntimeComponent(ManagementController.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -125,7 +136,7 @@ public class SocialDataImportResource implements OperationHandler {
         log.info("Importing applications data for space: " + extractedSpacePrettyName + " ...");
 
         Space space = spaceService.getSpaceByPrettyName(extractedSpacePrettyName);
-        if (space == null || !replaceExisting) {
+        if (space == null) {
           continue;
         }
 
@@ -153,16 +164,6 @@ public class SocialDataImportResource implements OperationHandler {
             importSubResource(fileToImport, fileKey);
           } else {
             if (fileKey.contains(SpaceActivitiesExportTask.FILENAME)) {
-              ActivityStorage activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
-              if (activityStorage instanceof CachedActivityStorage) {
-                ((CachedActivityStorage) activityStorage).clearCache();
-              }
-              Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, extractedSpacePrettyName, false);
-              RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
-              ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
-              for (ExoSocialActivity activity : activities) {
-                activityManager.deleteActivity(activity);
-              }
               createActivities(extractedSpacePrettyName, fileToImport);
             } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
               updateDashboard(space.getGroupId(), fileToImport);
@@ -200,6 +201,25 @@ public class SocialDataImportResource implements OperationHandler {
     }
 
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void deleteSpaceActivities(String extractedSpacePrettyName) {
+    if (activityStorage instanceof CachedActivityStorage) {
+      ((CachedActivityStorage) activityStorage).clearCache();
+    }
+    Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, extractedSpacePrettyName, false);
+    RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
+    ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
+    for (ExoSocialActivity activity : activities) {
+      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
+      if (commentsListAccess.getSize() > 0) {
+        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        for (ExoSocialActivity commentActivity : comments) {
+          activityManager.deleteActivity(commentActivity);
+        }
+      }
+      activityManager.deleteActivity(activity);
+    }
   }
 
   private void updateAvatar(Space space, File fileToImport) {
@@ -267,6 +287,7 @@ public class SocialDataImportResource implements OperationHandler {
   }
 
   private void createActivities(String spacePrettyName, File activitiesFile) {
+    log.info("Importing space activities");
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(activitiesFile);
@@ -281,13 +302,13 @@ public class SocialDataImportResource implements OperationHandler {
       Identity identity = null;
       for (ExoSocialActivity activity : activities) {
         profileFilter.setName(activity.getUserId());
-        identity = getIdentity(profileFilter);
+        identity = getIdentity(profileFilter, null);
 
         if (identity != null) {
           activity.setUserId(identity.getId());
 
           profileFilter.setName(activity.getPosterId());
-          identity = getIdentity(profileFilter);
+          identity = getIdentity(profileFilter, null);
 
           if (identity != null) {
             activity.setPosterId(identity.getId());
@@ -310,11 +331,62 @@ public class SocialDataImportResource implements OperationHandler {
               activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
             }
           }
+          activity.setReplyToId(null);
+          String[] commentedIds = activity.getCommentedIds();
+          if (commentedIds != null && commentedIds.length > 0) {
+            for (int i = 0; i < commentedIds.length; i++) {
+              profileFilter.setName(commentedIds[i]);
+              identity = getIdentity(profileFilter, null);
+              if (identity != null) {
+                commentedIds[i] = identity.getId();
+              }
+            }
+            activity.setCommentedIds(commentedIds);
+          }
+          String[] mentionedIds = activity.getMentionedIds();
+          if (mentionedIds != null && mentionedIds.length > 0) {
+            for (int i = 0; i < mentionedIds.length; i++) {
+              profileFilter.setName(mentionedIds[i]);
+              identity = getIdentity(profileFilter, null);
+              if (identity != null) {
+                mentionedIds[i] = identity.getId();
+              }
+            }
+            activity.setMentionedIds(mentionedIds);
+          }
+          String[] likeIdentityIds = activity.getLikeIdentityIds();
+          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+            for (int i = 0; i < likeIdentityIds.length; i++) {
+              profileFilter.setName(likeIdentityIds[i]);
+              identity = getIdentity(profileFilter, null);
+              if (identity != null) {
+                likeIdentityIds[i] = identity.getId();
+              }
+            }
+            activity.setLikeIdentityIds(likeIdentityIds);
+          }
+        } else {
+          log.warn("Space activity : '" + activity.getTitle() + "' isn't imported because its user/space wasn't found.");
         }
       }
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      ExoSocialActivity parentActivity = null;
       for (ExoSocialActivity exoSocialActivity : activitiesList) {
-        activityManager.saveActivityNoReturn(spaceIdentity, exoSocialActivity);
+        exoSocialActivity.setId(null);
+        if (exoSocialActivity.isComment()) {
+          if (parentActivity == null) {
+            log.warn("Attempt to add Social activity comment to a null activity");
+          } else {
+            saveComment(parentActivity, exoSocialActivity);
+          }
+        } else {
+          parentActivity = null;
+          saveActivity(exoSocialActivity, spaceIdentity);
+          if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(exoSocialActivity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(exoSocialActivity.getType())) {
+            identityStorage.updateProfileActivityId(spaceIdentity, exoSocialActivity.getId(), Profile.AttachedActivityType.SPACE);
+          }
+          parentActivity = activityManager.getActivity(exoSocialActivity.getId());
+        }
       }
     } catch (FileNotFoundException e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + activitiesFile.getAbsolutePath(), e);
@@ -329,11 +401,31 @@ public class SocialDataImportResource implements OperationHandler {
     }
   }
 
-  private Identity getIdentity(ProfileFilter profileFilter) {
-    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+  private void saveActivity(ExoSocialActivity activity, Identity spaceIdentity) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveActivityNoReturn(spaceIdentity, activity);
+    activity.setUpdated(updatedTime);
+    activityManager.updateActivity(activity);
+  }
+
+  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveComment(activity, comment);
+    activity.setUpdated(updatedTime);
+    activityManager.updateActivity(activity);
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter, String providerId) {
+    String computedProviderId = providerId;
+    if (computedProviderId == null) {
+      computedProviderId = OrganizationIdentityProvider.NAME;
+    }
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(computedProviderId, profileFilter, false);
     try {
       if (identities.getSize() > 0) {
         return identities.load(0, 1)[0];
+      } else if (providerId == null) {
+        return getIdentity(profileFilter, SpaceIdentityProvider.NAME);
       }
     } catch (Exception e) {
       log.error(e);
@@ -358,8 +450,16 @@ public class SocialDataImportResource implements OperationHandler {
     if (space != null) {
       if (replaceExisting) {
         log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
+        String groupId = space.getGroupId();
         spaceService.deleteSpace(space);
-        // Answer Bug: deleting a space don't delete answers category, but it will be deleted if answer data is imported
+        // FIXME deleting a space don't delete the corresponding group
+        Group group = organizationService.getGroupHandler().findGroupById(groupId);
+        if (group != null) {
+          organizationService.getGroupHandler().removeGroup(group, true);
+        }
+
+        // FIXME Answer Bug: deleting a space don't delete answers category, but
+        // it will be deleted if answer data is imported
       } else {
         log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space import.");
         return true;
@@ -392,6 +492,7 @@ public class SocialDataImportResource implements OperationHandler {
     if (isRenamed) {
       spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
     }
+    deleteSpaceActivities(spaceMetaData.getPrettyName());
     return false;
   }
 

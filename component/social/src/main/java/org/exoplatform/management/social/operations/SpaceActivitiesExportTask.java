@@ -60,14 +60,48 @@ public class SpaceActivitiesExportTask implements ExportTask {
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
     if (activities != null && activities.size() > 0) {
       for (ExoSocialActivity activity : activities) {
-        activity.setId(null);
         Identity identity = identityManager.getIdentity(activity.getUserId(), true);
-        String username = (String) identity.getProfile().getProperty(Profile.USERNAME);
-        activity.setUserId(username);
+        if (identity != null) {
+          String username = (String) identity.getProfile().getProperty(Profile.USERNAME);
+          activity.setUserId(username);
+        }
 
         identity = identityManager.getIdentity(activity.getPosterId(), true);
-        username = (String) identity.getProfile().getProperty(Profile.USERNAME);
-        activity.setPosterId(username);
+        if (identity != null) {
+          String username = (String) identity.getProfile().getProperty(Profile.USERNAME);
+          activity.setPosterId(username);
+        }
+
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            identity = identityManager.getIdentity(commentedIds[i], true);
+            if (identity != null) {
+              commentedIds[i] = (String) identity.getProfile().getProperty(Profile.USERNAME);
+            }
+          }
+          activity.setCommentedIds(commentedIds);
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            identity = identityManager.getIdentity(mentionedIds[i], true);
+            if (identity != null) {
+              mentionedIds[i] = (String) identity.getProfile().getProperty(Profile.USERNAME);
+            }
+          }
+          activity.setMentionedIds(mentionedIds);
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            identity = identityManager.getIdentity(likeIdentityIds[i], true);
+            if (identity != null) {
+              likeIdentityIds[i] = (String) identity.getProfile().getProperty(Profile.USERNAME);
+            }
+          }
+          activity.setLikeIdentityIds(likeIdentityIds);
+        }
       }
     }
     xStream.toXML(activities, writer);
