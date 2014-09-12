@@ -7,6 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,11 +21,13 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.management.calendar.CalendarExtension;
@@ -44,7 +48,12 @@ import org.exoplatform.portal.url.PortalURLContext;
 import org.exoplatform.portal.webui.util.Util;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -82,6 +91,8 @@ public class CalendarDataImportResource implements OperationHandler {
 
   final private static int BUFFER = 2048000;
 
+  public static final String EVENT_ID_KEY = "EventID";
+
   private static final String CALENDAR_SPACE_NAGVIGATION = "calendar";
 
   private static final String CALENDAR_PORTLET_NAME = "CalendarPortlet";
@@ -91,7 +102,9 @@ public class CalendarDataImportResource implements OperationHandler {
   public static final String EVENT_LINK_KEY = "EventLink";
 
   private ActivityManager activityManager;
+  private IdentityManager identityManager;
   private SpaceService spaceService;
+  private CalendarService calendarService;
   private UserACL userACL;
 
   private boolean groupCalendar;
@@ -106,9 +119,10 @@ public class CalendarDataImportResource implements OperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
-    CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
+    calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
 
@@ -164,10 +178,20 @@ public class CalendarDataImportResource implements OperationHandler {
         }
       }
 
+      List<File> activitiesFiles = new ArrayList<File>();
       for (String tempFilePath : contentsByOwner) {
-        importCalendar(calendarService, tempFolderPath, tempFilePath, replaceExisting, createSpace);
+        if (tempFilePath.endsWith(CalendarActivitiesExportTask.FILENAME)) {
+          activitiesFiles.add(new File(tempFilePath));
+        } else {
+          importCalendar(tempFolderPath, tempFilePath, replaceExisting, createSpace);
+        }
       }
-
+      for (File activitiesFile : activitiesFiles) {
+        String tempFilePath = activitiesFile.getAbsolutePath();
+        String spacePrettyName = tempFilePath.contains("_space_calendar") ? tempFilePath.substring(
+            tempFilePath.indexOf(CalendarExportTask.CALENDAR_SEPARATOR) + CalendarExportTask.CALENDAR_SEPARATOR.length(), tempFilePath.indexOf("_space_calendar")) : null;
+        createActivities(activitiesFile, spacePrettyName);
+      }
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import calendar contents", e);
     } finally {
@@ -208,7 +232,7 @@ public class CalendarDataImportResource implements OperationHandler {
 
       // Organize File paths by id and extract files from zip to a temp
       // folder
-      extractFilesById(tmpZipFile, targetFolderPath, contentsByCalendar);
+      extractFiles(tmpZipFile, targetFolderPath, contentsByCalendar);
     } finally {
       if (tmpZipFile != null) {
         try {
@@ -286,7 +310,7 @@ public class CalendarDataImportResource implements OperationHandler {
     return (space != null);
   }
 
-  private void importCalendar(CalendarService calendarService, String tempFolderPath, String tempFilePath, boolean replaceExisting, boolean createSpace) throws Exception {
+  private void importCalendar(String tempFolderPath, String tempFilePath, boolean replaceExisting, boolean createSpace) throws Exception {
     // Unmarshall calendar data file
     XStream xStream = new XStream();
     xStream.alias("Calendar", Calendar.class);
@@ -349,14 +373,11 @@ public class CalendarDataImportResource implements OperationHandler {
       log.info("Create calendar event: " + calendar.getName() + "/" + event.getSummary());
       if (groupCalendar) {
         calendarService.savePublicEvent(calendar.getId(), event, true);
-        // FIXME the URL of Stream Activity will use staging URL, modify it
-        updateCalendarActivityURL(event, spaceCalendar ? calendar.getCalendarOwner() : null);
       } else {
         calendarService.saveUserEvent(calendar.getCalendarOwner(), calendar.getId(), event, true);
-        // FIXME the URL of Stream Activity will use staging URL, modify it
-        updateCalendarActivityURL(event, null);
       }
     }
+    deleteCalendarActivities(events);
   }
 
   private void deleteCalendarActivities(List<CalendarEvent> events) {
@@ -372,13 +393,13 @@ public class CalendarDataImportResource implements OperationHandler {
     if (activity != null) {
       Map<String, String> templateParams = activity.getTemplateParams();
       if (templateParams.containsKey(EVENT_LINK_KEY)) {
-        templateParams.put(EVENT_LINK_KEY, getLink(event, groupId));
+        templateParams.put(EVENT_LINK_KEY, getLink(event, activity, groupId));
         activityManager.updateActivity(activity);
       }
     }
   }
 
-  private void extractFilesById(File tmpZipFile, String targetFolderPath, Set<String> contentsByOwner) throws Exception {
+  private void extractFiles(File tmpZipFile, String targetFolderPath, Set<String> contentsByOwner) throws Exception {
     // Open an input stream on local zip file
     NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
 
@@ -471,7 +492,7 @@ public class CalendarDataImportResource implements OperationHandler {
     return file;
   }
 
-  private String getLink(CalendarEvent event, String spaceGroupId) {
+  private String getLink(CalendarEvent event, ExoSocialActivity activity, String spaceGroupId) {
     if (spaceGroupId == null) {
       PortalRequestContext prc = Util.getPortalRequestContext();
       UserPortal userPortal = prc.getUserPortal();
@@ -485,6 +506,9 @@ public class CalendarDataImportResource implements OperationHandler {
       return StringUtils.EMPTY;
     } else {
       String spaceLink = getSpaceHomeURL(spaceGroupId);
+      if (spaceLink == null || spaceLink.isEmpty()) {
+        spaceLink = activity.getStreamUrl();
+      }
       if (getAnswerPortletInSpace(spaceGroupId).length() == 0) {
         return StringUtils.EMPTY;
       }
@@ -502,7 +526,6 @@ public class CalendarDataImportResource implements OperationHandler {
     if (spaceGroupId == null || "".equals(spaceGroupId))
       return null;
     String permanentSpaceName = spaceGroupId.split("/")[2];
-    SpaceService spaceService = (SpaceService) ExoContainerContext.getCurrentContainer().getComponentInstanceOfType(SpaceService.class);
     Space space = spaceService.getSpaceByGroupId(spaceGroupId);
 
     NodeURL nodeURL = RequestContext.getCurrentInstance().createURL(NodeURL.TYPE);
@@ -540,4 +563,190 @@ public class CalendarDataImportResource implements OperationHandler {
     return nodeURL.setNode(node).toString();
   }
 
+  private void createActivities(File activitiesFile, String spacePrettyName) {
+    log.info("Importing Calendar activities");
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(activitiesFile);
+
+      // Unmarshall metadata xml file
+      XStream xstream = new XStream();
+
+      @SuppressWarnings("unchecked")
+      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+      ProfileFilter profileFilter = new ProfileFilter();
+      Identity identity = null;
+      for (ExoSocialActivity activity : activities) {
+        profileFilter.setName(activity.getUserId());
+        identity = getIdentity(profileFilter);
+
+        if (identity != null) {
+          activity.setUserId(identity.getId());
+
+          profileFilter.setName(activity.getPosterId());
+          identity = getIdentity(profileFilter);
+
+          if (identity != null) {
+            activity.setPosterId(identity.getId());
+            activitiesList.add(activity);
+
+            Set<String> keys = activity.getTemplateParams().keySet();
+            for (String key : keys) {
+              String value = activity.getTemplateParams().get(key);
+              if (value != null) {
+                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+              }
+            }
+            if (StringUtils.isNotEmpty(activity.getTitle())) {
+              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+            }
+            if (StringUtils.isNotEmpty(activity.getBody())) {
+              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+            }
+            if (StringUtils.isNotEmpty(activity.getSummary())) {
+              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+            }
+          }
+          activity.setReplyToId(null);
+          String[] commentedIds = activity.getCommentedIds();
+          if (commentedIds != null && commentedIds.length > 0) {
+            for (int i = 0; i < commentedIds.length; i++) {
+              profileFilter.setName(commentedIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                commentedIds[i] = identity.getId();
+              }
+            }
+            activity.setCommentedIds(commentedIds);
+          }
+          String[] mentionedIds = activity.getMentionedIds();
+          if (mentionedIds != null && mentionedIds.length > 0) {
+            for (int i = 0; i < mentionedIds.length; i++) {
+              profileFilter.setName(mentionedIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                mentionedIds[i] = identity.getId();
+              }
+            }
+            activity.setMentionedIds(mentionedIds);
+          }
+          String[] likeIdentityIds = activity.getLikeIdentityIds();
+          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+            for (int i = 0; i < likeIdentityIds.length; i++) {
+              profileFilter.setName(likeIdentityIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                likeIdentityIds[i] = identity.getId();
+              }
+            }
+            activity.setLikeIdentityIds(likeIdentityIds);
+          }
+        }
+      }
+      Calendar calendar = null;
+      ExoSocialActivity eventActivity = null;
+      for (ExoSocialActivity exoSocialActivity : activitiesList) {
+        exoSocialActivity.setId(null);
+        if (exoSocialActivity.isComment()) {
+          if (eventActivity == null) {
+            log.warn("An Calendar activity comment was found, but with no calendar: " + exoSocialActivity.getTitle());
+          } else {
+            saveComment(eventActivity, exoSocialActivity);
+          }
+        } else {
+          eventActivity = null;
+          String eventId = exoSocialActivity.getTemplateParams().get(EVENT_ID_KEY);
+          if (eventId == null) {
+            log.warn("An unkown Calendar activity was found: " + exoSocialActivity.getTitle());
+            continue;
+          }
+          CalendarEvent event = calendarService.getEventById(eventId);
+          if (event == null) {
+            log.warn("Calendar event not found. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+            continue;
+          }
+          saveActivity(exoSocialActivity, spacePrettyName);
+          event.setActivityId(exoSocialActivity.getId());
+          calendar = saveEvent(calendar, event, exoSocialActivity);
+          eventActivity = exoSocialActivity;
+        }
+      }
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+  }
+
+  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
+    long updatedTime = activity.getUpdated().getTime();
+    if (spacePrettyName == null) {
+      activityManager.saveActivityNoReturn(activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    } else {
+      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    }
+  }
+
+  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveComment(activity, comment);
+    activity.setUpdated(updatedTime);
+    activityManager.updateActivity(activity);
+  }
+
+  private Calendar saveEvent(Calendar calendar, CalendarEvent event, ExoSocialActivity exoSocialActivity) throws Exception {
+    if (calendar == null) {
+      calendar = calendarService.getCalendarById(event.getCalendarId());
+    }
+
+    if (calendar.getCalendarOwner().startsWith("/")) {
+      calendarService.savePublicEvent(event.getCalendarId(), event, false);
+      // FIXME the URL of Stream Activity will use staging URL, modify it
+      updateCalendarActivityURL(event, spaceCalendar ? calendar.getCalendarOwner() : null);
+    } else {
+      calendarService.saveUserEvent(userACL.getSuperUser(), event.getCalendarId(), event, false);
+      // FIXME the URL of Stream Activity will use staging URL, modify it
+      updateCalendarActivityURL(event, null);
+    }
+
+    deleteCommentsAddedByUpdate(exoSocialActivity);
+
+    return calendar;
+  }
+
+  private void deleteCommentsAddedByUpdate(ExoSocialActivity exoSocialActivity) {
+    List<String> commentsID = exoSocialActivity.getReplyToId() == null ? new ArrayList<String>() : Arrays.asList(exoSocialActivity.getReplyToId());
+    exoSocialActivity = activityManager.getActivity(exoSocialActivity.getId());
+
+    List<String> newCommentsID = exoSocialActivity.getReplyToId() == null ? new ArrayList<String>() : Arrays.asList(exoSocialActivity.getReplyToId());
+    newCommentsID.removeAll(commentsID);
+    for (String newCommentID : newCommentsID) {
+      ExoSocialActivity newCommentActivity = activityManager.getActivity(newCommentID);
+      activityManager.deleteComment(exoSocialActivity, newCommentActivity);
+    }
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter) {
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+    try {
+      if (identities.getSize() > 0) {
+        return identities.load(0, 1)[0];
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
+    return null;
+  }
 }

@@ -31,6 +31,10 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -54,6 +58,8 @@ public class CalendarDataExportResource implements OperationHandler {
   private String type;
 
   private SpaceService spaceService;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
   private OrganizationService organizationService;
 
   public CalendarDataExportResource(boolean groupCalendar, boolean spaceCalendar) {
@@ -68,6 +74,8 @@ public class CalendarDataExportResource implements OperationHandler {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     UserACL userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
     boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
@@ -179,6 +187,7 @@ public class CalendarDataExportResource implements OperationHandler {
   private void exportGroupCalendar(CalendarService calendarService, List<ExportTask> exportTasks, Calendar calendar) throws Exception {
     List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
     exportTasks.add(new CalendarExportTask(type, calendar, events));
+    exportActivities(exportTasks, events);
   }
 
   private void exportUserCalendar(CalendarService calendarService, UserACL userACL, List<ExportTask> exportTasks, String username) {
@@ -188,10 +197,36 @@ public class CalendarDataExportResource implements OperationHandler {
         for (Calendar calendar : userCalendars) {
           List<CalendarEvent> events = calendarService.getUserEventByCalendar(username, Collections.list(calendar.getId()));
           exportTasks.add(new CalendarExportTask(type, calendar, events));
+          exportActivities(exportTasks, events);
         }
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error occured while exporting Group Calendar data");
+    }
+  }
+
+  private void exportActivities(List<ExportTask> exportTasks, List<CalendarEvent> events) throws Exception {
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    String calendarId = null;
+    for (CalendarEvent event : events) {
+      String activityId = event.getActivityId();
+      calendarId = event.getCalendarId();
+      if (activityId == null) {
+        continue;
+      }
+      ExoSocialActivity eventActivity = activityManager.getActivity(activityId);
+      if (eventActivity == null) {
+        continue;
+      }
+      activitiesList.add(eventActivity);
+      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(eventActivity);
+      if (commentsListAccess.getSize() > 0) {
+        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        activitiesList.addAll(comments);
+      }
+    }
+    if (!activitiesList.isEmpty()) {
+      exportTasks.add(new CalendarActivitiesExportTask(identityManager, activitiesList, type, calendarId));
     }
   }
 }
