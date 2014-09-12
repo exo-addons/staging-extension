@@ -21,6 +21,10 @@
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-webui</artifactId>
 		</dependency>
+	    <dependency>
+			  <groupId>org.exoplatform.social</groupId>
+			  <artifactId>social-component-core</artifactId>
+	    </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

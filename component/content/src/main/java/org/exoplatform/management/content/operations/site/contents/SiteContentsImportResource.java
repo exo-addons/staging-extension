@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,7 +34,10 @@ import javax.jcr.query.QueryManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -39,6 +45,14 @@ import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.seo.PageMetadataModel;
 import org.exoplatform.services.seo.SEOService;
+import org.exoplatform.social.core.activity.model.ActivityStream.Type;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.profile.ProfileFilter;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -69,6 +83,10 @@ public class SiteContentsImportResource implements OperationHandler {
 
   private String importedSiteName = null;
   private String filePath = null;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
+  private RepositoryService repositoryService;
+  private Pattern contenLinkPattern = Pattern.compile("([a-zA-Z]*)/([a-zA-Z]*)/(.*)");
 
   public SiteContentsImportResource() {}
 
@@ -80,6 +98,9 @@ public class SiteContentsImportResource implements OperationHandler {
   @SuppressWarnings("resource")
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
 
     if (importedSiteName == null) {
       importedSiteName = operationContext.getAddress().resolvePathTemplate("site-name");
@@ -138,7 +159,15 @@ public class SiteContentsImportResource implements OperationHandler {
         } catch (Exception e) {
           log.error("Unable to create import task", e);
         }
+
+        String activitiesFilePath = tempParentFolderPath + "/" + replaceSpecialChars(SiteContentsActivitiesExportTask.getEntryPath(site));
+        File activitiesFile = new File(activitiesFilePath);
+        // Import activities
+        if (activitiesFile.exists()) {
+          createActivities(activitiesFile);
+        }
       }
+
     } finally {
       if (sitesData != null && !sitesData.isEmpty()) {
         // import data of each site
@@ -282,6 +311,9 @@ public class SiteContentsImportResource implements OperationHandler {
             siteData = new SiteData();
           }
           siteData.getNodeExportHistoryFiles().put(filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, ".xml"), targetFolderPath + replaceSpecialChars(filePath));
+        } else if (filePath.endsWith(SiteContentsActivitiesExportTask.FILENAME)) {
+          // Put activities file in temp folder
+          copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
         }
       }
     } catch (Exception e) {
@@ -322,8 +354,6 @@ public class SiteContentsImportResource implements OperationHandler {
   private void importContentNodes(OperationContext operationContext, SiteMetaData metaData, Map<String, String> nodes, Map<String, String> historyFiles, String workspace, int uuidBehaviorValue,
       boolean isCleanPublication) throws Exception {
 
-    RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
-
     List<Map.Entry<String, String>> orderedEntries = new ArrayList<Map.Entry<String, String>>(nodes.entrySet());
     Collections.sort(orderedEntries, new Comparator<Map.Entry<String, String>>() {
       @Override
@@ -358,6 +388,10 @@ public class SiteContentsImportResource implements OperationHandler {
           log.info("Deleting the node " + workspace + ":" + targetNodePath);
 
           Node oldNode = (Node) session.getItem(targetNodePath);
+          if (oldNode.isNodeType("exo:activityInfo")) {
+            String activityId = ActivityTypeUtils.getActivityId(oldNode);
+            deleteActivity(activityId);
+          }
           oldNode.remove();
           session.save();
           session.refresh(false);
@@ -600,4 +634,198 @@ public class SiteContentsImportResource implements OperationHandler {
       file.createNewFile();
     return file;
   }
+
+  private void createActivities(File activitiesFile) {
+    log.info("Importing Documents activities");
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(activitiesFile);
+
+      // Unmarshall metadata xml file
+      XStream xstream = new XStream();
+
+      @SuppressWarnings("unchecked")
+      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+      List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
+
+      ExoSocialActivity documentActivity = null;
+      for (ExoSocialActivity activity : activitiesList) {
+        activity.setId(null);
+        String contentLink = activity.getTemplateParams().get("contenLink");
+        String workspace = null;
+        String contentPath = null;
+        if (contentLink != null && !contentLink.isEmpty()) {
+          Matcher matcher = contenLinkPattern.matcher(contentLink);
+          if (matcher.matches() && matcher.groupCount() == 3) {
+            workspace = matcher.group(2);
+            contentPath = "/" + matcher.group(3);
+          } else {
+            log.warn("ContentLink param was found in activity params, but it doesn't refer to a correct path");
+            documentActivity = null;
+            continue;
+          }
+        }
+        if (contentLink == null) {
+          if (activity.isComment()) {
+            if (documentActivity == null) {
+              log.warn("Attempt to add a comment activity to a non existing document activity.");
+            } else {
+              saveComment(documentActivity, activity);
+            }
+          } else {
+            log.warn("An unknown Document activity for was found. Ignore it: " + activity.getTitle());
+            documentActivity = null;
+            continue;
+          }
+        } else {
+          Session session = getSession(workspace, repositoryService);
+          if (!session.itemExists(contentPath)) {
+            log.warn("Document not found. Cannot import activity '" + activity.getTitle() + "'.");
+            documentActivity = null;
+            continue;
+          }
+          if (activity.isComment()) {
+            if (documentActivity == null) {
+              log.warn("Attempt to add a comment activity to a non existing document activity.");
+            } else {
+              saveComment(documentActivity, activity);
+            }
+          } else {
+            documentActivity = null;
+            saveActivity(activity);
+            ActivityTypeUtils.attachActivityId(((Node) session.getItem(contentPath)), activity.getId());
+            session.save();
+            documentActivity = activity;
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+  }
+
+  private void saveActivity(ExoSocialActivity activity) {
+    long updatedTime = activity.getUpdated().getTime();
+    if (activity.getActivityStream().getType().equals(Type.SPACE)) {
+      String spacePrettyName = activity.getActivityStream().getPrettyId();
+      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    } else {
+      activityManager.saveActivityNoReturn(activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    }
+  }
+
+  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveComment(activity, comment);
+    activity.setUpdated(updatedTime);
+    activityManager.saveActivityNoReturn(activity);
+  }
+
+  private List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    ProfileFilter profileFilter = new ProfileFilter();
+    Identity identity = null;
+    for (ExoSocialActivity activity : activities) {
+      profileFilter.setName(activity.getUserId());
+      identity = getIdentity(profileFilter);
+
+      if (identity != null) {
+        activity.setUserId(identity.getId());
+
+        profileFilter.setName(activity.getPosterId());
+        identity = getIdentity(profileFilter);
+
+        if (identity != null) {
+          activity.setPosterId(identity.getId());
+          activitiesList.add(activity);
+
+          Set<String> keys = activity.getTemplateParams().keySet();
+          for (String key : keys) {
+            String value = activity.getTemplateParams().get(key);
+            if (value != null) {
+              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+            }
+          }
+          if (StringUtils.isNotEmpty(activity.getTitle())) {
+            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+          }
+          if (StringUtils.isNotEmpty(activity.getBody())) {
+            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+          }
+          if (StringUtils.isNotEmpty(activity.getSummary())) {
+            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+          }
+        }
+        activity.setReplyToId(null);
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            profileFilter.setName(commentedIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              commentedIds[i] = identity.getId();
+            }
+          }
+          activity.setCommentedIds(commentedIds);
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            profileFilter.setName(mentionedIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              mentionedIds[i] = identity.getId();
+            }
+          }
+          activity.setMentionedIds(mentionedIds);
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            profileFilter.setName(likeIdentityIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              likeIdentityIds[i] = identity.getId();
+            }
+          }
+          activity.setLikeIdentityIds(likeIdentityIds);
+        }
+      }
+    }
+    return activitiesList;
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter) {
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+    try {
+      if (identities.getSize() > 0) {
+        return identities.load(0, 1)[0];
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
+    return null;
+  }
+
+  private void deleteActivity(String activityId) throws Exception {
+    // Delete Forum activity stream
+    ExoSocialActivity activity = activityManager.getActivity(activityId);
+    if (activity != null) {
+      activityManager.deleteActivity(activity);
+    }
+  }
+
 }
