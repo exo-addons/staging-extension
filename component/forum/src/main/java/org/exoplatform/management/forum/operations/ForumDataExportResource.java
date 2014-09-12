@@ -27,14 +27,24 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.Category;
+import org.exoplatform.forum.service.Forum;
 import org.exoplatform.forum.service.ForumService;
+import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
+import org.exoplatform.forum.service.impl.model.TopicFilter;
 import org.exoplatform.management.forum.ForumExtension;
+import org.exoplatform.poll.service.Poll;
+import org.exoplatform.poll.service.PollService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -60,7 +70,10 @@ public class ForumDataExportResource implements OperationHandler {
   private RepositoryService repositoryService;
   private SpaceService spaceService;
   private ForumService forumService;
+  private PollService pollService;
   private KSDataLocation dataLocation;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
 
   private boolean isSpaceForumType;
   private String type;
@@ -76,8 +89,11 @@ public class ForumDataExportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     forumService = operationContext.getRuntimeContext().getRuntimeComponent(ForumService.class);
+    pollService = operationContext.getRuntimeContext().getRuntimeComponent(PollService.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String name = operationContext.getAttributes().getValue("filter");
 
@@ -136,8 +152,65 @@ public class ForumDataExportResource implements OperationHandler {
       Node parentNode = (Node) session.getItem(parentNodePath);
       exportNode(workspace, parentNode, categoryId, forumId, exportTasks);
 
+      // export Activities
+      exportActivities(exportTasks, categoryId, forumId);
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting forum", exception);
+    }
+  }
+
+  private void exportActivities(List<ExportTask> exportTasks, String categoryId, String forumId) throws Exception {
+    log.info("export forum activities");
+    List<String> forumIds = new ArrayList<String>();
+    if (isSpaceForumType) {
+      categoryId = forumService.getCategoryIncludedSpace().getId();
+      forumIds.add(forumId);
+    } else {
+      List<Forum> forums = forumService.getForums(categoryId, null);
+      for (Forum forum : forums) {
+        forumIds.add(forum.getId());
+      }
+    }
+    for (String tmpForumId : forumIds) {
+      TopicFilter topicFilter = new TopicFilter(categoryId, tmpForumId);
+      ListAccess<Topic> topicsListAccess = forumService.getTopics(topicFilter);
+      if (topicsListAccess.getSize() == 0) {
+        continue;
+      }
+      Topic[] topics = topicsListAccess.load(0, topicsListAccess.getSize());
+      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+      for (Topic topic : topics) {
+        String activityId = forumService.getActivityIdForOwnerId(topic.getId());
+        if (activityId == null) {
+          continue;
+        }
+        addActivityWithComments(activitiesList, activityId);
+
+        if (topic.getIsPoll()) {
+          String pollId = topic.getId().replace(Utils.TOPIC, Utils.POLL);
+          Poll poll = pollService.getPoll(pollId);
+          if (poll != null) {
+            String pollPath = poll.getParentPath() + "/" + poll.getId();
+            String pollActivityId = pollService.getActivityIdForOwner(pollPath);
+            addActivityWithComments(activitiesList, pollActivityId);
+          }
+        }
+      }
+      if (!activitiesList.isEmpty()) {
+        exportTasks.add(new ForumActivitiesExportTask(identityManager, activitiesList, type, categoryId, forumId));
+      }
+    }
+  }
+
+  private void addActivityWithComments(List<ExoSocialActivity> activitiesList, String activityId) {
+    ExoSocialActivity topicActivity = activityManager.getActivity(activityId);
+    if (topicActivity != null && !topicActivity.isComment()) {
+      activitiesList.add(topicActivity);
+      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(topicActivity);
+      if (commentsListAccess.getSize() > 0) {
+        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        activitiesList.addAll(comments);
+      }
     }
   }
 

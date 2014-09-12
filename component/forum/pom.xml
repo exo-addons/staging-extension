@@ -17,10 +17,14 @@
 			<groupId>org.exoplatform.forum</groupId>
 			<artifactId>forum-forum-service</artifactId>
 		</dependency>
-    <dependency>
-		  <groupId>org.exoplatform.social</groupId>
-		  <artifactId>social-component-core</artifactId>
-    </dependency>
+		<dependency>
+			<groupId>org.exoplatform.forum</groupId>
+			<artifactId>forum-poll-service</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.exoplatform.social</groupId>
+			<artifactId>social-component-core</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-webui</artifactId>

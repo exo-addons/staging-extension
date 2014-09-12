@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -24,16 +25,31 @@ import javax.jcr.Session;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
+import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
 import org.exoplatform.forum.service.ForumService;
+import org.exoplatform.forum.service.Post;
+import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
+import org.exoplatform.forum.service.impl.model.TopicFilter;
 import org.exoplatform.management.forum.ForumExtension;
+import org.exoplatform.poll.service.Poll;
+import org.exoplatform.poll.service.PollService;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -60,7 +76,10 @@ public class ForumDataImportResource implements OperationHandler {
 
   private RepositoryService repositoryService;
   private SpaceService spaceService;
+  private ActivityManager activityManager;
+  private IdentityManager identityManager;
   private ForumService forumService;
+  private PollService pollService;
   private KSDataLocation dataLocation;
   private UserACL userACL;
 
@@ -79,6 +98,9 @@ public class ForumDataImportResource implements OperationHandler {
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
+    activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    pollService = operationContext.getRuntimeContext().getRuntimeComponent(PollService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -99,6 +121,8 @@ public class ForumDataImportResource implements OperationHandler {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for forum import.");
     }
 
+    log.info("Importing Forums Data");
+
     String tempFolderPath = null;
     Map<String, List<String>> contentsByOwner = new HashMap<String, List<String>>();
     try {
@@ -118,9 +142,11 @@ public class ForumDataImportResource implements OperationHandler {
 
           Category spaceCategory = forumService.getCategoryIncludedSpace();
           Forum forum = forumService.getForum(spaceCategory.getId(), forumId);
+
           if (forum != null) {
             if (replaceExisting) {
               log.info("Overwrite existing Space Forum: '" + forum.getForumName() + "'  (replace-existing=true)");
+              deleteActivities(spaceCategory.getId(), forumId);
             } else {
               log.info("Ignore existing Space Forum: '" + forum.getForumName() + "'  (replace-existing=false)");
               continue;
@@ -130,14 +156,31 @@ public class ForumDataImportResource implements OperationHandler {
           List<String> paths = contentsByOwner.get(forumId);
 
           Collections.sort(paths);
+          File activitiesFile = null;
           for (String nodePath : paths) {
-            importNode(forumId, nodePath, workspace, tempFolderPath);
+            if (nodePath.endsWith(ForumActivitiesExportTask.FILENAME)) {
+              activitiesFile = new File(nodePath);
+            } else {
+              importNode(forumId, nodePath, workspace, tempFolderPath);
+            }
+          }
+          // Refresh caches
+          forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
+          // Import activities
+          if (activitiesFile != null && activitiesFile.exists()) {
+            String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+            createActivities(activitiesFile, spacePrettyName);
           }
         } else {
           Category category = forumService.getCategory(categoryId);
+
           if (category != null) {
             if (replaceExisting) {
               log.info("Overwrite existing Forum Category: '" + category.getCategoryName() + "'  (replace-existing=true)");
+              List<Forum> forums = forumService.getForums(categoryId, null);
+              for (Forum forum : forums) {
+                deleteActivities(categoryId, forum.getId());
+              }
             } else {
               log.info("Ignore existing Forum Category: '" + category.getCategoryName() + "'  (replace-existing=false)");
               continue;
@@ -147,8 +190,19 @@ public class ForumDataImportResource implements OperationHandler {
           List<String> paths = contentsByOwner.get(categoryId);
 
           Collections.sort(paths);
+          File activitiesFile = null;
           for (String nodePath : paths) {
-            importNode(categoryId, nodePath, workspace, tempFolderPath);
+            if (nodePath.endsWith(ForumActivitiesExportTask.FILENAME)) {
+              activitiesFile = new File(nodePath);
+            } else {
+              importNode(categoryId, nodePath, workspace, tempFolderPath);
+            }
+          }
+          // Refresh caches
+          forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
+          // Import activities
+          if (activitiesFile != null && activitiesFile.exists()) {
+            createActivities(activitiesFile, null);
           }
         }
       }
@@ -174,6 +228,251 @@ public class ForumDataImportResource implements OperationHandler {
 
     }
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void createActivities(File activitiesFile, String spacePrettyName) {
+    log.info("Importing Forum activities");
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(activitiesFile);
+
+      // Unmarshall metadata xml file
+      XStream xstream = new XStream();
+
+      @SuppressWarnings("unchecked")
+      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+      ProfileFilter profileFilter = new ProfileFilter();
+      Identity identity = null;
+      for (ExoSocialActivity activity : activities) {
+        profileFilter.setName(activity.getUserId());
+        identity = getIdentity(profileFilter);
+
+        if (identity != null) {
+          activity.setUserId(identity.getId());
+
+          profileFilter.setName(activity.getPosterId());
+          identity = getIdentity(profileFilter);
+
+          if (identity != null) {
+            activity.setPosterId(identity.getId());
+            activitiesList.add(activity);
+
+            Set<String> keys = activity.getTemplateParams().keySet();
+            for (String key : keys) {
+              String value = activity.getTemplateParams().get(key);
+              if (value != null) {
+                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+              }
+            }
+            if (StringUtils.isNotEmpty(activity.getTitle())) {
+              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+            }
+            if (StringUtils.isNotEmpty(activity.getBody())) {
+              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+            }
+            if (StringUtils.isNotEmpty(activity.getSummary())) {
+              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+            }
+          }
+          activity.setReplyToId(null);
+          String[] commentedIds = activity.getCommentedIds();
+          if (commentedIds != null && commentedIds.length > 0) {
+            for (int i = 0; i < commentedIds.length; i++) {
+              profileFilter.setName(commentedIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                commentedIds[i] = identity.getId();
+              }
+            }
+            activity.setCommentedIds(commentedIds);
+          }
+          String[] mentionedIds = activity.getMentionedIds();
+          if (mentionedIds != null && mentionedIds.length > 0) {
+            for (int i = 0; i < mentionedIds.length; i++) {
+              profileFilter.setName(mentionedIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                mentionedIds[i] = identity.getId();
+              }
+            }
+            activity.setMentionedIds(mentionedIds);
+          }
+          String[] likeIdentityIds = activity.getLikeIdentityIds();
+          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+            for (int i = 0; i < likeIdentityIds.length; i++) {
+              profileFilter.setName(likeIdentityIds[i]);
+              identity = getIdentity(profileFilter);
+              if (identity != null) {
+                likeIdentityIds[i] = identity.getId();
+              }
+            }
+            activity.setLikeIdentityIds(likeIdentityIds);
+          }
+        }
+        activity.setReplyToId(null);
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            profileFilter.setName(commentedIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              commentedIds[i] = identity.getId();
+            }
+          }
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            profileFilter.setName(mentionedIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              mentionedIds[i] = identity.getId();
+            }
+          }
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            profileFilter.setName(likeIdentityIds[i]);
+            identity = getIdentity(profileFilter);
+            if (identity != null) {
+              likeIdentityIds[i] = identity.getId();
+            }
+          }
+        }
+      }
+      ExoSocialActivity topicActivity = null;
+      ExoSocialActivity pollActivity = null;
+      Topic topic = null;
+      for (ExoSocialActivity exoSocialActivity : activitiesList) {
+        exoSocialActivity.setId(null);
+        // If poll activity
+        if (exoSocialActivity.getTemplateParams().containsKey("PollLink")) {
+          if (topic == null) {
+            log.warn("A poll activity was found with non selected topic.");
+            continue;
+          }
+          String topicId = exoSocialActivity.getTemplateParams().get("Id");
+          if (!topicId.equals(topic.getId())) {
+            log.warn("A poll activity was found for different topic.");
+            continue;
+          }
+          topicActivity = null;
+          saveActivity(exoSocialActivity, spacePrettyName);
+          String pollId = topicId.replace(Utils.TOPIC, Utils.POLL);
+          Poll poll = pollService.getPoll(pollId);
+          String pollPath = poll.getParentPath() + "/" + pollId;
+          pollService.saveActivityIdForOwner(pollPath, exoSocialActivity.getId());
+          pollActivity = exoSocialActivity;
+          continue;
+        }
+
+        // Add poll comment
+        if (pollActivity != null && topicActivity == null && exoSocialActivity.isComment()) {
+          saveComment(pollActivity, exoSocialActivity);
+          continue;
+        }
+
+        // In case of topic activity
+        pollActivity = null;
+
+        String catId = exoSocialActivity.getTemplateParams().get("CateId");
+        if (catId == null) {
+          if (exoSocialActivity.isComment() && topicActivity != null) {
+            saveComment(topicActivity, exoSocialActivity);
+          } else {
+            log.warn("An activity that is not a topic nor a post nor a comment of a topic was found in Forum activities.");
+            topicActivity = null;
+            continue;
+          }
+        } else {
+          String forumId = exoSocialActivity.getTemplateParams().get("ForumId");
+          String topicId = exoSocialActivity.getTemplateParams().get("TopicId");
+          topic = forumService.getTopic(catId, forumId, topicId, userACL.getSuperUser());
+          if (topic == null) {
+            log.warn("Forum Topic not found. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+            topicActivity = null;
+            continue;
+          }
+          if (exoSocialActivity.isComment()) {
+            String postId = exoSocialActivity.getTemplateParams().get("PostId");
+            if (postId != null) {
+              Post post = forumService.getPost(catId, forumId, topicId, postId);
+              if (post == null) {
+                log.warn("Forum Post not found. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+                continue;
+              }
+              saveComment(topicActivity, exoSocialActivity);
+              forumService.saveActivityIdForOwnerPath(post.getPath(), exoSocialActivity.getId());
+            }
+          } else {
+            topicActivity = null;
+            saveActivity(exoSocialActivity, spacePrettyName);
+            forumService.saveActivityIdForOwnerPath(topic.getPath(), exoSocialActivity.getId());
+            topicActivity = exoSocialActivity;
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+  }
+
+  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
+    long updatedTime = activity.getUpdated().getTime();
+    if (spacePrettyName == null) {
+      activityManager.saveActivityNoReturn(activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    } else {
+      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+    }
+  }
+
+  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
+    long updatedTime = activity.getUpdated().getTime();
+    activityManager.saveComment(activity, comment);
+    activity.setUpdated(updatedTime);
+    activityManager.updateActivity(activity);
+  }
+
+  private Identity getIdentity(ProfileFilter profileFilter) {
+    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+    try {
+      if (identities.getSize() > 0) {
+        return identities.load(0, 1)[0];
+      }
+    } catch (Exception e) {
+      log.error(e);
+    }
+    return null;
+  }
+
+  private void deleteActivities(String categoryId, String forumId) throws Exception {
+    // Delete Forum activity stream
+    TopicFilter topicFilter = new TopicFilter(categoryId, forumId);
+    ListAccess<Topic> topicsListAccess = forumService.getTopics(topicFilter);
+    if (topicsListAccess.getSize() > 0) {
+      Topic[] topics = topicsListAccess.load(0, topicsListAccess.getSize());
+      for (Topic topic : topics) {
+        ExoSocialActivity activity = activityManager.getActivity(forumService.getActivityIdForOwnerId(topic.getId()));
+        if (activity != null) {
+          activityManager.deleteActivity(activity);
+        }
+      }
+    }
   }
 
   /**
@@ -312,7 +611,7 @@ public class ForumDataImportResource implements OperationHandler {
         }
 
         // Skip non managed
-        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(ForumActivitiesExportTask.FILENAME)) {
           log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
           continue;
         }
@@ -334,8 +633,13 @@ public class ForumDataImportResource implements OperationHandler {
         if (!contentsByOwner.containsKey(id)) {
           contentsByOwner.put(id, new ArrayList<String>());
         }
-        String nodePath = filePath.substring(filePath.indexOf(id + "/") + (id + "/").length(), filePath.lastIndexOf(".xml"));
-        contentsByOwner.get(id).add(nodePath);
+        if (filePath.contains(ForumActivitiesExportTask.FILENAME)) {
+          // add activities metadata files
+          contentsByOwner.get(id).add(targetFolderPath + replaceSpecialChars(filePath));
+        } else {
+          String nodePath = filePath.substring(filePath.indexOf(id + "/") + (id + "/").length(), filePath.lastIndexOf(".xml"));
+          contentsByOwner.get(id).add(nodePath);
+        }
       }
     } finally {
       if (zis != null) {
