@@ -26,6 +26,7 @@ import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.operation.model.ExportResourceModel;
+import org.gatein.management.api.operation.model.ExportTask;
 
 public class Utils {
 
@@ -142,10 +143,18 @@ public class Utils {
     ManagedResponse response = CONTENTS_HANDLER.getExportedResourceFromOperation(StagingService.CONTENT_SITES_PATH + "/shared", exportOptions);
 
     ExportResourceModel result = (ExportResourceModel) response.getResult();
-    if (result.getTasks() == null || result.getTasks().size() != 1) {
+    if (result.getTasks() == null || result.getTasks().size() == 0) {
       throw new IllegalStateException("Exported Gatein Management Tasks from local are different from what is expected.");
     }
-    SiteMetaDataExportTask siteMetaDataExportTask = (SiteMetaDataExportTask) result.getTasks().get(0);
+    SiteMetaDataExportTask siteMetaDataExportTask = null;
+    for (ExportTask exportTask : result.getTasks()) {
+      if (exportTask instanceof SiteMetaDataExportTask) {
+        siteMetaDataExportTask = (SiteMetaDataExportTask) exportTask;
+      }
+    }
+    if (siteMetaDataExportTask == null) {
+      throw new IllegalStateException("Exported Gatein Management Tasks from local are different from what is expected.");
+    }
     SiteMetaData siteMetaData = siteMetaDataExportTask.getMetaData();
     Map<String, NodeMetadata> sourceServerMetadata = siteMetaData.getNodesMetadata();
     return sourceServerMetadata;
