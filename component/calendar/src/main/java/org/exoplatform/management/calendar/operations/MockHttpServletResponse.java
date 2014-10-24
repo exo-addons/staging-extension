@@ -20,6 +20,7 @@ package org.exoplatform.management.calendar.operations;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Locale;
 
 import javax.servlet.ServletOutputStream;
@@ -226,4 +227,25 @@ public class MockHttpServletResponse implements HttpServletResponse {
     // TODO Auto-generated method stub
 
   }
+
+  public int getStatus() {
+    // TODO Auto-generated method stub
+    return 0;
+  }
+
+  public String getHeader(String name) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection<String> getHeaders(String name) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  public Collection<String> getHeaderNames() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
 }
