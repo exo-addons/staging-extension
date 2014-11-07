@@ -13,15 +13,19 @@ import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
+import javax.jcr.Property;
+import javax.jcr.PropertyIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.PropertyDefinition;
 import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.ecm.resolver.JCRResourceResolver;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.Application;
 import org.exoplatform.portal.config.model.Container;
@@ -35,6 +39,7 @@ import org.exoplatform.portal.pom.spi.portlet.Portlet;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.core.nodetype.PropertyDefinitionValue;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -43,10 +48,13 @@ import org.exoplatform.services.wcm.core.WCMConfigurationService;
 import org.exoplatform.services.wcm.core.WCMService;
 import org.exoplatform.services.wcm.portal.PortalFolderSchemaHandler;
 import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.social.common.service.LifecycleService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.storage.query.JCRProperties;
 import org.exoplatform.wcm.webui.Utils;
+import org.exoplatform.webui.core.lifecycle.Lifecycle;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
@@ -64,6 +72,8 @@ import org.gatein.management.api.operation.model.ExportTask;
  */
 public class SiteContentsExportResource implements OperationHandler {
   private static final Log log = ExoLogger.getLogger(SiteContentsExportResource.class);
+  
+  private boolean exportOnlyPublishedContents = false;
 
   private static final String FOLDER_PATH = "folderPath";
   private static final String WORKSPACE = "workspace";
@@ -153,6 +163,8 @@ public class SiteContentsExportResource implements OperationHandler {
       boolean exportOnlyMetadata = filters.contains("only-metadata:true");
       // Validate Structure. Defaults to true.
       boolean validateStructure = !filters.contains("validate-structure:false");
+      
+      exportOnlyPublishedContents = filters.contains("only-published-contents:true");
 
       if (validateStructure) {
         // Validate Site Structure
@@ -436,7 +448,7 @@ public class SiteContentsExportResource implements OperationHandler {
    */
   protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId,
       boolean exportOnlyMetadata) throws Exception {
-    List<ExportTask> subNodesExportTask = new ArrayList<ExportTask>();
+    List<ExportTask> subNodesExportTask = new ArrayList<ExportTask>(); 
     NodeIterator childrenNodes = parentNode.getNodes();
     while (childrenNodes.hasNext()) {
       Node childNode = (Node) childrenNodes.next();
@@ -504,10 +516,38 @@ public class SiteContentsExportResource implements OperationHandler {
         NodeIterator nodeIterator = childNode.getNodes();
         while (nodeIterator.hasNext()) {
           Node node = nodeIterator.nextNode();
-          exportNode(workspace, childNode, excludedNodes, exportVersionHistory, subNodesExportTask, node, metaData, activitiesId, exportOnlyMetadata);
+          PropertyIterator properties = node.getProperties();
+          boolean shouldExport = true;
+          if(exportOnlyPublishedContents) {
+        	  while(properties.hasNext()){ 
+        		  Property property = properties.nextProperty();
+        		  	if(hasPublicationLifecycle(property) && !isStatusNodePublished(property)){
+        		  		shouldExport = false;
+        		  	}
+        	  }
+        	  
+        	  if(shouldExport == false) {
+        		  continue;
+        	  }
+          }
+        	  exportNode(workspace, childNode, excludedNodes, exportVersionHistory, subNodesExportTask, node, metaData, activitiesId, exportOnlyMetadata);
         }
       }
     }
+  }
+  
+  private boolean hasPublicationLifecycle(Property property) throws RepositoryException{
+	  PropertyDefinition definition = property.getDefinition();
+	  return "publication:currentState".equals(definition.getName());
+  }
+  
+  private boolean isStatusNodePublished(Property property) throws RepositoryException{
+	  boolean isPublished = false;
+	  PropertyDefinition definition = property.getDefinition();
+	  		if("published".equals(property.getValue().getString())){
+				isPublished = true;
+			}
+	  return isPublished;
   }
 
   private boolean isRecursiveExport(Node node) throws Exception {

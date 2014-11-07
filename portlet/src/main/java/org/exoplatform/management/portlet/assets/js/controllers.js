@@ -1,9 +1,26 @@
-define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function ( $ )
+define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax"], function ( $ )
 {
 
   var stagingCtrl = function($scope, $http, stagingService) {
+	  
     var stagingContainer = $('#staging');
-
+    
+    $('*[rel="tooltip"]').tooltip();
+    
+    
+         $http.get(stagingContainer.jzURL('StagingExtensionController.getProperties')).success(function (data) {
+            $scope.with_jcr_query = data.with_jcr_query;
+            $scope.without_site_skeleton = data.without_site_skeleton
+            $scope.include_taxonomy = data.include_taxonomy;
+            $scope.without_versionHistory = data.without_versionHistory;
+            $scope.clean_publication = data.clean_publication;
+            $scope.published_contents = data.published_contents;
+            $scope.only_published_contents = data.only_published_contents;
+          }).error(function (data) {
+          });
+         
+         
+    	
     $scope.mode = "export";
     $scope.button_clicked = false;
 

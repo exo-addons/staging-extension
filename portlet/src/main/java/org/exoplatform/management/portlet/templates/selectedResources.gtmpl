@@ -1,3 +1,4 @@
+
 <div class="no-resource-selected" ng-show="!getSelectedCategories().length">
   <i>No selected resources</i>
 </div>
@@ -133,11 +134,11 @@
 				<label class="radio"><input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="false" id="contentEntireSite"
                                     ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><span>The entire site</span></label>
 			</span><br/>
-			<span class="uiRadio">
+			<span class="uiRadio" ng-attr-data-original-title="{{without_site_skeleton}}" data-placement="bottom" rel="tooltip">
 				<label class="radio"><input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="true" id="contentWithoutSkeleton"
                                     ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><span>Without Site Skeleton</span></label>
 			</span><br/>
-			<span class="uiRadio">
+			<span class="uiRadio" ng-attr-data-original-title="{{with_jcr_query}}" data-placement="bottom" rel="tooltip">
 				<label class="radio"><input class="option" type="radio" name="/content/sites_EXPORT_filter/no-skeleton" value="query" id="contentWithQuery"
                                     ng-model="optionsModel['/content/sites_EXPORT_filter/no-skeleton']"><span>With JCR Query</span></label>
 			</span><br/>
@@ -152,13 +153,15 @@
         </div>
       </div>
       <label class="checkbox uiCheckbox"><input id="taxonomy" class="option" type="checkbox" name="/content/sites_EXPORT_filter/taxonomy" value="true"
-                                                ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><span>Include taxonomy</span></label>
+                                                ng-model="optionsModel['/content/sites_EXPORT_filter/taxonomy']"/><span ng-attr-data-original-title="{{include_taxonomy}}" data-placement="bottom" rel="tooltip">Include taxonomy</span></label>
       <label class="checkbox uiCheckbox"><input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-history" value="true"
-                                                ng-model="optionsModel['/content/sites_EXPORT_filter/no-history']"/><span>Without Version history</span></label>
+                                                ng-model="optionsModel['/content/sites_EXPORT_filter/no-history']"/><span ng-attr-data-original-title="{{without_versionHistory}}" data-placement="bottom" rel="tooltip">Without Version history</span></label>
+      <label class="checkbox uiCheckbox"><input id="onlyPublishedContents" class="option" type="checkbox" name="/content/sites_EXPORT_filter/published-contents" value="true"
+                                                ng-model="optionsModel['/content/sites_EXPORT_filter/only-published-contents']"/><span ng-attr-data-original-title="{{only_published_contents}}" data-placement="bottom" rel="tooltip">Only published contents</span></label>
     </div>
     <div ng-show="mode == 'import' || mode == 'synchronize'">
-      <label class="checkbox uiCheckbox"><input id="cleanupPublication" class="option" type="checkbox" name="/content/sites_IMPORT_filter/cleanPublication" value="true"
-                                                ng-model="optionsModel['/content/sites_IMPORT_filter/cleanPublication']"/><span>Cleanup publication (used if Version history isn't exported)</span></label>
+      <label class="checkbox uiCheckbox" ng-attr-data-original-title="{{clean_publication}}" data-placement="bottom" rel="tooltip"><input id="cleanupPublication" class="option" type="checkbox" name="/content/sites_IMPORT_filter/cleanPublication" value="true"
+                                                ng-model="optionsModel['/content/sites_IMPORT_filter/cleanPublication']"/><span >Cleanup publication (used if Version history isn't exported)</span></label>
       JCR UUID Behavior
       <select class="option" name="/content/sites_IMPORT_uuidBehavior"
               ng-model="optionsModel['/content/sites_IMPORT_uuidBehavior']">
