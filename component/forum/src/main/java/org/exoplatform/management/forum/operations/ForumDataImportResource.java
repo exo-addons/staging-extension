@@ -415,7 +415,7 @@ public class ForumDataImportResource implements OperationHandler {
         }
       }
     } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+      log.warn("Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
     } finally {
       if (inputStream != null) {
         try {

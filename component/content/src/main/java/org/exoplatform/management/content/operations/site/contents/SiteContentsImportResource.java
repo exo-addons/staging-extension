@@ -700,7 +700,7 @@ public class SiteContentsImportResource implements OperationHandler {
         }
       }
     } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
+      log.warn("Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
     } finally {
       if (inputStream != null) {
         try {
@@ -811,7 +811,7 @@ public class SiteContentsImportResource implements OperationHandler {
   private Identity getIdentity(ProfileFilter profileFilter) {
     ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
     try {
-      if (identities.getSize() > 0) {
+      if (identities != null && identities.getSize() > 0) {
         return identities.load(0, 1)[0];
       }
     } catch (Exception e) {

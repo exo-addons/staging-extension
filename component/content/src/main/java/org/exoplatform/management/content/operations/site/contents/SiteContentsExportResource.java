@@ -188,20 +188,24 @@ public class SiteContentsExportResource implements OperationHandler {
   private void exportActivities(List<ExportTask> exportTasks, Set<String> activitiesId, String siteName) {
     // In case of minimal profile
     if (activityManager != null) {
-      List<ExoSocialActivity> activities = new ArrayList<ExoSocialActivity>();
-      for (String activityId : activitiesId) {
-        ExoSocialActivity activity = activityManager.getActivity(activityId);
-        if (activity != null) {
-          activities.add(activity);
-          RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
-          if (commentsListAccess.getSize() > 0) {
-            List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-            activities.addAll(comments);
+      try {
+        List<ExoSocialActivity> activities = new ArrayList<ExoSocialActivity>();
+        for (String activityId : activitiesId) {
+          ExoSocialActivity activity = activityManager.getActivity(activityId);
+          if (activity != null) {
+            activities.add(activity);
+            RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
+            if (commentsListAccess.getSize() > 0) {
+              List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+              activities.addAll(comments);
+            }
           }
         }
-      }
-      if (!activities.isEmpty()) {
-        exportTasks.add(new SiteContentsActivitiesExportTask(identityManager, activities, siteName));
+        if (!activities.isEmpty()) {
+          exportTasks.add(new SiteContentsActivitiesExportTask(identityManager, activities, siteName));
+        }
+      } catch (Exception e) {
+        log.warn("Can't export activities", e);
       }
     }
   }
