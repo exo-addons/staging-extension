@@ -163,7 +163,7 @@ public class SiteContentsImportResource implements OperationHandler {
         String activitiesFilePath = tempParentFolderPath + "/" + replaceSpecialChars(SiteContentsActivitiesExportTask.getEntryPath(site));
         File activitiesFile = new File(activitiesFilePath);
         // Import activities
-        if (activitiesFile.exists()) {
+        if (activitiesFile.exists() && activityManager != null) {
           createActivities(activitiesFile);
         }
       }
@@ -388,7 +388,7 @@ public class SiteContentsImportResource implements OperationHandler {
           log.info("Deleting the node " + workspace + ":" + targetNodePath);
 
           Node oldNode = (Node) session.getItem(targetNodePath);
-          if (oldNode.isNodeType("exo:activityInfo")) {
+          if (oldNode.isNodeType("exo:activityInfo") && activityManager != null) {
             String activityId = ActivityTypeUtils.getActivityId(oldNode);
             deleteActivity(activityId);
           }
@@ -436,7 +436,7 @@ public class SiteContentsImportResource implements OperationHandler {
           cleanPublication(targetNodePath, session);
         }
       } catch (Exception e) {
-        log.error("Error when trying to import node: " + targetNodePath, e);
+        log.error("Error when trying to import node: " + targetNodePath + ", revert changes", e);
         // Revert changes
         session.refresh(false);
       } finally {

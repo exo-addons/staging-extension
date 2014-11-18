@@ -151,12 +151,16 @@ public class SiteContentsExportResource implements OperationHandler {
       boolean exportVersionHistory = !filters.contains("no-history:true");
       // Exports only metadata
       boolean exportOnlyMetadata = filters.contains("only-metadata:true");
-      // Validate Structure. Defaults to true.
-      boolean validateStructure = !filters.contains("validate-structure:false");
+      // Validate Structure. Defaults to false.
+      boolean validateStructure = filters.contains("validate-structure:true");
 
       if (validateStructure) {
-        // Validate Site Structure
-        validateSiteStructure(siteName, metaData);
+        try {
+          // Validate Site Structure
+          validateSiteStructure(siteName, metaData);
+        } catch (Exception e) {
+          log.warn("Error while validation structure", e);
+        }
       }
 
       Set<String> activitiesId = new HashSet<String>();
