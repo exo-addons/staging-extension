@@ -1,0 +1,37 @@
+<% import org.exoplatform.management.uiextension.PushSiteForm;%>
+<div class="uiForm $uicomponent.id">
+	<% uiform.begin() %>
+		<div class="form-horizontal resizable">
+			<% 
+				for(field in uiform.getChildren()) {
+					if(field.isRendered()) {
+			%>
+            <div class="control-group">
+              <% if(PushSiteForm.INFO_FIELD_NAME.equals(field.getName())) {
+                   if(field.getValue() != null && !field.getValue().isEmpty()) { %>
+                    <div class="alert alert-error"><%=field.getValue()%></div>
+              <% }
+              } else { %>
+                <label class="control-label" for="<%=field.getId()%>">
+                    <%=uicomponent.getLabel(field.getName()) +": " %>
+                </label>
+                <div class="controls">
+                	<%uiform.renderField(field) ; %>
+              	</div>
+              <% } %>
+            </div>
+			<%
+					}
+				}
+			%>
+		</div>
+		<div class="uiAction uiActionBorder">
+			<% for(action in uicomponent.getActions()) {
+				 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action) 
+				 String link = uicomponent.event(action) ;
+			%>
+				 <button type="button" onclick="$link" class="btn"  href="javascript:void(0);">$actionLabel</button>
+			<% } %>					
+		</div>
+	<%uiform.end()%>
+</div>

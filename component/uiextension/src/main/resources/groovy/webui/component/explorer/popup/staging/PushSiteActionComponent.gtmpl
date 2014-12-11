@@ -1,0 +1,11 @@
+<script type="text/javascript">
+  function openPushSiteForm(event) {
+    var evt = event || window.event;
+    var mouse_cordinate = evt.clientY + "," + evt.clientX; 
+    var command = "<%=uicomponent.event("PushSite","str")%>";
+    command.replace('str', mouse_cordinate);
+    eval(command);
+  }
+</script>
+<% def onclickURL = "openPushSiteForm(event)"; %>
+<a href="javascript:void(0);" onclick="<%=onclickURL%>"><%=_ctx.appRes("PushSite.action")%></a>

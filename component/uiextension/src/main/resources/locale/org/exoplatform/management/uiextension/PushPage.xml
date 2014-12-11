@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<PushPage>
+		<msg>
+			<unableToConnect>Unable to connect to the server</unableToConnect>
+			<synchronizationError>An error occurred while synchronizing content</synchronizationError>
+			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
+			<synchronizationDone>Synchronization done successfully</synchronizationDone>
+		</msg>
+		<action>Push</action>
+	</PushPage>
+	<PushPageForm>
+		<label>
+			<targetServer>Target Server</targetServer>
+		</label>
+		<action>
+			<Push>Push</Push>
+			<Close>Close</Close>
+		</action>
+	</PushPageForm>
+	<StagingPushPageWindow>
+		<title>
+			<PushPageForm>Push current page</PushPageForm>
+		</title>
+	</StagingPushPageWindow>
+</bundle>

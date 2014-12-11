@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bundle>
+	<PushPage>
+		<msg>
+			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
+			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
+			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
+			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
+		</msg>
+		<action>Synchroniser</action>
+	</PushPage>
+	<PushPageForm>
+		<label>
+			<targetServer>Serveur</targetServer>
+		</label>
+		<action>
+			<Push>Synchroniser</Push>
+			<Close>Fermer</Close>
+		</action>
+	</PushPageForm>
+	<PushPagePopupWindow>
+		<title>
+			<PushPageForm>Synchroniser la page courante</PushPageForm>
+		</title>
+	</PushPagePopupWindow>
+</bundle>
