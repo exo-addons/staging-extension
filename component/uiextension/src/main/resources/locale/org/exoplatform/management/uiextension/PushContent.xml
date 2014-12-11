@@ -13,11 +13,11 @@
 	<PushContent>
 		<msg>
 			<unableToConnect>Unable to connect to server</unableToConnect>
-			<synchronizationError>An error occured while synchronizing content</synchronizationError>
+			<synchronizationError>An error occurred while synchronizing content</synchronizationError>
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<userNameMandatory>Login is mandatory</userNameMandatory>
 			<passwordMandatory>Password is mandatory</passwordMandatory>
-			<synchronizationDone>Synhronization done successfully</synchronizationDone>
+			<synchronizationDone>Synchronization done successfully</synchronizationDone>
 		</msg>
 		<state>
 			<not_found_source>Not found on source</not_found_source>
@@ -37,7 +37,7 @@
 			<synchronizationNode>Node</synchronizationNode>
 			<publishOnTarget>Publish on target server</publishOnTarget>
 			<currentContent>Current Content</currentContent>
-			<currentSubContents>Subcontents of the current content</currentSubContents>
+			<currentSubContents>Sub contents of the current content</currentSubContents>
 		</label>
 		<action>
 			<Select>Edit selection</Select>
