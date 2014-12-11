@@ -8,8 +8,8 @@ import java.util.ResourceBundle;
 
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
-import org.exoplatform.management.uiextension.coparaison.NodeComparaison;
-import org.exoplatform.management.uiextension.coparaison.NodeComparaisonState;
+import org.exoplatform.management.uiextension.comparaison.NodeComparaison;
+import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
 import org.exoplatform.webui.application.WebuiRequestContext;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
 import org.exoplatform.webui.config.annotation.ComponentConfigs;
