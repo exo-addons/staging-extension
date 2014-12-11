@@ -1,4 +1,4 @@
-package org.exoplatform.management.uiextension.coparaison;
+package org.exoplatform.management.uiextension.comparaison;
 
 import java.io.Serializable;
 import java.text.DateFormat;
