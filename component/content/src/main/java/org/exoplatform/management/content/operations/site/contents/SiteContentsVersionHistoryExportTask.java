@@ -93,7 +93,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
           String historyValue = getHistoryValue(node);
           propertiesBOS.write(historyValue.getBytes());
           propertiesBOS.write('\n');
-          session.exportSystemView(node.getVersionHistory().getPath(), out, false, false);
+          session.exportDocumentView(node.getVersionHistory().getPath(), out, false, false);
           out.flush();
           zipService.addInputStream(node.getUUID() + ".xml", in);
         }
@@ -106,7 +106,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
         String historyValue = getHistoryValue(currentNode);
         propertiesBOS.write(historyValue.getBytes());
         propertiesBOS.write('\n');
-        session.exportSystemView(currentNode.getVersionHistory().getPath(), out, false, false);
+        session.exportDocumentView(currentNode.getVersionHistory().getPath(), out, false, false);
         out.flush();
         zipService.addInputStream(currentNode.getUUID() + ".xml", in);
       }

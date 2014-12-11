@@ -467,7 +467,7 @@ public class SiteContentsExportResource implements OperationHandler {
       if (!exportOnlyMetadata) {
         SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), path, recursive);
         subNodesExportTask.add(siteContentExportTask);
-        if (exportVersionHistory) {
+        if (exportVersionHistory && childNode.isNodeType(org.exoplatform.ecm.webui.utils.Utils.MIX_VERSIONABLE) && childNode.getVersionHistory().hasNodes()) {
           SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
               path, recursive);
           subNodesExportTask.add(versionHistoryExportTask);

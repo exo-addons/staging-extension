@@ -56,7 +56,7 @@ public class OrganizationModelJCRContentExportTask implements ExportTask {
     try {
       ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
       Session session = sessionProvider.getSession(workspace, manageableRepository);
-      session.exportSystemView(jcrPath, outputStream, false, false);
+      session.exportDocumentView(jcrPath, outputStream, false, false);
       outputStream.flush();
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting user's personnal JCR contents", exception);

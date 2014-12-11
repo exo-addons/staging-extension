@@ -37,7 +37,7 @@ public class GadgetExportTask implements ExportTask {
     SessionProvider sessionProvider = SessionProvider.createSystemProvider();
     try {
       Session session = sessionProvider.getSession(workspaceName, manageableRepository);
-      session.exportSystemView(gadgetJCRPath, outputStream, false, false);
+      session.exportDocumentView(gadgetJCRPath, outputStream, false, false);
       outputStream.flush();
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting gadget data", exception);
