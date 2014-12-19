@@ -1,5 +1,14 @@
 package org.exoplatform.management.uiextension;
 
+import java.net.ConnectException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
@@ -31,38 +40,29 @@ import org.exoplatform.webui.event.EventListener;
 import org.exoplatform.webui.form.UIForm;
 import org.exoplatform.webui.form.UIFormInputInfo;
 import org.exoplatform.webui.form.UIFormSelectBox;
-import org.exoplatform.webui.form.UIFormStringInput;
-
-import java.net.ConnectException;
-import java.net.URLDecoder;
-import java.util.*;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 
-@ComponentConfigs(
-  { @ComponentConfig(
-    type = UIGrid.class,
-    id = "selectedNodesGrid",
-    template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"), @ComponentConfig(
-    lifecycle = UIFormLifecycle.class,
-    template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
-    events =
-      { @EventConfig(
-        listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(
-        listeners = PushContentPopupComponent.PushActionListener.class), @EventConfig(
-        listeners = PushContentPopupComponent.SelectActionListener.class), @EventConfig(
-        listeners = PushContentPopupComponent.DeleteActionListener.class) }) })
+@ComponentConfigs({ @ComponentConfig(
+  type = UIGrid.class,
+  id = "selectedNodesGrid",
+  template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"), @ComponentConfig(
+  lifecycle = UIFormLifecycle.class,
+  template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
+  events = { @EventConfig(
+    listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(
+    listeners = PushContentPopupComponent.PushActionListener.class), @EventConfig(
+    listeners = PushContentPopupComponent.SelectActionListener.class), @EventConfig(
+    listeners = PushContentPopupComponent.DeleteActionListener.class) }) })
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
 
   protected static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
 
   private static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
-  private static final String USERNAME_FIELD_NAME = "username";
-  private static final String PWD_FIELD_NAME = "password";
 
   // private static final String PUBLISH_FIELD_NAME = "publishOnTarget";
 
@@ -79,11 +79,9 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   List<NodeComparaison> selectedNodes = new ArrayList<NodeComparaison>();
 
-  public static String[] SELECTED_NODES_BEAN_FIELD =
-    { "title", "path" };
+  public static String[] SELECTED_NODES_BEAN_FIELD = { "title", "path" };
 
-  public static String[] SELECTED_BEAN_ACTION =
-    { "Delete" };
+  public static String[] SELECTED_BEAN_ACTION = { "Delete" };
 
   private UIGrid selectedNodesGrid;
 
@@ -93,10 +91,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
 
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
-    addUIFormInput(new UIFormStringInput(USERNAME_FIELD_NAME, USERNAME_FIELD_NAME, ""));
-    UIFormStringInput pwdInput = new UIFormStringInput(PWD_FIELD_NAME, PWD_FIELD_NAME, "");
-    pwdInput.setType(UIFormStringInput.PASSWORD_TYPE);
-    addUIFormInput(pwdInput);
 
     // addUIFormInput(new UICheckBoxInput(PUBLISH_FIELD_NAME,
     // PUBLISH_FIELD_NAME, false));
@@ -178,26 +172,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
       UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
       try {
-        // get username
-        String username = pushContentPopupComponent.getUIStringInput(USERNAME_FIELD_NAME).getValue();
-        if (username == null || username.isEmpty()) {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.userNameMandatory", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
-          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
-          return;
-        }
-
-        // get password
-        String password = pushContentPopupComponent.getUIStringInput(PWD_FIELD_NAME).getValue();
-        if (password == null || password.isEmpty()) {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.passwordMandatory", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
-          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
-          return;
-        }
-
         // get target server
         TargetServer targetServer = null;
         String targetServerId = pushContentPopupComponent.getUIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME).getValue();
@@ -215,8 +189,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
           return;
         }
-        targetServer.setUsername(username);
-        targetServer.setPassword(password);
 
         List<NodeComparaison> comparaisons = Utils.compareLocalNodesWithTargetServer(pushContentPopupComponent.getWorkspace(), pushContentPopupComponent.getCurrentPath(), targetServer);
         selectNodesPopupComponent.setComparaisons(comparaisons);
@@ -227,7 +199,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
       } catch (Exception ex) {
         ApplicationMessage message;
-        if(isConnectionException(ex)) {
+        if (isConnectionException(ex)) {
           message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
         } else {
           message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
@@ -301,26 +273,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
       UIApplication uiApp = pushContentPopupComponent.getAncestorOfType(UIApplication.class);
       try {
-        // get username
-        String username = pushContentPopupComponent.getUIStringInput(USERNAME_FIELD_NAME).getValue();
-        if (username == null || username.isEmpty()) {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.userNameMandatory", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
-          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
-          return;
-        }
-
-        // get password
-        String password = pushContentPopupComponent.getUIStringInput(PWD_FIELD_NAME).getValue();
-        if (password == null || password.isEmpty()) {
-          ApplicationMessage message = new ApplicationMessage("PushContent.msg.passwordMandatory", null, ApplicationMessage.ERROR);
-          message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
-          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
-          return;
-        }
-
         // get cleanupPublication checkbox value
         // boolean cleanupPublication =
         // pushContentPopupComponent.getUICheckBoxInput(PUBLISH_FIELD_NAME).getValue();
@@ -343,11 +295,8 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
           return;
         }
-        targetServer.setUsername(username);
-        targetServer.setPassword(password);
 
-        @SuppressWarnings(
-          { "unchecked", "deprecation" })
+        @SuppressWarnings({ "unchecked", "deprecation" })
         List<NodeComparaison> selectedComparaisons = (List<NodeComparaison>) pushContentPopupComponent.getSelectedNodesGrid().getUIPageIterator().getPageList().getAll();
         // If default selection
         if (pushContentPopupComponent.getDefaultSelection().equals(selectedComparaisons)) {
@@ -397,7 +346,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         LOG.info("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' done.");
       } catch (Exception ex) {
         ApplicationMessage message;
-        if(isConnectionException(ex)) {
+        if (isConnectionException(ex)) {
           message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
         } else {
           message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
@@ -412,6 +361,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   /**
    * Check if the exception has a ConnectionException cause
+   * 
    * @param ex
    * @return
    */
@@ -419,7 +369,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     boolean connectionException = false;
     Throwable throwable = ex;
     do {
-      if(throwable instanceof ConnectException) {
+      if (throwable instanceof ConnectException) {
         connectionException = true;
       } else {
         throwable = throwable.getCause();
@@ -438,15 +388,12 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     }
   }
 
-  public void activate() {
-  }
+  public void activate() {}
 
-  public void deActivate() {
-  }
+  public void deActivate() {}
 
   public String[] getActions() {
-    return new String[]
-      { "Push", "Close" };
+    return new String[] { "Push", "Close" };
   }
 
   public List<NodeComparaison> getSelectedNodes() {
