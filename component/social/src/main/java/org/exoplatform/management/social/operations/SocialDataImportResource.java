@@ -232,7 +232,8 @@ public class SocialDataImportResource implements OperationHandler {
       AvatarAttachment avatarAttachment = (AvatarAttachment) xstream.fromXML(reader);
       space.setAvatarAttachment(avatarAttachment);
 
-      spaceService.updateSpace(space);
+      space = spaceService.updateSpace(space);
+      space = spaceService.getSpaceByGroupId(space.getGroupId());
       spaceService.updateSpaceAvatar(space);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while updating Space '" + space.getDisplayName() + "' avatar.", e);
@@ -479,8 +480,9 @@ public class SocialDataImportResource implements OperationHandler {
     space.setGroupId(spaceMetaData.getGroupId());
     space.setTag(spaceMetaData.getTag());
     space.setApp(spaceMetaData.getApp());
-    space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userACL.getSuperUser());
     space.setManagers(spaceMetaData.getManagers());
+    space.setEditor(!StringUtils.isEmpty(spaceMetaData.getEditor()) ? spaceMetaData.getEditor()
+        : ((spaceMetaData.getManagers().length > 0 && !StringUtils.isEmpty(spaceMetaData.getManagers()[0])) ? spaceMetaData.getManagers()[0] : userACL.getSuperUser()));
     space.setInvitedUsers(spaceMetaData.getInvitedUsers());
     space.setRegistration(spaceMetaData.getRegistration());
     space.setDescription(spaceMetaData.getDescription());
