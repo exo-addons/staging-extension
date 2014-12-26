@@ -1,24 +1,49 @@
 package org.exoplatform.management.portlet;
 
-import juzu.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.inject.Inject;
+import javax.portlet.Portlet;
+
+import juzu.Action;
+import juzu.Path;
+import juzu.Response;
+import juzu.Route;
+import juzu.SessionScoped;
+import juzu.View;
 import juzu.impl.request.Request;
 import juzu.template.Template;
+
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
 import org.exoplatform.management.service.api.Resource;
-import org.exoplatform.management.service.api.*;
+import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.ResourceHandler;
+import org.exoplatform.management.service.api.StagingService;
+import org.exoplatform.management.service.api.SynchronizationService;
+import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ManagementService;
 
-import javax.inject.Inject;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import com.google.gson.Gson;
 
 @SessionScoped
 public class StagingExtensionController {
@@ -30,6 +55,7 @@ public class StagingExtensionController {
 
   public static final Map<String, String> IMPORT_ZIP_PATH_EXCEPTIONS = new HashMap<String, String>();
   public static final Map<String, String> IMPORT_PATH_EXCEPTIONS = new HashMap<String, String>();
+  private static final String TOOLTIP_PROPERTIES = "tooltips.properties";
 
   @Inject
   StagingService stagingService;
@@ -51,6 +77,7 @@ public class StagingExtensionController {
   static List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
 
   static {
+	  
     // ZIP PATH EXCEPTIONS
     IMPORT_ZIP_PATH_EXCEPTIONS.put("/portal", "/site/portalsites");
     IMPORT_ZIP_PATH_EXCEPTIONS.put("/group", "/site/groupsites");
@@ -129,11 +156,35 @@ public class StagingExtensionController {
 
   @View
   public Response.Render index() {
-    Map<String, Object> parameters = new HashMap<String, Object>();
+	Map<String, Object> parameters = new HashMap<String, Object>();
 
     parameters.put("resourceCategories", resourceCategories);
 
     return indexTmpl.ok(parameters);
+  }
+  
+  @Ajax
+  @juzu.Resource
+  public Response getProperties(){
+	  
+	  Properties prop = new Properties();
+	  
+	  try{
+		  InputStream inputStream = getClass().getClassLoader().getResourceAsStream(TOOLTIP_PROPERTIES);
+		  prop.load(inputStream);
+		  
+		  if (inputStream == null) {
+			  throw new FileNotFoundException("property file '" + TOOLTIP_PROPERTIES + "' not found in the classpath");
+		  }
+	   }catch(Exception e) {
+		   log.error("error to read: "+ TOOLTIP_PROPERTIES, e); 
+		   return Response.content(500, e.getMessage());
+	   }
+	   
+	   Gson gsonObj = new Gson();
+	   String strJson =  gsonObj.toJson(prop);
+	   
+	   return Response.ok(strJson);
   }
 
   @Ajax
