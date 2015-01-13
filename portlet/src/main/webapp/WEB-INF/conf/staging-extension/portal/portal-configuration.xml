@@ -5,46 +5,52 @@
    xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
 
   <component>
-      <type>org.exoplatform.platform.common.service.MenuConfiguratorService</type>
-      <init-params>
-          <value-param>
-              <name>setup.navigation.file</name>
-              <value>war:/conf/staging-extension/portal/setup-navigation.xml</value>
-          </value-param>
-      </init-params>
+    <type>org.exoplatform.platform.common.service.MenuConfiguratorService</type>
+    <init-params>
+      <value-param>
+        <name>setup.navigation.file</name>
+        <value>war:/conf/staging-extension/portal/setup-navigation.xml</value>
+      </value-param>
+    </init-params>
   </component>
-	<external-component-plugins>
-		<target-component>org.exoplatform.portal.config.UserPortalConfigService</target-component>
-		<component-plugin>
-			<name>new.portal.config.user.listener</name>
-			<set-method>initListener</set-method>
-			<type>org.exoplatform.portal.config.NewPortalConfigListener</type>
-			<description>this listener init the portal configuration</description>
-			<init-params>
-				<value-param>
-				  <name>override</name>
-				  <value>true</value>
-				</value-param>
-				<object-param>
-				  <name>group.configuration</name>
-				  <description>description</description>
-				  <object type="org.exoplatform.portal.config.NewPortalConfig">
-					<field name="predefinedOwner">
-					  <collection type="java.util.HashSet">
-						<value>
-						  <string>/platform/administrators</string>
-						</value>                
-					  </collection>
-					</field>
-					<field name="ownerType">
-					  <string>group</string>
-					</field>
-					<field name="templateLocation">
-					  <string>war:/conf/staging-extension/portal</string>
-					</field>
-				  </object>
-				</object-param>
-			</init-params>
-		</component-plugin>
-	</external-component-plugins>
+  <external-component-plugins>
+    <target-component>org.exoplatform.portal.config.UserPortalConfigService</target-component>
+    <component-plugin>
+      <name>new.portal.config.user.listener</name>
+      <set-method>initListener</set-method>
+      <type>org.exoplatform.portal.config.NewPortalConfigListener</type>
+      <description>this listener init the portal configuration</description>
+      <init-params>
+        <value-param>
+          <name>override</name>
+          <value>true</value>
+        </value-param>
+        <object-param>
+          <name>group.configuration</name>
+          <description>description</description>
+          <object type="org.exoplatform.portal.config.NewPortalConfig">
+            <field name="predefinedOwner">
+              <collection type="java.util.HashSet">
+                <value>
+                  <string>/platform/administrators</string>
+                </value>                
+              </collection>
+            </field>
+            <field name="ownerType">
+              <string>group</string>
+            </field>
+            <field name="templateLocation">
+              <string>war:/conf/staging-extension/portal</string>
+            </field>
+            <field name="override">
+              <boolean>true</boolean>
+            </field>
+            <field name="importMode">
+              <string>insert</string>
+            </field>
+          </object>
+        </object-param>
+      </init-params>
+    </component-plugin>
+  </external-component-plugins>
 </configuration>
