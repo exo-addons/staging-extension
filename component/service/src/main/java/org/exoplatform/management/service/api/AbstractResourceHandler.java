@@ -18,6 +18,7 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.http.NameValuePair;
@@ -357,9 +358,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   protected void deleteFile(File tempFile) {
     if (tempFile != null && tempFile.exists() && !tempFile.isDirectory()) {
       try {
-        tempFile.delete();
-      } catch (Exception exception) {
-        // Cannot delete file, plan to delete it when JVM stops.
+        FileUtils.forceDelete(tempFile);
+      } catch (Exception e) {
+        log.warn("Unable to delete temp file: " + tempFile.getAbsolutePath() + ". Not blocker.");
         tempFile.deleteOnExit();
       }
     }

@@ -198,7 +198,6 @@ public class AnswerDataImportResource implements OperationHandler {
     try {
       // Copy attachement to local File
       tmpZipFile = File.createTempFile("staging-answer", ".zip");
-      tmpZipFile.deleteOnExit();
       FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
       IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
       tmpFileOutputStream.close();

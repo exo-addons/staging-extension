@@ -95,7 +95,6 @@ public class SiteContentsImportResource implements OperationHandler {
     this.filePath = filePath;
   }
 
-  @SuppressWarnings("resource")
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
