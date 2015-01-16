@@ -107,7 +107,7 @@ public class ForumSettingsImportResource implements OperationHandler {
           }
           FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
           tmpZipFile.deleteOnExit();
         }
       }
@@ -246,7 +246,8 @@ public class ForumSettingsImportResource implements OperationHandler {
   }
 
   private static String replaceSpecialChars(String name) {
-    return name.replaceAll(":", "_");
+    name = name.replaceAll(":", "_");
+    return name.replaceAll("\\?", "_");
   }
 
   private static File createFile(File file, boolean folder) throws IOException {

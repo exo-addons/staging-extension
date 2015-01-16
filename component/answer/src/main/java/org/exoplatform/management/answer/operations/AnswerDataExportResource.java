@@ -177,6 +177,7 @@ public class AnswerDataExportResource implements OperationHandler {
               }
             }
           }
+          exoSocialActivity.isComment(true);
         }
         activitiesList.addAll(comments);
       }

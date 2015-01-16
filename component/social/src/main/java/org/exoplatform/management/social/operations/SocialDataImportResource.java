@@ -9,10 +9,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,7 +26,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
@@ -32,6 +35,7 @@ import org.exoplatform.portal.config.model.Dashboard;
 import org.exoplatform.portal.mop.importer.ImportMode;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
+import org.exoplatform.services.organization.User;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.application.SpaceActivityPublisher;
@@ -42,7 +46,6 @@ import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.model.AvatarAttachment;
-import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -73,6 +76,8 @@ import com.thoughtworks.xstream.XStream;
  */
 public class SocialDataImportResource implements OperationHandler {
 
+  private static final String[] EMPTY_STRING_ARRAY = new String[0];
+
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
 
   final private static int BUFFER = 2048000;
@@ -87,6 +92,9 @@ public class SocialDataImportResource implements OperationHandler {
   private DataStorage dataStorage;
   private ActivityStorage activityStorage;
 
+  // This is used to test on duplicated activities
+  private Set<Long> activityPostTime = new HashSet<Long>();
+
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
@@ -98,12 +106,16 @@ public class SocialDataImportResource implements OperationHandler {
     dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
     activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
+    activityPostTime.clear();
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
+
+    // "create-users" attribute. Defaults to false.
+    boolean createAbsentUsers = filters.contains("create-users:true");
 
     // space-name = spaceDisplayName || spacePrettyName ||
     // spaceOriginalPrettyName (before renaming)
@@ -130,7 +142,7 @@ public class SocialDataImportResource implements OperationHandler {
     try {
       // Copy attachement to local temporary File
       tmpZipFile = File.createTempFile("staging-social", ".zip");
-      Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZipAndCreateSpaces(operationContext.getAttachment(false), spaceName, replaceExisting, tmpZipFile);
+      Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZipAndCreateSpaces(operationContext.getAttachment(false), spaceName, replaceExisting, createAbsentUsers, tmpZipFile);
       Set<String> spacePrettyNames = fileToImportByOwner.keySet();
       for (String extractedSpacePrettyName : spacePrettyNames) {
         log.info("Importing applications data for space: " + extractedSpacePrettyName + " ...");
@@ -194,7 +206,7 @@ public class SocialDataImportResource implements OperationHandler {
           }
           FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
           tmpZipFile.deleteOnExit();
         }
       }
@@ -234,9 +246,13 @@ public class SocialDataImportResource implements OperationHandler {
 
       space = spaceService.updateSpace(space);
       space = spaceService.getSpaceByGroupId(space.getGroupId());
+
+      if (space.getAvatarAttachment() == null) {
+        space.setAvatarAttachment(avatarAttachment);
+      }
       spaceService.updateSpaceAvatar(space);
     } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while updating Space '" + space.getDisplayName() + "' avatar.", e);
+      log.error("Error while updating Space '" + space.getDisplayName() + "' avatar.", e);
     } finally {
       if (inputStream != null) {
         try {
@@ -287,92 +303,95 @@ public class SocialDataImportResource implements OperationHandler {
     }
   }
 
+  @SuppressWarnings("unchecked")
   private void createActivities(String spacePrettyName, File activitiesFile) {
-    log.info("Importing space activities");
-    FileInputStream inputStream = null;
+    log.info("Importing space '" + spacePrettyName + "' activities.");
+    List<ExoSocialActivity> activities = null;
     try {
-      inputStream = new FileInputStream(activitiesFile);
-
+      FileInputStream inputStream = new FileInputStream(activitiesFile);
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
 
-      @SuppressWarnings("unchecked")
-      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-      ProfileFilter profileFilter = new ProfileFilter();
-      Identity identity = null;
-      for (ExoSocialActivity activity : activities) {
-        profileFilter.setName(activity.getUserId());
-        identity = getIdentity(profileFilter, null);
+      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+    } catch (FileNotFoundException e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + activitiesFile.getAbsolutePath(), e);
+    }
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    Identity identity = null;
+    for (ExoSocialActivity activity : activities) {
+      if (activity.getPostedTime() != null && activityPostTime.contains(activity.getPostedTime())) {
+        log.warn("Activity '" + activity.getTitle() + "' is duplicated, ignore it.");
+        continue;
+      } else {
+        activityPostTime.add(activity.getPostedTime());
+      }
+      identity = getIdentity(activity.getUserId());
+
+      if (identity != null) {
+        activity.setUserId(identity.getId());
+
+        identity = getIdentity(activity.getPosterId());
 
         if (identity != null) {
-          activity.setUserId(identity.getId());
+          activity.setPosterId(identity.getId());
+          activitiesList.add(activity);
 
-          profileFilter.setName(activity.getPosterId());
-          identity = getIdentity(profileFilter, null);
-
-          if (identity != null) {
-            activity.setPosterId(identity.getId());
-            activitiesList.add(activity);
-
-            Set<String> keys = activity.getTemplateParams().keySet();
-            for (String key : keys) {
-              String value = activity.getTemplateParams().get(key);
-              if (value != null) {
-                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
-              }
-            }
-            if (StringUtils.isNotEmpty(activity.getTitle())) {
-              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
-            }
-            if (StringUtils.isNotEmpty(activity.getBody())) {
-              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
-            }
-            if (StringUtils.isNotEmpty(activity.getSummary())) {
-              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+          Set<String> keys = activity.getTemplateParams().keySet();
+          for (String key : keys) {
+            String value = activity.getTemplateParams().get(key);
+            if (value != null) {
+              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
             }
           }
-          activity.setReplyToId(null);
-          String[] commentedIds = activity.getCommentedIds();
-          if (commentedIds != null && commentedIds.length > 0) {
-            for (int i = 0; i < commentedIds.length; i++) {
-              profileFilter.setName(commentedIds[i]);
-              identity = getIdentity(profileFilter, null);
-              if (identity != null) {
-                commentedIds[i] = identity.getId();
-              }
-            }
-            activity.setCommentedIds(commentedIds);
+          if (StringUtils.isNotEmpty(activity.getTitle())) {
+            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
           }
-          String[] mentionedIds = activity.getMentionedIds();
-          if (mentionedIds != null && mentionedIds.length > 0) {
-            for (int i = 0; i < mentionedIds.length; i++) {
-              profileFilter.setName(mentionedIds[i]);
-              identity = getIdentity(profileFilter, null);
-              if (identity != null) {
-                mentionedIds[i] = identity.getId();
-              }
-            }
-            activity.setMentionedIds(mentionedIds);
+          if (StringUtils.isNotEmpty(activity.getBody())) {
+            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
           }
-          String[] likeIdentityIds = activity.getLikeIdentityIds();
-          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
-            for (int i = 0; i < likeIdentityIds.length; i++) {
-              profileFilter.setName(likeIdentityIds[i]);
-              identity = getIdentity(profileFilter, null);
-              if (identity != null) {
-                likeIdentityIds[i] = identity.getId();
-              }
-            }
-            activity.setLikeIdentityIds(likeIdentityIds);
+          if (StringUtils.isNotEmpty(activity.getSummary())) {
+            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
           }
-        } else {
-          log.warn("Space activity : '" + activity.getTitle() + "' isn't imported because its user/space wasn't found.");
         }
+        activity.setReplyToId(null);
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            identity = getIdentity(commentedIds[i]);
+            if (identity != null) {
+              commentedIds[i] = identity.getId();
+            }
+          }
+          activity.setCommentedIds(commentedIds);
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            identity = getIdentity(mentionedIds[i]);
+            if (identity != null) {
+              mentionedIds[i] = identity.getId();
+            }
+          }
+          activity.setMentionedIds(mentionedIds);
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            identity = getIdentity(likeIdentityIds[i]);
+            if (identity != null) {
+              likeIdentityIds[i] = identity.getId();
+            }
+          }
+          activity.setLikeIdentityIds(likeIdentityIds);
+        }
+      } else {
+        log.warn("Space activity : '" + activity.getTitle() + "' isn't imported because the associated user '" + activity.getUserId() + "' wasn't found.");
       }
-      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
-      ExoSocialActivity parentActivity = null;
-      for (ExoSocialActivity exoSocialActivity : activitiesList) {
+    }
+    Identity spaceIdentity = getIdentity(spacePrettyName);
+    ExoSocialActivity parentActivity = null;
+    for (ExoSocialActivity exoSocialActivity : activitiesList) {
+      try {
         exoSocialActivity.setId(null);
         if (exoSocialActivity.isComment()) {
           if (parentActivity == null) {
@@ -383,21 +402,17 @@ public class SocialDataImportResource implements OperationHandler {
         } else {
           parentActivity = null;
           saveActivity(exoSocialActivity, spaceIdentity);
+          if (exoSocialActivity.getId() == null) {
+            log.warn("Activity '" + exoSocialActivity.getTitle() + "' is not imported, id is null");
+            continue;
+          }
           if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(exoSocialActivity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(exoSocialActivity.getType())) {
             identityStorage.updateProfileActivityId(spaceIdentity, exoSocialActivity.getId(), Profile.AttachedActivityType.SPACE);
           }
           parentActivity = activityManager.getActivity(exoSocialActivity.getId());
         }
-      }
-    } catch (FileNotFoundException e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + activitiesFile.getAbsolutePath(), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
+      } catch (Exception e) {
+        log.warn("Error while adding activity: " + exoSocialActivity.getTitle(), e);
       }
     }
   }
@@ -407,6 +422,7 @@ public class SocialDataImportResource implements OperationHandler {
     activityManager.saveActivityNoReturn(spaceIdentity, activity);
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
+    log.info("Space activity : '" + activity.getTitle() + " is imported.");
   }
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
@@ -414,19 +430,24 @@ public class SocialDataImportResource implements OperationHandler {
     activityManager.saveComment(activity, comment);
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
+    log.info("Space activity comment: '" + activity.getTitle() + " is imported.");
   }
 
-  private Identity getIdentity(ProfileFilter profileFilter, String providerId) {
-    String computedProviderId = providerId;
-    if (computedProviderId == null) {
-      computedProviderId = OrganizationIdentityProvider.NAME;
-    }
-    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(computedProviderId, profileFilter, false);
+  private Identity getIdentity(String userId) {
+    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
     try {
-      if (identities.getSize() > 0) {
-        return identities.load(0, 1)[0];
-      } else if (providerId == null) {
-        return getIdentity(profileFilter, SpaceIdentityProvider.NAME);
+      if (userIdentity != null) {
+        return userIdentity;
+      } else {
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
+
+        // Try to see if space was renamed
+        if (spaceIdentity == null) {
+          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
+          spaceIdentity = getIdentity(space.getPrettyName());
+        }
+
+        return spaceIdentity;
       }
     } catch (Exception e) {
       log.error(e);
@@ -434,7 +455,7 @@ public class SocialDataImportResource implements OperationHandler {
     return null;
   }
 
-  private boolean createOrReplaceSpace(String spacePrettyName, String targetSpaceName, boolean replaceExisting, InputStream inputStream) throws Exception {
+  private boolean createOrReplaceSpace(String spacePrettyName, String targetSpaceName, boolean replaceExisting, boolean createAbsentUsers, InputStream inputStream) throws Exception {
     // Unmarshall metadata xml file
     XStream xstream = new XStream();
     xstream.alias("metadata", SpaceMetaData.class);
@@ -450,6 +471,7 @@ public class SocialDataImportResource implements OperationHandler {
     Space space = spaceService.getSpaceByGroupId(spaceMetaData.getGroupId());
     if (space != null) {
       if (replaceExisting) {
+        RequestLifeCycle.begin(PortalContainer.getInstance());
         log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
         String groupId = space.getGroupId();
         spaceService.deleteSpace(space);
@@ -461,11 +483,38 @@ public class SocialDataImportResource implements OperationHandler {
 
         // FIXME Answer Bug: deleting a space don't delete answers category, but
         // it will be deleted if answer data is imported
+
+        RequestLifeCycle.end();
       } else {
         log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space import.");
         return true;
       }
     }
+
+    if (createAbsentUsers) {
+      RequestLifeCycle.begin(PortalContainer.getInstance());
+      log.info("Create not found users of space: '" + spaceMetaData.getPrettyName() + "'.");
+      String[] members = spaceMetaData.getMembers();
+      for (String member : members) {
+        try {
+          User user = organizationService.getUserHandler().findUserByName(member);
+          if (user == null) {
+            user = organizationService.getUserHandler().createUserInstance(member);
+            user.setDisplayName(member);
+            user.setFirstName(member);
+            user.setLastName(member);
+            user.setEmail(member + "@example.com");
+            user.setPassword("" + Math.random());
+            log.info("     Create not found user of space: '" + member + "' with random password.");
+            organizationService.getUserHandler().createUser(user, true);
+          }
+        } catch (Exception e) {
+          log.warn("Exception while attempting to create the user: " + member, e);
+        }
+      }
+      RequestLifeCycle.end();
+    }
+
     log.info("Create new space: '" + spaceMetaData.getPrettyName() + "'.");
     space = new Space();
 
@@ -480,22 +529,82 @@ public class SocialDataImportResource implements OperationHandler {
     space.setGroupId(spaceMetaData.getGroupId());
     space.setTag(spaceMetaData.getTag());
     space.setApp(spaceMetaData.getApp());
-    space.setManagers(spaceMetaData.getManagers());
-    space.setEditor(!StringUtils.isEmpty(spaceMetaData.getEditor()) ? spaceMetaData.getEditor()
-        : ((spaceMetaData.getManagers().length > 0 && !StringUtils.isEmpty(spaceMetaData.getManagers()[0])) ? spaceMetaData.getManagers()[0] : userACL.getSuperUser()));
-    space.setInvitedUsers(spaceMetaData.getInvitedUsers());
+
+    // Filter on existing users
+    String[] members = getExistingUsers(spaceMetaData.getMembers());
+    if (members == null || members.length == 0) {
+      space.setMembers(new String[] { userACL.getSuperUser() });
+      log.warn("Members '" + Arrays.toString(spaceMetaData.getMembers()) + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getMembers())
+          + "' will be used instead.");
+    } else {
+      space.setMembers(members);
+    }
+
+    String[] managers = getExistingUsers(spaceMetaData.getManagers());
+    if (managers == null || managers.length == 0) {
+      space.setManagers(new String[] { userACL.getSuperUser() });
+      log.warn("Managers '" + Arrays.toString(spaceMetaData.getManagers()) + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getManagers())
+          + "' will be used instead.");
+    } else {
+      space.setManagers(managers);
+    }
+
+    String[] editor = getExistingUsers(spaceMetaData.getEditor());
+    if (editor == null || editor.length == 0) {
+      space.setEditor(space.getManagers()[0]);
+      log.warn("Editor '" + spaceMetaData.getEditor() + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the manager '" + space.getManagers()[0] + "' will be used instead.");
+    } else {
+      space.setEditor(editor[0]);
+    }
+
+    space.setInvitedUsers(getExistingUsers(spaceMetaData.getInvitedUsers()));
+
     space.setRegistration(spaceMetaData.getRegistration());
     space.setDescription(spaceMetaData.getDescription());
     space.setType(spaceMetaData.getType());
     space.setVisibility(spaceMetaData.getVisibility());
     space.setPriority(spaceMetaData.getPriority());
     space.setUrl(spaceMetaData.getUrl());
-    spaceService.createSpace(space, space.getEditor());
+    space = spaceService.createSpace(space, space.getEditor());
     if (isRenamed) {
+      log.info("Rename space from '" + oldSpacePrettyName + "' to '" + newSpacePrettyName + "'.");
       spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
     }
+
+    RequestLifeCycle.begin(PortalContainer.getInstance());
+    log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");
+    for (String member : members) {
+      spaceService.addMember(space, member);
+    }
+    for (String manager : managers) {
+      spaceService.setManager(space, manager, true);
+    }
+    RequestLifeCycle.end();
+
     deleteSpaceActivities(spaceMetaData.getPrettyName());
     return false;
+  }
+
+  private String[] getExistingUsers(String... users) {
+    List<String> existingUsers = new ArrayList<String>();
+    if (users != null && users.length > 0) {
+      for (String userId : users) {
+        if (userId == null || userId.isEmpty()) {
+          continue;
+        }
+        try {
+          User user = organizationService.getUserHandler().findUserByName(userId);
+          if (user != null) {
+            existingUsers.add(userId);
+          } else {
+            log.info("   User '" + userId + "' doesn't exist, the user will not be added as member or manager of the space.");
+          }
+        } catch (Exception e) {
+          log.warn("Exception while attempting to get user: " + userId, e);
+        }
+      }
+    }
+    return existingUsers.toArray(EMPTY_STRING_ARRAY);
   }
 
   private void importSubResource(File tempFile, String subResourcePath) {
@@ -526,7 +635,8 @@ public class SocialDataImportResource implements OperationHandler {
     }
   }
 
-  private Map<String, Map<String, File>> extractDataFromZipAndCreateSpaces(OperationAttachment attachment, String spaceName, boolean replaceExisting, File tmpZipFile) throws OperationException {
+  private Map<String, Map<String, File>> extractDataFromZipAndCreateSpaces(OperationAttachment attachment, String spaceName, boolean replaceExisting, boolean createAbsentUsers, File tmpZipFile)
+      throws OperationException {
     if (attachment == null || attachment.getStream() == null) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for Social import.");
     }
@@ -536,7 +646,7 @@ public class SocialDataImportResource implements OperationHandler {
 
       // Organize File paths by id and extract files from zip to a temp
       // folder and create spaces
-      return extractFilesByIdAndCreateSpaces(tmpZipFile, spaceName, replaceExisting);
+      return extractFilesByIdAndCreateSpaces(tmpZipFile, spaceName, replaceExisting, createAbsentUsers);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error occured while handling attachement", e);
     } finally {
@@ -568,7 +678,7 @@ public class SocialDataImportResource implements OperationHandler {
     }
   }
 
-  private Map<String, Map<String, File>> extractFilesByIdAndCreateSpaces(File tmpZipFile, String targetSpaceName, boolean replaceExisting) throws Exception {
+  private Map<String, Map<String, File>> extractFilesByIdAndCreateSpaces(File tmpZipFile, String targetSpaceName, boolean replaceExisting, boolean createAbsentUsers) throws Exception {
     // Get path of folder where to unzip files
     String targetFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "") + "/";
 
@@ -626,7 +736,7 @@ public class SocialDataImportResource implements OperationHandler {
           if (localFilePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
             // Create space here to be sure that it's created before importing
             // other application resources
-            boolean toIgnore = createOrReplaceSpace(spacePrettyName, targetSpaceName, replaceExisting, zis);
+            boolean toIgnore = createOrReplaceSpace(spacePrettyName, targetSpaceName, replaceExisting, createAbsentUsers, zis);
             if (toIgnore) {
               ignoredSpaces.add(spacePrettyName);
               filesToImportByOwner.remove(spacePrettyName);
@@ -689,7 +799,8 @@ public class SocialDataImportResource implements OperationHandler {
   }
 
   private static String replaceSpecialChars(String name) {
-    return name.replaceAll(":", "_");
+    name = name.replaceAll(":", "_");
+    return name.replaceAll("\\?", "_");
   }
 
   private static File createFile(File file, boolean folder) throws IOException {

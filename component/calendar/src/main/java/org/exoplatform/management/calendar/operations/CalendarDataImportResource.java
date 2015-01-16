@@ -8,7 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -27,7 +26,8 @@ import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
-import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.calendar.service.impl.CalendarServiceImpl;
+import org.exoplatform.calendar.service.impl.JCRDataStorage;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.management.calendar.CalendarExtension;
@@ -52,11 +52,10 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
-import org.exoplatform.social.core.manager.IdentityManager;
-import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.exoplatform.web.ControllerContext;
 import org.exoplatform.web.application.RequestContext;
 import org.exoplatform.web.url.PortalURL;
@@ -102,10 +101,11 @@ public class CalendarDataImportResource implements OperationHandler {
   public static final String EVENT_LINK_KEY = "EventLink";
 
   private ActivityManager activityManager;
-  private IdentityManager identityManager;
+  private IdentityStorage identityStorage;
   private SpaceService spaceService;
   private CalendarService calendarService;
   private UserACL userACL;
+  private JCRDataStorage calendarStorage;
 
   private boolean groupCalendar;
   private boolean spaceCalendar;
@@ -120,9 +120,10 @@ public class CalendarDataImportResource implements OperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
+    calendarStorage = ((CalendarServiceImpl) calendarService).getDataStorage();
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
 
@@ -238,7 +239,7 @@ public class CalendarDataImportResource implements OperationHandler {
         try {
           FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
           tmpZipFile.deleteOnExit();
         }
       }
@@ -333,7 +334,7 @@ public class CalendarDataImportResource implements OperationHandler {
           calendarService.removePublicCalendar(calendar.getId());
 
           // Save new Calendar
-          calendarService.savePublicCalendar(calendar, true);
+          calendarStorage.savePublicCalendar(calendar, true, null);
         } else {
           // FIXME event activities aren't deleted
           List<CalendarEvent> events = calendarService.getUserEventByCalendar(calendar.getCalendarOwner(), Collections.list(calendar.getId()));
@@ -343,7 +344,7 @@ public class CalendarDataImportResource implements OperationHandler {
           calendarService.removeUserCalendar(calendar.getCalendarOwner(), calendar.getId());
 
           // Save new Calendar
-          calendarService.saveUserCalendar(calendar.getCalendarOwner(), calendar, true);
+          calendarStorage.saveUserCalendar(calendar.getCalendarOwner(), calendar, true);
         }
       } else {
         log.info("Ignore existing calendar: " + toReplaceCalendar.getName());
@@ -362,9 +363,9 @@ public class CalendarDataImportResource implements OperationHandler {
           }
           calendarService.removePublicCalendar(calendar.getId());
         }
-        calendarService.savePublicCalendar(calendar, true);
+        calendarStorage.savePublicCalendar(calendar, true, null);
       } else {
-        calendarService.saveUserCalendar(calendar.getCalendarOwner(), calendar, true);
+        calendarStorage.saveUserCalendar(calendar.getCalendarOwner(), calendar, true);
       }
     }
     @SuppressWarnings("unchecked")
@@ -372,9 +373,9 @@ public class CalendarDataImportResource implements OperationHandler {
     for (CalendarEvent event : events) {
       log.info("Create calendar event: " + calendar.getName() + "/" + event.getSummary());
       if (groupCalendar) {
-        calendarService.savePublicEvent(calendar.getId(), event, true);
+        calendarStorage.savePublicEvent(calendar.getId(), event, true);
       } else {
-        calendarService.saveUserEvent(calendar.getCalendarOwner(), calendar.getId(), event, true);
+        calendarStorage.saveUserEvent(calendar.getCalendarOwner(), calendar.getId(), event, true);
       }
     }
     deleteCalendarActivities(events);
@@ -383,7 +384,9 @@ public class CalendarDataImportResource implements OperationHandler {
   private void deleteCalendarActivities(List<CalendarEvent> events) {
     for (CalendarEvent event : events) {
       if (event != null && event.getActivityId() != null) {
-        activityManager.deleteActivity(event.getActivityId());
+        if (activityManager.getActivity(event.getActivityId()) != null) {
+          activityManager.deleteActivity(event.getActivityId());
+        }
       }
     }
   }
@@ -563,8 +566,10 @@ public class CalendarDataImportResource implements OperationHandler {
     return nodeURL.setNode(node).toString();
   }
 
+  @SuppressWarnings("unchecked")
   private void createActivities(File activitiesFile, String spacePrettyName) {
     log.info("Importing Calendar activities");
+    List<ExoSocialActivity> activities = null;
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(activitiesFile);
@@ -572,81 +577,87 @@ public class CalendarDataImportResource implements OperationHandler {
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
 
-      @SuppressWarnings("unchecked")
-      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-      ProfileFilter profileFilter = new ProfileFilter();
-      Identity identity = null;
-      for (ExoSocialActivity activity : activities) {
-        profileFilter.setName(activity.getUserId());
-        identity = getIdentity(profileFilter);
-
-        if (identity != null) {
-          activity.setUserId(identity.getId());
-
-          profileFilter.setName(activity.getPosterId());
-          identity = getIdentity(profileFilter);
-
-          if (identity != null) {
-            activity.setPosterId(identity.getId());
-            activitiesList.add(activity);
-
-            Set<String> keys = activity.getTemplateParams().keySet();
-            for (String key : keys) {
-              String value = activity.getTemplateParams().get(key);
-              if (value != null) {
-                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
-              }
-            }
-            if (StringUtils.isNotEmpty(activity.getTitle())) {
-              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
-            }
-            if (StringUtils.isNotEmpty(activity.getBody())) {
-              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
-            }
-            if (StringUtils.isNotEmpty(activity.getSummary())) {
-              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
-            }
-          }
-          activity.setReplyToId(null);
-          String[] commentedIds = activity.getCommentedIds();
-          if (commentedIds != null && commentedIds.length > 0) {
-            for (int i = 0; i < commentedIds.length; i++) {
-              profileFilter.setName(commentedIds[i]);
-              identity = getIdentity(profileFilter);
-              if (identity != null) {
-                commentedIds[i] = identity.getId();
-              }
-            }
-            activity.setCommentedIds(commentedIds);
-          }
-          String[] mentionedIds = activity.getMentionedIds();
-          if (mentionedIds != null && mentionedIds.length > 0) {
-            for (int i = 0; i < mentionedIds.length; i++) {
-              profileFilter.setName(mentionedIds[i]);
-              identity = getIdentity(profileFilter);
-              if (identity != null) {
-                mentionedIds[i] = identity.getId();
-              }
-            }
-            activity.setMentionedIds(mentionedIds);
-          }
-          String[] likeIdentityIds = activity.getLikeIdentityIds();
-          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
-            for (int i = 0; i < likeIdentityIds.length; i++) {
-              profileFilter.setName(likeIdentityIds[i]);
-              identity = getIdentity(profileFilter);
-              if (identity != null) {
-                likeIdentityIds[i] = identity.getId();
-              }
-            }
-            activity.setLikeIdentityIds(likeIdentityIds);
-          }
+      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+    } catch (FileNotFoundException e) {
+      log.error("Error while getting activities file", e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
         }
       }
-      Calendar calendar = null;
-      ExoSocialActivity eventActivity = null;
-      for (ExoSocialActivity exoSocialActivity : activitiesList) {
+    }
+
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    Identity identity = null;
+    for (ExoSocialActivity activity : activities) {
+      identity = getIdentity(activity.getUserId());
+
+      if (identity != null) {
+        activity.setUserId(identity.getId());
+
+        identity = getIdentity(activity.getPosterId());
+
+        if (identity != null) {
+          activity.setPosterId(identity.getId());
+          activitiesList.add(activity);
+
+          Set<String> keys = activity.getTemplateParams().keySet();
+          for (String key : keys) {
+            String value = activity.getTemplateParams().get(key);
+            if (value != null) {
+              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+            }
+          }
+          if (StringUtils.isNotEmpty(activity.getTitle())) {
+            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+          }
+          if (StringUtils.isNotEmpty(activity.getBody())) {
+            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+          }
+          if (StringUtils.isNotEmpty(activity.getSummary())) {
+            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+          }
+        }
+        activity.setReplyToId(null);
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            identity = getIdentity(commentedIds[i]);
+            if (identity != null) {
+              commentedIds[i] = identity.getId();
+            }
+          }
+          activity.setCommentedIds(commentedIds);
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            identity = getIdentity(mentionedIds[i]);
+            if (identity != null) {
+              mentionedIds[i] = identity.getId();
+            }
+          }
+          activity.setMentionedIds(mentionedIds);
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            identity = getIdentity(likeIdentityIds[i]);
+            if (identity != null) {
+              likeIdentityIds[i] = identity.getId();
+            }
+          }
+          activity.setLikeIdentityIds(likeIdentityIds);
+        }
+      }
+    }
+    Calendar calendar = null;
+    ExoSocialActivity eventActivity = null;
+    for (ExoSocialActivity exoSocialActivity : activitiesList) {
+      try {
         exoSocialActivity.setId(null);
         if (exoSocialActivity.isComment()) {
           if (eventActivity == null) {
@@ -667,20 +678,16 @@ public class CalendarDataImportResource implements OperationHandler {
             continue;
           }
           saveActivity(exoSocialActivity, spacePrettyName);
+          if (exoSocialActivity.getId() == null) {
+            log.warn("Activity '" + exoSocialActivity.getTitle() + "' is not imported, id is null");
+            continue;
+          }
           event.setActivityId(exoSocialActivity.getId());
           calendar = saveEvent(calendar, event, exoSocialActivity);
           eventActivity = exoSocialActivity;
         }
-      }
-    } catch (Exception e) {
-      log.warn("Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
+      } catch (Exception e) {
+        log.warn("Error while importing activity: " + exoSocialActivity.getTitle(), e);
       }
     }
   }
@@ -692,11 +699,16 @@ public class CalendarDataImportResource implements OperationHandler {
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     } else {
-      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      Identity spaceIdentity = getIdentity(spacePrettyName);
+      if (spaceIdentity == null) {
+        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
+        return;
+      }
       activityManager.saveActivityNoReturn(spaceIdentity, activity);
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     }
+    log.info("Calendar activity : '" + activity.getTitle() + " is imported.");
   }
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
@@ -704,6 +716,7 @@ public class CalendarDataImportResource implements OperationHandler {
     activityManager.saveComment(activity, comment);
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
+    log.info("Calendar activity comment: '" + activity.getTitle() + " is imported.");
   }
 
   private Calendar saveEvent(Calendar calendar, CalendarEvent event, ExoSocialActivity exoSocialActivity) throws Exception {
@@ -712,37 +725,33 @@ public class CalendarDataImportResource implements OperationHandler {
     }
 
     if (calendar.getCalendarOwner().startsWith("/")) {
-      calendarService.savePublicEvent(event.getCalendarId(), event, false);
+      calendarStorage.savePublicEvent(event.getCalendarId(), event, false);
       // FIXME the URL of Stream Activity will use staging URL, modify it
       updateCalendarActivityURL(event, spaceCalendar ? calendar.getCalendarOwner() : null);
     } else {
-      calendarService.saveUserEvent(userACL.getSuperUser(), event.getCalendarId(), event, false);
+      calendarStorage.saveUserEvent(userACL.getSuperUser(), event.getCalendarId(), event, false);
       // FIXME the URL of Stream Activity will use staging URL, modify it
       updateCalendarActivityURL(event, null);
     }
 
-    deleteCommentsAddedByUpdate(exoSocialActivity);
-
     return calendar;
   }
 
-  private void deleteCommentsAddedByUpdate(ExoSocialActivity exoSocialActivity) {
-    List<String> commentsID = exoSocialActivity.getReplyToId() == null ? new ArrayList<String>() : Arrays.asList(exoSocialActivity.getReplyToId());
-    exoSocialActivity = activityManager.getActivity(exoSocialActivity.getId());
-
-    List<String> newCommentsID = exoSocialActivity.getReplyToId() == null ? new ArrayList<String>() : Arrays.asList(exoSocialActivity.getReplyToId());
-    newCommentsID.removeAll(commentsID);
-    for (String newCommentID : newCommentsID) {
-      ExoSocialActivity newCommentActivity = activityManager.getActivity(newCommentID);
-      activityManager.deleteComment(exoSocialActivity, newCommentActivity);
-    }
-  }
-
-  private Identity getIdentity(ProfileFilter profileFilter) {
-    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+  private Identity getIdentity(String userId) {
+    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
     try {
-      if (identities.getSize() > 0) {
-        return identities.load(0, 1)[0];
+      if (userIdentity != null) {
+        return userIdentity;
+      } else {
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
+
+        // Try to see if space was renamed
+        if (spaceIdentity == null) {
+          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
+          spaceIdentity = getIdentity(space.getPrettyName());
+        }
+
+        return spaceIdentity;
       }
     } catch (Exception e) {
       log.error(e);

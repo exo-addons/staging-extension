@@ -37,7 +37,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -51,8 +50,10 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
-import org.exoplatform.social.core.manager.IdentityManager;
-import org.exoplatform.social.core.profile.ProfileFilter;
+import org.exoplatform.social.core.space.SpaceUtils;
+import org.exoplatform.social.core.space.model.Space;
+import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -84,7 +85,8 @@ public class SiteContentsImportResource implements OperationHandler {
   private String importedSiteName = null;
   private String filePath = null;
   private ActivityManager activityManager;
-  private IdentityManager identityManager;
+  private IdentityStorage identityStorage;
+  private SpaceService spaceService;
   private RepositoryService repositoryService;
   private Pattern contenLinkPattern = Pattern.compile("([a-zA-Z]*)/([a-zA-Z]*)/(.*)");
 
@@ -97,8 +99,9 @@ public class SiteContentsImportResource implements OperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
+    spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
 
     if (importedSiteName == null) {
@@ -292,7 +295,9 @@ public class SiteContentsImportResource implements OperationHandler {
         // sysview file ?
         else if (filePath.endsWith(".xml")) {
           // Put XML Export file in temp folder
-          copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+          if (!copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath))) {
+            continue;
+          }
 
           // Save unmarshalled sysview
           SiteData siteData = sitesData.get(siteName);
@@ -303,7 +308,9 @@ public class SiteContentsImportResource implements OperationHandler {
           sitesData.put(siteName, siteData);
         } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
           // Put Version History file in temp folder
-          copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+          if (!copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath))) {
+            continue;
+          }
 
           SiteData siteData = sitesData.get(siteName);
           if (siteData == null) {
@@ -602,7 +609,7 @@ public class SiteContentsImportResource implements OperationHandler {
     return session;
   }
 
-  private static void copyToDisk(InputStream input, String output) throws Exception {
+  private static boolean copyToDisk(InputStream input, String output) throws Exception {
     byte data[] = new byte[BUFFER];
     BufferedOutputStream dest = null;
     try {
@@ -611,6 +618,10 @@ public class SiteContentsImportResource implements OperationHandler {
       int count = 0;
       while ((count = input.read(data, 0, BUFFER)) != -1)
         dest.write(data, 0, count);
+      return true;
+    } catch (Exception e) {
+      log.error("Error while copying file: " + output, e);
+      return false;
     } finally {
       if (dest != null) {
         dest.close();
@@ -619,18 +630,21 @@ public class SiteContentsImportResource implements OperationHandler {
   }
 
   private static String replaceSpecialChars(String name) {
-    return name.replaceAll(":", "_");
+    name = name.replaceAll(":", "_");
+    return name.replaceAll("\\?", "_");
   }
 
   private static File createFile(File file, boolean folder) throws Exception {
     if (file.getParentFile() != null)
       createFile(file.getParentFile(), true);
-    if (file.exists())
+    if (file.exists()) {
       return file;
-    if (file.isDirectory() || folder)
+    }
+    if (file.isDirectory() || folder) {
       file.mkdir();
-    else
+    } else {
       file.createNewFile();
+    }
     return file;
   }
 
@@ -650,6 +664,7 @@ public class SiteContentsImportResource implements OperationHandler {
       ExoSocialActivity documentActivity = null;
       for (ExoSocialActivity activity : activitiesList) {
         activity.setId(null);
+
         String contentLink = activity.getTemplateParams().get("contenLink");
         String workspace = null;
         String contentPath = null;
@@ -692,6 +707,10 @@ public class SiteContentsImportResource implements OperationHandler {
           } else {
             documentActivity = null;
             saveActivity(activity);
+            if (activity.getId() == null) {
+              log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
+              continue;
+            }
             ActivityTypeUtils.attachActivityId(((Node) session.getItem(contentPath)), activity.getId());
             session.save();
             documentActivity = activity;
@@ -715,7 +734,11 @@ public class SiteContentsImportResource implements OperationHandler {
     long updatedTime = activity.getUpdated().getTime();
     if (activity.getActivityStream().getType().equals(Type.SPACE)) {
       String spacePrettyName = activity.getActivityStream().getPrettyId();
-      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      Identity spaceIdentity = getIdentity(spacePrettyName);
+      if (spaceIdentity == null) {
+        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
+        return;
+      }
       activityManager.saveActivityNoReturn(spaceIdentity, activity);
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
@@ -724,6 +747,7 @@ public class SiteContentsImportResource implements OperationHandler {
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     }
+    log.info("Site Content activity : '" + activity.getTitle() + " is imported.");
   }
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
@@ -731,21 +755,19 @@ public class SiteContentsImportResource implements OperationHandler {
     activityManager.saveComment(activity, comment);
     activity.setUpdated(updatedTime);
     activityManager.saveActivityNoReturn(activity);
+    log.info("Site Content activity comment: '" + activity.getTitle() + " is imported.");
   }
 
   private List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    ProfileFilter profileFilter = new ProfileFilter();
     Identity identity = null;
     for (ExoSocialActivity activity : activities) {
-      profileFilter.setName(activity.getUserId());
-      identity = getIdentity(profileFilter);
+      identity = getIdentity(activity.getUserId());
 
       if (identity != null) {
         activity.setUserId(identity.getId());
 
-        profileFilter.setName(activity.getPosterId());
-        identity = getIdentity(profileFilter);
+        identity = getIdentity(activity.getPosterId());
 
         if (identity != null) {
           activity.setPosterId(identity.getId());
@@ -772,8 +794,7 @@ public class SiteContentsImportResource implements OperationHandler {
         String[] commentedIds = activity.getCommentedIds();
         if (commentedIds != null && commentedIds.length > 0) {
           for (int i = 0; i < commentedIds.length; i++) {
-            profileFilter.setName(commentedIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(commentedIds[i]);
             if (identity != null) {
               commentedIds[i] = identity.getId();
             }
@@ -783,8 +804,7 @@ public class SiteContentsImportResource implements OperationHandler {
         String[] mentionedIds = activity.getMentionedIds();
         if (mentionedIds != null && mentionedIds.length > 0) {
           for (int i = 0; i < mentionedIds.length; i++) {
-            profileFilter.setName(mentionedIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(mentionedIds[i]);
             if (identity != null) {
               mentionedIds[i] = identity.getId();
             }
@@ -794,8 +814,7 @@ public class SiteContentsImportResource implements OperationHandler {
         String[] likeIdentityIds = activity.getLikeIdentityIds();
         if (likeIdentityIds != null && likeIdentityIds.length > 0) {
           for (int i = 0; i < likeIdentityIds.length; i++) {
-            profileFilter.setName(likeIdentityIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(likeIdentityIds[i]);
             if (identity != null) {
               likeIdentityIds[i] = identity.getId();
             }
@@ -807,11 +826,21 @@ public class SiteContentsImportResource implements OperationHandler {
     return activitiesList;
   }
 
-  private Identity getIdentity(ProfileFilter profileFilter) {
-    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+  private Identity getIdentity(String userId) {
+    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
     try {
-      if (identities != null && identities.getSize() > 0) {
-        return identities.load(0, 1)[0];
+      if (userIdentity != null) {
+        return userIdentity;
+      } else {
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
+
+        // Try to see if space was renamed
+        if (spaceIdentity == null) {
+          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
+          spaceIdentity = getIdentity(space.getPrettyName());
+        }
+
+        return spaceIdentity;
       }
     } catch (Exception e) {
       log.error(e);

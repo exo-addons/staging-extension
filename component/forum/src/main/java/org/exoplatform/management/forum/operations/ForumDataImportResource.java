@@ -48,11 +48,10 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
-import org.exoplatform.social.core.manager.IdentityManager;
-import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -77,7 +76,7 @@ public class ForumDataImportResource implements OperationHandler {
   private RepositoryService repositoryService;
   private SpaceService spaceService;
   private ActivityManager activityManager;
-  private IdentityManager identityManager;
+  private IdentityStorage identityStorage;
   private ForumService forumService;
   private PollService pollService;
   private KSDataLocation dataLocation;
@@ -99,7 +98,7 @@ public class ForumDataImportResource implements OperationHandler {
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     pollService = operationContext.getRuntimeContext().getRuntimeComponent(PollService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -242,17 +241,14 @@ public class ForumDataImportResource implements OperationHandler {
       @SuppressWarnings("unchecked")
       List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
       List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-      ProfileFilter profileFilter = new ProfileFilter();
       Identity identity = null;
       for (ExoSocialActivity activity : activities) {
-        profileFilter.setName(activity.getUserId());
-        identity = getIdentity(profileFilter);
+        identity = getIdentity(activity.getUserId());
 
         if (identity != null) {
           activity.setUserId(identity.getId());
 
-          profileFilter.setName(activity.getPosterId());
-          identity = getIdentity(profileFilter);
+          identity = getIdentity(activity.getPosterId());
 
           if (identity != null) {
             activity.setPosterId(identity.getId());
@@ -279,8 +275,7 @@ public class ForumDataImportResource implements OperationHandler {
           String[] commentedIds = activity.getCommentedIds();
           if (commentedIds != null && commentedIds.length > 0) {
             for (int i = 0; i < commentedIds.length; i++) {
-              profileFilter.setName(commentedIds[i]);
-              identity = getIdentity(profileFilter);
+              identity = getIdentity(commentedIds[i]);
               if (identity != null) {
                 commentedIds[i] = identity.getId();
               }
@@ -290,8 +285,7 @@ public class ForumDataImportResource implements OperationHandler {
           String[] mentionedIds = activity.getMentionedIds();
           if (mentionedIds != null && mentionedIds.length > 0) {
             for (int i = 0; i < mentionedIds.length; i++) {
-              profileFilter.setName(mentionedIds[i]);
-              identity = getIdentity(profileFilter);
+              identity = getIdentity(mentionedIds[i]);
               if (identity != null) {
                 mentionedIds[i] = identity.getId();
               }
@@ -301,8 +295,7 @@ public class ForumDataImportResource implements OperationHandler {
           String[] likeIdentityIds = activity.getLikeIdentityIds();
           if (likeIdentityIds != null && likeIdentityIds.length > 0) {
             for (int i = 0; i < likeIdentityIds.length; i++) {
-              profileFilter.setName(likeIdentityIds[i]);
-              identity = getIdentity(profileFilter);
+              identity = getIdentity(likeIdentityIds[i]);
               if (identity != null) {
                 likeIdentityIds[i] = identity.getId();
               }
@@ -314,8 +307,7 @@ public class ForumDataImportResource implements OperationHandler {
         String[] commentedIds = activity.getCommentedIds();
         if (commentedIds != null && commentedIds.length > 0) {
           for (int i = 0; i < commentedIds.length; i++) {
-            profileFilter.setName(commentedIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(commentedIds[i]);
             if (identity != null) {
               commentedIds[i] = identity.getId();
             }
@@ -324,8 +316,7 @@ public class ForumDataImportResource implements OperationHandler {
         String[] mentionedIds = activity.getMentionedIds();
         if (mentionedIds != null && mentionedIds.length > 0) {
           for (int i = 0; i < mentionedIds.length; i++) {
-            profileFilter.setName(mentionedIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(mentionedIds[i]);
             if (identity != null) {
               mentionedIds[i] = identity.getId();
             }
@@ -334,8 +325,7 @@ public class ForumDataImportResource implements OperationHandler {
         String[] likeIdentityIds = activity.getLikeIdentityIds();
         if (likeIdentityIds != null && likeIdentityIds.length > 0) {
           for (int i = 0; i < likeIdentityIds.length; i++) {
-            profileFilter.setName(likeIdentityIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(likeIdentityIds[i]);
             if (identity != null) {
               likeIdentityIds[i] = identity.getId();
             }
@@ -360,6 +350,10 @@ public class ForumDataImportResource implements OperationHandler {
           }
           topicActivity = null;
           saveActivity(exoSocialActivity, spacePrettyName);
+          if (exoSocialActivity.getId() == null) {
+            log.warn("Activity '" + exoSocialActivity.getTitle() + "' is not imported, id is null");
+            continue;
+          }
           String pollId = topicId.replace(Utils.TOPIC, Utils.POLL);
           Poll poll = pollService.getPoll(pollId);
           String pollPath = poll.getParentPath() + "/" + pollId;
@@ -409,6 +403,10 @@ public class ForumDataImportResource implements OperationHandler {
           } else {
             topicActivity = null;
             saveActivity(exoSocialActivity, spacePrettyName);
+            if (exoSocialActivity.getId() == null) {
+              log.warn("Activity '" + exoSocialActivity.getTitle() + "' is not imported, id is null");
+              continue;
+            }
             forumService.saveActivityIdForOwnerPath(topic.getPath(), exoSocialActivity.getId());
             topicActivity = exoSocialActivity;
           }
@@ -434,11 +432,15 @@ public class ForumDataImportResource implements OperationHandler {
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     } else {
-      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      Identity spaceIdentity = getIdentity(spacePrettyName);
+      if (spaceIdentity == null) {
+        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
+        return;
+      }
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     }
+    log.info("Forum activity : '" + activity.getTitle() + " is imported.");
   }
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
@@ -446,13 +448,24 @@ public class ForumDataImportResource implements OperationHandler {
     activityManager.saveComment(activity, comment);
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
+    log.info("Forum activity comment: '" + activity.getTitle() + " is imported.");
   }
 
-  private Identity getIdentity(ProfileFilter profileFilter) {
-    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+  private Identity getIdentity(String userId) {
+    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
     try {
-      if (identities.getSize() > 0) {
-        return identities.load(0, 1)[0];
+      if (userIdentity != null) {
+        return userIdentity;
+      } else {
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
+
+        // Try to see if space was renamed
+        if (spaceIdentity == null) {
+          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
+          spaceIdentity = getIdentity(space.getPrettyName());
+        }
+
+        return spaceIdentity;
       }
     } catch (Exception e) {
       log.error(e);
@@ -498,7 +511,7 @@ public class ForumDataImportResource implements OperationHandler {
         try {
           FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
           tmpZipFile.deleteOnExit();
         }
       }
@@ -776,7 +789,8 @@ public class ForumDataImportResource implements OperationHandler {
   }
 
   private static String replaceSpecialChars(String name) {
-    return name.replaceAll(":", "_");
+    name = name.replaceAll(":", "_");
+    return name.replaceAll("\\?", "_");
   }
 
   private static File createFile(File file, boolean folder) throws Exception {
