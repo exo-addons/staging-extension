@@ -41,14 +41,18 @@ public class SocialDataReadResource implements OperationHandler {
     Set<String> children = new LinkedHashSet<String>();
     SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
 
-    try {
-      ListAccess<Space> spaces = spaceService.getAllSpacesWithListAccess();
-      Space[] spacesArr = spaces.load(0, spaces.getSize());
-      for (Space space : spacesArr) {
-        children.add(space.getDisplayName());
+    if (spaceService != null) {
+      try {
+        ListAccess<Space> spaces = spaceService.getAllSpacesWithListAccess();
+        if (spaces != null && spaces.getSize() > 0) {
+          Space[] spacesArr = spaces.load(0, spaces.getSize());
+          for (Space space : spacesArr) {
+            children.add(space.getDisplayName());
+          }
+        }
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.READ_RESOURCE, "Error while listing all spaces", e);
       }
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.READ_RESOURCE, "Error while listing all spaces", e);
     }
 
     resultHandler.completed(new ReadResourceModel("All spaces:", children));

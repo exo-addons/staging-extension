@@ -3,8 +3,10 @@ package org.exoplatform.management.portlet;
 import juzu.*;
 import juzu.impl.request.Request;
 import juzu.template.Template;
+
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.*;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
@@ -13,6 +15,7 @@ import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ManagementService;
 
 import javax.inject.Inject;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -48,7 +51,13 @@ public class StagingExtensionController {
   @Path("index.gtmpl")
   Template indexTmpl;
 
-  static List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
+  private static final List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
+  private static final int SPACES_CATEGORY_INDEX;
+  private static final int FORUM_CATEGORY_INDEX;
+  private static final int ANSWER_CATEGORY_INDEX;
+  private static final int CALENDAR_CATEGORY_INDEX;
+  private static final int WIKI_CATEGORY_INDEX;
+  private static final int COUNT_ALL;
 
   static {
     // ZIP PATH EXCEPTIONS
@@ -71,6 +80,7 @@ public class StagingExtensionController {
     ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);
     social.getSubResourceCategories().add(new ResourceCategory("Spaces", StagingService.SOCIAL_SPACE_PATH));
     resourceCategories.add(social);
+    SPACES_CATEGORY_INDEX = resourceCategories.size() - 1;
 
     ResourceCategory contents = new ResourceCategory("Contents", "/content");
     contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
@@ -81,24 +91,28 @@ public class StagingExtensionController {
     answers.getSubResourceCategories().add(new ResourceCategory("Space Answers", StagingService.SPACE_ANSWER_PATH));
     answers.getSubResourceCategories().add(new ResourceCategory("FAQ Template", StagingService.FAQ_TEMPLATE_PATH));
     resourceCategories.add(answers);
+    ANSWER_CATEGORY_INDEX = resourceCategories.size() - 1;
 
     ResourceCategory forums = new ResourceCategory("Forums", StagingService.FORUMS_PARENT_PATH);
     forums.getSubResourceCategories().add(new ResourceCategory("Public Forum", StagingService.PUBLIC_FORUM_PATH));
     forums.getSubResourceCategories().add(new ResourceCategory("Space Forum", StagingService.SPACE_FORUM_PATH));
     forums.getSubResourceCategories().add(new ResourceCategory("Forum settings", StagingService.FORUM_SETTINGS));
     resourceCategories.add(forums);
+    FORUM_CATEGORY_INDEX = resourceCategories.size() - 1;
 
     ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
     calendars.getSubResourceCategories().add(new ResourceCategory("Group Calendar", StagingService.GROUP_CALENDAR_PATH));
     calendars.getSubResourceCategories().add(new ResourceCategory("Space Calendar", StagingService.SPACE_CALENDAR_PATH));
     calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
     resourceCategories.add(calendars);
+    CALENDAR_CATEGORY_INDEX = resourceCategories.size() - 1;
 
     ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
     wikis.getSubResourceCategories().add(new ResourceCategory("Portal wikis", StagingService.PORTAL_WIKIS_PATH));
     wikis.getSubResourceCategories().add(new ResourceCategory("Space wikis", StagingService.GROUP_WIKIS_PATH));
     wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
     resourceCategories.add(wikis);
+    WIKI_CATEGORY_INDEX = resourceCategories.size() - 1;
 
     ResourceCategory organization = new ResourceCategory("Organization", "/organization");
     organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));
@@ -125,10 +139,30 @@ public class StagingExtensionController {
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
     ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
     resourceCategories.add(ecmAdmin);
+
+    COUNT_ALL = resourceCategories.size();
   }
 
   @View
   public Response.Render index() {
+    if (resourceCategories.size() == COUNT_ALL) {
+      if (!isWikiActivated()) {
+        resourceCategories.remove(WIKI_CATEGORY_INDEX);
+      }
+      if (!isCalendarActivated()) {
+        resourceCategories.remove(CALENDAR_CATEGORY_INDEX);
+      }
+      if (!isForumActivated()) {
+        resourceCategories.remove(FORUM_CATEGORY_INDEX);
+      }
+      if (!isAnswerActivated()) {
+        resourceCategories.remove(ANSWER_CATEGORY_INDEX);
+      }
+      if (!isSocialActivated()) {
+        resourceCategories.remove(SPACES_CATEGORY_INDEX);
+      }
+    }
+
     Map<String, Object> parameters = new HashMap<String, Object>();
 
     parameters.put("resourceCategories", resourceCategories);
@@ -192,7 +226,7 @@ public class StagingExtensionController {
     Set<String> foundResources = new HashSet<String>();
     while (entry != null) {
       String fileName = entry.getName();
-      if(entry.isDirectory()) {
+      if (entry.isDirectory()) {
         entry = zipInputStream.getNextEntry();
         continue;
       }
@@ -475,6 +509,46 @@ public class StagingExtensionController {
     } catch (Exception e) {
       log.error("Error while executing request: " + sql, e);
       return Response.content(500, "Error while executing request: " + e.getMessage());
+    }
+  }
+
+  private boolean isWikiActivated() {
+    try {
+      return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.wiki.service.WikiService")) != null;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  private boolean isCalendarActivated() {
+    try {
+      return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.calendar.service.CalendarService")) != null;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  private boolean isForumActivated() {
+    try {
+      return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.forum.service.ForumService")) != null;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  private boolean isAnswerActivated() {
+    try {
+      return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.faq.service.FAQService")) != null;
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+  }
+
+  private boolean isSocialActivated() {
+    try {
+      return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.social.core.space.spi.SpaceService")) != null;
+    } catch (ClassNotFoundException e) {
+      return false;
     }
   }
 

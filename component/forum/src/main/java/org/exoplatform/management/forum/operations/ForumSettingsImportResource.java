@@ -107,7 +107,7 @@ public class ForumSettingsImportResource implements OperationHandler {
           }
           FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
           tmpZipFile.deleteOnExit();
         }
       }

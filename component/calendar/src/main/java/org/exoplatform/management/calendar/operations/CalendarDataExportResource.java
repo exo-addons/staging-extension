@@ -222,6 +222,9 @@ public class CalendarDataExportResource implements OperationHandler {
       RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(eventActivity);
       if (commentsListAccess.getSize() > 0) {
         List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        for (ExoSocialActivity exoSocialActivityComment : comments) {
+          exoSocialActivityComment.isComment(true);
+        }
         activitiesList.addAll(comments);
       }
     }

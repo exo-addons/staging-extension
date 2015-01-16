@@ -27,7 +27,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -37,11 +36,10 @@ import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
-import org.exoplatform.social.core.manager.IdentityManager;
-import org.exoplatform.social.core.profile.ProfileFilter;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.exoplatform.wiki.mow.api.Page;
 import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
@@ -78,8 +76,8 @@ public class WikiDataImportResource implements OperationHandler {
   private MOWService mowService;
   private RepositoryService repositoryService;
   private ActivityManager activityManager;
-  private IdentityManager identityManager;
   private WikiService wikiService;
+  private IdentityStorage identityStorage;
 
   public WikiDataImportResource(WikiType wikiType) {
     this.wikiType = wikiType;
@@ -92,7 +90,7 @@ public class WikiDataImportResource implements OperationHandler {
     mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -203,7 +201,7 @@ public class WikiDataImportResource implements OperationHandler {
         try {
           FileUtils.forceDelete(tmpZipFile);
         } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.", e);
+          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
           tmpZipFile.deleteOnExit();
         }
       }
@@ -524,6 +522,10 @@ public class WikiDataImportResource implements OperationHandler {
           } else {
             pageActivity = null;
             saveActivity(activity, pageOwner);
+            if (activity.getId() == null) {
+              log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
+              continue;
+            }
             ActivityTypeUtils.attachActivityId(page.getJCRPageNode(), activity.getId());
             page.getJCRPageNode().getSession().save();
             pageActivity = activity;
@@ -551,7 +553,11 @@ public class WikiDataImportResource implements OperationHandler {
       activityManager.updateActivity(activity);
     } else {
       String spacePrettyName = pageOwner.replace(SpaceUtils.SPACE_GROUP + "/", "");
-      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, spacePrettyName, false);
+      Identity spaceIdentity = getIdentity(spacePrettyName);
+      if (spaceIdentity == null) {
+        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
+        return;
+      }
       activityManager.saveActivityNoReturn(spaceIdentity, activity);
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
@@ -567,17 +573,14 @@ public class WikiDataImportResource implements OperationHandler {
 
   private List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    ProfileFilter profileFilter = new ProfileFilter();
     Identity identity = null;
     for (ExoSocialActivity activity : activities) {
-      profileFilter.setName(activity.getUserId());
-      identity = getIdentity(profileFilter);
+      identity = getIdentity(activity.getUserId());
 
       if (identity != null) {
         activity.setUserId(identity.getId());
 
-        profileFilter.setName(activity.getPosterId());
-        identity = getIdentity(profileFilter);
+        identity = getIdentity(activity.getPosterId());
 
         if (identity != null) {
           activity.setPosterId(identity.getId());
@@ -604,8 +607,7 @@ public class WikiDataImportResource implements OperationHandler {
         String[] commentedIds = activity.getCommentedIds();
         if (commentedIds != null && commentedIds.length > 0) {
           for (int i = 0; i < commentedIds.length; i++) {
-            profileFilter.setName(commentedIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(commentedIds[i]);
             if (identity != null) {
               commentedIds[i] = identity.getId();
             }
@@ -615,8 +617,7 @@ public class WikiDataImportResource implements OperationHandler {
         String[] mentionedIds = activity.getMentionedIds();
         if (mentionedIds != null && mentionedIds.length > 0) {
           for (int i = 0; i < mentionedIds.length; i++) {
-            profileFilter.setName(mentionedIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(mentionedIds[i]);
             if (identity != null) {
               mentionedIds[i] = identity.getId();
             }
@@ -626,8 +627,7 @@ public class WikiDataImportResource implements OperationHandler {
         String[] likeIdentityIds = activity.getLikeIdentityIds();
         if (likeIdentityIds != null && likeIdentityIds.length > 0) {
           for (int i = 0; i < likeIdentityIds.length; i++) {
-            profileFilter.setName(likeIdentityIds[i]);
-            identity = getIdentity(profileFilter);
+            identity = getIdentity(likeIdentityIds[i]);
             if (identity != null) {
               likeIdentityIds[i] = identity.getId();
             }
@@ -639,11 +639,21 @@ public class WikiDataImportResource implements OperationHandler {
     return activitiesList;
   }
 
-  private Identity getIdentity(ProfileFilter profileFilter) {
-    ListAccess<Identity> identities = identityManager.getIdentitiesByProfileFilter(OrganizationIdentityProvider.NAME, profileFilter, false);
+  private Identity getIdentity(String userId) {
+    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
     try {
-      if (identities.getSize() > 0) {
-        return identities.load(0, 1)[0];
+      if (userIdentity != null) {
+        return userIdentity;
+      } else {
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
+
+        // Try to see if space was renamed
+        if (spaceIdentity == null) {
+          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
+          spaceIdentity = getIdentity(space.getPrettyName());
+        }
+
+        return spaceIdentity;
       }
     } catch (Exception e) {
       log.error(e);

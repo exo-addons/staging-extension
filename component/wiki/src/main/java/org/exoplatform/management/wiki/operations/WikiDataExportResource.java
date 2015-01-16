@@ -157,6 +157,9 @@ public class WikiDataExportResource implements OperationHandler {
       RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(pageActivity);
       if (commentsListAccess.getSize() > 0) {
         List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        for (ExoSocialActivity exoSocialActivityComment : comments) {
+          exoSocialActivityComment.isComment(true);
+        }
         activitiesList.addAll(comments);
       }
     }

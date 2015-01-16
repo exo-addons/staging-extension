@@ -197,6 +197,9 @@ public class SiteContentsExportResource implements OperationHandler {
             RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
             if (commentsListAccess.getSize() > 0) {
               List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+              for (ExoSocialActivity exoSocialActivityComment : comments) {
+                exoSocialActivityComment.isComment(true);
+              }
               activities.addAll(comments);
             }
           }

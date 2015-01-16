@@ -209,6 +209,9 @@ public class ForumDataExportResource implements OperationHandler {
       RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(topicActivity);
       if (commentsListAccess.getSize() > 0) {
         List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+        for (ExoSocialActivity exoSocialActivityComment : comments) {
+          exoSocialActivityComment.isComment(true);
+        }
         activitiesList.addAll(comments);
       }
     }

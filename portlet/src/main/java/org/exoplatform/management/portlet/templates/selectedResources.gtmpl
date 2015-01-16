@@ -93,6 +93,8 @@
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/social/space_IMPORT_filter/replace-existing']"><span>Replace existing</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/social/space_IMPORT_filter/create-users"
+                                                ng-model="optionsModel['/social/space_IMPORT_filter/create-users']"><span>Create not found members</span></label>
     </div>
     <div ng-show="mode == 'export' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input ng-init="optionsModel['/social/space_EXPORT_filter/export-activities']=true" class="option" type="checkbox" name="/social/space_EXPORT_filter/export-activities" ng-checked="optionsModel['/social/space_EXPORT_filter/export-activities']" ng-disabled="true"
