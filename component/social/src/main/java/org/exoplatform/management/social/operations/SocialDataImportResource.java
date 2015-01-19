@@ -250,6 +250,9 @@ public class SocialDataImportResource implements OperationHandler {
       if (space.getAvatarAttachment() == null) {
         space.setAvatarAttachment(avatarAttachment);
       }
+      if (space.getEditor() == null) {
+        space.setEditor(space.getManagers().length > 0 ? space.getManagers()[0] : userACL.getSuperUser());
+      }
       spaceService.updateSpaceAvatar(space);
     } catch (Exception e) {
       log.error("Error while updating Space '" + space.getDisplayName() + "' avatar.", e);
@@ -533,20 +536,16 @@ public class SocialDataImportResource implements OperationHandler {
     // Filter on existing users
     String[] members = getExistingUsers(spaceMetaData.getMembers());
     if (members == null || members.length == 0) {
-      space.setMembers(new String[] { userACL.getSuperUser() });
+      members = new String[] { userACL.getSuperUser() };
       log.warn("Members '" + Arrays.toString(spaceMetaData.getMembers()) + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getMembers())
           + "' will be used instead.");
-    } else {
-      space.setMembers(members);
     }
 
     String[] managers = getExistingUsers(spaceMetaData.getManagers());
     if (managers == null || managers.length == 0) {
-      space.setManagers(new String[] { userACL.getSuperUser() });
+      managers = new String[] { userACL.getSuperUser() };
       log.warn("Managers '" + Arrays.toString(spaceMetaData.getManagers()) + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getManagers())
           + "' will be used instead.");
-    } else {
-      space.setManagers(managers);
     }
 
     String[] editor = getExistingUsers(spaceMetaData.getEditor());
@@ -574,10 +573,19 @@ public class SocialDataImportResource implements OperationHandler {
     RequestLifeCycle.begin(PortalContainer.getInstance());
     log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");
     for (String member : members) {
-      spaceService.addMember(space, member);
+      try {
+        spaceService.addMember(space, member);
+      } catch (Exception e) {
+        log.warn("Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
+      }
     }
+    log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
     for (String manager : managers) {
-      spaceService.setManager(space, manager, true);
+      try {
+        spaceService.setManager(space, manager, true);
+      } catch (Exception e) {
+        log.warn("Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
+      }
     }
     RequestLifeCycle.end();
 

@@ -437,6 +437,7 @@ public class ForumDataImportResource implements OperationHandler {
         log.warn("Cannot get identity of space '" + spacePrettyName + "'");
         return;
       }
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     }
