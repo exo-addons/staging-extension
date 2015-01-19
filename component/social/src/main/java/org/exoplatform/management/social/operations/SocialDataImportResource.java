@@ -251,7 +251,7 @@ public class SocialDataImportResource implements OperationHandler {
         space.setAvatarAttachment(avatarAttachment);
       }
       if (space.getEditor() == null) {
-        space.setEditor(space.getManagers().length > 0 ? space.getManagers()[0] : userACL.getSuperUser());
+        space.setEditor(space.getManagers() != null && space.getManagers().length > 0 ? space.getManagers()[0] : userACL.getSuperUser());
       }
       spaceService.updateSpaceAvatar(space);
     } catch (Exception e) {
@@ -537,21 +537,19 @@ public class SocialDataImportResource implements OperationHandler {
     String[] members = getExistingUsers(spaceMetaData.getMembers());
     if (members == null || members.length == 0) {
       members = new String[] { userACL.getSuperUser() };
-      log.warn("Members '" + Arrays.toString(spaceMetaData.getMembers()) + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getMembers())
-          + "' will be used instead.");
+      log.warn("Members of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getMembers()) + "' will be used instead.");
     }
 
     String[] managers = getExistingUsers(spaceMetaData.getManagers());
     if (managers == null || managers.length == 0) {
       managers = new String[] { userACL.getSuperUser() };
-      log.warn("Managers '" + Arrays.toString(spaceMetaData.getManagers()) + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getManagers())
-          + "' will be used instead.");
+      log.warn("Managers of space '" + spaceMetaData.getDisplayName() + "' is empty, the super user '" + Arrays.toString(space.getManagers()) + "' will be used instead.");
     }
 
     String[] editor = getExistingUsers(spaceMetaData.getEditor());
     if (editor == null || editor.length == 0) {
-      space.setEditor(space.getManagers()[0]);
-      log.warn("Editor '" + spaceMetaData.getEditor() + "' of space '" + spaceMetaData.getDisplayName() + "' is empty, the manager '" + space.getManagers()[0] + "' will be used instead.");
+      space.setEditor(managers[0]);
+      log.warn("Editor of space '" + spaceMetaData.getDisplayName() + "' is empty, the manager '" + space.getEditor() + "' will be used instead.");
     } else {
       space.setEditor(editor[0]);
     }

@@ -659,7 +659,7 @@ public class WikiDataImportResource implements OperationHandler {
         return spaceIdentity;
       }
     } catch (Exception e) {
-      log.error(e);
+      log.error("Error while getting identity", e);
     }
     return null;
   }
