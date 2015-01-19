@@ -273,85 +273,99 @@ public class AnswerDataImportResource implements OperationHandler {
     deleteActivities(category.getId(), questions);
   }
 
+  @SuppressWarnings("unchecked")
   private void createActivities(File activitiesFile, String spacePrettyName) {
     log.info("Importing Answer activities");
+
+    List<ExoSocialActivity> activities = null;
+
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(activitiesFile);
-
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
 
-      @SuppressWarnings("unchecked")
-      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-      Identity identity = null;
-      for (ExoSocialActivity activity : activities) {
-        identity = getIdentity(activity.getUserId());
-
-        if (identity != null) {
-          activity.setUserId(identity.getId());
-
-          identity = getIdentity(activity.getPosterId());
-
-          if (identity != null) {
-            activity.setPosterId(identity.getId());
-            activitiesList.add(activity);
-
-            Set<String> keys = activity.getTemplateParams().keySet();
-            for (String key : keys) {
-              String value = activity.getTemplateParams().get(key);
-              if (value != null) {
-                activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
-              }
-            }
-            if (StringUtils.isNotEmpty(activity.getTitle())) {
-              activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
-            }
-            if (StringUtils.isNotEmpty(activity.getBody())) {
-              activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
-            }
-            if (StringUtils.isNotEmpty(activity.getSummary())) {
-              activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
-            }
-          }
-          activity.setReplyToId(null);
-          String[] commentedIds = activity.getCommentedIds();
-          if (commentedIds != null && commentedIds.length > 0) {
-            for (int i = 0; i < commentedIds.length; i++) {
-              identity = getIdentity(commentedIds[i]);
-              if (identity != null) {
-                commentedIds[i] = identity.getId();
-              }
-            }
-            activity.setCommentedIds(commentedIds);
-          }
-          String[] mentionedIds = activity.getMentionedIds();
-          if (mentionedIds != null && mentionedIds.length > 0) {
-            for (int i = 0; i < mentionedIds.length; i++) {
-              identity = getIdentity(mentionedIds[i]);
-              if (identity != null) {
-                mentionedIds[i] = identity.getId();
-              }
-            }
-            activity.setMentionedIds(mentionedIds);
-          }
-          String[] likeIdentityIds = activity.getLikeIdentityIds();
-          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
-            for (int i = 0; i < likeIdentityIds.length; i++) {
-              identity = getIdentity(likeIdentityIds[i]);
-              if (identity != null) {
-                likeIdentityIds[i] = identity.getId();
-              }
-            }
-            activity.setLikeIdentityIds(likeIdentityIds);
-          }
+      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+    } catch (FileNotFoundException e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
         }
       }
-      ExoSocialActivity questionActivity = null;
-      String questionId = null;
-      Question question = null;
-      for (ExoSocialActivity exoSocialActivity : activitiesList) {
+    }
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    Identity identity = null;
+    for (ExoSocialActivity activity : activities) {
+      identity = getIdentity(activity.getUserId());
+
+      if (identity != null) {
+        activity.setUserId(identity.getId());
+
+        identity = getIdentity(activity.getPosterId());
+
+        if (identity != null) {
+          activity.setPosterId(identity.getId());
+          activitiesList.add(activity);
+
+          Set<String> keys = activity.getTemplateParams().keySet();
+          for (String key : keys) {
+            String value = activity.getTemplateParams().get(key);
+            if (value != null) {
+              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+            }
+          }
+          if (StringUtils.isNotEmpty(activity.getTitle())) {
+            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+          }
+          if (StringUtils.isNotEmpty(activity.getBody())) {
+            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+          }
+          if (StringUtils.isNotEmpty(activity.getSummary())) {
+            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+          }
+        }
+        activity.setReplyToId(null);
+        String[] commentedIds = activity.getCommentedIds();
+        if (commentedIds != null && commentedIds.length > 0) {
+          for (int i = 0; i < commentedIds.length; i++) {
+            identity = getIdentity(commentedIds[i]);
+            if (identity != null) {
+              commentedIds[i] = identity.getId();
+            }
+          }
+          activity.setCommentedIds(commentedIds);
+        }
+        String[] mentionedIds = activity.getMentionedIds();
+        if (mentionedIds != null && mentionedIds.length > 0) {
+          for (int i = 0; i < mentionedIds.length; i++) {
+            identity = getIdentity(mentionedIds[i]);
+            if (identity != null) {
+              mentionedIds[i] = identity.getId();
+            }
+          }
+          activity.setMentionedIds(mentionedIds);
+        }
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
+          for (int i = 0; i < likeIdentityIds.length; i++) {
+            identity = getIdentity(likeIdentityIds[i]);
+            if (identity != null) {
+              likeIdentityIds[i] = identity.getId();
+            }
+          }
+          activity.setLikeIdentityIds(likeIdentityIds);
+        }
+      }
+    }
+    ExoSocialActivity questionActivity = null;
+    String questionId = null;
+    Question question = null;
+    for (ExoSocialActivity exoSocialActivity : activitiesList) {
+      try {
         exoSocialActivity.setId(null);
         if (exoSocialActivity.getTemplateParams() == null) {
           log.warn("Answer Activity TemplateParams is null, can't process activity: '" + exoSocialActivity.getTitle() + "'.");
@@ -410,16 +424,8 @@ public class AnswerDataImportResource implements OperationHandler {
             questionActivity = exoSocialActivity;
           }
         }
-      }
-    } catch (Exception e) {
-      log.warn("Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
+      } catch (Exception e) {
+        log.warn("Error while adding activity: " + exoSocialActivity.getTitle(), e);
       }
     }
   }

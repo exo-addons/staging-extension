@@ -168,32 +168,39 @@ public class SocialDataImportResource implements OperationHandler {
           }
         });
 
+        List<File> activitiesFileList = new ArrayList<File>();
+
         for (String fileKey : filesKeysList) {
           File fileToImport = spaceFiles.get(fileKey);
           if (fileKey.equals(SocialExtension.ANSWER_RESOURCE_PATH) || fileKey.equals(SocialExtension.CALENDAR_RESOURCE_PATH) || fileKey.equals(SocialExtension.CONTENT_RESOURCE_PATH)
               || fileKey.equals(SocialExtension.FAQ_RESOURCE_PATH) || fileKey.equals(SocialExtension.FORUM_RESOURCE_PATH) || fileKey.equals(SocialExtension.WIKI_RESOURCE_PATH)
               || fileKey.equals(SocialExtension.SITES_IMPORT_RESOURCE_PATH)) {
             importSubResource(fileToImport, fileKey);
+            deleteTempFile(fileToImport);
           } else {
             if (fileKey.contains(SpaceActivitiesExportTask.FILENAME)) {
-              createActivities(extractedSpacePrettyName, fileToImport);
+              activitiesFileList.add(fileToImport);
             } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
               updateDashboard(space.getGroupId(), fileToImport);
+              deleteTempFile(fileToImport);
             } else if (fileToImport.getAbsolutePath().contains(SpaceAvatarExportTask.FILENAME)) {
               updateAvatar(space, fileToImport);
+              deleteTempFile(fileToImport);
             } else {
               log.warn("Cannot handle file: " + fileToImport.getAbsolutePath() + ". Ignore it.");
+              deleteTempFile(fileToImport);
             }
           }
-          try {
-            fileToImport.delete();
-          } catch (Exception e) {
-            log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
-          }
         }
+
+        for (File file : activitiesFileList) {
+          createActivities(extractedSpacePrettyName, file);
+          deleteTempFile(file);
+        }
+
         log.info("Import operation finished successfully for space: " + extractedSpacePrettyName);
       }
-      log.info("Import operation finished successfully.");
+      log.info("Import operation finished successfully for all space.");
     } catch (IOException e) {
       log.warn("Cannot create temporary file.", e);
     } finally {
@@ -213,6 +220,14 @@ public class SocialDataImportResource implements OperationHandler {
     }
 
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void deleteTempFile(File fileToImport) {
+    try {
+      FileUtils.forceDelete(fileToImport);
+    } catch (Exception e) {
+      log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
+    }
   }
 
   private void deleteSpaceActivities(String extractedSpacePrettyName) {
@@ -235,6 +250,8 @@ public class SocialDataImportResource implements OperationHandler {
   }
 
   private void updateAvatar(Space space, File fileToImport) {
+    log.info("Update Space avatar '" + space.getDisplayName() + "'");
+
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(fileToImport);
@@ -249,9 +266,6 @@ public class SocialDataImportResource implements OperationHandler {
 
       if (space.getAvatarAttachment() == null) {
         space.setAvatarAttachment(avatarAttachment);
-      }
-      if (space.getEditor() == null) {
-        space.setEditor(space.getManagers() != null && space.getManagers().length > 0 ? space.getManagers()[0] : userACL.getSuperUser());
       }
       spaceService.updateSpaceAvatar(space);
     } catch (Exception e) {
@@ -310,14 +324,23 @@ public class SocialDataImportResource implements OperationHandler {
   private void createActivities(String spacePrettyName, File activitiesFile) {
     log.info("Importing space '" + spacePrettyName + "' activities.");
     List<ExoSocialActivity> activities = null;
+    FileInputStream inputStream = null;
     try {
-      FileInputStream inputStream = new FileInputStream(activitiesFile);
+      inputStream = new FileInputStream(activitiesFile);
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
 
       activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
     } catch (FileNotFoundException e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + activitiesFile.getAbsolutePath(), e);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
     }
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
     Identity identity = null;
@@ -509,10 +532,19 @@ public class SocialDataImportResource implements OperationHandler {
             user.setEmail(member + "@example.com");
             user.setPassword("" + Math.random());
             log.info("     Create not found user of space: '" + member + "' with random password.");
-            organizationService.getUserHandler().createUser(user, true);
+            try {
+              organizationService.getUserHandler().createUser(user, true);
+            } catch (RuntimeException e) {
+              // The user JCR data are already in the JCR
+              if (null == organizationService.getUserHandler().findUserByName(member)) {
+                organizationService.getUserHandler().createUser(user, false);
+              } else {
+                throw e;
+              }
+            }
           }
         } catch (Exception e) {
-          log.warn("Exception while attempting to create the user: " + member, e);
+          log.warn("Exception while creating the user: " + member, e);
         }
       }
       RequestLifeCycle.end();
@@ -566,6 +598,7 @@ public class SocialDataImportResource implements OperationHandler {
     if (isRenamed) {
       log.info("Rename space from '" + oldSpacePrettyName + "' to '" + newSpacePrettyName + "'.");
       spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
+      space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
     }
 
     RequestLifeCycle.begin(PortalContainer.getInstance());
@@ -577,7 +610,9 @@ public class SocialDataImportResource implements OperationHandler {
         log.warn("Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
       }
     }
+
     log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
+
     for (String manager : managers) {
       try {
         spaceService.setManager(space, manager, true);
@@ -592,7 +627,7 @@ public class SocialDataImportResource implements OperationHandler {
   }
 
   private String[] getExistingUsers(String... users) {
-    List<String> existingUsers = new ArrayList<String>();
+    Set<String> existingUsers = new HashSet<String>();
     if (users != null && users.length > 0) {
       for (String userId : users) {
         if (userId == null || userId.isEmpty()) {
@@ -629,7 +664,7 @@ public class SocialDataImportResource implements OperationHandler {
         throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unknown error while importing to path: " + subResourcePath);
       }
     } catch (FileNotFoundException e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + tempFile.getAbsolutePath(), e);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (tempFile != null ? tempFile.getAbsolutePath() : tempFile), e);
     } finally {
       if (inputStream != null) {
         try {

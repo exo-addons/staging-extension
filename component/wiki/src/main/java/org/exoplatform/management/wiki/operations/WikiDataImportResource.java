@@ -480,21 +480,35 @@ public class WikiDataImportResource implements OperationHandler {
     return file;
   }
 
+  @SuppressWarnings("unchecked")
   private void createActivities(File activitiesFile) {
     log.info("Importing Wiki activities");
+
+    List<ExoSocialActivity> activities = null;
+
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(activitiesFile);
-
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
 
-      @SuppressWarnings("unchecked")
-      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-      List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
+      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+    } catch (FileNotFoundException e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
 
-      ExoSocialActivity pageActivity = null;
-      for (ExoSocialActivity activity : activitiesList) {
+    ExoSocialActivity pageActivity = null;
+    for (ExoSocialActivity activity : activitiesList) {
+      try {
         activity.setId(null);
         String pageId = activity.getTemplateParams().get("page_id");
         String pageOwner = activity.getTemplateParams().get("page_owner");
@@ -532,16 +546,8 @@ public class WikiDataImportResource implements OperationHandler {
             pageActivity = activity;
           }
         }
-      }
-    } catch (Exception e) {
-      log.warn("Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
+      } catch (Exception e) {
+        log.warn("Error while adding activity: " + activity.getTitle(), e);
       }
     }
   }
@@ -653,7 +659,11 @@ public class WikiDataImportResource implements OperationHandler {
         // Try to see if space was renamed
         if (spaceIdentity == null) {
           Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
-          spaceIdentity = getIdentity(space.getPrettyName());
+          if (space != null) {
+            spaceIdentity = getIdentity(space.getPrettyName());
+          } else {
+            log.warn("Cannot get identity for: " + userId);
+          }
         }
 
         return spaceIdentity;

@@ -650,19 +650,33 @@ public class SiteContentsImportResource implements OperationHandler {
 
   private void createActivities(File activitiesFile) {
     log.info("Importing Documents activities");
+
+    List<ExoSocialActivity> activities = null;
+
     FileInputStream inputStream = null;
     try {
       inputStream = new FileInputStream(activitiesFile);
-
       // Unmarshall metadata xml file
       XStream xstream = new XStream();
 
-      @SuppressWarnings("unchecked")
-      List<ExoSocialActivity> activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-      List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
+      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+    } catch (FileNotFoundException e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
 
-      ExoSocialActivity documentActivity = null;
-      for (ExoSocialActivity activity : activitiesList) {
+    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
+
+    ExoSocialActivity documentActivity = null;
+    for (ExoSocialActivity activity : activitiesList) {
+      try {
         activity.setId(null);
 
         String contentLink = activity.getTemplateParams().get("contenLink");
@@ -716,16 +730,8 @@ public class SiteContentsImportResource implements OperationHandler {
             documentActivity = activity;
           }
         }
-      }
-    } catch (Exception e) {
-      log.warn("Error while importing activities: " + activitiesFile.getAbsolutePath(), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
+      } catch (Exception e) {
+        log.warn("Error while adding activity: " + activity.getTitle(), e);
       }
     }
   }
