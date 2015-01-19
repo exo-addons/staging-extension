@@ -759,6 +759,7 @@ public class SiteContentsImportResource implements OperationHandler {
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveComment(activity, comment);
+    activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
     activityManager.saveActivityNoReturn(activity);
     log.info("Site Content activity comment: '" + activity.getTitle() + " is imported.");

@@ -167,8 +167,11 @@ public class ForumDataImportResource implements OperationHandler {
           forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
           // Import activities
           if (activitiesFile != null && activitiesFile.exists()) {
-            String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-            createActivities(activitiesFile, spacePrettyName);
+            String spaceGroupName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+            String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + spaceGroupName;
+            Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+
+            createActivities(activitiesFile, space.getPrettyName());
           }
         } else {
           Category category = forumService.getCategory(categoryId);
@@ -452,6 +455,7 @@ public class ForumDataImportResource implements OperationHandler {
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveComment(activity, comment);
+    activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
     log.info("Forum activity comment: '" + activity.getTitle() + " is imported.");

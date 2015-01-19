@@ -189,9 +189,11 @@ public class CalendarDataImportResource implements OperationHandler {
       }
       for (File activitiesFile : activitiesFiles) {
         String tempFilePath = activitiesFile.getAbsolutePath();
-        String spacePrettyName = tempFilePath.contains("_space_calendar") ? tempFilePath.substring(
+        String spaceGroupName = tempFilePath.contains("_space_calendar") ? tempFilePath.substring(
             tempFilePath.indexOf(CalendarExportTask.CALENDAR_SEPARATOR) + CalendarExportTask.CALENDAR_SEPARATOR.length(), tempFilePath.indexOf("_space_calendar")) : null;
-        createActivities(activitiesFile, spacePrettyName);
+        String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + spaceGroupName;
+        Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+        createActivities(activitiesFile, space.getPrettyName());
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import calendar contents", e);
@@ -714,6 +716,7 @@ public class CalendarDataImportResource implements OperationHandler {
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveComment(activity, comment);
+    activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
     log.info("Calendar activity comment: '" + activity.getTitle() + " is imported.");

@@ -452,6 +452,7 @@ public class AnswerDataImportResource implements OperationHandler {
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveComment(activity, comment);
+    activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
     log.info("Answer activity comment: '" + activity.getTitle() + " is imported.");

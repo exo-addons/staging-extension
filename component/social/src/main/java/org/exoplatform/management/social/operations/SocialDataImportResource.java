@@ -245,6 +245,7 @@ public class SocialDataImportResource implements OperationHandler {
           activityManager.deleteActivity(commentActivity);
         }
       }
+      log.info("Delete activity : " + activity.getTitle());
       activityManager.deleteActivity(activity);
     }
   }
@@ -261,8 +262,12 @@ public class SocialDataImportResource implements OperationHandler {
       AvatarAttachment avatarAttachment = (AvatarAttachment) xstream.fromXML(reader);
       space.setAvatarAttachment(avatarAttachment);
 
+      fixSpaceEditor(space);
+
       space = spaceService.updateSpace(space);
       space = spaceService.getSpaceByGroupId(space.getGroupId());
+
+      fixSpaceEditor(space);
 
       if (space.getAvatarAttachment() == null) {
         space.setAvatarAttachment(avatarAttachment);
@@ -278,6 +283,13 @@ public class SocialDataImportResource implements OperationHandler {
           log.warn("Cannot close input stream: " + fileToImport.getAbsolutePath() + ". Ignore non blocking operation.");
         }
       }
+    }
+  }
+
+  private void fixSpaceEditor(Space space) {
+    if (space.getEditor() == null) {
+      // Fix space editor that is always null
+      space.setEditor(space.getManagers()[0]);
     }
   }
 
@@ -454,6 +466,7 @@ public class SocialDataImportResource implements OperationHandler {
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveComment(activity, comment);
+    activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
     log.info("Space activity comment: '" + activity.getTitle() + " is imported.");
@@ -497,20 +510,26 @@ public class SocialDataImportResource implements OperationHandler {
     Space space = spaceService.getSpaceByGroupId(spaceMetaData.getGroupId());
     if (space != null) {
       if (replaceExisting) {
-        RequestLifeCycle.begin(PortalContainer.getInstance());
-        log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
         String groupId = space.getGroupId();
+
+        log.info("Delete space activities: '" + spaceMetaData.getPrettyName() + "'.");
+        deleteSpaceActivities(space.getPrettyName());
+
+        log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
         spaceService.deleteSpace(space);
-        // FIXME deleting a space don't delete the corresponding group
+
+        // FIXME Workaround: deleting a space don't delete the corresponding
+        // group
+        RequestLifeCycle.begin(PortalContainer.getInstance());
         Group group = organizationService.getGroupHandler().findGroupById(groupId);
         if (group != null) {
           organizationService.getGroupHandler().removeGroup(group, true);
         }
+        RequestLifeCycle.end();
 
         // FIXME Answer Bug: deleting a space don't delete answers category, but
         // it will be deleted if answer data is imported
 
-        RequestLifeCycle.end();
       } else {
         log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space import.");
         return true;
@@ -537,6 +556,7 @@ public class SocialDataImportResource implements OperationHandler {
             } catch (RuntimeException e) {
               // The user JCR data are already in the JCR
               if (null == organizationService.getUserHandler().findUserByName(member)) {
+                log.warn("Exception while creating the user '" + member + "' with broadcasting event, try without broadcast", e);
                 organizationService.getUserHandler().createUser(user, false);
               } else {
                 throw e;
@@ -580,11 +600,10 @@ public class SocialDataImportResource implements OperationHandler {
 
     String[] editor = getExistingUsers(spaceMetaData.getEditor());
     if (editor == null || editor.length == 0) {
-      space.setEditor(managers[0]);
-      log.warn("Editor of space '" + spaceMetaData.getDisplayName() + "' is empty, the manager '" + space.getEditor() + "' will be used instead.");
-    } else {
-      space.setEditor(editor[0]);
+      editor = new String[] { managers[0] };
+      log.warn("Editor of space '" + spaceMetaData.getDisplayName() + "' is empty, the manager '" + editor[0] + "' will be used instead.");
     }
+    space.setEditor(editor[0]);
 
     space.setInvitedUsers(getExistingUsers(spaceMetaData.getInvitedUsers()));
 
@@ -601,21 +620,26 @@ public class SocialDataImportResource implements OperationHandler {
       space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
     }
 
+    fixSpaceEditor(space);
+
     RequestLifeCycle.begin(PortalContainer.getInstance());
     log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");
     for (String member : members) {
       try {
         spaceService.addMember(space, member);
+        log.info("User '" + member + "' added to space as member: '" + spaceMetaData.getPrettyName() + "'.");
       } catch (Exception e) {
         log.warn("Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
       }
     }
 
-    log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
+    fixSpaceEditor(space);
 
+    log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
     for (String manager : managers) {
       try {
         spaceService.setManager(space, manager, true);
+        log.info("User '" + manager + "' promoted to manager of space: '" + spaceMetaData.getPrettyName() + "'.");
       } catch (Exception e) {
         log.warn("Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
       }

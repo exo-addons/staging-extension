@@ -151,9 +151,16 @@ public class WikiDataImportResource implements OperationHandler {
 
         String activitiesFilePath = tempFolderPath + replaceSpecialChars(WikiActivitiesExportTask.getEntryPath(wiki.getType(), wikiOwner));
         File activitiesFile = new File(activitiesFilePath);
+
+        String spacePrettyName = null;
+        if (WikiType.GROUP.equals(wikiType)) {
+          Space space = spaceService.getSpaceByGroupId(wikiOwner);
+          spacePrettyName = space.getPrettyName();
+        }
+
         // Import activities
         if (activitiesFile.exists()) {
-          createActivities(activitiesFile);
+          createActivities(activitiesFile, spacePrettyName);
         }
       }
     } catch (Exception e) {
@@ -481,7 +488,7 @@ public class WikiDataImportResource implements OperationHandler {
   }
 
   @SuppressWarnings("unchecked")
-  private void createActivities(File activitiesFile) {
+  private void createActivities(File activitiesFile, String spacePrettyName) {
     log.info("Importing Wiki activities");
 
     List<ExoSocialActivity> activities = null;
@@ -536,7 +543,7 @@ public class WikiDataImportResource implements OperationHandler {
             saveComment(pageActivity, activity);
           } else {
             pageActivity = null;
-            saveActivity(activity, pageOwner);
+            saveActivity(activity, spacePrettyName);
             if (activity.getId() == null) {
               log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
               continue;
@@ -552,14 +559,13 @@ public class WikiDataImportResource implements OperationHandler {
     }
   }
 
-  private void saveActivity(ExoSocialActivity activity, String pageOwner) {
+  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
     long updatedTime = activity.getUpdated().getTime();
-    if (pageOwner == null || !pageOwner.startsWith(SpaceUtils.SPACE_GROUP)) {
+    if (spacePrettyName == null) {
       activityManager.saveActivityNoReturn(activity);
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     } else {
-      String spacePrettyName = pageOwner.replace(SpaceUtils.SPACE_GROUP + "/", "");
       Identity spaceIdentity = getIdentity(spacePrettyName);
       if (spaceIdentity == null) {
         log.warn("Cannot get identity of space '" + spacePrettyName + "'");
@@ -569,12 +575,13 @@ public class WikiDataImportResource implements OperationHandler {
       activity.setUpdated(updatedTime);
       activityManager.updateActivity(activity);
     }
-    log.info("Wiki activity : '" + activity.getTitle() + " is imported.");
+    log.info("Wiki activity : '" + activity.getTitle() + "' is imported.");
   }
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveComment(activity, comment);
+    activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
     activityManager.updateActivity(activity);
     log.info("Wiki activity comment: '" + activity.getTitle() + " is imported.");
