@@ -231,6 +231,8 @@ public class SocialDataImportResource implements OperationHandler {
   }
 
   private void deleteSpaceActivities(String extractedSpacePrettyName) {
+    log.info("Delete space activities");
+
     if (activityStorage instanceof CachedActivityStorage) {
       ((CachedActivityStorage) activityStorage).clearCache();
     }
@@ -245,7 +247,7 @@ public class SocialDataImportResource implements OperationHandler {
           activityManager.deleteActivity(commentActivity);
         }
       }
-      log.info("Delete activity : " + activity.getTitle());
+      log.info("   Delete activity : " + activity.getTitle());
       activityManager.deleteActivity(activity);
     }
   }

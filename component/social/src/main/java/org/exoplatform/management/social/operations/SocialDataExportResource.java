@@ -131,6 +131,8 @@ public class SocialDataExportResource implements OperationHandler {
       filters.add(spaceDisplayName);
       attributesMap.put("filter", filters);
 
+      Set<String> alreadyExportedPaths = new HashSet<String>();
+
       for (String application : appsSet) {
         String path = getEntryResourcePath(application);
         if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.WIKI_RESOURCE_PATH) && !exportWiki)
@@ -138,7 +140,11 @@ public class SocialDataExportResource implements OperationHandler {
             || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
           continue;
         }
-        addResourceExportTasks(exportTasks, attributesMap, path, space.getPrettyName());
+
+        if (!alreadyExportedPaths.contains(path)) {
+          addResourceExportTasks(exportTasks, attributesMap, path, space.getPrettyName());
+          alreadyExportedPaths.add(path);
+        }
         // TODO Export/import Dashboard gadgets
         // else if (application.contains(SocialExtension.DASHBOARD_PORTLET)) {
         // Dashboard dashboard =
