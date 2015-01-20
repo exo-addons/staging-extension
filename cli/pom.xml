@@ -22,10 +22,8 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<inherited>false</inherited>
 				<configuration>
-					<!-- Use this to override parent value -->
-					<packagingExcludes>WEB-INF/crash.properties,WEB-INF/lib/bcprov*.jar,WEB-INF/lib/groovy*.jar</packagingExcludes>
-					<dependentWarIncludes>**,WEB-INF/lib/*.jar</dependentWarIncludes>
-					<dependentWarExcludes>WEB-INF/crash.properties,WEB-INF/lib/bcprov*.jar,WEB-INF/lib/groovy*.jar</dependentWarExcludes>
+					<!-- Use this to override parent file -->
+					<dependentWarExcludes>WEB-INF/crash/commands/gatein/import.groovy</dependentWarExcludes>
 				</configuration>
 			</plugin>
 		</plugins>

@@ -1,26 +1,50 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2011, Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags. See the copyright.txt file in the
+ * distribution for a full listing of individual contributors.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
+
 package org.exoplatform.management.mop.binding;
 
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 
-import org.exoplatform.portal.config.model.ModelUnmarshaller;
+import org.exoplatform.management.mop.binding.xml.NavigationMarshaller;
+import org.exoplatform.management.mop.binding.xml.PageMarshaller;
+import org.exoplatform.management.mop.binding.xml.SiteLayoutMarshaller;
 import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.config.model.PageNavigation;
 import org.exoplatform.portal.config.model.PortalConfig;
-import org.exoplatform.portal.mop.management.binding.xml.NavigationMarshaller;
-import org.exoplatform.portal.mop.management.binding.xml.PageMarshaller;
-import org.exoplatform.portal.mop.management.binding.xml.SiteLayoutMarshaller;
 import org.gatein.management.api.ContentType;
 import org.gatein.management.api.binding.BindingException;
 import org.gatein.management.api.binding.BindingProvider;
 import org.gatein.management.api.binding.Marshaller;
 
-public class CustomMopBindingProvider implements BindingProvider {
-  public static final CustomMopBindingProvider INSTANCE = new CustomMopBindingProvider();
+/**
+ * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
+ * @version $Revision$
+ */
+public class MopBindingProvider implements BindingProvider {
+  public static final MopBindingProvider INSTANCE = new MopBindingProvider();
 
-  private CustomMopBindingProvider() {
-  }
+  private MopBindingProvider() {}
 
   @Override
   public <T> Marshaller<T> getMarshaller(Class<T> type, ContentType contentType) throws BindingException {
@@ -53,24 +77,20 @@ public class CustomMopBindingProvider implements BindingProvider {
 
     // ------------------------------------ Page Marshallers
     // ------------------------------------//
-    private static Marshaller<Page.PageSet> pages_marshaller = new PageMarshaller() {
-      public Page.PageSet unmarshal(InputStream inputStream) throws BindingException {
-        try {
-          return ModelUnmarshaller.unmarshall(Page.PageSet.class, inputStream).getObject();
-        } catch (Exception e) {
-          throw new BindingException(e);
-        }
-      }
-    };
+    private static Marshaller<Page.PageSet> pages_marshaller = new PageMarshaller();
 
     private static Marshaller<Page> page_marshaller = new Marshaller<Page>() {
-      @Override
+
+      public void marshal(Page object, OutputStream outputStream, boolean pretty) throws BindingException {
+        marshal(object, outputStream);
+      }
+
       public void marshal(Page page, OutputStream outputStream) throws BindingException {
         Page.PageSet pages = new Page.PageSet();
         pages.setPages(new ArrayList<Page>(1));
         pages.getPages().add(page);
 
-        XmlMarshallers.pages_marshaller.marshal(pages, outputStream);
+        XmlMarshallers.pages_marshaller.marshal(pages, outputStream, false);
       }
 
       @Override
@@ -87,24 +107,8 @@ public class CustomMopBindingProvider implements BindingProvider {
       }
     };
 
-    private static Marshaller<PageNavigation> navigation_marshaller = new NavigationMarshaller() {
-      public PageNavigation unmarshal(InputStream inputStream) throws BindingException {
-        try {
-          return ModelUnmarshaller.unmarshall(PageNavigation.class, inputStream).getObject();
-        } catch (Exception e) {
-          throw new BindingException(e);
-        }
-      }
-    };
+    private static Marshaller<PageNavigation> navigation_marshaller = new NavigationMarshaller();
 
-    private static Marshaller<PortalConfig> site_marshaller = new SiteLayoutMarshaller() {
-      public PortalConfig unmarshal(InputStream inputStream) throws BindingException {
-        try {
-          return ModelUnmarshaller.unmarshall(PortalConfig.class, inputStream).getObject();
-        } catch (Exception e) {
-          throw new BindingException(e);
-        }
-      }
-    };
+    private static Marshaller<PortalConfig> site_marshaller = new SiteLayoutMarshaller();
   }
 }

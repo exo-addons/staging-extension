@@ -229,7 +229,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       tmpFile = File.createTempFile("staging", "-export.zip");
 
       outputStream = new FileOutputStream(tmpFile);
-      managedResponse.writeResult(outputStream);
+      managedResponse.writeResult(outputStream, false);
 
       outputStream.flush();
       outputStream.close();
@@ -269,7 +269,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       tmpFile.deleteOnExit();
 
       fileOutputStream = new FileOutputStream(tmpFile);
-      managedResponse.writeResult(fileOutputStream);
+      managedResponse.writeResult(fileOutputStream, false);
       fileOutputStream.close();
 
       getLogger().info("Export operation finished.");

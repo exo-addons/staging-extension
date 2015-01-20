@@ -1,4 +1,4 @@
-package org.exoplatform.management.mop.operation;
+package org.exoplatform.management.mop.operations;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,14 +14,12 @@ import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.description.DescriptionService;
 import org.exoplatform.portal.mop.importer.ImportMode;
-import org.exoplatform.portal.mop.management.exportimport.NavigationExportTask;
-import org.exoplatform.portal.mop.management.exportimport.NavigationImportTask;
-import org.exoplatform.portal.mop.management.exportimport.PageExportTask;
-import org.exoplatform.portal.mop.management.exportimport.PageImportTask;
-import org.exoplatform.portal.mop.management.exportimport.SiteLayoutExportTask;
-import org.exoplatform.portal.mop.management.exportimport.SiteLayoutImportTask;
-import org.exoplatform.portal.mop.management.operations.MOPSiteProvider;
-import org.exoplatform.portal.mop.management.operations.Utils;
+import org.exoplatform.management.mop.exportimport.NavigationExportTask;
+import org.exoplatform.management.mop.exportimport.NavigationImportTask;
+import org.exoplatform.management.mop.exportimport.PageExportTask;
+import org.exoplatform.management.mop.exportimport.PageImportTask;
+import org.exoplatform.management.mop.exportimport.SiteLayoutExportTask;
+import org.exoplatform.management.mop.exportimport.SiteLayoutImportTask;
 import org.exoplatform.portal.mop.navigation.NavigationService;
 import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.pom.config.POMSession;
@@ -40,8 +38,8 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
-public class CustomMopImportResource implements OperationHandler {
-  private static final Logger log = LoggerFactory.getLogger(CustomMopImportResource.class);
+public class MopImportResource implements OperationHandler {
+  private static final Logger log = LoggerFactory.getLogger(MopImportResource.class);
 
   // TODO: Would like to see the step operations be handled by mgmt core.
 

@@ -109,6 +109,32 @@
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.gatein.management</groupId>
+      <artifactId>gatein-management-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gatein.management</groupId>
+      <artifactId>gatein-management-spi</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gatein.management</groupId>
+      <artifactId>gatein-management-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gatein.management</groupId>
+      <artifactId>gatein-management-rest</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.gatein.management</groupId>
+      <artifactId>gatein-management-cli</artifactId>
+      <scope>provided</scope>
+      <type>war</type>
+    </dependency>
   </dependencies>
 
   <build>
