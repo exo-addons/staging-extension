@@ -708,7 +708,7 @@ public class SiteContentsImportResource implements OperationHandler {
         } else {
           Session session = getSession(workspace, repositoryService);
           if (!session.itemExists(contentPath)) {
-            log.warn("Document not found. Cannot import activity '" + activity.getTitle() + "'.");
+            log.warn("Document '" + contentPath + "' not found. Cannot import activity '" + activity.getTitle() + "'.");
             documentActivity = null;
             continue;
           }
@@ -758,6 +758,11 @@ public class SiteContentsImportResource implements OperationHandler {
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
+    if (activity.getId() == null) {
+      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
+      return;
+    }
+    activity = activityManager.getActivity(activity.getId());
     activityManager.saveComment(activity, comment);
     activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);

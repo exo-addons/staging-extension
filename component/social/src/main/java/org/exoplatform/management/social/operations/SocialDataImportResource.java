@@ -358,7 +358,7 @@ public class SocialDataImportResource implements OperationHandler {
     Identity identity = null;
     for (ExoSocialActivity activity : activities) {
       if (activity.getPostedTime() != null && activityPostTime.contains(activity.getPostedTime())) {
-        log.warn("Activity '" + activity.getTitle() + "' is duplicated, ignore it.");
+        log.info("Ignore duplicated Activity '" + activity.getTitle() + "'.");
         continue;
       } else {
         activityPostTime.add(activity.getPostedTime());
@@ -465,6 +465,11 @@ public class SocialDataImportResource implements OperationHandler {
 
   private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
+    if (activity.getId() == null) {
+      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
+      return;
+    }
+    activity = activityManager.getActivity(activity.getId());
     activityManager.saveComment(activity, comment);
     activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
@@ -512,8 +517,7 @@ public class SocialDataImportResource implements OperationHandler {
       if (replaceExisting) {
         String groupId = space.getGroupId();
 
-        log.info("Delete space activities: '" + spaceMetaData.getPrettyName() + "'.");
-        deleteSpaceActivities(space.getPrettyName());
+        deleteSpaceActivities(spaceMetaData.getPrettyName());
 
         log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
         spaceService.deleteSpace(space);
@@ -620,26 +624,33 @@ public class SocialDataImportResource implements OperationHandler {
       space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
     }
 
-    fixSpaceEditor(space);
-
     RequestLifeCycle.begin(PortalContainer.getInstance());
     log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");
+
+    space.setEditor(managers[0]);
+    space.setMembers(members);
+    space = spaceService.updateSpace(space);
+
     for (String member : members) {
       try {
-        spaceService.addMember(space, member);
+        SpaceUtils.addUserToGroupWithMemberMembership(member, space.getGroupId());
         log.info("User '" + member + "' added to space as member: '" + spaceMetaData.getPrettyName() + "'.");
       } catch (Exception e) {
         log.warn("Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
       }
     }
 
-    fixSpaceEditor(space);
-
     log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
+
+    space.setEditor(managers[0]);
+    space.setManagers(managers);
+    space = spaceService.updateSpace(space);
+
     for (String manager : managers) {
       try {
-        spaceService.setManager(space, manager, true);
         log.info("User '" + manager + "' promoted to manager of space: '" + spaceMetaData.getPrettyName() + "'.");
+        SpaceUtils.addUserToGroupWithManagerMembership(manager, space.getGroupId());
+
       } catch (Exception e) {
         log.warn("Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
       }
