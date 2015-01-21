@@ -6,11 +6,11 @@ import java.util.TreeSet;
 
 import javax.jcr.Node;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.scripts.ScriptService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -19,7 +19,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ScriptReadResource implements OperationHandler {
+public class ScriptReadResource extends AbstractOperationHandler {
   private ScriptService scriptService = null;
 
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {

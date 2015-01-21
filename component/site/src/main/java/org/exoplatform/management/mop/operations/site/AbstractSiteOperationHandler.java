@@ -22,8 +22,8 @@
 
 package org.exoplatform.management.mop.operations.site;
 
-import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.management.mop.operations.AbstractMopOperationHandler;
+import org.exoplatform.portal.mop.SiteKey;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;

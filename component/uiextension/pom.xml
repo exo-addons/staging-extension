@@ -27,6 +27,12 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.exoplatform.addons.staging</groupId>
+			<artifactId>staging-extension-common</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.gatein.management</groupId>
 			<artifactId>gatein-management-spi</artifactId>
 		</dependency>

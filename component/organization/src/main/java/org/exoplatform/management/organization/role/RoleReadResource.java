@@ -4,13 +4,13 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.OrganizationService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -19,7 +19,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class RoleReadResource implements OperationHandler {
+public class RoleReadResource extends AbstractOperationHandler {
   final private static Logger log = LoggerFactory.getLogger(RoleReadResource.class);
 
   @Override

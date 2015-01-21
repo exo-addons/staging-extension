@@ -1,6 +1,11 @@
 package org.exoplatform.management.organization.role;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.InputStream;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -8,19 +13,20 @@ import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.impl.MembershipTypeImpl;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import java.io.InputStream;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class RoleImportResource implements OperationHandler {
+public class RoleImportResource extends AbstractOperationHandler {
   private static final Log log = ExoLogger.getLogger(RoleImportResource.class);
   private OrganizationService organizationService = null;
 

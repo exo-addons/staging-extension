@@ -17,7 +17,7 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 
-package org.exoplatform.management.calendar.operations;
+package org.exoplatform.management.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -22,44 +22,31 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.seo.PageMetadataModel;
 import org.exoplatform.services.seo.SEOService;
-import org.exoplatform.social.core.activity.model.ActivityStream.Type;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
-import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
-import org.exoplatform.social.core.space.SpaceUtils;
-import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
@@ -75,7 +62,7 @@ import com.thoughtworks.xstream.XStream;
  * @version $Revision$ usage: ssh -p 2000 john@localhost mgmt connect ls cd
  *          content import -f /acmeTest.zip
  */
-public class SiteContentsImportResource implements OperationHandler {
+public class SiteContentsImportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(SiteContentsImportResource.class);
   final private static int BUFFER = 2048000;
@@ -84,10 +71,7 @@ public class SiteContentsImportResource implements OperationHandler {
 
   private String importedSiteName = null;
   private String filePath = null;
-  private ActivityManager activityManager;
-  private IdentityStorage identityStorage;
-  private SpaceService spaceService;
-  private RepositoryService repositoryService;
+
   private Pattern contenLinkPattern = Pattern.compile("([a-zA-Z]*)/([a-zA-Z]*)/(.*)");
 
   public SiteContentsImportResource() {}
@@ -101,6 +85,7 @@ public class SiteContentsImportResource implements OperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
 
@@ -377,23 +362,25 @@ public class SiteContentsImportResource implements OperationHandler {
       String name = entry.getKey();
       String path = metaData.getExportedFiles().get(name);
 
-      if (StringUtils.isEmpty(nodes.get(name))) {
+      String tempFilePath = nodes.get(name);
+
+      if (StringUtils.isEmpty(tempFilePath)) {
         log.warn("can't get temporary file for content: " + name + ". Ignore import operation for this file.");
         continue;
       }
 
-      String targetNodePath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
-      if (targetNodePath.contains("//")) {
-        targetNodePath = targetNodePath.replaceAll("//", "/");
+      String targetParentNodeJCRPath = path + name.substring(name.lastIndexOf("/"), name.lastIndexOf('.'));
+      if (targetParentNodeJCRPath.contains("//")) {
+        targetParentNodeJCRPath = targetParentNodeJCRPath.replaceAll("//", "/");
       }
 
       List<String> proceededPaths = new ArrayList<String>();
-      Session session = getSession(workspace, repositoryService);
+      Session session = getSession(workspace);
       try {
-        if (!proceededPaths.contains(targetNodePath) && session.itemExists(targetNodePath) && session.getItem(targetNodePath) instanceof Node) {
-          log.info("Deleting the node " + workspace + ":" + targetNodePath);
+        if (!proceededPaths.contains(targetParentNodeJCRPath) && session.itemExists(targetParentNodeJCRPath) && session.getItem(targetParentNodeJCRPath) instanceof Node) {
+          log.info("Deleting the node " + workspace + ":" + targetParentNodeJCRPath);
 
-          Node oldNode = (Node) session.getItem(targetNodePath);
+          Node oldNode = (Node) session.getItem(targetParentNodeJCRPath);
           if (oldNode.isNodeType("exo:activityInfo") && activityManager != null) {
             String activityId = ActivityTypeUtils.getActivityId(oldNode);
             deleteActivity(activityId);
@@ -403,13 +390,13 @@ public class SiteContentsImportResource implements OperationHandler {
           session.refresh(false);
         }
       } catch (Exception e) {
-        log.error("Error when trying to find and delete the node: " + targetNodePath, e);
+        log.error("Error when trying to find and delete the node: " + targetParentNodeJCRPath, e);
         continue;
       } finally {
         if (session != null) {
           session.logout();
         }
-        session = getSession(workspace, repositoryService);
+        session = getSession(workspace);
       }
 
       if (log.isInfoEnabled()) {
@@ -419,16 +406,19 @@ public class SiteContentsImportResource implements OperationHandler {
       // Create the parent path
       Node currentNode = createJCRPath(session, path);
       FileInputStream fis = null, historyFis1 = null, historyFis2 = null;
-      File xmlFile = new File(nodes.get(name));
+      File xmlFile = new File(tempFilePath);
       File historyFile = historyFiles.containsKey(name) ? new File(historyFiles.get(name)) : null;
 
       try {
-        fis = new FileInputStream(nodes.get(name));
+        fis = new FileInputStream(tempFilePath);
         session.refresh(false);
         session.importXML(path, fis, uuidBehaviorValue);
         session.save();
 
-        if (historyFiles.containsKey(name)) {
+        if (isCleanPublication) {
+          // Clean publication information
+          cleanPublication(targetParentNodeJCRPath, session);
+        } else if (historyFiles.containsKey(name)) {
           log.info("Importing history of the node " + path);
           String historyFilePath = historyFiles.get(name);
 
@@ -437,12 +427,9 @@ public class SiteContentsImportResource implements OperationHandler {
 
           historyFis2 = new FileInputStream(historyFilePath);
           org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, historyFis2, mapHistoryValue);
-        } else if (isCleanPublication) {
-          // Clean publication information
-          cleanPublication(targetNodePath, session);
         }
       } catch (Exception e) {
-        log.error("Error when trying to import node: " + targetNodePath + ", revert changes", e);
+        log.error("Error when trying to import node: " + targetParentNodeJCRPath + ", revert changes", e);
         // Revert changes
         session.refresh(false);
       } finally {
@@ -466,58 +453,6 @@ public class SiteContentsImportResource implements OperationHandler {
         }
       }
     }
-  }
-
-  private void cleanPublication(String path, Session session) throws Exception {
-    QueryManager manager = session.getWorkspace().getQueryManager();
-    String statement = "select * from nt:base where jcr:path LIKE '" + path + "/%' and publication:liveRevision IS NOT NULL";
-    Query query = manager.createQuery(statement.toString(), Query.SQL);
-    NodeIterator iter = query.execute().getNodes();
-    while (iter.hasNext()) {
-      Node node = iter.nextNode();
-      cleanPublication(node);
-    }
-    if (session.itemExists(path)) {
-      Node node = (Node) session.getItem(path);
-      cleanPublication(node);
-    }
-  }
-
-  private void cleanPublication(Node node) throws Exception {
-    if (node.hasProperty("publication:currentState")) {
-      log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
-      // See in case the content is enrolled for the first time but never
-      // publisher in "source server", if yes, set manually "published" state
-      Value[] values = node.getProperty("publication:revisionData").getValues();
-      if (values.length < 2) {
-        String user = node.getProperty("publication:lastUser").getString();
-        node.setProperty("publication:revisionData", new String[] { node.getUUID() + ",published," + user });
-      }
-      node.setProperty("publication:liveRevision", "");
-      node.setProperty("publication:currentState", "published");
-      node.save();
-    }
-  }
-
-  private Node createJCRPath(Session session, String path) throws RepositoryException {
-
-    String[] ancestors = path.split("/");
-    Node current = session.getRootNode();
-    for (int i = 0; i < ancestors.length; i++) {
-      if (!"".equals(ancestors[i])) {
-        if (current.hasNode(ancestors[i])) {
-          current = current.getNode(ancestors[i]);
-        } else {
-          if (log.isInfoEnabled()) {
-            log.info("Creating folder: " + ancestors[i] + " in node : " + current.getPath());
-          }
-          current = current.addNode(ancestors[i], "nt:unstructured");
-          session.save();
-        }
-      }
-    }
-    return current;
-
   }
 
   /**
@@ -602,13 +537,6 @@ public class SiteContentsImportResource implements OperationHandler {
     }
   }
 
-  private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
-  }
-
   private static boolean copyToDisk(InputStream input, String output) throws Exception {
     byte data[] = new byte[BUFFER];
     BufferedOutputStream dest = null;
@@ -648,6 +576,7 @@ public class SiteContentsImportResource implements OperationHandler {
     return file;
   }
 
+  @SuppressWarnings("unchecked")
   private void createActivities(File activitiesFile) {
     log.info("Importing Documents activities");
 
@@ -706,7 +635,7 @@ public class SiteContentsImportResource implements OperationHandler {
             continue;
           }
         } else {
-          Session session = getSession(workspace, repositoryService);
+          Session session = getSession(workspace);
           if (!session.itemExists(contentPath)) {
             log.warn("Document '" + contentPath + "' not found. Cannot import activity '" + activity.getTitle() + "'.");
             documentActivity = null;
@@ -734,40 +663,6 @@ public class SiteContentsImportResource implements OperationHandler {
         log.warn("Error while adding activity: " + activity.getTitle(), e);
       }
     }
-  }
-
-  private void saveActivity(ExoSocialActivity activity) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getActivityStream().getType().equals(Type.SPACE)) {
-      String spacePrettyName = activity.getActivityStream().getPrettyId();
-      Identity spaceIdentity = getIdentity(spacePrettyName);
-      if (spaceIdentity == null) {
-        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
-        return;
-      }
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    } else {
-      activityManager.saveActivityNoReturn(activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    }
-    log.info("Site Content activity : '" + activity.getTitle() + " is imported.");
-  }
-
-  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getId() == null) {
-      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
-      return;
-    }
-    activity = activityManager.getActivity(activity.getId());
-    activityManager.saveComment(activity, comment);
-    activity = activityManager.getActivity(activity.getId());
-    activity.setUpdated(updatedTime);
-    activityManager.saveActivityNoReturn(activity);
-    log.info("Site Content activity comment: '" + activity.getTitle() + " is imported.");
   }
 
   private List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
@@ -837,35 +732,4 @@ public class SiteContentsImportResource implements OperationHandler {
     }
     return activitiesList;
   }
-
-  private Identity getIdentity(String userId) {
-    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
-    try {
-      if (userIdentity != null) {
-        return userIdentity;
-      } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
-
-        // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
-          spaceIdentity = getIdentity(space.getPrettyName());
-        }
-
-        return spaceIdentity;
-      }
-    } catch (Exception e) {
-      log.error(e);
-    }
-    return null;
-  }
-
-  private void deleteActivity(String activityId) throws Exception {
-    // Delete Forum activity stream
-    ExoSocialActivity activity = activityManager.getActivity(activityId);
-    if (activity != null) {
-      activityManager.deleteActivity(activity);
-    }
-  }
-
 }

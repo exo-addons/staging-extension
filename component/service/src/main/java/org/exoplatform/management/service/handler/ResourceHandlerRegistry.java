@@ -1,9 +1,9 @@
 package org.exoplatform.management.service.handler;
 
-import org.exoplatform.management.service.api.ResourceHandler;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.exoplatform.management.service.api.ResourceHandler;
 
 /**
  * Registry for resources handlers

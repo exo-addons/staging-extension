@@ -1,4 +1,4 @@
-package org.exoplatform.management.wiki.operations;
+package org.exoplatform.management.common;
 
 import java.io.Serializable;
 
@@ -10,7 +10,7 @@ import org.exoplatform.social.core.space.model.Space;
  */
 public class SpaceMetaData implements Serializable {
 
-  private static final long serialVersionUID = 4205723981874872794L;
+  private static final long serialVersionUID = -4671727410455859650L;
 
   private String displayName;
   private String app;

@@ -36,7 +36,9 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
+import javax.transaction.SystemException;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -45,6 +47,7 @@ import org.exoplatform.services.jcr.ext.distribution.DataDistributionManager;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionMode;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionType;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
+import org.exoplatform.services.transaction.TransactionService;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
@@ -54,6 +57,7 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.model.AvatarAttachment;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.ContentType;
@@ -65,7 +69,6 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -75,14 +78,14 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class SocialDataExportResource implements OperationHandler {
+public class SocialDataExportResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(SocialDataExportResource.class);
 
   private static final String GROUPS_PATH = "groupsPath";
 
-  private SpaceService spaceService;
-  private ActivityManager activityManager;
+
+
   private IdentityManager identityManager;
   private ManagementController managementController;
   private NodeHierarchyCreator nodeHierarchyCreator;
@@ -100,7 +103,12 @@ public class SocialDataExportResource implements OperationHandler {
     dataDistributionManager = operationContext.getRuntimeContext().getRuntimeComponent(DataDistributionManager.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+
+    // Increase current transaction timeout
+    increaseCurrentTransactionTimeOut(operationContext);
+
     // TODO For Space Dashboard export/import
     // dataStorage =
     // operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
@@ -185,6 +193,15 @@ public class SocialDataExportResource implements OperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
+  private void increaseCurrentTransactionTimeOut(OperationContext operationContext) {
+    TransactionService transactionService = operationContext.getRuntimeContext().getRuntimeComponent(TransactionService.class);
+    try {
+      transactionService.setTransactionTimeout(86400);
+    } catch (SystemException e1) {
+      log.warn("Cannot Change Transaction timeout");
+    }
+  }
+
   private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity, boolean exportWiki) {
     RealtimeListAccess<ExoSocialActivity> spaceActivitiesList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
     ExoSocialActivity[] activities = null;
@@ -196,21 +213,14 @@ public class SocialDataExportResource implements OperationHandler {
       List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
       for (ExoSocialActivity exoSocialActivity : activities) {
         // Don't export application activities
-        if (exoSocialActivity.isComment() || exoSocialActivity.getType().equals(SocialExtension.SITES_CONTENT_SPACES) || exoSocialActivity.getType().equals(SocialExtension.SITES_FILE_SPACES)
+        if (exoSocialActivity.getType().equals(SocialExtension.SITES_CONTENT_SPACES) || exoSocialActivity.getType().equals(SocialExtension.SITES_FILE_SPACES)
             || exoSocialActivity.getType().equals(SocialExtension.FORUM_ACTIVITY_TYPE) || exoSocialActivity.getType().equals(SocialExtension.POLL_ACTIVITY_TYPE)
             || exoSocialActivity.getType().equals(SocialExtension.WIKI_ACTIVITY_TYPE) || exoSocialActivity.getType().equals(SocialExtension.ANSWER_ACTIVITY_TYPE)
             || exoSocialActivity.getType().equals(SocialExtension.CALENDAR_ACTIVITY_TYPE)) {
           continue;
         }
-        activitiesList.add(exoSocialActivity);
-        RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(exoSocialActivity);
-        if (commentsListAccess.getSize() > 0) {
-          List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-          for (ExoSocialActivity exoSocialActivityComment : comments) {
-            exoSocialActivityComment.isComment(true);
-          }
-          activitiesList.addAll(comments);
-        }
+        activityManager.getParentActivity(exoSocialActivity);
+        addActivityWithComments(activitiesList, exoSocialActivity);
       }
       if (!activitiesList.isEmpty()) {
         exportTasks.add(new SpaceActivitiesExportTask(identityManager, activitiesList, space.getPrettyName(), i));
@@ -243,19 +253,19 @@ public class SocialDataExportResource implements OperationHandler {
 
   private String getEntryResourcePath(String application) {
     String path = null;
-    if (application.startsWith(SocialExtension.FORUM_PORTLET)) {
+    if (application.contains(SocialExtension.FORUM_PORTLET)) {
       path = SocialExtension.FORUM_RESOURCE_PATH;
       log.info("export space forum data");
-    } else if (application.startsWith(SocialExtension.ANSWERS_PORTLET)) {
+    } else if (application.contains(SocialExtension.ANSWERS_PORTLET)) {
       path = SocialExtension.ANSWER_RESOURCE_PATH;
       log.info("export space answer data");
-    } else if (application.startsWith(SocialExtension.CALENDAR_PORTLET)) {
+    } else if (application.contains(SocialExtension.CALENDAR_PORTLET)) {
       path = SocialExtension.CALENDAR_RESOURCE_PATH;
       log.info("export space calendar data");
-    } else if (application.startsWith(SocialExtension.FAQ_PORTLET)) {
+    } else if (application.contains(SocialExtension.FAQ_PORTLET)) {
       path = SocialExtension.FAQ_RESOURCE_PATH;
       log.info("export FAQ template");
-    } else if (application.startsWith(SocialExtension.WIKI_PORTLET)) {
+    } else if (application.contains(SocialExtension.WIKI_PORTLET)) {
       path = SocialExtension.WIKI_RESOURCE_PATH;
       log.info("export space wiki data");
     }

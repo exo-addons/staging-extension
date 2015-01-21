@@ -1,5 +1,19 @@
 package org.exoplatform.management.service.impl;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipOutputStream;
+
+import javax.inject.Singleton;
+import javax.jcr.NodeIterator;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.service.api.Resource;
@@ -22,19 +36,6 @@ import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ReadResourceModel;
-
-import javax.inject.Singleton;
-import javax.jcr.NodeIterator;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Staging service

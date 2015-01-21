@@ -1,32 +1,38 @@
 package org.exoplatform.management.registry.operations;
 
-import org.exoplatform.application.registry.Application;
-import org.exoplatform.application.registry.ApplicationCategory;
-import org.exoplatform.application.registry.ApplicationRegistryService;
-import org.exoplatform.container.xml.ObjectParameter;
-import org.exoplatform.management.registry.tasks.ApplicationExportTask;
-import org.exoplatform.management.registry.tasks.CategoryExportTask;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
-import org.gatein.management.api.operation.model.NoResultModel;
-import org.jibx.runtime.BindingDirectory;
-import org.jibx.runtime.IBindingFactory;
-import org.jibx.runtime.IUnmarshallingContext;
-
-import javax.jcr.Session;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.jcr.Session;
+
+import org.exoplatform.application.registry.Application;
+import org.exoplatform.application.registry.ApplicationCategory;
+import org.exoplatform.application.registry.ApplicationRegistryService;
+import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.registry.tasks.ApplicationExportTask;
+import org.exoplatform.management.registry.tasks.CategoryExportTask;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.model.NoResultModel;
+import org.jibx.runtime.BindingDirectory;
+import org.jibx.runtime.IBindingFactory;
+import org.jibx.runtime.IUnmarshallingContext;
+
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class RegistryImportResource implements OperationHandler {
+public class RegistryImportResource extends AbstractOperationHandler {
   private static final Log log = ExoLogger.getLogger(RegistryImportResource.class);
   private ApplicationRegistryService applicationRegistryService;
 

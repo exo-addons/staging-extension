@@ -1,7 +1,19 @@
 package org.exoplatform.management.ecmadmin.operations.queries;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.Value;
+import javax.jcr.query.Query;
+
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.container.xml.*;
+import org.exoplatform.container.xml.ComponentPlugin;
+import org.exoplatform.container.xml.Configuration;
+import org.exoplatform.container.xml.ExternalComponentPlugins;
+import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.queries.QueryService;
 import org.exoplatform.services.cms.queries.impl.QueryData;
 import org.exoplatform.services.cms.queries.impl.QueryPlugin;
@@ -10,24 +22,17 @@ import org.exoplatform.services.organization.User;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
-
-import javax.jcr.Node;
-import javax.jcr.Value;
-import javax.jcr.query.Query;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class QueriesExportResource implements OperationHandler {
+public class QueriesExportResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {

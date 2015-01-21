@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.exoplatform.application.registry.impl.ApplicationRegistryChromatticLifeCycle;
 import org.exoplatform.commons.chromattic.ChromatticManager;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.gadget.tasks.GadgetExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -13,7 +14,6 @@ import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -23,7 +23,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class GadgetExportResource implements OperationHandler {
+public class GadgetExportResource extends AbstractOperationHandler {
 
   private static final String DEFAULT_JCR_PATH = "/production/app:gadgets/";
   private ChromatticManager chromatticManager;

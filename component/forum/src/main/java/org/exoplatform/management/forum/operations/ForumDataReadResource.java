@@ -24,13 +24,13 @@ import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -40,7 +40,7 @@ import org.mortbay.log.Log;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataReadResource implements OperationHandler {
+public class ForumDataReadResource extends AbstractOperationHandler {
 
   private boolean isSpaceForumType;
 

@@ -1,5 +1,9 @@
 package org.exoplatform.management.organization;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.group.GroupExportResource;
 import org.exoplatform.management.organization.group.GroupImportResource;
 import org.exoplatform.management.organization.group.GroupReadResource;
@@ -15,15 +19,11 @@ import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
 import org.gatein.management.spi.ManagementExtension;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -90,14 +90,14 @@ public class OrganizationManagementExtension implements ManagementExtension {
     };
   }
 
-  public static final class EmptyReadResource implements OperationHandler {
+  public static final class EmptyReadResource extends AbstractOperationHandler {
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
       resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
     }
   }
 
-  public static final class OrganizationReadResource implements OperationHandler {
+  public static final class OrganizationReadResource extends AbstractOperationHandler {
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
       Set<String> subResources = new HashSet<String>();

@@ -1,17 +1,19 @@
 package org.exoplatform.management.organization;
 
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.organization.*;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.model.ExportTask;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
-import java.io.IOException;
-import java.io.OutputStream;
+
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.User;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.model.ExportTask;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

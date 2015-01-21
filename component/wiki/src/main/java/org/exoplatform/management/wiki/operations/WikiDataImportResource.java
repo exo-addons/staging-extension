@@ -1,6 +1,5 @@
 package org.exoplatform.management.wiki.operations;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,7 +18,6 @@ import java.util.zip.ZipInputStream;
 
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.io.FileUtils;
@@ -27,18 +25,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
-import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
-import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.exoplatform.wiki.mow.api.Page;
 import org.exoplatform.wiki.mow.api.Wiki;
@@ -52,7 +47,6 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
@@ -63,21 +57,15 @@ import com.thoughtworks.xstream.XStream;
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
-public class WikiDataImportResource implements OperationHandler {
+public class WikiDataImportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(WikiDataImportResource.class);
 
   private WikiType wikiType;
 
-  final private static int BUFFER = 2048000;
-
-  private SpaceService spaceService;
-  private UserACL userAcl;
   private MOWService mowService;
-  private RepositoryService repositoryService;
-  private ActivityManager activityManager;
+
   private WikiService wikiService;
-  private IdentityStorage identityStorage;
 
   public WikiDataImportResource(WikiType wikiType) {
     this.wikiType = wikiType;
@@ -86,10 +74,11 @@ public class WikiDataImportResource implements OperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
-    userAcl = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
+    userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
 
@@ -112,18 +101,21 @@ public class WikiDataImportResource implements OperationHandler {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for Wiki import.");
     }
 
-    String tempFolderPath = null;
     Map<String, List<String>> contentsByOwner = new HashMap<String, List<String>>();
+    Map<String, File> templfilesByJCRPath = new HashMap<String, File>();
     try {
       // extract data from zip
-      tempFolderPath = extractDataFromZip(attachmentInputStream, contentsByOwner);
+      extractDataFromZip(attachmentInputStream, contentsByOwner, templfilesByJCRPath);
 
       for (String wikiOwner : contentsByOwner.keySet()) {
         if (WikiType.GROUP.equals(wikiType)) {
-          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, wikiOwner, createSpace);
-          if (!spaceCreatedOrAlreadyExists) {
-            log.warn("Import of wiki '" + wikiOwner + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
-            continue;
+          File spaceMetadataFile = templfilesByJCRPath.get(wikiOwner + SpaceMetadataExportTask.FILENAME);
+          if (spaceMetadataFile != null && spaceMetadataFile.exists()) {
+            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile, wikiOwner, createSpace);
+            if (!spaceCreatedOrAlreadyExists) {
+              log.warn("Import of wiki '" + wikiOwner + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+              continue;
+            }
           }
         }
 
@@ -146,34 +138,23 @@ public class WikiDataImportResource implements OperationHandler {
 
         Collections.sort(paths);
         for (String nodePath : paths) {
-          importNode(wikiOwner, nodePath, workspace, tempFolderPath);
+          importNode(wikiOwner, nodePath, workspace, templfilesByJCRPath);
         }
 
-        String activitiesFilePath = tempFolderPath + replaceSpecialChars(WikiActivitiesExportTask.getEntryPath(wiki.getType(), wikiOwner));
-        File activitiesFile = new File(activitiesFilePath);
-
-        String spacePrettyName = null;
-        if (WikiType.GROUP.equals(wikiType)) {
-          Space space = spaceService.getSpaceByGroupId(wikiOwner);
-          spacePrettyName = space.getPrettyName();
-        }
-
+        File activitiesFile = templfilesByJCRPath.get(wikiOwner + WikiActivitiesExportTask.FILENAME);
         // Import activities
-        if (activitiesFile.exists()) {
+        if (activitiesFile != null && activitiesFile.exists()) {
+          String spacePrettyName = null;
+          if (WikiType.GROUP.equals(wikiType)) {
+            Space space = spaceService.getSpaceByGroupId(wikiOwner);
+            spacePrettyName = space.getPrettyName();
+          }
           createActivities(activitiesFile, spacePrettyName);
         }
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import wiki content of type: " + wikiType, e);
     } finally {
-      if (tempFolderPath != null) {
-        try {
-          FileUtils.deleteDirectory(new File(tempFolderPath));
-        } catch (IOException e) {
-          log.warn("Unable to delete temp folder: " + tempFolderPath + ". Not blocker.", e);
-        }
-      }
-
       if (attachmentInputStream != null) {
         try {
           attachmentInputStream.close();
@@ -188,21 +169,20 @@ public class WikiDataImportResource implements OperationHandler {
   /**
    * Extract data from zip
    * 
+   * @param templfilesByJCRPath
+   * 
    * @param attachment
    * @return
    */
-  public String extractDataFromZip(InputStream attachmentInputStream, Map<String, List<String>> contentsByOwner) throws Exception {
+  public void extractDataFromZip(InputStream attachmentInputStream, Map<String, List<String>> contentsByOwner, Map<String, File> templfilesByJCRPath) throws Exception {
     File tmpZipFile = null;
     String targetFolderPath = null;
     try {
       tmpZipFile = copyAttachementToLocalFolder(attachmentInputStream);
 
-      // Get path of folder where to unzip files
-      targetFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "") + "/";
-
       // Organize File paths by wikiOwner and extract files from zip to a temp
       // folder
-      extractFilesByWikiOwner(tmpZipFile, targetFolderPath, contentsByOwner);
+      extractFilesByWikiOwner(tmpZipFile, targetFolderPath, contentsByOwner, templfilesByJCRPath);
     } finally {
       if (tmpZipFile != null) {
         try {
@@ -213,7 +193,6 @@ public class WikiDataImportResource implements OperationHandler {
         }
       }
     }
-    return targetFolderPath;
   }
 
   private File copyAttachementToLocalFolder(InputStream attachmentInputStream) throws IOException, FileNotFoundException {
@@ -239,12 +218,11 @@ public class WikiDataImportResource implements OperationHandler {
     return tmpZipFile;
   }
 
-  private void importNode(String wikiOwner, String nodePath, String workspace, String tempFolderPath) throws Exception {
-    if (!nodePath.startsWith("/")) {
-      nodePath = "/" + nodePath;
-    }
+  private void importNode(String wikiOwner, String nodePath, String workspace, Map<String, File> templfilesByJCRPath) throws Exception {
     String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
     parentNodePath = parentNodePath.replaceAll("//", "/");
+
+    File xmlFile = templfilesByJCRPath.get(nodePath);
 
     // Delete old node
     Session session = getSession(workspace);
@@ -269,7 +247,6 @@ public class WikiDataImportResource implements OperationHandler {
     // Import Node from Extracted Zip file
     session = getSession(workspace);
     FileInputStream fis = null;
-    File xmlFile = null;
     try {
       log.info("Importing the node '" + nodePath + "'");
 
@@ -277,14 +254,13 @@ public class WikiDataImportResource implements OperationHandler {
       createJCRPath(session, parentNodePath);
 
       // Get XML file
-      xmlFile = new File((tempFolderPath + "/" + WikiExportTask.getEntryPath(wikiType, wikiOwner, replaceSpecialChars(nodePath))).replaceAll("//", "/"));
       fis = new FileInputStream(xmlFile);
 
       session.refresh(false);
       session.importXML(parentNodePath, fis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
       session.save();
     } catch (Exception e) {
-      log.error("Error when trying to import node: " + parentNodePath, e);
+      log.error("Error when trying to import node: " + nodePath, e);
       // Revert changes
       session.refresh(false);
     } finally {
@@ -300,7 +276,8 @@ public class WikiDataImportResource implements OperationHandler {
     }
   }
 
-  private void extractFilesByWikiOwner(File tmpZipFile, String targetFolderPath, Map<String, List<String>> contentsByOwner) throws FileNotFoundException, IOException, Exception {
+  private void extractFilesByWikiOwner(File tmpZipFile, String targetFolderPath, Map<String, List<String>> contentsByOwner, Map<String, File> templfilesByJCRPath) throws FileNotFoundException,
+      IOException, Exception {
     // Open an input stream on local zip file
     NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
 
@@ -315,8 +292,6 @@ public class WikiDataImportResource implements OperationHandler {
 
         // Skip directories
         if (entry.isDirectory()) {
-          // Create directory in unzipped folder location
-          createFile(new File(targetFolderPath + replaceSpecialChars(filePath)), true);
           continue;
         }
 
@@ -328,14 +303,21 @@ public class WikiDataImportResource implements OperationHandler {
 
         log.info("Receiving content " + filePath);
 
+        File file = File.createTempFile("staging-wiki", ".xml");
+
         // Put XML Export file in temp folder
-        copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+        copyToDisk(zis, file);
 
         // Extract wiki owner
         String wikiOwner = extractWikiOwnerFromPath(filePath);
 
-        // Skip metadata file
-        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME) || filePath.endsWith(WikiActivitiesExportTask.FILENAME)) {
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+          templfilesByJCRPath.put(wikiOwner + SpaceMetadataExportTask.FILENAME, file);
+          continue;
+        }
+
+        if (filePath.endsWith(WikiActivitiesExportTask.FILENAME)) {
+          templfilesByJCRPath.put(wikiOwner + WikiActivitiesExportTask.FILENAME, file);
           continue;
         }
 
@@ -344,33 +326,17 @@ public class WikiDataImportResource implements OperationHandler {
           contentsByOwner.put(wikiOwner, new ArrayList<String>());
         }
         String nodePath = filePath.substring(filePath.indexOf("---/") + 4, filePath.lastIndexOf(".xml"));
+        if (!nodePath.startsWith("/")) {
+          nodePath = "/" + nodePath;
+        }
         contentsByOwner.get(wikiOwner).add(nodePath);
+        templfilesByJCRPath.put(nodePath, file);
       }
     } finally {
       if (zis != null) {
         zis.reallyClose();
       }
     }
-  }
-
-  private Node createJCRPath(Session session, String path) throws RepositoryException {
-    String[] ancestors = path.split("/");
-    Node current = session.getRootNode();
-    for (int i = 0; i < ancestors.length; i++) {
-      if (!"".equals(ancestors[i])) {
-        if (current.hasNode(ancestors[i])) {
-          current = current.getNode(ancestors[i]);
-        } else {
-          if (log.isInfoEnabled()) {
-            log.info("Creating folder: " + ancestors[i] + " in node : " + current.getPath());
-          }
-          current = current.addNode(ancestors[i], "nt:unstructured");
-          session.save();
-        }
-      }
-    }
-    return current;
-
   }
 
   /**
@@ -406,85 +372,16 @@ public class WikiDataImportResource implements OperationHandler {
     }
   }
 
-  private boolean createSpaceIfNotExists(String tempFolderPath, String wikiOwner, boolean createSpace) throws IOException {
-    Space space = spaceService.getSpaceByGroupId(wikiOwner);
-    if (space == null && createSpace) {
-      FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(wikiType, wikiOwner));
-      try {
-        // Unmarshall metadata xml file
-        XStream xstream = new XStream();
-        xstream.alias("metadata", SpaceMetaData.class);
-        SpaceMetaData spaceMetaData = (SpaceMetaData) xstream.fromXML(spaceMetadataFile);
-
-        log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
-        space = new Space();
-        space.setPrettyName(spaceMetaData.getPrettyName());
-        space.setDisplayName(spaceMetaData.getDisplayName());
-        space.setGroupId(wikiOwner);
-        space.setTag(spaceMetaData.getTag());
-        space.setApp(spaceMetaData.getApp());
-        space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userAcl.getSuperUser());
-        space.setManagers(spaceMetaData.getManagers());
-        space.setInvitedUsers(spaceMetaData.getInvitedUsers());
-        space.setRegistration(spaceMetaData.getRegistration());
-        space.setDescription(spaceMetaData.getDescription());
-        space.setType(spaceMetaData.getType());
-        space.setVisibility(spaceMetaData.getVisibility());
-        space.setPriority(spaceMetaData.getPriority());
-        space.setUrl(spaceMetaData.getUrl());
-        spaceService.createSpace(space, space.getEditor());
-        return true;
-      } finally {
-        if (spaceMetadataFile != null) {
-          try {
-            spaceMetadataFile.close();
-          } catch (Exception e) {
-            log.warn(e);
-          }
-        }
-      }
-    }
-    return (space != null);
-  }
-
-  private Session getSession(String workspace) throws Exception {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
-  }
-
-  private static void copyToDisk(InputStream input, String output) throws Exception {
-    byte data[] = new byte[BUFFER];
-    BufferedOutputStream dest = null;
+  private static void copyToDisk(InputStream input, File file) throws Exception {
+    FileOutputStream fileOuput = null;
     try {
-      FileOutputStream fileOuput = new FileOutputStream(createFile(new File(output), false));
-      dest = new BufferedOutputStream(fileOuput, BUFFER);
-      int count = 0;
-      while ((count = input.read(data, 0, BUFFER)) != -1)
-        dest.write(data, 0, count);
+      fileOuput = new FileOutputStream(file);
+      IOUtils.copy(input, fileOuput);
     } finally {
-      if (dest != null) {
-        dest.close();
+      if (fileOuput != null) {
+        fileOuput.close();
       }
     }
-  }
-
-  private static String replaceSpecialChars(String name) {
-    name = name.replaceAll(":", "_");
-    return name.replaceAll("\\?", "_");
-  }
-
-  private static File createFile(File file, boolean folder) throws Exception {
-    if (file.getParentFile() != null)
-      createFile(file.getParentFile(), true);
-    if (file.exists())
-      return file;
-    if (file.isDirectory() || folder)
-      file.mkdir();
-    else
-      file.createNewFile();
-    return file;
   }
 
   @SuppressWarnings("unchecked")
@@ -558,40 +455,6 @@ public class WikiDataImportResource implements OperationHandler {
       }
     }
   }
-
-  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (spacePrettyName == null) {
-      activityManager.saveActivityNoReturn(activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    } else {
-      Identity spaceIdentity = getIdentity(spacePrettyName);
-      if (spaceIdentity == null) {
-        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
-        return;
-      }
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    }
-    log.info("Wiki activity : '" + activity.getTitle() + "' is imported.");
-  }
-
-  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getId() == null) {
-      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
-      return;
-    }
-    activity = activityManager.getActivity(activity.getId());
-    activityManager.saveComment(activity, comment);
-    activity = activityManager.getActivity(activity.getId());
-    activity.setUpdated(updatedTime);
-    activityManager.updateActivity(activity);
-    log.info("Wiki activity comment: '" + activity.getTitle() + " is imported.");
-  }
-
   private List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
     Identity identity = null;
@@ -658,32 +521,6 @@ public class WikiDataImportResource implements OperationHandler {
       }
     }
     return activitiesList;
-  }
-
-  private Identity getIdentity(String userId) {
-    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
-    try {
-      if (userIdentity != null) {
-        return userIdentity;
-      } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
-
-        // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
-          if (space != null) {
-            spaceIdentity = getIdentity(space.getPrettyName());
-          } else {
-            log.warn("Cannot get identity for: " + userId);
-          }
-        }
-
-        return spaceIdentity;
-      }
-    } catch (Exception e) {
-      log.error("Error while getting identity", e);
-    }
-    return null;
   }
 
   private void deleteActivities(String wikiType, String wikiOwner) throws Exception {

@@ -6,11 +6,11 @@ import java.util.Set;
 
 import javax.jcr.nodetype.NodeType;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.actions.ActionServiceContainer;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -19,7 +19,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ActionReadResource implements OperationHandler {
+public class ActionReadResource extends AbstractOperationHandler {
   private ActionServiceContainer actionsServiceContainer;
   private RepositoryService repositoryService;
 

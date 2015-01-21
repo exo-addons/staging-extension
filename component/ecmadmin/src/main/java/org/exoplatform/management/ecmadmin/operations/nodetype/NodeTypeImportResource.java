@@ -1,6 +1,21 @@
 package org.exoplatform.management.ecmadmin.operations.nodetype;
 
-import org.exoplatform.container.xml.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+
+import org.exoplatform.container.xml.ComponentPlugin;
+import org.exoplatform.container.xml.Configuration;
+import org.exoplatform.container.xml.ExternalComponentPlugins;
+import org.exoplatform.container.xml.PropertiesParam;
 import org.exoplatform.container.xml.Property;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -18,13 +33,6 @@ import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
-
-import javax.jcr.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

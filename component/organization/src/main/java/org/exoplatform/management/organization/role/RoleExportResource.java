@@ -1,27 +1,27 @@
 package org.exoplatform.management.organization.role;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.OrganizationService;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
-public class RoleExportResource implements OperationHandler {
+public class RoleExportResource extends AbstractOperationHandler {
 
   private OrganizationService organizationService = null;
 

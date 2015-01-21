@@ -36,6 +36,8 @@ import org.exoplatform.forum.service.Post;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.forum.service.impl.model.TopicFilter;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.SpaceMetaData;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
@@ -45,12 +47,11 @@ import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
-import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
@@ -58,7 +59,6 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
@@ -69,18 +69,15 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataImportResource implements OperationHandler {
+public class ForumDataImportResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataImportResource.class);
 
   private RepositoryService repositoryService;
-  private SpaceService spaceService;
-  private ActivityManager activityManager;
-  private IdentityStorage identityStorage;
+
   private ForumService forumService;
   private PollService pollService;
   private KSDataLocation dataLocation;
-  private UserACL userACL;
 
   private String type;
 
@@ -98,6 +95,7 @@ public class ForumDataImportResource implements OperationHandler {
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     pollService = operationContext.getRuntimeContext().getRuntimeComponent(PollService.class);
 
@@ -431,61 +429,6 @@ public class ForumDataImportResource implements OperationHandler {
         log.warn("Error while adding activity: " + exoSocialActivity.getTitle(), e);
       }
     }
-  }
-
-  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (spacePrettyName == null) {
-      activityManager.saveActivityNoReturn(activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    } else {
-      Identity spaceIdentity = getIdentity(spacePrettyName);
-      if (spaceIdentity == null) {
-        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
-        return;
-      }
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    }
-    log.info("Forum activity : '" + activity.getTitle() + " is imported.");
-  }
-
-  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getId() == null) {
-      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
-      return;
-    }
-    activity = activityManager.getActivity(activity.getId());
-    activityManager.saveComment(activity, comment);
-    activity = activityManager.getActivity(activity.getId());
-    activity.setUpdated(updatedTime);
-    activityManager.updateActivity(activity);
-    log.info("Forum activity comment: '" + activity.getTitle() + " is imported.");
-  }
-
-  private Identity getIdentity(String userId) {
-    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
-    try {
-      if (userIdentity != null) {
-        return userIdentity;
-      } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
-
-        // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
-          spaceIdentity = getIdentity(space.getPrettyName());
-        }
-
-        return spaceIdentity;
-      }
-    } catch (Exception e) {
-      log.error(e);
-    }
-    return null;
   }
 
   private void deleteActivities(String categoryId, String forumId) throws Exception {

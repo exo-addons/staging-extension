@@ -1,5 +1,9 @@
 package org.exoplatform.management.ecmadmin.operations.templates.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.ecmadmin.exporttask.StringExportTask;
 import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
 import org.exoplatform.services.cms.BasePath;
@@ -9,20 +13,16 @@ import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class MetadataTemplatesExportResource implements OperationHandler {
+public class MetadataTemplatesExportResource extends AbstractOperationHandler {
 
   private static final String EXPORT_BASE_PATH = "ecmadmin/templates/metadata";
 

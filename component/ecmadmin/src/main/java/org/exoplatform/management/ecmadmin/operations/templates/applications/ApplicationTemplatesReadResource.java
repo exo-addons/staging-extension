@@ -9,12 +9,12 @@ import java.util.TreeSet;
 
 import javax.jcr.Node;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -23,7 +23,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class ApplicationTemplatesReadResource implements OperationHandler {
+public class ApplicationTemplatesReadResource extends AbstractOperationHandler {
 
   public final static Map<String, String[]> APPLICATION_SUB_TEMPLATES_MAP = new HashMap<String, String[]>();
   static {

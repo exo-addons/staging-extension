@@ -1,11 +1,11 @@
 package org.exoplatform.management.registry.operations;
 
 import org.exoplatform.application.registry.ApplicationRegistryService;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.registry.tasks.ApplicationExportTask;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -14,7 +14,7 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ApplicationExportResource implements OperationHandler {
+public class ApplicationExportResource extends AbstractOperationHandler {
   private ApplicationRegistryService applicationRegistryService;
 
   @Override

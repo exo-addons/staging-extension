@@ -1,21 +1,29 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
-import org.exoplatform.container.xml.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.exoplatform.container.xml.ComponentPlugin;
+import org.exoplatform.container.xml.Configuration;
+import org.exoplatform.container.xml.ExternalComponentPlugins;
+import org.exoplatform.container.xml.InitParams;
+import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.drives.DriveData;
 import org.exoplatform.services.cms.drives.ManageDriveService;
 import org.exoplatform.services.cms.drives.impl.ManageDrivePlugin;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class DriveExportResource implements OperationHandler {
+public class DriveExportResource extends AbstractOperationHandler {
 
   private static final String EXPORT_BASE_PATH = "ecmadmin/drive";
 

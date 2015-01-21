@@ -25,9 +25,9 @@ package org.exoplatform.management.mop.operations.navigation;
 import java.util.Collections;
 import java.util.List;
 
+import org.exoplatform.management.mop.exportimport.NavigationExportTask;
 import org.exoplatform.portal.config.model.NavigationFragment;
 import org.exoplatform.portal.config.model.PageNavigation;
-import org.exoplatform.management.mop.exportimport.NavigationExportTask;
 import org.gatein.management.api.ContentType;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.PathAddress;

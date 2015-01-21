@@ -20,12 +20,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -34,7 +34,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class SocialDataReadResource implements OperationHandler {
+public class SocialDataReadResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {

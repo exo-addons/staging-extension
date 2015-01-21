@@ -1,5 +1,8 @@
 package org.exoplatform.management.ecmadmin;
 
+import java.util.HashSet;
+
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminContentImportResource;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminContentReadResource;
 import org.exoplatform.management.ecmadmin.operations.action.ActionExportResource;
@@ -30,21 +33,23 @@ import org.exoplatform.management.ecmadmin.operations.templates.metadata.Metadat
 import org.exoplatform.management.ecmadmin.operations.templates.nodetypes.NodeTypesTemplatesExportResource;
 import org.exoplatform.management.ecmadmin.operations.templates.nodetypes.NodeTypesTemplatesImportResource;
 import org.exoplatform.management.ecmadmin.operations.templates.nodetypes.NodeTypesTemplatesReadResource;
-import org.exoplatform.management.ecmadmin.operations.view.*;
+import org.exoplatform.management.ecmadmin.operations.view.ViewConfigurationExportResource;
+import org.exoplatform.management.ecmadmin.operations.view.ViewConfigurationReadResource;
+import org.exoplatform.management.ecmadmin.operations.view.ViewImportResource;
+import org.exoplatform.management.ecmadmin.operations.view.ViewReadResource;
+import org.exoplatform.management.ecmadmin.operations.view.ViewTemplatesExportResource;
+import org.exoplatform.management.ecmadmin.operations.view.ViewTemplatesReadResource;
 import org.gatein.management.api.ComponentRegistration;
 import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
 import org.gatein.management.spi.ManagementExtension;
-
-import java.util.HashSet;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -168,7 +173,7 @@ public class ECMAdminManagementExtension implements ManagementExtension {
     };
   }
 
-  public static class EmptyReadResource implements OperationHandler {
+  public static class EmptyReadResource extends AbstractOperationHandler {
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
       resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));

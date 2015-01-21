@@ -9,6 +9,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.pom.config.POMSession;
@@ -24,7 +25,6 @@ import org.exoplatform.services.wcm.core.WCMConfigurationService;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -41,7 +41,7 @@ import org.gatein.mop.api.workspace.Workspace;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class SiteSEOExportResource implements OperationHandler {
+public class SiteSEOExportResource extends AbstractOperationHandler {
 
   private DataStorage dataStorage = null;
   private WCMConfigurationService wcmConfigurationService = null;

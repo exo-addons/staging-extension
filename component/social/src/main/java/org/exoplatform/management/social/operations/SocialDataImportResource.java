@@ -28,6 +28,8 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.SpaceMetaData;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
@@ -41,7 +43,6 @@ import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.application.SpaceActivityPublisher;
 import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.identity.model.Profile;
-import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
@@ -63,7 +64,6 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
@@ -74,7 +74,7 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class SocialDataImportResource implements OperationHandler {
+public class SocialDataImportResource extends AbstractOperationHandler {
 
   private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
@@ -83,14 +83,11 @@ public class SocialDataImportResource implements OperationHandler {
   final private static int BUFFER = 2048000;
 
   private OrganizationService organizationService;
-  private SpaceService spaceService;
-  private IdentityStorage identityStorage;
-  private ActivityManager activityManager;
+
   private IdentityManager identityManager;
   private ManagementController managementController;
-  private UserACL userACL;
+
   private DataStorage dataStorage;
-  private ActivityStorage activityStorage;
 
   // This is used to test on duplicated activities
   private Set<Long> activityPostTime = new HashSet<Long>();
@@ -240,15 +237,7 @@ public class SocialDataImportResource implements OperationHandler {
     RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
     ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
     for (ExoSocialActivity activity : activities) {
-      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
-      if (commentsListAccess.getSize() > 0) {
-        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-        for (ExoSocialActivity commentActivity : comments) {
-          activityManager.deleteActivity(commentActivity);
-        }
-      }
-      log.info("   Delete activity : " + activity.getTitle());
-      activityManager.deleteActivity(activity);
+      deleteActivity(activity);
     }
   }
 
@@ -259,6 +248,8 @@ public class SocialDataImportResource implements OperationHandler {
     try {
       inputStream = new FileInputStream(fileToImport);
       InputStreamReader reader = new InputStreamReader(inputStream, "UTF-8");
+
+      space = spaceService.getSpaceByGroupId(space.getGroupId());
 
       XStream xstream = new XStream();
       AvatarAttachment avatarAttachment = (AvatarAttachment) xstream.fromXML(reader);
@@ -455,50 +446,6 @@ public class SocialDataImportResource implements OperationHandler {
         log.warn("Error while adding activity: " + exoSocialActivity.getTitle(), e);
       }
     }
-  }
-
-  private void saveActivity(ExoSocialActivity activity, Identity spaceIdentity) {
-    long updatedTime = activity.getUpdated().getTime();
-    activityManager.saveActivityNoReturn(spaceIdentity, activity);
-    activity.setUpdated(updatedTime);
-    activityManager.updateActivity(activity);
-    log.info("Space activity : '" + activity.getTitle() + " is imported.");
-  }
-
-  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getId() == null) {
-      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
-      return;
-    }
-    activity = activityManager.getActivity(activity.getId());
-    activityManager.saveComment(activity, comment);
-    activity = activityManager.getActivity(activity.getId());
-    activity.setUpdated(updatedTime);
-    activityManager.updateActivity(activity);
-    log.info("Space activity comment: '" + activity.getTitle() + " is imported.");
-  }
-
-  private Identity getIdentity(String userId) {
-    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
-    try {
-      if (userIdentity != null) {
-        return userIdentity;
-      } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
-
-        // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
-          spaceIdentity = getIdentity(space.getPrettyName());
-        }
-
-        return spaceIdentity;
-      }
-    } catch (Exception e) {
-      log.error(e);
-    }
-    return null;
   }
 
   private boolean createOrReplaceSpace(String spacePrettyName, String targetSpaceName, boolean replaceExisting, boolean createAbsentUsers, InputStream inputStream) throws Exception {

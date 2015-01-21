@@ -24,6 +24,7 @@ import org.apache.commons.io.IOUtils;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -32,12 +33,11 @@ import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-public class ForumSettingsImportResource implements OperationHandler {
+public class ForumSettingsImportResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumSettingsImportResource.class);
   final private static int BUFFER = 2048000;

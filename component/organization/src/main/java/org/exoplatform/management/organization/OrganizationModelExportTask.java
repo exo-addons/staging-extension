@@ -1,11 +1,16 @@
 package org.exoplatform.management.organization;
 
-import com.thoughtworks.xstream.XStream;
-import org.exoplatform.services.organization.*;
-import org.gatein.management.api.operation.model.ExportTask;
-
 import java.io.IOException;
 import java.io.OutputStream;
+
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.Membership;
+import org.exoplatform.services.organization.MembershipType;
+import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.UserProfile;
+import org.gatein.management.api.operation.model.ExportTask;
+
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

@@ -1,6 +1,28 @@
 package org.exoplatform.management.portlet;
 
-import juzu.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.inject.Inject;
+
+import juzu.Action;
+import juzu.Path;
+import juzu.Response;
+import juzu.Route;
+import juzu.SessionScoped;
+import juzu.View;
 import juzu.impl.request.Request;
 import juzu.template.Template;
 
@@ -8,20 +30,15 @@ import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.commons.juzu.ajax.Ajax;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.service.api.Resource;
-import org.exoplatform.management.service.api.*;
+import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.ResourceHandler;
+import org.exoplatform.management.service.api.StagingService;
+import org.exoplatform.management.service.api.SynchronizationService;
+import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.ManagementService;
-
-import javax.inject.Inject;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @SessionScoped
 public class StagingExtensionController {

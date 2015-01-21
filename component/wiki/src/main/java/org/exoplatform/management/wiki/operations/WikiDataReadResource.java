@@ -19,6 +19,7 @@ package org.exoplatform.management.wiki.operations;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.wiki.mow.api.Wiki;
@@ -27,7 +28,6 @@ import org.exoplatform.wiki.mow.core.api.MOWService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -35,9 +35,9 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
-public class WikiDataReadResource implements OperationHandler {
+public class WikiDataReadResource extends AbstractOperationHandler {
 
-  private SpaceService spaceService;
+
   private WikiType wikiType;
 
   public WikiDataReadResource(WikiType wikiType) {

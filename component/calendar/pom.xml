@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.exoplatform.addons.staging</groupId>
@@ -17,17 +18,18 @@
 			<groupId>org.exoplatform.calendar</groupId>
 			<artifactId>calendar-service</artifactId>
 		</dependency>
-    <dependency>
-		  <groupId>org.exoplatform.social</groupId>
-		  <artifactId>social-component-core</artifactId>
-    </dependency>
-    <dependency>
-		  <groupId>javax.servlet</groupId>
-		  <artifactId>javax.servlet-api</artifactId>
-    </dependency>
+		<dependency>
+			<groupId>org.exoplatform.social</groupId>
+			<artifactId>social-component-core</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-webui</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.exoplatform.addons.staging</groupId>
+			<artifactId>staging-extension-common</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>

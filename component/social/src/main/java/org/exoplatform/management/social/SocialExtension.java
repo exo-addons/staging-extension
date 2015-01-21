@@ -19,6 +19,7 @@ package org.exoplatform.management.social;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.social.operations.SocialDataExportResource;
 import org.exoplatform.management.social.operations.SocialDataImportResource;
 import org.exoplatform.management.social.operations.SocialDataReadResource;
@@ -28,7 +29,6 @@ import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -98,7 +98,7 @@ public class SocialExtension implements ManagementExtension {
     };
   }
 
-  public static class ReadResource implements OperationHandler {
+  public static class ReadResource extends AbstractOperationHandler {
     private String[] values;
     private String description;
 

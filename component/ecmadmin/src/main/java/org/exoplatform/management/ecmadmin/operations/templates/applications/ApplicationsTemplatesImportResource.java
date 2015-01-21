@@ -1,6 +1,13 @@
 package org.exoplatform.management.ecmadmin.operations.templates.applications;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.InputStreamReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.Node;
+
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
@@ -13,12 +20,7 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import javax.jcr.Node;
-import java.io.InputStreamReader;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

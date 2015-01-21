@@ -7,6 +7,7 @@ import javax.jcr.Node;
 
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.ObjectParameter;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.BasePath;
 import org.exoplatform.services.cms.views.ManageViewService;
 import org.exoplatform.services.cms.views.TemplateConfig;
@@ -14,7 +15,6 @@ import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -25,7 +25,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class ViewTemplatesExportResource implements OperationHandler {
+public class ViewTemplatesExportResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {

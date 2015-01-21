@@ -18,6 +18,7 @@ package org.exoplatform.management.wiki;
 
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.wiki.operations.WikiDataExportResource;
 import org.exoplatform.management.wiki.operations.WikiDataImportResource;
 import org.exoplatform.management.wiki.operations.WikiDataReadResource;
@@ -29,7 +30,6 @@ import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -93,7 +93,7 @@ public class WikiExtension implements ManagementExtension {
     };
   }
 
-  public static class EmptyReadResource implements OperationHandler {
+  public static class EmptyReadResource extends AbstractOperationHandler {
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
       resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));

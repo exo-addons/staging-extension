@@ -2,9 +2,9 @@ package org.exoplatform.management.content.operations.site.contents;
 
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -13,7 +13,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class SiteContentsReadResource implements OperationHandler {
+public class SiteContentsReadResource extends AbstractOperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     resultHandler.completed(new ReadResourceModel("Available sites.", new HashSet<String>()));

@@ -2,56 +2,35 @@ package org.exoplatform.management.content.operations.site.contents;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.portal.config.DataStorage;
-import org.exoplatform.portal.config.model.Application;
-import org.exoplatform.portal.config.model.Container;
-import org.exoplatform.portal.config.model.ModelObject;
-import org.exoplatform.portal.config.model.Page;
-import org.exoplatform.portal.config.model.PortalConfig;
-import org.exoplatform.portal.mop.SiteType;
-import org.exoplatform.portal.mop.page.PageContext;
-import org.exoplatform.portal.mop.page.PageService;
-import org.exoplatform.portal.pom.spi.portlet.Portlet;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.wcm.core.NodeLocation;
 import org.exoplatform.services.wcm.core.WCMConfigurationService;
-import org.exoplatform.services.wcm.core.WCMService;
 import org.exoplatform.services.wcm.portal.PortalFolderSchemaHandler;
-import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
-import org.exoplatform.wcm.webui.Utils;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -60,26 +39,17 @@ import org.gatein.management.api.operation.model.ExportTask;
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
+ * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
+ *         Khanfir</a>
  * @version $Revision$
  */
-public class SiteContentsExportResource implements OperationHandler {
+public class SiteContentsExportResource extends AbstractJCROperationHandler {
   private static final Log log = ExoLogger.getLogger(SiteContentsExportResource.class);
 
-  private static final String FOLDER_PATH = "folderPath";
-  private static final String WORKSPACE = "workspace";
-  private static final String IDENTIFIER = "nodeIdentifier";
   public static final String FILTER_SEPARATOR = ":";
 
   private WCMConfigurationService wcmConfigurationService = null;
-  private TemplateService templateService = null;
-  private ActivityManager activityManager = null;
   private IdentityManager identityManager = null;
-  private RepositoryService repositoryService = null;
-  private WCMService wcmService = null;
-  private DataStorage dataStorage = null;
-  private PageService pageService = null;
-
-  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
@@ -94,18 +64,15 @@ public class SiteContentsExportResource implements OperationHandler {
         throw new OperationException(operationName, "No site name specified.");
       }
 
-      wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
       templateService = operationContext.getRuntimeContext().getRuntimeComponent(TemplateService.class);
-      dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-      pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
+      wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
       activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+      activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
-
       List<String> excludePaths = attributes.getValues("excludePaths");
-
       List<String> filters = attributes.getValues("filter");
 
       boolean exportSiteWithSkeleton = true;
@@ -151,17 +118,6 @@ public class SiteContentsExportResource implements OperationHandler {
       boolean exportVersionHistory = !filters.contains("no-history:true");
       // Exports only metadata
       boolean exportOnlyMetadata = filters.contains("only-metadata:true");
-      // Validate Structure. Defaults to false.
-      boolean validateStructure = filters.contains("validate-structure:true");
-
-      if (validateStructure) {
-        try {
-          // Validate Site Structure
-          validateSiteStructure(siteName, metaData);
-        } catch (Exception e) {
-          log.warn("Error while validation structure", e);
-        }
-      }
 
       Set<String> activitiesId = new HashSet<String>();
       // Site contents
@@ -191,18 +147,7 @@ public class SiteContentsExportResource implements OperationHandler {
       try {
         List<ExoSocialActivity> activities = new ArrayList<ExoSocialActivity>();
         for (String activityId : activitiesId) {
-          ExoSocialActivity activity = activityManager.getActivity(activityId);
-          if (activity != null) {
-            activities.add(activity);
-            RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
-            if (commentsListAccess.getSize() > 0) {
-              List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-              for (ExoSocialActivity exoSocialActivityComment : comments) {
-                exoSocialActivityComment.isComment(true);
-              }
-              activities.addAll(comments);
-            }
-          }
+          addActivityWithComments(activities, activityId);
         }
         if (!activities.isEmpty()) {
           exportTasks.add(new SiteContentsActivitiesExportTask(identityManager, activities, siteName));
@@ -211,99 +156,6 @@ public class SiteContentsExportResource implements OperationHandler {
         log.warn("Can't export activities", e);
       }
     }
-  }
-
-  private void validateSiteStructure(String siteName, SiteMetaData metaData) throws Exception {
-    if (siteName.equals(wcmConfigurationService.getSharedPortalName())) {
-      return;
-    }
-    // pages
-    Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, SiteType.PORTAL, siteName, null, null).iterator();
-    Set<String> contentSet = new HashSet<String>();
-    while (pagesQueryResult.hasNext()) {
-      PageContext pageContext = (PageContext) pagesQueryResult.next();
-      Page page = dataStorage.getPage(pageContext.getKey().format());
-      contentSet.addAll(getSCVPaths(page.getChildren(), metaData));
-      contentSet.addAll(getCLVPaths(page.getChildren(), metaData));
-    }
-
-    // site layout
-    PortalConfig portalConfig = dataStorage.getPortalConfig(siteName);
-    if (portalConfig != null) {
-      Container portalLayout = portalConfig.getPortalLayout();
-      contentSet.addAll(getSCVPaths(portalLayout.getChildren(), metaData));
-      contentSet.addAll(getCLVPaths(portalLayout.getChildren(), metaData));
-    }
-
-    if (!contentSet.isEmpty()) {
-      log.warn("Site contents export: There are some contents used in pages that don't belong to <<" + siteName + ">> site's JCR structure: " + contentSet);
-    }
-  }
-
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  private List<String> getSCVPaths(ArrayList<ModelObject> children, SiteMetaData metaData) throws Exception {
-    List<String> scvPaths = new ArrayList<String>();
-    if (children != null) {
-      for (ModelObject modelObject : children) {
-        if (modelObject instanceof Application) {
-          Portlet portlet = (Portlet) dataStorage.load(((Application) modelObject).getState(), ((Application) modelObject).getType());
-          if (portlet == null || portlet.getValue(IDENTIFIER) == null) {
-            continue;
-          }
-          String workspace = portlet.getPreference(WORKSPACE).getValue();
-          String nodeIdentifier = portlet.getPreference(IDENTIFIER) == null ? null : portlet.getPreference(IDENTIFIER).getValue();
-          if (nodeIdentifier == null || nodeIdentifier.isEmpty()) {
-            continue;
-          }
-          if (workspace.equals(metaData.getOptions().get(SiteMetaData.SITE_WORKSPACE)) && nodeIdentifier.startsWith(metaData.getOptions().get(SiteMetaData.SITE_PATH))) {
-            continue;
-          }
-          String path = nodeIdentifier;
-          if (!nodeIdentifier.startsWith("/")) {
-            Node node = wcmService.getReferencedContent(SessionProvider.createSystemProvider(), workspace, nodeIdentifier);
-            if (node != null) {
-              node = Utils.getRealNode(node);
-            }
-            path = node == null ? null : node.getPath();
-          }
-          if (path == null || path.isEmpty()) {
-            continue;
-          }
-          scvPaths.add(path);
-        } else if (modelObject instanceof Container) {
-          scvPaths.addAll(getSCVPaths(((Container) modelObject).getChildren(), metaData));
-        }
-      }
-    }
-    return scvPaths;
-  }
-
-  @SuppressWarnings({ "unchecked", "rawtypes" })
-  private List<String> getCLVPaths(ArrayList<ModelObject> children, SiteMetaData metaData) throws Exception {
-    List<String> scvPaths = new ArrayList<String>();
-    if (children != null) {
-      for (ModelObject modelObject : children) {
-        if (modelObject instanceof Application) {
-          Portlet portlet = (Portlet) dataStorage.load(((Application) modelObject).getState(), ((Application) modelObject).getType());
-          if (portlet == null || portlet.getValue(FOLDER_PATH) == null) {
-            continue;
-          }
-          String[] folderPaths = portlet.getPreference(FOLDER_PATH).getValue().split(";");
-          for (String folderPath : folderPaths) {
-            String[] paths = folderPath.split(":");
-            String workspace = paths[1];
-            String path = paths[2];
-            if (workspace.equals(metaData.getOptions().get(SiteMetaData.SITE_WORKSPACE)) && path.startsWith(metaData.getOptions().get(SiteMetaData.SITE_PATH))) {
-              continue;
-            }
-            scvPaths.add(path);
-          }
-        } else if (modelObject instanceof Container) {
-          scvPaths.addAll(getCLVPaths(((Container) modelObject).getChildren(), metaData));
-        }
-      }
-    }
-    return scvPaths;
   }
 
   /**
@@ -521,46 +373,10 @@ public class SiteContentsExportResource implements OperationHandler {
     }
   }
 
-  private boolean isRecursiveExport(Node node) throws Exception {
-    NodeType nodeType = node.getPrimaryNodeType();
-    NodeType[] nodeTypes = node.getMixinNodeTypes();
-    boolean recursive = isRecursiveNT(nodeType);
-    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
-      int i = 0;
-      while (!recursive && i < nodeTypes.length) {
-        recursive = isRecursiveNT(nodeTypes[i]);
-        i++;
-      }
-    }
-    return recursive;
-  }
-
-  private boolean isRecursiveNT(NodeType nodeType) throws Exception {
-    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
-      boolean hasMandatoryChild = false;
-      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
-      if (nodeDefinitions != null) {
-        int i = 0;
-        while (!hasMandatoryChild && i < nodeDefinitions.length) {
-          hasMandatoryChild = nodeDefinitions[i].isMandatory();
-          i++;
-        }
-      }
-      boolean recursive = hasMandatoryChild || templateService.isManagedNodeType(nodeType.getName());
-      isNTRecursiveMap.put(nodeType.getName(), recursive);
-    }
-    return isNTRecursiveMap.get(nodeType.getName());
-  }
-
   private SiteMetaDataExportTask getMetaDataExportTask(SiteMetaData metaData) {
     return new SiteMetaDataExportTask(metaData);
   }
 
-  private Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
-  }
-
+  @Override
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {}
 }

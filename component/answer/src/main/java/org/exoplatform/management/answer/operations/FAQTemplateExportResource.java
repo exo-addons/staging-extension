@@ -5,17 +5,17 @@ import java.io.OutputStream;
 
 import org.exoplatform.faq.service.DataStorage;
 import org.exoplatform.faq.service.Utils;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
-public class FAQTemplateExportResource implements OperationHandler {
+public class FAQTemplateExportResource extends AbstractOperationHandler {
 
   public static final String TEMPLATE_PATH_ENTRY = new StringBuilder("answer/template/").append(Utils.UI_FAQ_VIEWER).append(".gtmpl").toString();
 

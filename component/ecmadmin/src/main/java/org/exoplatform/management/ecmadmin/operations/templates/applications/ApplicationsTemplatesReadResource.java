@@ -4,10 +4,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -16,7 +16,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class ApplicationsTemplatesReadResource implements OperationHandler {
+public class ApplicationsTemplatesReadResource extends AbstractOperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     Set<String> applications = new HashSet<String>();

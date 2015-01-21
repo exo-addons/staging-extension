@@ -8,18 +8,18 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.exoplatform.faq.service.DataStorage;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-public class FAQTemplateImportResource implements OperationHandler {
+public class FAQTemplateImportResource extends AbstractOperationHandler {
   private static final Log log = ExoLogger.getLogger(FAQTemplateImportResource.class);
 
   @Override

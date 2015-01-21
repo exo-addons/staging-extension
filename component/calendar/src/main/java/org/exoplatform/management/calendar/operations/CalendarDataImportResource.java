@@ -31,6 +31,10 @@ import org.exoplatform.calendar.service.impl.JCRDataStorage;
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.management.calendar.CalendarExtension;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.MockHttpServletRequest;
+import org.exoplatform.management.common.MockHttpServletResponse;
+import org.exoplatform.management.common.SpaceMetaData;
 import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.UserPortalConfigService;
@@ -49,12 +53,11 @@ import org.exoplatform.portal.webui.util.Util;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
-import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.exoplatform.web.ControllerContext;
 import org.exoplatform.web.application.RequestContext;
@@ -71,7 +74,6 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
@@ -82,7 +84,7 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class CalendarDataImportResource implements OperationHandler {
+public class CalendarDataImportResource extends AbstractOperationHandler {
 
   private static final String INTRANET_SITE_NAME = "intranet";
 
@@ -100,12 +102,10 @@ public class CalendarDataImportResource implements OperationHandler {
 
   public static final String EVENT_LINK_KEY = "EventLink";
 
-  private ActivityManager activityManager;
-  private IdentityStorage identityStorage;
-  private SpaceService spaceService;
   private CalendarService calendarService;
-  private UserACL userACL;
+
   private JCRDataStorage calendarStorage;
+  private UserPortalConfigService portalConfigService;
 
   private boolean groupCalendar;
   private boolean spaceCalendar;
@@ -123,9 +123,10 @@ public class CalendarDataImportResource implements OperationHandler {
     calendarStorage = ((CalendarServiceImpl) calendarService).getDataStorage();
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
-    UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
+    portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -149,7 +150,7 @@ public class CalendarDataImportResource implements OperationHandler {
     String tempFolderPath = null;
     Set<String> contentsByOwner = new HashSet<String>();
 
-    RequestContext originalRequestContext = WebuiRequestContext.getCurrentInstance();
+    RequestContext originalRequestContext = null;
     try {
       // extract data from zip
       tempFolderPath = extractDataFromZip(attachmentInputStream, contentsByOwner);
@@ -157,26 +158,7 @@ public class CalendarDataImportResource implements OperationHandler {
       // FIXME: INTEG-333. Add this to not have a null pointer exception while
       // importing
       if (!contentsByOwner.isEmpty()) {
-        if (originalRequestContext == null) {
-          final ControllerContext controllerContext = new ControllerContext(null, null, new MockHttpServletRequest(), new MockHttpServletResponse(), null);
-          PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(),
-              portalConfigService.getDefaultPortal(), "/portal/" + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
-            @Override
-            public <R, U extends PortalURL<R, U>> U newURL(ResourceType<R, U> resourceType, URLFactory urlFactory) {
-              if (resourceType.equals(NodeURL.TYPE)) {
-                @SuppressWarnings("unchecked")
-                U u = (U) new NodeURL(new PortalURLContext(controllerContext, null) {
-                  public <S extends Object, V extends org.exoplatform.web.url.PortalURL<S, V>> String render(V url) {
-                    return "";
-                  };
-                });
-                return u;
-              }
-              return super.newURL(resourceType, urlFactory);
-            }
-          };
-          WebuiRequestContext.setCurrentInstance(portalRequestContext);
-        }
+        originalRequestContext = fixPortalRequest();
       }
 
       List<File> activitiesFiles = new ArrayList<File>();
@@ -198,7 +180,16 @@ public class CalendarDataImportResource implements OperationHandler {
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import calendar contents", e);
     } finally {
-      WebuiRequestContext.setCurrentInstance(originalRequestContext);
+      if (originalRequestContext != null) {
+        WebuiRequestContext.setCurrentInstance(originalRequestContext);
+      }
+      if (attachmentInputStream != null) {
+        try {
+          attachmentInputStream.close();
+        } catch (IOException e) {
+          // Nothing to do
+        }
+      }
       if (tempFolderPath != null) {
         try {
           FileUtils.deleteDirectory(new File(tempFolderPath));
@@ -207,15 +198,34 @@ public class CalendarDataImportResource implements OperationHandler {
         }
       }
 
-      if (attachmentInputStream != null) {
-        try {
-          attachmentInputStream.close();
-        } catch (IOException e) {
-          // Nothing to do
-        }
-      }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private RequestContext fixPortalRequest() {
+    RequestContext originalRequestContext;
+    originalRequestContext = WebuiRequestContext.getCurrentInstance();
+    if (originalRequestContext == null) {
+      final ControllerContext controllerContext = new ControllerContext(null, null, new MockHttpServletRequest(), new MockHttpServletResponse(), null);
+      PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(),
+          portalConfigService.getDefaultPortal(), "/portal/" + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
+        @Override
+        public <R, U extends PortalURL<R, U>> U newURL(ResourceType<R, U> resourceType, URLFactory urlFactory) {
+          if (resourceType.equals(NodeURL.TYPE)) {
+            @SuppressWarnings("unchecked")
+            U u = (U) new NodeURL(new PortalURLContext(controllerContext, null) {
+              public <S extends Object, V extends org.exoplatform.web.url.PortalURL<S, V>> String render(V url) {
+                return "";
+              };
+            });
+            return u;
+          }
+          return super.newURL(resourceType, urlFactory);
+        }
+      };
+      WebuiRequestContext.setCurrentInstance(portalRequestContext);
+    }
+    return originalRequestContext;
   }
 
   /**
@@ -326,6 +336,18 @@ public class CalendarDataImportResource implements OperationHandler {
     List<Object> objects = (List<Object>) xStream.fromXML(FileUtils.readFileToString(new File(tempFilePath), "UTF-8"));
 
     Calendar calendar = (Calendar) objects.get(0);
+    if (groupCalendar && (calendar.getCalendarOwner() == null || !calendar.getCalendarOwner().startsWith(SpaceUtils.SPACE_GROUP))) {
+      String[] groups = calendar.getGroups();
+      if (groups != null) {
+        for (String groupId : groups) {
+          if (groupId != null && groupId.startsWith(SpaceUtils.SPACE_GROUP)) {
+            calendar.setCalendarOwner(groups[0]);
+            break;
+          }
+        }
+      }
+    }
+
     Calendar toReplaceCalendar = calendarService.getCalendarById(calendar.getId());
     if (toReplaceCalendar != null) {
       if (replaceExisting) {
@@ -389,9 +411,7 @@ public class CalendarDataImportResource implements OperationHandler {
   private void deleteCalendarActivities(List<CalendarEvent> events) {
     for (CalendarEvent event : events) {
       if (event != null && event.getActivityId() != null) {
-        if (activityManager.getActivity(event.getActivityId()) != null) {
-          activityManager.deleteActivity(event.getActivityId());
-        }
+        deleteActivity(event.getActivityId());
       }
     }
   }
@@ -697,39 +717,6 @@ public class CalendarDataImportResource implements OperationHandler {
     }
   }
 
-  private void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (spacePrettyName == null) {
-      activityManager.saveActivityNoReturn(activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    } else {
-      Identity spaceIdentity = getIdentity(spacePrettyName);
-      if (spaceIdentity == null) {
-        log.warn("Cannot get identity of space '" + spacePrettyName + "'");
-        return;
-      }
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-    }
-    log.info("Calendar activity : '" + activity.getTitle() + " is imported.");
-  }
-
-  private void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getId() == null) {
-      log.warn("Parent activity '" + activity.getTitle() + "' has a null ID, cannot import activity comment '" + comment.getTitle() + "'.");
-      return;
-    }
-    activity = activityManager.getActivity(activity.getId());
-    activityManager.saveComment(activity, comment);
-    activity = activityManager.getActivity(activity.getId());
-    activity.setUpdated(updatedTime);
-    activityManager.updateActivity(activity);
-    log.info("Calendar activity comment: '" + activity.getTitle() + " is imported.");
-  }
-
   private Calendar saveEvent(Calendar calendar, CalendarEvent event, ExoSocialActivity exoSocialActivity) throws Exception {
     if (calendar == null) {
       calendar = calendarService.getCalendarById(event.getCalendarId());
@@ -746,27 +733,5 @@ public class CalendarDataImportResource implements OperationHandler {
     }
 
     return calendar;
-  }
-
-  private Identity getIdentity(String userId) {
-    Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, userId);
-    try {
-      if (userIdentity != null) {
-        return userIdentity;
-      } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, userId);
-
-        // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + userId);
-          spaceIdentity = getIdentity(space.getPrettyName());
-        }
-
-        return spaceIdentity;
-      }
-    } catch (Exception e) {
-      log.error(e);
-    }
-    return null;
   }
 }

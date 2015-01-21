@@ -22,6 +22,7 @@
 
 package org.exoplatform.management.mop.operations;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.pom.config.POMSession;
@@ -30,7 +31,6 @@ import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.mop.api.workspace.ObjectType;
 import org.gatein.mop.api.workspace.Site;
@@ -40,7 +40,7 @@ import org.gatein.mop.api.workspace.Workspace;
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
-public abstract class AbstractMopOperationHandler implements OperationHandler {
+public abstract class AbstractMopOperationHandler extends AbstractOperationHandler {
     @Override
     public final void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
             OperationException {

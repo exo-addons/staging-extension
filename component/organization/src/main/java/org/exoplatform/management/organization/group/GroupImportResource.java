@@ -1,8 +1,27 @@
 package org.exoplatform.management.organization.group;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.Session;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -14,30 +33,27 @@ import org.exoplatform.services.jcr.ext.distribution.DataDistributionType;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-import org.exoplatform.services.organization.*;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.Membership;
+import org.exoplatform.services.organization.MembershipType;
+import org.exoplatform.services.organization.OrganizationService;
+import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.impl.UserImpl;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Session;
-import java.io.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class GroupImportResource implements OperationHandler {
+public class GroupImportResource extends AbstractOperationHandler {
   private static final Log log = ExoLogger.getLogger(GroupImportResource.class);
   private OrganizationService organizationService = null;
   private RepositoryService repositoryService = null;

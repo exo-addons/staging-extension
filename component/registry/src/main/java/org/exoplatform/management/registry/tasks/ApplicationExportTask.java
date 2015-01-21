@@ -1,5 +1,9 @@
 package org.exoplatform.management.registry.tasks;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.exoplatform.application.registry.Application;
 import org.exoplatform.application.registry.ApplicationRegistryService;
 import org.exoplatform.container.xml.ObjectParameter;
@@ -9,10 +13,6 @@ import org.gatein.management.api.operation.model.ExportTask;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IMarshallingContext;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

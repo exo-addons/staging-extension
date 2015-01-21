@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 
 import org.apache.commons.io.IOUtils;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.ecmadmin.operations.drive.DriveImportResource;
 import org.exoplatform.management.ecmadmin.operations.nodetype.NodeTypeImportResource;
 import org.exoplatform.management.ecmadmin.operations.queries.QueriesImportResource;
@@ -27,7 +28,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ECMAdminContentImportResource implements OperationHandler {
+public class ECMAdminContentImportResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,

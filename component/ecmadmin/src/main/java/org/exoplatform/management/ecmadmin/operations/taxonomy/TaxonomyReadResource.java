@@ -6,10 +6,10 @@ import java.util.Set;
 
 import javax.jcr.Node;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -18,7 +18,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class TaxonomyReadResource implements OperationHandler {
+public class TaxonomyReadResource extends AbstractOperationHandler {
   private TaxonomyService taxonomyService;
 
   @Override

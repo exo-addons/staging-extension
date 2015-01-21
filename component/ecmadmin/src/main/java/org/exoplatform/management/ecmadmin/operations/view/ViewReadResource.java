@@ -3,9 +3,9 @@ package org.exoplatform.management.ecmadmin.operations.view;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -14,7 +14,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class ViewReadResource implements OperationHandler {
+public class ViewReadResource extends AbstractOperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     Set<String> viewConfigurations = new HashSet<String>();

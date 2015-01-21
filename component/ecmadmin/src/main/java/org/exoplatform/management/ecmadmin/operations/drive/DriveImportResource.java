@@ -1,5 +1,10 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
+import java.io.StringReader;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.Configuration;
@@ -18,11 +23,6 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
-
-import java.io.StringReader;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

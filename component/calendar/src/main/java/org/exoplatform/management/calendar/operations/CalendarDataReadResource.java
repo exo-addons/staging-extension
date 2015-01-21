@@ -25,6 +25,7 @@ import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarService;
 import org.exoplatform.calendar.service.GroupCalendarData;
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
@@ -35,7 +36,6 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -44,7 +44,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class CalendarDataReadResource implements OperationHandler {
+public class CalendarDataReadResource extends AbstractOperationHandler {
 
   private boolean groupCalendar;
   private boolean spaceCalendar;

@@ -2,6 +2,7 @@ package org.exoplatform.management.gadget;
 
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.gadget.operations.GadgetExportResource;
 import org.exoplatform.management.gadget.operations.GadgetImportResource;
 import org.exoplatform.management.gadget.operations.GadgetReadResource;
@@ -11,7 +12,6 @@ import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -54,7 +54,7 @@ public class GadgetManagementExtension implements ManagementExtension {
     };
   }
 
-  public static class EmptyReadResource implements OperationHandler {
+  public static class EmptyReadResource extends AbstractOperationHandler {
     @Override
     public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
         OperationException {

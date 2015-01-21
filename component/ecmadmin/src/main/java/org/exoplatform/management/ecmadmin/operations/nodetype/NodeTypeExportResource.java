@@ -7,11 +7,11 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.NodeTypeIterator;
 import javax.jcr.nodetype.NodeTypeManager;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -21,7 +21,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class NodeTypeExportResource implements OperationHandler {
+public class NodeTypeExportResource extends AbstractOperationHandler {
 
   private RepositoryService repositoryService;
 

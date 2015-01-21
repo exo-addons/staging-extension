@@ -1,6 +1,19 @@
 package org.exoplatform.management.ecmadmin.operations.taxonomy;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.Session;
+
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
@@ -14,18 +27,7 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.Session;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>

@@ -1,11 +1,12 @@
 package org.exoplatform.management.ecmadmin.operations.templates.metadata;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
 import org.gatein.management.api.operation.model.ExportTask;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas

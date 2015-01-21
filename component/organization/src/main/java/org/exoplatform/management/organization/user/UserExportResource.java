@@ -1,6 +1,13 @@
 package org.exoplatform.management.organization.user;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.jcr.Node;
+
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -11,21 +18,19 @@ import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserProfile;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
-
-import javax.jcr.Node;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
-public class UserExportResource implements OperationHandler {
+public class UserExportResource extends AbstractOperationHandler {
   private OrganizationService organizationService = null;
   private RepositoryService repositoryService = null;
   private NodeHierarchyCreator hierarchyCreator = null;

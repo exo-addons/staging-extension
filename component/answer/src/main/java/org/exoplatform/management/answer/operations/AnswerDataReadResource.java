@@ -24,6 +24,7 @@ import org.exoplatform.faq.service.Category;
 import org.exoplatform.faq.service.FAQService;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -32,7 +33,6 @@ import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
@@ -40,7 +40,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class AnswerDataReadResource implements OperationHandler {
+public class AnswerDataReadResource extends AbstractOperationHandler {
 
   private boolean isSpaceType;
 

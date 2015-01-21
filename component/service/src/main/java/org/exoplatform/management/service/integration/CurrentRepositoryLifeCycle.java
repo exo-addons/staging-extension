@@ -1,12 +1,13 @@
 package org.exoplatform.management.service.integration;
 
-import org.chromattic.spi.jcr.SessionLifeCycle;
+import java.lang.reflect.Method;
 
 import javax.jcr.Credentials;
 import javax.jcr.Repository;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import java.lang.reflect.Method;
+
+import org.chromattic.spi.jcr.SessionLifeCycle;
 
 /**
  * Integrates Chromattic with the GateIn JCR server.

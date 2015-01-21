@@ -1,29 +1,30 @@
 package org.exoplatform.management.ecmadmin.operations.taxonomy;
 
-import org.exoplatform.ecm.webui.utils.Utils;
-import org.exoplatform.services.cms.taxonomy.TaxonomyService;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.gatein.management.api.PathAddress;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
-import org.gatein.management.api.operation.model.ExportResourceModel;
-import org.gatein.management.api.operation.model.ExportTask;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Value;
 import javax.jcr.ValueFormatException;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.exoplatform.ecm.webui.utils.Utils;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.services.cms.taxonomy.TaxonomyService;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.gatein.management.api.PathAddress;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.model.ExportResourceModel;
+import org.gatein.management.api.operation.model.ExportTask;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class TaxonomyExportResource implements OperationHandler {
+public class TaxonomyExportResource extends AbstractOperationHandler {
 
   private static final String EXPORT_BASE_PATH = "ecmadmin/taxonomy";
 

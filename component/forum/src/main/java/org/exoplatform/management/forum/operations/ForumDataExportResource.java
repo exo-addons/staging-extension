@@ -17,16 +17,12 @@
 package org.exoplatform.management.forum.operations;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 import javax.jcr.Session;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.Category;
@@ -35,25 +31,23 @@ import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.forum.service.impl.model.TopicFilter;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -63,22 +57,18 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataExportResource implements OperationHandler {
+public class ForumDataExportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataExportResource.class);
 
-  private RepositoryService repositoryService;
-  private SpaceService spaceService;
+
   private ForumService forumService;
   private PollService pollService;
   private KSDataLocation dataLocation;
-  private ActivityManager activityManager;
   private IdentityManager identityManager;
 
   private boolean isSpaceForumType;
   private String type;
-
-  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
   public ForumDataExportResource(boolean isSpaceForumType) {
     this.isSpaceForumType = isSpaceForumType;
@@ -93,6 +83,7 @@ public class ForumDataExportResource implements OperationHandler {
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String name = operationContext.getAttributes().getValue("filter");
@@ -134,6 +125,16 @@ public class ForumDataExportResource implements OperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
+  @Override
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {
+    if (params.length != 4) {
+      log.warn("Cannot add Forum Export Task, 4 parameters was expected, got: " + ArrayUtils.toString(params));
+      return;
+    }
+    ForumExportTask forumExportTask = new ForumExportTask(repositoryService, type, params[1], params[2], params[0], params[3], recursive);
+    subNodesExportTask.add(forumExportTask);
+  }
+
   private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName, boolean exportSpaceMetadata) {
     try {
       String forumId = (spacePrettyName == null ? "" : Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName);
@@ -150,7 +151,7 @@ public class ForumDataExportResource implements OperationHandler {
       String parentNodePath = "/" + categoryHomePath + "/" + categoryId + (forumId.isEmpty() ? "" : "/" + forumId);
       Session session = getSession(workspace);
       Node parentNode = (Node) session.getItem(parentNodePath);
-      exportNode(workspace, parentNode, categoryId, forumId, exportTasks);
+      exportNode(parentNode, exportTasks, workspace, categoryId, forumId);
 
       // export Activities
       exportActivities(exportTasks, categoryId, forumId);
@@ -181,9 +182,6 @@ public class ForumDataExportResource implements OperationHandler {
       List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
       for (Topic topic : topics) {
         String activityId = forumService.getActivityIdForOwnerId(topic.getId());
-        if (activityId == null) {
-          continue;
-        }
         addActivityWithComments(activitiesList, activityId);
 
         if (topic.getIsPoll()) {
@@ -201,71 +199,4 @@ public class ForumDataExportResource implements OperationHandler {
       }
     }
   }
-
-  private void addActivityWithComments(List<ExoSocialActivity> activitiesList, String activityId) {
-    ExoSocialActivity topicActivity = activityManager.getActivity(activityId);
-    if (topicActivity != null && !topicActivity.isComment()) {
-      activitiesList.add(topicActivity);
-      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(topicActivity);
-      if (commentsListAccess.getSize() > 0) {
-        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-        for (ExoSocialActivity exoSocialActivityComment : comments) {
-          exoSocialActivityComment.isComment(true);
-        }
-        activitiesList.addAll(comments);
-      }
-    }
-  }
-
-  private void exportNode(String workspace, Node node, String categoryId, String forumId, List<ExportTask> subNodesExportTask) throws Exception {
-    boolean recursive = isRecursiveExport(node);
-    ForumExportTask forumExportTask = new ForumExportTask(repositoryService, type, categoryId, forumId, workspace, node.getPath(), recursive);
-    subNodesExportTask.add(forumExportTask);
-    // If not export the whole node
-    if (!recursive) {
-      NodeIterator nodeIterator = node.getNodes();
-      while (nodeIterator.hasNext()) {
-        Node childNode = nodeIterator.nextNode();
-        exportNode(workspace, childNode, categoryId, forumId, subNodesExportTask);
-      }
-    }
-  }
-
-  private Session getSession(String workspace) throws Exception {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
-  }
-
-  private boolean isRecursiveExport(Node node) throws Exception {
-    NodeType nodeType = node.getPrimaryNodeType();
-    NodeType[] nodeTypes = node.getMixinNodeTypes();
-    boolean recursive = isRecursiveNT(nodeType);
-    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
-      int i = 0;
-      while (!recursive && i < nodeTypes.length) {
-        recursive = isRecursiveNT(nodeTypes[i]);
-        i++;
-      }
-    }
-    return recursive;
-  }
-
-  private boolean isRecursiveNT(NodeType nodeType) throws Exception {
-    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
-      boolean hasMandatoryChild = false;
-      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
-      if (nodeDefinitions != null) {
-        int i = 0;
-        while (!hasMandatoryChild && i < nodeDefinitions.length) {
-          hasMandatoryChild = nodeDefinitions[i].isMandatory();
-          i++;
-        }
-      }
-      isNTRecursiveMap.put(nodeType.getName(), hasMandatoryChild);
-    }
-    return isNTRecursiveMap.get(nodeType.getName());
-  }
-
 }

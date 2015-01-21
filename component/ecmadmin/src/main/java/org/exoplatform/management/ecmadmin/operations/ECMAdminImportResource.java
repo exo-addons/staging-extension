@@ -1,17 +1,22 @@
 package org.exoplatform.management.ecmadmin.operations;
 
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
-
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
+
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public abstract class ECMAdminImportResource implements OperationHandler {
+public abstract class ECMAdminImportResource extends AbstractOperationHandler {
 
   protected InputStream attachmentInputStream = null;
   protected Boolean replaceExisting = null;

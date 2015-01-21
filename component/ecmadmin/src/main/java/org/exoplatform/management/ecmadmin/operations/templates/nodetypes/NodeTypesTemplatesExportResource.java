@@ -6,6 +6,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.ecmadmin.exporttask.NodeFileExportTask;
 import org.exoplatform.management.ecmadmin.operations.templates.NodeTemplate;
 import org.exoplatform.services.cms.templates.TemplateService;
@@ -13,7 +14,6 @@ import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
@@ -23,7 +23,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class NodeTypesTemplatesExportResource implements OperationHandler {
+public class NodeTypesTemplatesExportResource extends AbstractOperationHandler {
 
   private static final String EXPORT_BASE_PATH = "ecmadmin/templates/nodetypes";
 

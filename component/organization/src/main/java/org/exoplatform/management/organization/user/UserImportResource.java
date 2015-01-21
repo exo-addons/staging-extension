@@ -1,34 +1,51 @@
 package org.exoplatform.management.organization.user;
 
-import com.thoughtworks.xstream.XStream;
-import org.apache.poi.util.IOUtils;
-import org.exoplatform.management.organization.OrganizationManagementExtension;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.exoplatform.services.organization.*;
-import org.exoplatform.services.organization.impl.UserImpl;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
-import org.gatein.management.api.operation.model.NoResultModel;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.Session;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.Node;
+import javax.jcr.Session;
+
+import org.apache.poi.util.IOUtils;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.organization.OrganizationManagementExtension;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.Group;
+import org.exoplatform.services.organization.Membership;
+import org.exoplatform.services.organization.MembershipType;
+import org.exoplatform.services.organization.OrganizationService;
+import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.UserProfile;
+import org.exoplatform.services.organization.impl.UserImpl;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.model.NoResultModel;
+
+import com.thoughtworks.xstream.XStream;
+
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class UserImportResource implements OperationHandler {
+public class UserImportResource extends AbstractOperationHandler {
   private static final Log log = ExoLogger.getLogger(UserImportResource.class);
   private OrganizationService organizationService = null;
   private RepositoryService repositoryService = null;

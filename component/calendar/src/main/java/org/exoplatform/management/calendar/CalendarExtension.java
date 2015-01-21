@@ -22,13 +22,13 @@ import java.util.HashSet;
 import org.exoplatform.management.calendar.operations.CalendarDataExportResource;
 import org.exoplatform.management.calendar.operations.CalendarDataImportResource;
 import org.exoplatform.management.calendar.operations.CalendarDataReadResource;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.gatein.management.api.ComponentRegistration;
 import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
@@ -83,7 +83,7 @@ public class CalendarExtension implements ManagementExtension {
     };
   }
 
-  public static class ReadResource implements OperationHandler {
+  public static class ReadResource extends AbstractOperationHandler {
     private String[] values;
     private String description;
 

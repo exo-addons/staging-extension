@@ -25,5 +25,11 @@
 			<groupId>org.gatein.portal</groupId>
 			<artifactId>exo.portal.component.portal</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.exoplatform.addons.staging</groupId>
+			<artifactId>staging-extension-common</artifactId>
+			<version>${project.version}</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 </project>

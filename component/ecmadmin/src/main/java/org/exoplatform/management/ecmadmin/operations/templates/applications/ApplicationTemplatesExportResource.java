@@ -8,12 +8,12 @@ import java.util.regex.Pattern;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -24,7 +24,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class ApplicationTemplatesExportResource implements OperationHandler {
+public class ApplicationTemplatesExportResource extends AbstractOperationHandler {
 
   private Pattern templateEntryPattern = Pattern.compile("(.*)/(.*)/(.*)\\.gtmpl");
 

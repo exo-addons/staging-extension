@@ -18,18 +18,14 @@ package org.exoplatform.management.wiki.operations;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
@@ -47,7 +43,6 @@ import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -57,20 +52,17 @@ import org.gatein.management.api.operation.model.ExportTask;
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
-public class WikiDataExportResource implements OperationHandler {
+public class WikiDataExportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(WikiDataExportResource.class);
 
   private MOWService mowService;
 
   private WikiType wikiType;
-
-  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
-
   private RepositoryService repositoryService;
-  private SpaceService spaceService;
+
   private WikiService wikiService;
-  private ActivityManager activityManager;
+
   private IdentityManager identityManager;
 
   public WikiDataExportResource(WikiType wikiType) {
@@ -118,7 +110,7 @@ public class WikiDataExportResource implements OperationHandler {
     try {
       Node wikiNode = wiki.getWikiHome().getJCRPageNode().getParent();
       String workspace = wikiNode.getSession().getWorkspace().getName();
-      exportNode(wikiNode, wiki.getOwner(), workspace, exportTasks);
+      exportNode(wikiNode, exportTasks, workspace, wiki.getOwner());
 
       if (exportSpaceMetadata && WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
         Space space = spaceService.getSpaceByGroupId(wiki.getOwner());
@@ -146,22 +138,7 @@ public class WikiDataExportResource implements OperationHandler {
 
     for (Page page : pages) {
       String activityId = ActivityTypeUtils.getActivityId(page.getJCRPageNode());
-      if (activityId == null || activityId.isEmpty()) {
-        continue;
-      }
-      ExoSocialActivity pageActivity = activityManager.getActivity(activityId);
-      if (pageActivity == null || pageActivity.isComment()) {
-        continue;
-      }
-      activitiesList.add(pageActivity);
-      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(pageActivity);
-      if (commentsListAccess.getSize() > 0) {
-        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-        for (ExoSocialActivity exoSocialActivityComment : comments) {
-          exoSocialActivityComment.isComment(true);
-        }
-        activitiesList.addAll(comments);
-      }
+      addActivityWithComments(activitiesList, activityId);
     }
     if (!activitiesList.isEmpty()) {
       exportTasks.add(new WikiActivitiesExportTask(identityManager, activitiesList, wiki.getType(), wiki.getOwner()));
@@ -176,49 +153,14 @@ public class WikiDataExportResource implements OperationHandler {
     }
   }
 
-  private void exportNode(Node childNode, String workspace, String wikiOwner, List<ExportTask> subNodesExportTask) throws Exception {
-    String path = childNode.getPath();
-    boolean recursive = isRecursiveExport(childNode);
-    WikiExportTask wikiExportTask = new WikiExportTask(repositoryService, wikiType, workspace, wikiOwner, path, recursive);
+  @Override
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {
+    if (params.length != 3) {
+      log.warn("Cannot add Wiki Export Task, 3 parameters was expected, got: " + ArrayUtils.toString(params));
+      return;
+    }
+    WikiExportTask wikiExportTask = new WikiExportTask(repositoryService, wikiType, params[0], params[1], params[2], recursive);
     subNodesExportTask.add(wikiExportTask);
-    // If not export the whole node
-    if (!recursive) {
-      NodeIterator nodeIterator = childNode.getNodes();
-      while (nodeIterator.hasNext()) {
-        Node node = nodeIterator.nextNode();
-        exportNode(node, workspace, wikiOwner, subNodesExportTask);
-      }
-    }
-  }
-
-  private boolean isRecursiveExport(Node node) throws Exception {
-    NodeType nodeType = node.getPrimaryNodeType();
-    NodeType[] nodeTypes = node.getMixinNodeTypes();
-    boolean recursive = isRecursiveNT(nodeType);
-    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
-      int i = 0;
-      while (!recursive && i < nodeTypes.length) {
-        recursive = isRecursiveNT(nodeTypes[i]);
-        i++;
-      }
-    }
-    return recursive;
-  }
-
-  private boolean isRecursiveNT(NodeType nodeType) throws Exception {
-    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
-      boolean hasMandatoryChild = false;
-      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
-      if (nodeDefinitions != null) {
-        int i = 0;
-        while (!hasMandatoryChild && i < nodeDefinitions.length) {
-          hasMandatoryChild = nodeDefinitions[i].isMandatory();
-          i++;
-        }
-      }
-      isNTRecursiveMap.put(nodeType.getName(), hasMandatoryChild);
-    }
-    return isNTRecursiveMap.get(nodeType.getName());
   }
 
 }

@@ -1,13 +1,13 @@
 package org.exoplatform.management.service.handler.organization;
 
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipOutputStream;
+
 import org.exoplatform.management.service.api.AbstractResourceHandler;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.TargetServer;
-
-import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipOutputStream;
 
 public class GroupsHandler extends AbstractResourceHandler {
 

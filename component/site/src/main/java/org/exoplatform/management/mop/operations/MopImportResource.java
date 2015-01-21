@@ -7,6 +7,13 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.mop.exportimport.NavigationExportTask;
+import org.exoplatform.management.mop.exportimport.NavigationImportTask;
+import org.exoplatform.management.mop.exportimport.PageExportTask;
+import org.exoplatform.management.mop.exportimport.PageImportTask;
+import org.exoplatform.management.mop.exportimport.SiteLayoutExportTask;
+import org.exoplatform.management.mop.exportimport.SiteLayoutImportTask;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.Page;
 import org.exoplatform.portal.config.model.PageNavigation;
@@ -14,12 +21,6 @@ import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.description.DescriptionService;
 import org.exoplatform.portal.mop.importer.ImportMode;
-import org.exoplatform.management.mop.exportimport.NavigationExportTask;
-import org.exoplatform.management.mop.exportimport.NavigationImportTask;
-import org.exoplatform.management.mop.exportimport.PageExportTask;
-import org.exoplatform.management.mop.exportimport.PageImportTask;
-import org.exoplatform.management.mop.exportimport.SiteLayoutExportTask;
-import org.exoplatform.management.mop.exportimport.SiteLayoutImportTask;
 import org.exoplatform.portal.mop.navigation.NavigationService;
 import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.pom.config.POMSession;
@@ -32,13 +33,12 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
-public class MopImportResource implements OperationHandler {
+public class MopImportResource extends AbstractOperationHandler {
   private static final Logger log = LoggerFactory.getLogger(MopImportResource.class);
 
   // TODO: Would like to see the step operations be handled by mgmt core.

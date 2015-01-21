@@ -8,6 +8,7 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.exoplatform.commons.utils.ListAccess;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -24,7 +25,6 @@ import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -35,7 +35,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class GroupExportResource implements OperationHandler {
+public class GroupExportResource extends AbstractOperationHandler {
 
   private OrganizationService organizationService = null;
   private RepositoryService repositoryService = null;

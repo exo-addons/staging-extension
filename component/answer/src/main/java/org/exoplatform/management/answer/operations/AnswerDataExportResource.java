@@ -28,6 +28,7 @@ import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.QuestionPageList;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -35,12 +36,12 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -50,13 +51,13 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class AnswerDataExportResource implements OperationHandler {
+public class AnswerDataExportResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataExportResource.class);
 
-  private SpaceService spaceService;
+
   private FAQService faqService;
-  private ActivityManager activityManager;
+
   private IdentityManager identityManager;
 
   private boolean isSpaceType;
@@ -73,6 +74,7 @@ public class AnswerDataExportResource implements OperationHandler {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String name = operationContext.getAttributes().getValue("filter");
@@ -163,6 +165,7 @@ public class AnswerDataExportResource implements OperationHandler {
       }
       ExoSocialActivity questionActivity = activityManager.getActivity(activityId);
       activitiesList.add(questionActivity);
+
       RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(questionActivity);
       if (commentsListAccess.getSize() > 0) {
         List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
@@ -178,6 +181,7 @@ public class AnswerDataExportResource implements OperationHandler {
             }
           }
           exoSocialActivity.isComment(true);
+          exoSocialActivity.setParentId(activityId);
         }
         activitiesList.addAll(comments);
       }

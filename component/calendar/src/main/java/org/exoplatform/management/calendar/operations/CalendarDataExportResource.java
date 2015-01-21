@@ -27,21 +27,21 @@ import org.exoplatform.calendar.service.CalendarService;
 import org.exoplatform.calendar.service.GroupCalendarData;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.calendar.CalendarExtension;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
-import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationHandler;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -51,14 +51,12 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class CalendarDataExportResource implements OperationHandler {
+public class CalendarDataExportResource extends AbstractOperationHandler {
 
   private boolean groupCalendar;
   private boolean spaceCalendar;
   private String type;
 
-  private SpaceService spaceService;
-  private ActivityManager activityManager;
   private IdentityManager identityManager;
   private OrganizationService organizationService;
 
@@ -75,6 +73,7 @@ public class CalendarDataExportResource implements OperationHandler {
     UserACL userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
@@ -207,29 +206,11 @@ public class CalendarDataExportResource implements OperationHandler {
 
   private void exportActivities(List<ExportTask> exportTasks, List<CalendarEvent> events) throws Exception {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    String calendarId = null;
     for (CalendarEvent event : events) {
-      String activityId = event.getActivityId();
-      calendarId = event.getCalendarId();
-      if (activityId == null) {
-        continue;
-      }
-      ExoSocialActivity eventActivity = activityManager.getActivity(activityId);
-      if (eventActivity == null) {
-        continue;
-      }
-      activitiesList.add(eventActivity);
-      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(eventActivity);
-      if (commentsListAccess.getSize() > 0) {
-        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-        for (ExoSocialActivity exoSocialActivityComment : comments) {
-          exoSocialActivityComment.isComment(true);
-        }
-        activitiesList.addAll(comments);
-      }
+      addActivityWithComments(activitiesList, event.getActivityId());
     }
     if (!activitiesList.isEmpty()) {
-      exportTasks.add(new CalendarActivitiesExportTask(identityManager, activitiesList, type, calendarId));
+      exportTasks.add(new CalendarActivitiesExportTask(identityManager, activitiesList, type, events.get(0).getCalendarId()));
     }
   }
 }

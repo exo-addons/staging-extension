@@ -1,24 +1,5 @@
 package org.exoplatform.management.gadget.operations;
 
-import org.apache.commons.io.IOUtils;
-import org.exoplatform.application.gadget.Gadget;
-import org.exoplatform.application.gadget.GadgetRegistryService;
-import org.exoplatform.application.registry.impl.ApplicationRegistryChromatticLifeCycle;
-import org.exoplatform.commons.chromattic.ChromatticManager;
-import org.exoplatform.container.PortalContainer;
-import org.exoplatform.container.component.RequestLifeCycle;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.*;
-import org.gatein.management.api.operation.model.NoResultModel;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,11 +8,36 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
+import org.apache.commons.io.IOUtils;
+import org.exoplatform.application.gadget.Gadget;
+import org.exoplatform.application.gadget.GadgetRegistryService;
+import org.exoplatform.application.registry.impl.ApplicationRegistryChromatticLifeCycle;
+import org.exoplatform.commons.chromattic.ChromatticManager;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationAttributes;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.model.NoResultModel;
+
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class GadgetImportResource implements OperationHandler {
+public class GadgetImportResource extends AbstractOperationHandler {
 
   private static final Log log = ExoLogger.getLogger(GadgetImportResource.class);
   private static final String DEFAULT_JCR_PATH = "/production/app:gadgets/";

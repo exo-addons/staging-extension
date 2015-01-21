@@ -1,11 +1,15 @@
 package org.exoplatform.management.service.impl;
 
-import org.exoplatform.management.service.api.*;
+import java.util.List;
+
+import org.exoplatform.management.service.api.ChromatticService;
+import org.exoplatform.management.service.api.ResourceCategory;
+import org.exoplatform.management.service.api.ResourceHandler;
+import org.exoplatform.management.service.api.SynchronizationService;
+import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-
-import java.util.List;
 
 public class SynchronizationServiceImpl implements SynchronizationService {
 
