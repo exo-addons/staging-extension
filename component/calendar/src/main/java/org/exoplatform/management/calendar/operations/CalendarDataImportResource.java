@@ -20,7 +20,6 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
@@ -52,7 +51,6 @@ import org.exoplatform.portal.url.PortalURLContext;
 import org.exoplatform.portal.webui.util.Util;
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
-import org.exoplatform.social.core.identity.model.Identity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
@@ -615,70 +613,8 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
       }
     }
 
-    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    Identity identity = null;
-    for (ExoSocialActivity activity : activities) {
-      identity = getIdentity(activity.getUserId());
+    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
 
-      if (identity != null) {
-        activity.setUserId(identity.getId());
-
-        identity = getIdentity(activity.getPosterId());
-
-        if (identity != null) {
-          activity.setPosterId(identity.getId());
-          activitiesList.add(activity);
-
-          Set<String> keys = activity.getTemplateParams().keySet();
-          for (String key : keys) {
-            String value = activity.getTemplateParams().get(key);
-            if (value != null) {
-              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
-            }
-          }
-          if (StringUtils.isNotEmpty(activity.getTitle())) {
-            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
-          }
-          if (StringUtils.isNotEmpty(activity.getBody())) {
-            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
-          }
-          if (StringUtils.isNotEmpty(activity.getSummary())) {
-            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
-          }
-        }
-        activity.setReplyToId(null);
-        String[] commentedIds = activity.getCommentedIds();
-        if (commentedIds != null && commentedIds.length > 0) {
-          for (int i = 0; i < commentedIds.length; i++) {
-            identity = getIdentity(commentedIds[i]);
-            if (identity != null) {
-              commentedIds[i] = identity.getId();
-            }
-          }
-          activity.setCommentedIds(commentedIds);
-        }
-        String[] mentionedIds = activity.getMentionedIds();
-        if (mentionedIds != null && mentionedIds.length > 0) {
-          for (int i = 0; i < mentionedIds.length; i++) {
-            identity = getIdentity(mentionedIds[i]);
-            if (identity != null) {
-              mentionedIds[i] = identity.getId();
-            }
-          }
-          activity.setMentionedIds(mentionedIds);
-        }
-        String[] likeIdentityIds = activity.getLikeIdentityIds();
-        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
-          for (int i = 0; i < likeIdentityIds.length; i++) {
-            identity = getIdentity(likeIdentityIds[i]);
-            if (identity != null) {
-              likeIdentityIds[i] = identity.getId();
-            }
-          }
-          activity.setLikeIdentityIds(likeIdentityIds);
-        }
-      }
-    }
     Calendar calendar = null;
     ExoSocialActivity eventActivity = null;
     for (ExoSocialActivity exoSocialActivity : activitiesList) {

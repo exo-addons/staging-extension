@@ -24,8 +24,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.StringUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.common.AbstractOperationHandler;
@@ -76,8 +74,6 @@ import com.thoughtworks.xstream.XStream;
  */
 public class SocialDataImportResource extends AbstractOperationHandler {
 
-  private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
 
   final private static int BUFFER = 2048000;
@@ -88,9 +84,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
   private ManagementController managementController;
 
   private DataStorage dataStorage;
-
-  // This is used to test on duplicated activities
-  private Set<Long> activityPostTime = new HashSet<Long>();
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
@@ -103,7 +96,7 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
     activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
-    activityPostTime.clear();
+    activitiesByPostTime.clear();
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -347,78 +340,9 @@ public class SocialDataImportResource extends AbstractOperationHandler {
         }
       }
     }
-    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    Identity identity = null;
-    for (ExoSocialActivity activity : activities) {
-      if (activity.getPostedTime() != null && activityPostTime.contains(activity.getPostedTime())) {
-        log.info("Ignore duplicated Activity '" + activity.getTitle() + "'.");
-        continue;
-      } else {
-        activityPostTime.add(activity.getPostedTime());
-      }
-      identity = getIdentity(activity.getUserId());
 
-      if (identity != null) {
-        activity.setUserId(identity.getId());
+    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
 
-        identity = getIdentity(activity.getPosterId());
-
-        if (identity != null) {
-          activity.setPosterId(identity.getId());
-          activitiesList.add(activity);
-
-          Set<String> keys = activity.getTemplateParams().keySet();
-          for (String key : keys) {
-            String value = activity.getTemplateParams().get(key);
-            if (value != null) {
-              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
-            }
-          }
-          if (StringUtils.isNotEmpty(activity.getTitle())) {
-            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
-          }
-          if (StringUtils.isNotEmpty(activity.getBody())) {
-            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
-          }
-          if (StringUtils.isNotEmpty(activity.getSummary())) {
-            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
-          }
-        }
-        activity.setReplyToId(null);
-        String[] commentedIds = activity.getCommentedIds();
-        if (commentedIds != null && commentedIds.length > 0) {
-          for (int i = 0; i < commentedIds.length; i++) {
-            identity = getIdentity(commentedIds[i]);
-            if (identity != null) {
-              commentedIds[i] = identity.getId();
-            }
-          }
-          activity.setCommentedIds(commentedIds);
-        }
-        String[] mentionedIds = activity.getMentionedIds();
-        if (mentionedIds != null && mentionedIds.length > 0) {
-          for (int i = 0; i < mentionedIds.length; i++) {
-            identity = getIdentity(mentionedIds[i]);
-            if (identity != null) {
-              mentionedIds[i] = identity.getId();
-            }
-          }
-          activity.setMentionedIds(mentionedIds);
-        }
-        String[] likeIdentityIds = activity.getLikeIdentityIds();
-        if (likeIdentityIds != null && likeIdentityIds.length > 0) {
-          for (int i = 0; i < likeIdentityIds.length; i++) {
-            identity = getIdentity(likeIdentityIds[i]);
-            if (identity != null) {
-              likeIdentityIds[i] = identity.getId();
-            }
-          }
-          activity.setLikeIdentityIds(likeIdentityIds);
-        }
-      } else {
-        log.warn("Space activity : '" + activity.getTitle() + "' isn't imported because the associated user '" + activity.getUserId() + "' wasn't found.");
-      }
-    }
     Identity spaceIdentity = getIdentity(spacePrettyName);
     ExoSocialActivity parentActivity = null;
     for (ExoSocialActivity exoSocialActivity : activitiesList) {
@@ -583,9 +507,9 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     for (String member : members) {
       try {
         SpaceUtils.addUserToGroupWithMemberMembership(member, space.getGroupId());
-        log.info("User '" + member + "' added to space as member: '" + spaceMetaData.getPrettyName() + "'.");
+        log.info("  User '" + member + "' added to space as member: '" + spaceMetaData.getPrettyName() + "'.");
       } catch (Exception e) {
-        log.warn("Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
+        log.warn("  Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
       }
     }
 
@@ -597,11 +521,11 @@ public class SocialDataImportResource extends AbstractOperationHandler {
 
     for (String manager : managers) {
       try {
-        log.info("User '" + manager + "' promoted to manager of space: '" + spaceMetaData.getPrettyName() + "'.");
+        log.info("  User '" + manager + "' promoted to manager of space: '" + spaceMetaData.getPrettyName() + "'.");
         SpaceUtils.addUserToGroupWithManagerMembership(manager, space.getGroupId());
 
       } catch (Exception e) {
-        log.warn("Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
+        log.warn("  Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
       }
     }
     RequestLifeCycle.end();

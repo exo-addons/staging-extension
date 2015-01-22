@@ -159,7 +159,7 @@ public class WikiDataExportResource extends AbstractJCROperationHandler {
       log.warn("Cannot add Wiki Export Task, 3 parameters was expected, got: " + ArrayUtils.toString(params));
       return;
     }
-    WikiExportTask wikiExportTask = new WikiExportTask(repositoryService, wikiType, params[0], params[1], params[2], recursive);
+    WikiExportTask wikiExportTask = new WikiExportTask(repositoryService, wikiType, params[1], params[0], params[2], recursive);
     subNodesExportTask.add(wikiExportTask);
   }
 

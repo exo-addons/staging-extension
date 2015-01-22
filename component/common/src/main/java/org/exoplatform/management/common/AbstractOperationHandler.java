@@ -3,8 +3,13 @@ package org.exoplatform.management.common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -12,6 +17,7 @@ import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ActivityStream.Type;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.model.Profile;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -28,11 +34,16 @@ public abstract class AbstractOperationHandler implements OperationHandler {
 
   protected static final Log log = ExoLogger.getLogger(AbstractOperationHandler.class);
 
+  protected static final String[] EMPTY_STRING_ARRAY = new String[0];
+
   protected UserACL userACL;
   protected SpaceService spaceService;
   protected ActivityManager activityManager;
   protected ActivityStorage activityStorage;
   protected IdentityStorage identityStorage;
+
+  // This is used to test on duplicated activities
+  protected Set<Long> activitiesByPostTime = new HashSet<Long>();
 
   protected final void addActivityWithComments(List<ExoSocialActivity> activitiesList, String activityId) {
     if (activityId == null || activityId.isEmpty()) {
@@ -158,7 +169,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     } else {
       Identity spaceIdentity = getIdentity(spacePrettyName);
       if (spaceIdentity == null) {
-        log.warn("Activity is not imported'" + activity.getTitle() + "'.");
+        log.warn("Activity is not imported: '" + activity.getTitle() + "'.");
         return;
       }
       activityManager.saveActivityNoReturn(spaceIdentity, activity);
@@ -207,7 +218,10 @@ public abstract class AbstractOperationHandler implements OperationHandler {
 
         // Try to see if space was renamed
         if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + id);
+          Space space = spaceService.getSpaceByGroupId(id);
+          if (space == null) {
+            space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + id);
+          }
           if (space != null) {
             spaceIdentity = getIdentity(space.getPrettyName());
           }
@@ -221,6 +235,79 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       log.error("Error while retrieving identity: ", e);
     }
     return null;
+  }
+
+  protected final List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
+    Identity identity = null;
+    for (ExoSocialActivity activity : activities) {
+      if (activity.getPostedTime() != null && activitiesByPostTime.contains(activity.getPostedTime())) {
+        log.info("Ignore duplicated Activity '" + activity.getTitle() + "'.");
+        continue;
+      } else {
+        activitiesByPostTime.add(activity.getPostedTime());
+      }
+      identity = getIdentity(activity.getUserId());
+      if (identity != null) {
+        activity.setUserId(identity.getId());
+        identity = getIdentity(activity.getPosterId());
+        if (identity != null) {
+          activity.setPosterId(identity.getId());
+          activitiesList.add(activity);
+
+          Set<String> keys = activity.getTemplateParams().keySet();
+          for (String key : keys) {
+            String value = activity.getTemplateParams().get(key);
+            if (value != null) {
+              activity.getTemplateParams().put(key, StringEscapeUtils.unescapeHtml(value));
+            }
+          }
+          if (StringUtils.isNotEmpty(activity.getTitle())) {
+            activity.setTitle(StringEscapeUtils.unescapeHtml(activity.getTitle()));
+          }
+          if (StringUtils.isNotEmpty(activity.getBody())) {
+            activity.setBody(StringEscapeUtils.unescapeHtml(activity.getBody()));
+          }
+          if (StringUtils.isNotEmpty(activity.getSummary())) {
+            activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
+          }
+        }
+        activity.setReplyToId(null);
+
+        String[] commentedIds = activity.getCommentedIds();
+        commentedIds = changeUsernameIdToIdentity(commentedIds);
+        activity.setCommentedIds(commentedIds);
+
+        String[] mentionedIds = activity.getMentionedIds();
+        mentionedIds = changeUsernameIdToIdentity(mentionedIds);
+        activity.setMentionedIds(mentionedIds);
+
+        String[] likeIdentityIds = activity.getLikeIdentityIds();
+        likeIdentityIds = changeUsernameIdToIdentity(likeIdentityIds);
+        activity.setLikeIdentityIds(likeIdentityIds);
+
+      } else {
+        log.warn("Activity is not imported because the associated user '" + activity.getUserId() + "' wasn't found:  '" + activity.getTitle() + "'");
+      }
+    }
+    return activitiesList;
+  }
+
+  private String[] changeUsernameIdToIdentity(String[] ids) {
+    List<String> resultIds = new ArrayList<String>();
+    if (ids != null && ids.length > 0) {
+      for (int i = 0; i < ids.length; i++) {
+        String id = ids[i];
+        Identity identity = getIdentity(id);
+        if (identity != null) {
+          resultIds.add((String) identity.getProfile().getProperty(Profile.USERNAME));
+        } else {
+          log.warn("Cannot get identity : " + id);
+        }
+      }
+      ids = resultIds.toArray(EMPTY_STRING_ARRAY);
+    }
+    return ids;
   }
 
 }

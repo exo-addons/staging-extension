@@ -19,6 +19,7 @@ package org.exoplatform.management.common;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.exoplatform.services.log.ExoLogger;
@@ -37,6 +38,8 @@ import com.thoughtworks.xstream.XStream;
  */
 public abstract class AbstractActivitiesExportTask implements ExportTask {
   protected static final Log log = ExoLogger.getLogger(AbstractActivitiesExportTask.class);
+
+  protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
   protected final IdentityManager identityManager;
   protected final List<ExoSocialActivity> activities;
@@ -66,35 +69,16 @@ public abstract class AbstractActivitiesExportTask implements ExportTask {
           }
 
           String[] commentedIds = activity.getCommentedIds();
-          if (commentedIds != null && commentedIds.length > 0) {
-            for (int i = 0; i < commentedIds.length; i++) {
-              identity = identityManager.getIdentity(commentedIds[i], true);
-              if (identity != null) {
-                commentedIds[i] = (String) identity.getProfile().getProperty(Profile.USERNAME);
-              }
-            }
-            activity.setCommentedIds(commentedIds);
-          }
+          commentedIds = changeIdentityIdToUsername(commentedIds);
+          activity.setCommentedIds(commentedIds);
+
           String[] mentionedIds = activity.getMentionedIds();
-          if (mentionedIds != null && mentionedIds.length > 0) {
-            for (int i = 0; i < mentionedIds.length; i++) {
-              identity = identityManager.getIdentity(mentionedIds[i], true);
-              if (identity != null) {
-                mentionedIds[i] = (String) identity.getProfile().getProperty(Profile.USERNAME);
-              }
-            }
-            activity.setMentionedIds(mentionedIds);
-          }
+          mentionedIds = changeIdentityIdToUsername(mentionedIds);
+          activity.setMentionedIds(mentionedIds);
+
           String[] likeIdentityIds = activity.getLikeIdentityIds();
-          if (likeIdentityIds != null && likeIdentityIds.length > 0) {
-            for (int i = 0; i < likeIdentityIds.length; i++) {
-              identity = identityManager.getIdentity(likeIdentityIds[i], true);
-              if (identity != null) {
-                likeIdentityIds[i] = (String) identity.getProfile().getProperty(Profile.USERNAME);
-              }
-            }
-            activity.setLikeIdentityIds(likeIdentityIds);
-          }
+          likeIdentityIds = changeIdentityIdToUsername(likeIdentityIds);
+          activity.setLikeIdentityIds(likeIdentityIds);
         }
       }
       xStream.toXML(activities, writer);
@@ -102,6 +86,26 @@ public abstract class AbstractActivitiesExportTask implements ExportTask {
     } catch (Exception e) {
       log.warn("Can't export activities", e);
     }
+  }
+
+  private String[] changeIdentityIdToUsername(String[] ids) {
+    List<String> resultIds = new ArrayList<String>();
+    if (ids != null && ids.length > 0) {
+      for (int i = 0; i < ids.length; i++) {
+        String id = ids[i];
+        if (id.indexOf('@') > 0) {
+          id = id.substring(0, id.indexOf('@'));
+        }
+        Identity identity = identityManager.getIdentity(id, true);
+        if (identity != null) {
+          resultIds.add((String) identity.getProfile().getProperty(Profile.USERNAME));
+        } else {
+          log.warn("Cannot get identity : " + ids[i]);
+        }
+      }
+      ids = resultIds.toArray(EMPTY_STRING_ARRAY);
+    }
+    return ids;
   }
 
 }
