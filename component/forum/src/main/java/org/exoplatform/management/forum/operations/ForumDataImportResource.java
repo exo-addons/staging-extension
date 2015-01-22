@@ -16,10 +16,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
 import org.apache.commons.io.FileUtils;
@@ -33,15 +30,12 @@ import org.exoplatform.forum.service.Post;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.forum.service.impl.model.TopicFilter;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.SpaceMetaData;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
@@ -65,11 +59,9 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataImportResource extends AbstractOperationHandler {
+public class ForumDataImportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataImportResource.class);
-
-  private RepositoryService repositoryService;
 
   private ForumService forumService;
   private PollService pollService;
@@ -127,10 +119,15 @@ public class ForumDataImportResource extends AbstractOperationHandler {
         boolean isSpaceForum = categoryId.contains(Utils.FORUM_SPACE_ID_PREFIX);
         if (isSpaceForum) {
           String forumId = categoryId;
-          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, forumId, createSpace);
-          if (!spaceCreatedOrAlreadyExists) {
-            log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
-            continue;
+          String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+          String groupId = SpaceUtils.SPACE_GROUP + "/" + spacePrettyName;
+          File file = new File(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(forumId));
+          if (file.exists()) {
+            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(file, groupId, createSpace);
+            if (!spaceCreatedOrAlreadyExists) {
+              log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
+              continue;
+            }
           }
 
           Category spaceCategory = forumService.getCategoryIncludedSpace();
@@ -297,7 +294,7 @@ public class ForumDataImportResource extends AbstractOperationHandler {
           if (exoSocialActivity.isComment() && topicActivity != null) {
             saveComment(topicActivity, exoSocialActivity);
           } else {
-            log.warn("An activity that is not a topic nor a post nor a comment of a topic was found in Forum activities.");
+            log.warn("An activity that is not a topic nor a post nor a comment of a topic was found in Forum activities: " + exoSocialActivity.getTitle());
             topicActivity = null;
             continue;
           }
@@ -311,6 +308,16 @@ public class ForumDataImportResource extends AbstractOperationHandler {
             continue;
           }
           if (exoSocialActivity.isComment()) {
+            if (topicActivity == null) {
+              String activityId = forumService.getActivityIdForOwnerId(topic.getId());
+              if (activityId != null) {
+                topicActivity = activityManager.getActivity(activityId);
+              }
+              if (topicActivity == null) {
+                log.warn("Forum Topic activity is null. Cannot import activity '" + exoSocialActivity.getTitle() + "'.");
+                continue;
+              }
+            }
             String postId = exoSocialActivity.getTemplateParams().get("PostId");
             if (postId != null) {
               Post post = forumService.getPost(catId, forumId, topicId, postId);
@@ -415,7 +422,7 @@ public class ForumDataImportResource extends AbstractOperationHandler {
     parentNodePath = parentNodePath.replaceAll("//", "/");
 
     // Delete old node
-    Session session = getSession(workspace, repositoryService);
+    Session session = getSession(workspace);
     try {
       if (session.itemExists(nodePath) && session.getItem(nodePath) instanceof Node) {
         log.info("Deleting the node " + workspace + ":" + nodePath);
@@ -435,7 +442,7 @@ public class ForumDataImportResource extends AbstractOperationHandler {
     }
 
     // Import Node from Extracted Zip file
-    session = getSession(workspace, repositoryService);
+    session = getSession(workspace);
     FileInputStream fis = null;
     File xmlFile = null;
     try {
@@ -526,26 +533,6 @@ public class ForumDataImportResource extends AbstractOperationHandler {
     }
   }
 
-  private Node createJCRPath(Session session, String path) throws RepositoryException {
-    String[] ancestors = path.split("/");
-    Node current = session.getRootNode();
-    for (int i = 0; i < ancestors.length; i++) {
-      if (!"".equals(ancestors[i])) {
-        if (current.hasNode(ancestors[i])) {
-          current = current.getNode(ancestors[i]);
-        } else {
-          if (log.isInfoEnabled()) {
-            log.info("Creating folder: " + ancestors[i] + " in node : " + current.getPath());
-          }
-          current = current.addNode(ancestors[i], "nt:unstructured");
-          session.save();
-        }
-      }
-    }
-    return current;
-
-  }
-
   /**
    * Extract Wiki owner from the file path
    * 
@@ -577,64 +564,6 @@ public class ForumDataImportResource extends AbstractOperationHandler {
     private void reallyClose() throws IOException {
       super.close();
     }
-  }
-
-  private boolean createSpaceIfNotExists(String tempFolderPath, String forumId, boolean createSpace) throws Exception {
-    String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-    Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spacePrettyName);
-    if (space == null && createSpace) {
-      FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(forumId));
-      try {
-        // Unmarshall metadata xml file
-        XStream xstream = new XStream();
-        xstream.alias("metadata", SpaceMetaData.class);
-        SpaceMetaData spaceMetaData = (SpaceMetaData) xstream.fromXML(spaceMetadataFile);
-
-        log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
-        space = new Space();
-
-        String originalSpacePrettyName = spaceMetaData.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
-        if (originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
-          space.setPrettyName(spaceMetaData.getPrettyName());
-        } else {
-          space.setPrettyName(originalSpacePrettyName);
-        }
-        space.setDisplayName(spaceMetaData.getDisplayName());
-        space.setGroupId("/space/" + spacePrettyName);
-        space.setTag(spaceMetaData.getTag());
-        space.setApp(spaceMetaData.getApp());
-        space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userACL.getSuperUser());
-        space.setManagers(spaceMetaData.getManagers());
-        space.setInvitedUsers(spaceMetaData.getInvitedUsers());
-        space.setRegistration(spaceMetaData.getRegistration());
-        space.setDescription(spaceMetaData.getDescription());
-        space.setType(spaceMetaData.getType());
-        space.setVisibility(spaceMetaData.getVisibility());
-        space.setPriority(spaceMetaData.getPriority());
-        space.setUrl(spaceMetaData.getUrl());
-        spaceService.createSpace(space, space.getEditor());
-        if (!originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
-          spaceService.renameSpace(space, spaceMetaData.getDisplayName());
-        }
-        return true;
-      } finally {
-        if (spaceMetadataFile != null) {
-          try {
-            spaceMetadataFile.close();
-          } catch (Exception e) {
-            log.warn(e);
-          }
-        }
-      }
-    }
-    return (space != null);
-  }
-
-  private Session getSession(String workspace, RepositoryService repositoryService) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
   }
 
   private static void copyToDisk(InputStream input, String output) throws Exception {

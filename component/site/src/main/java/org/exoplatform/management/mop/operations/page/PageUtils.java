@@ -166,7 +166,6 @@ public class PageUtils {
         return pageSet;
     }
 
-    @SuppressWarnings("unused")
     public static PageBody copy(PageBody existing) {
         return new PageBody();
     }
@@ -207,7 +206,7 @@ public class PageUtils {
 
         for (ModelObject object : existing) {
             if (object instanceof Application) {
-                @SuppressWarnings("unchecked")
+                @SuppressWarnings({ "rawtypes", "unchecked" })
                 Application app = copy((Application) object);
 
                 children.add(app);

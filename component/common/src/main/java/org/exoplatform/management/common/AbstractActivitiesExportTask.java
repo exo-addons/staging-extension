@@ -92,13 +92,16 @@ public abstract class AbstractActivitiesExportTask implements ExportTask {
     List<String> resultIds = new ArrayList<String>();
     if (ids != null && ids.length > 0) {
       for (int i = 0; i < ids.length; i++) {
-        String id = ids[i];
-        if (id.indexOf('@') > 0) {
-          id = id.substring(0, id.indexOf('@'));
-        }
-        Identity identity = identityManager.getIdentity(id, true);
+        String[] id = ids[i].split("@");
+        Identity identity = identityManager.getIdentity(id[0], true);
         if (identity != null) {
-          resultIds.add((String) identity.getProfile().getProperty(Profile.USERNAME));
+          id[0] = (String) identity.getProfile().getProperty(Profile.USERNAME);
+          if (id.length == 2) {
+            ids[i] = id[0] + "@" + id[1];
+          } else {
+            ids[i] = id[0];
+          }
+          resultIds.add(ids[i]);
         } else {
           log.warn("Cannot get identity : " + ids[i]);
         }

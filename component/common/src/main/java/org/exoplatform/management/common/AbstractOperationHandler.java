@@ -17,7 +17,6 @@ import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ActivityStream.Type;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.identity.model.Profile;
 import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -143,24 +142,24 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     }
     activity = activityManager.getActivity(activity.getId());
     try {
-      activityStorage.saveComment(activity, comment);
+      activityStorage.setInjectStreams(false);
+      activityManager.saveComment(activity, comment);
     } catch (NullPointerException e) {
-      if (comment.getId() == null) {
-        throw e;
-      } else {
-        ExoSocialActivity tmpComment = activityManager.getActivity(activity.getId());
-        if (tmpComment == null) {
-          log.warn("Comment activity wasn't found after save operation: '" + comment.getTitle() + "'.");
-        }
-      }
+      log.warn("Error while importing comment: '" + comment.getTitle() + "'.");
+      return;
+    }
+    if (comment.getId() == null) {
+      log.warn("Error while importing comment, id is null: '" + comment.getTitle() + "'.");
+      return;
     }
     activity = activityManager.getActivity(activity.getId());
     activity.setUpdated(updatedTime);
-    activityStorage.updateActivity(activity);
+    activityManager.updateActivity(activity);
     log.info("Comment activity is imported: '" + comment.getTitle() + "'.");
   }
 
   protected final void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
+    activityStorage.setInjectStreams(false);
     long updatedTime = activity.getUpdated().getTime();
     if (spacePrettyName == null) {
       activityManager.saveActivityNoReturn(activity);
@@ -180,6 +179,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   }
 
   protected final void saveActivity(ExoSocialActivity activity, Identity spaceIdentity) {
+    activityStorage.setInjectStreams(false);
     long updatedTime = activity.getUpdated().getTime();
     activityManager.saveActivityNoReturn(spaceIdentity, activity);
     activity.setUpdated(updatedTime);
@@ -188,6 +188,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   }
 
   protected final void saveActivity(ExoSocialActivity activity) {
+    activityStorage.setInjectStreams(false);
     long updatedTime = activity.getUpdated().getTime();
     if (activity.getActivityStream().getType().equals(Type.SPACE)) {
       String spacePrettyName = activity.getActivityStream().getPrettyId();
@@ -226,9 +227,6 @@ public abstract class AbstractOperationHandler implements OperationHandler {
             spaceIdentity = getIdentity(space.getPrettyName());
           }
         }
-        if (spaceIdentity == null) {
-          log.warn("Cannot retrieve identity: " + id);
-        }
         return spaceIdentity;
       }
     } catch (Exception e) {
@@ -252,8 +250,9 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         activity.setUserId(identity.getId());
         identity = getIdentity(activity.getPosterId());
         if (identity != null) {
-          activity.setPosterId(identity.getId());
           activitiesList.add(activity);
+
+          activity.setPosterId(identity.getId());
 
           Set<String> keys = activity.getTemplateParams().keySet();
           for (String key : keys) {
@@ -271,23 +270,23 @@ public abstract class AbstractOperationHandler implements OperationHandler {
           if (StringUtils.isNotEmpty(activity.getSummary())) {
             activity.setSummary(StringEscapeUtils.unescapeHtml(activity.getSummary()));
           }
+          activity.setReplyToId(null);
+
+          String[] commentedIds = activity.getCommentedIds();
+          commentedIds = changeUsernameIdToIdentity(commentedIds);
+          activity.setCommentedIds(commentedIds);
+
+          String[] mentionedIds = activity.getMentionedIds();
+          mentionedIds = changeUsernameIdToIdentity(mentionedIds);
+          activity.setMentionedIds(mentionedIds);
+
+          String[] likeIdentityIds = activity.getLikeIdentityIds();
+          likeIdentityIds = changeUsernameIdToIdentity(likeIdentityIds);
+          activity.setLikeIdentityIds(likeIdentityIds);
         }
-        activity.setReplyToId(null);
-
-        String[] commentedIds = activity.getCommentedIds();
-        commentedIds = changeUsernameIdToIdentity(commentedIds);
-        activity.setCommentedIds(commentedIds);
-
-        String[] mentionedIds = activity.getMentionedIds();
-        mentionedIds = changeUsernameIdToIdentity(mentionedIds);
-        activity.setMentionedIds(mentionedIds);
-
-        String[] likeIdentityIds = activity.getLikeIdentityIds();
-        likeIdentityIds = changeUsernameIdToIdentity(likeIdentityIds);
-        activity.setLikeIdentityIds(likeIdentityIds);
-
-      } else {
-        log.warn("Activity is not imported because the associated user '" + activity.getUserId() + "' wasn't found:  '" + activity.getTitle() + "'");
+      }
+      if (identity == null) {
+        log.info("ACTIVITY IS NOT IMPORTED because the associated user '" + activity.getUserId() + "' wasn't found:  '" + activity.getTitle() + "'");
       }
     }
     return activitiesList;
@@ -297,17 +296,20 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     List<String> resultIds = new ArrayList<String>();
     if (ids != null && ids.length > 0) {
       for (int i = 0; i < ids.length; i++) {
-        String id = ids[i];
-        Identity identity = getIdentity(id);
+        String[] id = ids[i].split("@");
+        Identity identity = getIdentity(id[0]);
         if (identity != null) {
-          resultIds.add((String) identity.getProfile().getProperty(Profile.USERNAME));
-        } else {
-          log.warn("Cannot get identity : " + id);
+          id[0] = (String) identity.getId();
+          if (id.length == 2) {
+            ids[i] = id[0] + "@" + id[1];
+          } else {
+            ids[i] = id[0];
+          }
+          resultIds.add(ids[i]);
         }
       }
       ids = resultIds.toArray(EMPTY_STRING_ARRAY);
     }
     return ids;
   }
-
 }

@@ -478,7 +478,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     String[] editor = getExistingUsers(spaceMetaData.getEditor());
     if (editor == null || editor.length == 0) {
       editor = new String[] { managers[0] };
-      log.warn("Editor of space '" + spaceMetaData.getDisplayName() + "' is empty, the manager '" + editor[0] + "' will be used instead.");
     }
     space.setEditor(editor[0]);
 
