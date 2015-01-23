@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.mop.exportimport.NavigationExportTask;
@@ -216,7 +215,7 @@ public class MopImportResource extends AbstractOperationHandler {
           mopImport.navigationTask.importData(importMode);
         }
       }
-      log.info("Import successful !");
+      log.info("Site pages and navigations imported successfully !");
     } catch (Throwable t) {
       boolean rollbackSuccess = true;
       log.error("Exception importing data.", t);
@@ -291,25 +290,6 @@ public class MopImportResource extends AbstractOperationHandler {
     }
 
     return false;
-  }
-
-  // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
-  // stream when
-  // it finishes reading an XML document. This is no good when we are using a
-  // ZipInputStream.
-  // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more information.
-  private static class NonCloseableZipInputStream extends ZipInputStream {
-    private NonCloseableZipInputStream(InputStream inputStream) {
-      super(inputStream);
-    }
-
-    @Override
-    public void close() throws IOException {
-    }
-
-    private void reallyClose() throws IOException {
-      super.close();
-    }
   }
 
   private static class MopImport {

@@ -514,26 +514,6 @@ public class SiteContentsImportResource extends AbstractJCROperationHandler {
     return siteName;
   }
 
-  // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
-  // stream when
-  // it finishes reading an XML document. This is no good when we are using
-  // a
-  // ZipInputStream.
-  // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
-  // information.
-  public static class NonCloseableZipInputStream extends ZipInputStream {
-    public NonCloseableZipInputStream(InputStream inputStream) {
-      super(inputStream);
-    }
-
-    @Override
-    public void close() throws IOException {}
-
-    private void reallyClose() throws IOException {
-      super.close();
-    }
-  }
-
   private static boolean copyToDisk(InputStream input, String output) throws Exception {
     byte data[] = new byte[BUFFER];
     BufferedOutputStream dest = null;

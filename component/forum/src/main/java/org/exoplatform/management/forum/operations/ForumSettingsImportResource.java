@@ -269,24 +269,4 @@ public class ForumSettingsImportResource extends AbstractOperationHandler {
     return session;
   }
 
-  // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
-  // stream when
-  // it finishes reading an XML document. This is no good when we are using
-  // a
-  // ZipInputStream.
-  // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
-  // information.
-  private static class NonCloseableZipInputStream extends ZipInputStream {
-    public NonCloseableZipInputStream(InputStream inputStream) {
-      super(inputStream);
-    }
-
-    @Override
-    public void close() throws IOException {}
-
-    private void reallyClose() throws IOException {
-      super.close();
-    }
-  }
-
 }

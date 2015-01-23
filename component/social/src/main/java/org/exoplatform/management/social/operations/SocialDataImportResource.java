@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
@@ -761,26 +760,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     else
       file.createNewFile();
     return file;
-  }
-
-  // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
-  // stream when
-  // it finishes reading an XML document. This is no good when we are using
-  // a
-  // ZipInputStream.
-  // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
-  // information.
-  public static class NonCloseableZipInputStream extends ZipInputStream {
-    public NonCloseableZipInputStream(InputStream inputStream) {
-      super(inputStream);
-    }
-
-    @Override
-    public void close() throws IOException {}
-
-    private void reallyClose() throws IOException {
-      super.close();
-    }
   }
 
 }

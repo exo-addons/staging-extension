@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -438,26 +437,6 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
     int beginIndex = ("answer/" + type + "/").length();
     int endIndex = path.indexOf("/", beginIndex + 1);
     return path.substring(beginIndex, endIndex);
-  }
-
-  // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
-  // stream when
-  // it finishes reading an XML document. This is no good when we are using
-  // a
-  // ZipInputStream.
-  // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
-  // information.
-  public static class NonCloseableZipInputStream extends ZipInputStream {
-    public NonCloseableZipInputStream(InputStream inputStream) {
-      super(inputStream);
-    }
-
-    @Override
-    public void close() throws IOException {}
-
-    private void reallyClose() throws IOException {
-      super.close();
-    }
   }
 
   private boolean createSpaceIfNotExists(String tempFolderPath, String faqId, boolean createSpace) throws Exception {

@@ -3,10 +3,12 @@ package org.exoplatform.management.common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
@@ -23,6 +25,7 @@ import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.ActivityStorageException;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.management.api.operation.OperationHandler;
@@ -162,29 +165,42 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     activityStorage.setInjectStreams(false);
     long updatedTime = activity.getUpdated().getTime();
     if (spacePrettyName == null) {
-      activityManager.saveActivityNoReturn(activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
+      try {
+        activityManager.saveActivityNoReturn(activity);
+        activity.setUpdated(updatedTime);
+        activityManager.updateActivity(activity);
+        log.info("Activity  is imported: '" + activity.getTitle() + "'");
+      } catch (ActivityStorageException e) {
+        log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
+      }
     } else {
       Identity spaceIdentity = getIdentity(spacePrettyName);
       if (spaceIdentity == null) {
         log.warn("Activity is not imported: '" + activity.getTitle() + "'.");
         return;
       }
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
+      try {
+        activityManager.saveActivityNoReturn(spaceIdentity, activity);
+        activity.setUpdated(updatedTime);
+        activityManager.updateActivity(activity);
+        log.info("Activity  is imported: '" + activity.getTitle() + "'");
+      } catch (ActivityStorageException e) {
+        log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
+      }
     }
-    log.info("Activity  is imported: '" + activity.getTitle() + "'");
   }
 
   protected final void saveActivity(ExoSocialActivity activity, Identity spaceIdentity) {
     activityStorage.setInjectStreams(false);
     long updatedTime = activity.getUpdated().getTime();
-    activityManager.saveActivityNoReturn(spaceIdentity, activity);
-    activity.setUpdated(updatedTime);
-    activityManager.updateActivity(activity);
-    log.info("Activity  is imported: '" + activity.getTitle() + "'.");
+    try {
+      activityManager.saveActivityNoReturn(spaceIdentity, activity);
+      activity.setUpdated(updatedTime);
+      activityManager.updateActivity(activity);
+      log.info("Activity  is imported: '" + activity.getTitle() + "'.");
+    } catch (ActivityStorageException e) {
+      log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
+    }
   }
 
   protected final void saveActivity(ExoSocialActivity activity) {
@@ -197,15 +213,24 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         log.warn("Activity is not imported'" + activity.getTitle() + "'.");
         return;
       }
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
+      try {
+        activityManager.saveActivityNoReturn(spaceIdentity, activity);
+        activity.setUpdated(updatedTime);
+        activityManager.updateActivity(activity);
+        log.info("Activity : '" + activity.getTitle() + " is imported.");
+      } catch (ActivityStorageException e) {
+        log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
+      }
     } else {
-      activityManager.saveActivityNoReturn(activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
+      try {
+        activityManager.saveActivityNoReturn(activity);
+        activity.setUpdated(updatedTime);
+        activityManager.updateActivity(activity);
+        log.info("Activity : '" + activity.getTitle() + " is imported.");
+      } catch (ActivityStorageException e) {
+        log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
+      }
     }
-    log.info("Activity : '" + activity.getTitle() + " is imported.");
   }
 
   protected final Identity getIdentity(String id) {
@@ -238,7 +263,15 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   protected final List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
     Identity identity = null;
+    boolean ignoreNextComments = false;
     for (ExoSocialActivity activity : activities) {
+      if (ignoreNextComments) {
+        if (activity.isComment()) {
+          continue;
+        } else {
+          ignoreNextComments = false;
+        }
+      }
       if (activity.getPostedTime() != null && activitiesByPostTime.contains(activity.getPostedTime())) {
         log.info("Ignore duplicated Activity '" + activity.getTitle() + "'.");
         continue;
@@ -286,6 +319,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         }
       }
       if (identity == null) {
+        ignoreNextComments = true;
         log.info("ACTIVITY IS NOT IMPORTED because the associated user '" + activity.getUserId() + "' wasn't found:  '" + activity.getTitle() + "'");
       }
     }
@@ -312,4 +346,25 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     }
     return ids;
   }
+
+  // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
+  // stream when
+  // it finishes reading an XML document. This is no good when we are using
+  // a
+  // ZipInputStream.
+  // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
+  // information.
+  public static class NonCloseableZipInputStream extends ZipInputStream {
+    public NonCloseableZipInputStream(InputStream inputStream) {
+      super(inputStream);
+    }
+
+    @Override
+    public void close() throws IOException {}
+
+    public void reallyClose() throws IOException {
+      super.close();
+    }
+  }
+
 }
