@@ -67,6 +67,9 @@ public class GadgetImportResource extends AbstractOperationHandler {
         throw new OperationException(OperationNames.EXPORT_RESOURCE, "GadgetRegistryService doesn't exist.");
       }
     }
+
+    increaseCurrentTransactionTimeOut(operationContext);
+
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 

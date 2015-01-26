@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
@@ -25,11 +23,11 @@ import javax.jcr.query.QueryResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.ecm.webui.utils.Utils;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.JCRNodeExportTask;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.compress.CompressData;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.exceptions.OperationException;
@@ -37,7 +35,7 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ExportTask;
 
 public class SiteContentsVersionHistoryExportTask implements ExportTask {
-  private static final Log log = ExoLogger.getLogger(SiteContentsExportTask.class);
+  private static final Log log = ExoLogger.getLogger(JCRNodeExportTask.class);
 
   public static final String VERSION_HISTORY_FILE_SUFFIX = "_VersionHistory.zip";
   public static final String ROOT_SQL_QUERY = "select * from mix:versionable order by exo:dateCreated DESC";
@@ -80,7 +78,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     try {
       Node currentNode = getCurrentNode();
       String sysWsName = repositoryService.getCurrentRepository().getConfiguration().getSystemWorkspaceName();
-      session = getSession(sysWsName);
+      session = AbstractJCROperationHandler.getSession(repositoryService, sysWsName);
       if (recurse) {
         // Export version history of sub nodes
         QueryResult queryResult = getQueryResult(currentNode);
@@ -166,7 +164,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   private Node getCurrentNode() throws Exception {
     Session session = null;
     try {
-      session = getSession(workspace);
+      session = AbstractJCROperationHandler.getSession(repositoryService, workspace);
       return (Node) session.getItem(absolutePath);
     } catch (RepositoryException exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);
@@ -199,12 +197,4 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     tempFiles.add(tempFile);
     return tempFile;
   }
-
-  private Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
-  }
-
 }

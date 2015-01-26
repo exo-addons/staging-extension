@@ -44,6 +44,8 @@ public class GadgetExportResource extends AbstractOperationHandler {
       }
     }
 
+    increaseCurrentTransactionTimeOut(operationContext);
+
     PathAddress address = operationContext.getAddress();
     String gadgetName = address.resolvePathTemplate("gadget-name");
     OperationAttributes attributes = operationContext.getAttributes();

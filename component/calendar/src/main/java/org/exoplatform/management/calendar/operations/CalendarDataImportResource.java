@@ -1,10 +1,8 @@
 package org.exoplatform.management.calendar.operations;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -18,7 +16,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
@@ -30,9 +27,11 @@ import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.management.calendar.CalendarExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
 import org.exoplatform.management.common.MockHttpServletRequest;
 import org.exoplatform.management.common.MockHttpServletResponse;
 import org.exoplatform.management.common.SpaceMetaData;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.portal.config.UserPortalConfigService;
@@ -68,7 +67,6 @@ import org.exoplatform.webui.application.WebuiRequestContext;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
@@ -86,8 +84,6 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
   private static final String INTRANET_SITE_NAME = "intranet";
 
   final private static Logger log = LoggerFactory.getLogger(CalendarDataImportResource.class);
-
-  final private static int BUFFER = 2048000;
 
   public static final String EVENT_ID_KEY = "EventID";
 
@@ -127,22 +123,12 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
-
     // "replace-existing" attribute. Defaults to false.
     boolean replaceExisting = filters.contains("replace-existing:true");
-
     // "create-space" attribute. Defaults to false.
     boolean createSpace = filters.contains("create-space:true");
 
-    OperationAttachment attachment = operationContext.getAttachment(false);
-    if (attachment == null) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for calendar import.");
-    }
-
-    InputStream attachmentInputStream = attachment.getStream();
-    if (attachmentInputStream == null) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for calendar import.");
-    }
+    InputStream attachmentInputStream = getAttachementInputStream(operationContext);
 
     String tempFolderPath = null;
     Set<String> contentsByOwner = new HashSet<String>();
@@ -160,7 +146,7 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
 
       List<File> activitiesFiles = new ArrayList<File>();
       for (String tempFilePath : contentsByOwner) {
-        if (tempFilePath.endsWith(CalendarActivitiesExportTask.FILENAME)) {
+        if (tempFilePath.endsWith(ActivitiesExportTask.FILENAME)) {
           activitiesFiles.add(new File(tempFilePath));
         } else {
           importCalendar(tempFolderPath, tempFilePath, replaceExisting, createSpace);
@@ -256,27 +242,8 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
     return targetFolderPath;
   }
 
-  private File copyAttachementToLocalFolder(InputStream attachmentInputStream) throws IOException, FileNotFoundException {
-    NonCloseableZipInputStream zis = null;
-    File tmpZipFile = null;
-    try {
-      // Copy attachement to local File
-      tmpZipFile = File.createTempFile("staging-calendar", ".zip");
-      tmpZipFile.deleteOnExit();
-      FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
-      IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
-      tmpFileOutputStream.close();
-      attachmentInputStream.close();
-    } finally {
-      if (zis != null) {
-        try {
-          zis.reallyClose();
-        } catch (IOException e) {
-          log.warn("Can't close inputStream of attachement.");
-        }
-      }
-    }
-    return tmpZipFile;
+  public static String getEntryPath(String spacePrettyName) {
+    return new StringBuilder("calendar/space/").append(spacePrettyName).append("/").append(SpaceMetadataExportTask.FILENAME).toString();
   }
 
   private boolean createSpaceIfNotExists(String tempFolderPath, String spacePrettyName, String groupId, boolean createSpace) throws IOException {
@@ -285,7 +252,7 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
       space = spaceService.getSpaceByPrettyName(spacePrettyName);
     }
     if (space == null && createSpace) {
-      FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(spacePrettyName));
+      FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + getEntryPath(spacePrettyName));
       try {
         // Unmarshall metadata xml file
         XStream xstream = new XStream();
@@ -467,34 +434,6 @@ public class CalendarDataImportResource extends AbstractOperationHandler {
         zis.reallyClose();
       }
     }
-  }
-
-  private static void copyToDisk(InputStream input, String output) throws Exception {
-    byte data[] = new byte[BUFFER];
-    BufferedOutputStream dest = null;
-    try {
-      FileOutputStream fileOuput = new FileOutputStream(createFile(new File(output), false));
-      dest = new BufferedOutputStream(fileOuput, BUFFER);
-      int count = 0;
-      while ((count = input.read(data, 0, BUFFER)) != -1)
-        dest.write(data, 0, count);
-    } finally {
-      if (dest != null) {
-        dest.close();
-      }
-    }
-  }
-
-  private static File createFile(File file, boolean folder) throws Exception {
-    if (file.getParentFile() != null)
-      createFile(file.getParentFile(), true);
-    if (file.exists())
-      return file;
-    if (file.isDirectory() || folder)
-      file.mkdir();
-    else
-      file.createNewFile();
-    return file;
   }
 
   private String getLink(CalendarEvent event, ExoSocialActivity activity, String spaceGroupId) {

@@ -7,9 +7,10 @@ import java.util.List;
 import javax.jcr.Node;
 
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
-import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
@@ -30,9 +31,8 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class UserExportResource extends AbstractOperationHandler {
+public class UserExportResource extends AbstractJCROperationHandler {
   private OrganizationService organizationService = null;
-  private RepositoryService repositoryService = null;
   private NodeHierarchyCreator hierarchyCreator = null;
 
   @Override
@@ -41,13 +41,11 @@ public class UserExportResource extends AbstractOperationHandler {
     try {
       if (organizationService == null) {
         organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
-      }
-      if (repositoryService == null) {
         repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
-      }
-      if (hierarchyCreator == null) {
         hierarchyCreator = operationContext.getRuntimeContext().getRuntimeComponent(NodeHierarchyCreator.class);
       }
+
+      increaseCurrentTransactionTimeOut(operationContext);
 
       PathAddress address = operationContext.getAddress();
       String userName = address.resolvePathTemplate("user-name");
@@ -60,9 +58,10 @@ public class UserExportResource extends AbstractOperationHandler {
       // "with-membership" attribute. Defaults to true.
       boolean withMemberships = !filters.contains("with-membership:false");
 
-      // "new-password" attribute. Defaults to null (means : don't change passwords).
+      // "new-password" attribute. Defaults to null (means : don't change
+      // passwords).
       String newPassword = null;
-      for(String filter : attributes.getValues("filter")) {
+      for (String filter : attributes.getValues("filter")) {
         if (filter.startsWith("new-password:")) {
           newPassword = filter.substring("new-password:".length());
           break;
@@ -113,7 +112,14 @@ public class UserExportResource extends AbstractOperationHandler {
     if (withContent) {
       SessionProvider provider = SessionProvider.createSystemProvider();
       Node userNode = hierarchyCreator.getUserNode(provider, user.getUserName());
-      exportTasks.add(new OrganizationModelJCRContentExportTask(repositoryService, userNode, user));
+      String defaultWorkspace = userNode.getSession().getWorkspace().getName();
+      exportNode(userNode, exportTasks, new String[] { defaultWorkspace, user.getUserName() });
     }
+  }
+
+  @Override
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception {
+    String prefixInZiipFile = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/" + params[1];
+    subNodesExportTask.add(new JCRNodeExportTask(repositoryService, params[0], childNode.getPath(), prefixInZiipFile, recursive, true));
   }
 }

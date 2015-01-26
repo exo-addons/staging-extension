@@ -1,6 +1,5 @@
 package org.exoplatform.management.social.operations;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -26,7 +25,9 @@ import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
 import org.exoplatform.management.common.SpaceMetaData;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
@@ -36,6 +37,7 @@ import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.social.core.activity.model.ActivityStream.Type;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.application.SpaceActivityPublisher;
 import org.exoplatform.social.core.identity.model.Identity;
@@ -75,8 +77,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
 
-  final private static int BUFFER = 2048000;
-
   private OrganizationService organizationService;
 
   private IdentityManager identityManager;
@@ -96,6 +96,8 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     activitiesByPostTime.clear();
+
+    increaseCurrentTransactionTimeOut(operationContext);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -167,7 +169,7 @@ public class SocialDataImportResource extends AbstractOperationHandler {
             importSubResource(fileToImport, fileKey);
             deleteTempFile(fileToImport);
           } else {
-            if (fileKey.contains(SpaceActivitiesExportTask.FILENAME)) {
+            if (fileKey.contains(ActivitiesExportTask.FILENAME)) {
               activitiesFileList.add(fileToImport);
             } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
               updateDashboard(space.getGroupId(), fileToImport);
@@ -182,9 +184,9 @@ public class SocialDataImportResource extends AbstractOperationHandler {
           }
         }
 
+        log.info("Importing space '" + extractedSpacePrettyName + "' activities.");
         for (File file : activitiesFileList) {
-          createActivities(extractedSpacePrettyName, file);
-          deleteTempFile(file);
+          importActivities(file, extractedSpacePrettyName);
         }
 
         log.info("Import operation finished successfully for space: " + extractedSpacePrettyName);
@@ -211,14 +213,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
-  private void deleteTempFile(File fileToImport) {
-    try {
-      FileUtils.forceDelete(fileToImport);
-    } catch (Exception e) {
-      log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
-    }
-  }
-
   private void deleteSpaceActivities(String extractedSpacePrettyName) {
     log.info("Delete space activities");
 
@@ -228,9 +222,7 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, extractedSpacePrettyName, false);
     RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
     ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
-    for (ExoSocialActivity activity : activities) {
-      deleteActivity(activity);
-    }
+    deleteActivities(activities);
   }
 
   private void updateAvatar(Space space, File fileToImport) {
@@ -317,57 +309,22 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     }
   }
 
-  @SuppressWarnings("unchecked")
-  private void createActivities(String spacePrettyName, File activitiesFile) {
-    log.info("Importing space '" + spacePrettyName + "' activities.");
-    List<ExoSocialActivity> activities = null;
-    FileInputStream inputStream = null;
-    try {
-      inputStream = new FileInputStream(activitiesFile);
-      // Unmarshall metadata xml file
-      XStream xstream = new XStream();
-
-      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-    } catch (FileNotFoundException e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
-      }
+  protected void attachActivityToEntity(ExoSocialActivity activity) throws Exception {
+    Identity spaceIdentity = getIdentity(activity.getStreamOwner());
+    if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(activity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(activity.getType())) {
+      identityStorage.updateProfileActivityId(spaceIdentity, activity.getId(), Profile.AttachedActivityType.SPACE);
     }
+  }
 
-    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
-
-    Identity spaceIdentity = getIdentity(spacePrettyName);
-    ExoSocialActivity parentActivity = null;
-    for (ExoSocialActivity exoSocialActivity : activitiesList) {
-      try {
-        exoSocialActivity.setId(null);
-        if (exoSocialActivity.isComment()) {
-          if (parentActivity == null) {
-            log.warn("Attempt to add Social activity comment to a null activity");
-          } else {
-            saveComment(parentActivity, exoSocialActivity);
-          }
-        } else {
-          parentActivity = null;
-          saveActivity(exoSocialActivity, spaceIdentity);
-          if (exoSocialActivity.getId() == null) {
-            log.warn("Activity '" + exoSocialActivity.getTitle() + "' is not imported, id is null");
-            continue;
-          }
-          if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(exoSocialActivity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(exoSocialActivity.getType())) {
-            identityStorage.updateProfileActivityId(spaceIdentity, exoSocialActivity.getId(), Profile.AttachedActivityType.SPACE);
-          }
-          parentActivity = activityManager.getActivity(exoSocialActivity.getId());
-        }
-      } catch (Exception e) {
-        log.warn("Error while adding activity: " + exoSocialActivity.getTitle(), e);
+  protected boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+    if (comment == null) {
+      boolean notValidActivity = activity.getActivityStream() == null || !activity.getActivityStream().getType().equals(Type.SPACE);
+      if (notValidActivity) {
+        log.warn("NOT Valid space activity: '" + activity.getTitle() + "'");
       }
+      return notValidActivity;
+    } else {
+      return false;
     }
   }
 
@@ -607,24 +564,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     }
   }
 
-  private void copyAttachementToLocalFolder(InputStream attachmentInputStream, File tmpZipFile) throws IOException, FileNotFoundException {
-    NonCloseableZipInputStream zis = null;
-    try {
-      FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
-      IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
-      tmpFileOutputStream.close();
-      attachmentInputStream.close();
-    } finally {
-      if (zis != null) {
-        try {
-          zis.reallyClose();
-        } catch (IOException e) {
-          log.warn("Can't close inputStream of attachement.");
-        }
-      }
-    }
-  }
-
   private Map<String, Map<String, File>> extractFilesByIdAndCreateSpaces(File tmpZipFile, String targetSpaceName, boolean replaceExisting, boolean createAbsentUsers) throws Exception {
     // Get path of folder where to unzip files
     String targetFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "") + "/";
@@ -714,7 +653,7 @@ public class SocialDataImportResource extends AbstractOperationHandler {
   }
 
   private void putSubResourceEntry(File tmpZipFile, String targetFolderPath, NonCloseableZipInputStream zis, Map<String, ZipOutputStream> zipOutputStreamMap, String zipEntryPath,
-      String spacePrettyName, Map<String, File> ownerFiles, String subResourcePath) throws IOException, FileNotFoundException {
+      String spacePrettyName, Map<String, File> ownerFiles, String subResourcePath) throws Exception {
     if (!ownerFiles.containsKey(subResourcePath)) {
       createFile(new File(targetFolderPath + "social/space/" + spacePrettyName + subResourcePath), true);
       String zipFilePath = targetFolderPath + "social/space/" + spacePrettyName + subResourcePath + ".zip";
@@ -727,39 +666,6 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     zos.putNextEntry(new ZipEntry(subResourceZipEntryPath));
     IOUtils.copy(zis, zos);
     zos.closeEntry();
-  }
-
-  private static void copyToDisk(InputStream input, String output) throws Exception {
-    byte data[] = new byte[BUFFER];
-    BufferedOutputStream dest = null;
-    try {
-      FileOutputStream fileOuput = new FileOutputStream(createFile(new File(output), false));
-      dest = new BufferedOutputStream(fileOuput, BUFFER);
-      int count = 0;
-      while ((count = input.read(data, 0, BUFFER)) != -1)
-        dest.write(data, 0, count);
-    } finally {
-      if (dest != null) {
-        dest.close();
-      }
-    }
-  }
-
-  private static String replaceSpecialChars(String name) {
-    name = name.replaceAll(":", "_");
-    return name.replaceAll("\\?", "_");
-  }
-
-  private static File createFile(File file, boolean folder) throws IOException {
-    if (file.getParentFile() != null)
-      createFile(file.getParentFile(), true);
-    if (file.exists())
-      return file;
-    if (file.isDirectory() || folder)
-      file.mkdir();
-    else
-      file.createNewFile();
-    return file;
   }
 
 }

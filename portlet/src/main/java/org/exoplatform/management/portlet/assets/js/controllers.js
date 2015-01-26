@@ -113,7 +113,6 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.optionsModel['/organization/user_EXPORT_filter/with-membership'] = true;
     $scope.optionsModel['/organization/group_EXPORT_filter/with-membership'] = true;
     $scope.optionsModel['/content/sites_EXPORT_filter/taxonomy'] = true;
-    $scope.optionsModel['/content/sites_IMPORT_uuidBehavior'] = "NEW";
 
     //
     $scope.resources = [];

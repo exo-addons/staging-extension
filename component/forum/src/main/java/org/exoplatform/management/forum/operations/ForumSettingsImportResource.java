@@ -1,10 +1,7 @@
 package org.exoplatform.management.forum.operations;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
@@ -12,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import javax.jcr.ImportUUIDBehavior;
@@ -20,14 +16,11 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
-import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -37,12 +30,10 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-public class ForumSettingsImportResource extends AbstractOperationHandler {
+public class ForumSettingsImportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumSettingsImportResource.class);
-  final private static int BUFFER = 2048000;
 
-  private RepositoryService repositoryService;
   private KSDataLocation dataLocation;
   private ForumService forumService;
 
@@ -112,12 +103,11 @@ public class ForumSettingsImportResource extends AbstractOperationHandler {
         }
       }
     }
-
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
   private void importSettingsContent(File fileToImport, String workspace, String locationPath, String targetPath) throws Exception {
-    Session session = getSession(workspace, repositoryService);
+    Session session = getSession(workspace);
 
     if (session.itemExists(targetPath)) {
       Node oldNode = (Node) session.getItem(targetPath);
@@ -157,24 +147,6 @@ public class ForumSettingsImportResource extends AbstractOperationHandler {
           inputStream.close();
         } catch (IOException e) {
           log.warn("Cannot close input stream.");
-        }
-      }
-    }
-  }
-
-  private void copyAttachementToLocalFolder(InputStream attachmentInputStream, File tmpZipFile) throws IOException, FileNotFoundException {
-    NonCloseableZipInputStream zis = null;
-    try {
-      FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
-      IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
-      tmpFileOutputStream.close();
-      attachmentInputStream.close();
-    } finally {
-      if (zis != null) {
-        try {
-          zis.reallyClose();
-        } catch (IOException e) {
-          log.warn("Can't close inputStream of attachement.");
         }
       }
     }
@@ -227,46 +199,6 @@ public class ForumSettingsImportResource extends AbstractOperationHandler {
     }
 
     return filesToImport;
-  }
-
-  private static void copyToDisk(InputStream input, String output) throws Exception {
-    byte data[] = new byte[BUFFER];
-    BufferedOutputStream dest = null;
-    try {
-      FileOutputStream fileOuput = new FileOutputStream(createFile(new File(output), false));
-      dest = new BufferedOutputStream(fileOuput, BUFFER);
-      int count = 0;
-      while ((count = input.read(data, 0, BUFFER)) != -1)
-        dest.write(data, 0, count);
-    } finally {
-      if (dest != null) {
-        dest.close();
-      }
-    }
-  }
-
-  private static String replaceSpecialChars(String name) {
-    name = name.replaceAll(":", "_");
-    return name.replaceAll("\\?", "_");
-  }
-
-  private static File createFile(File file, boolean folder) throws IOException {
-    if (file.getParentFile() != null)
-      createFile(file.getParentFile(), true);
-    if (file.exists())
-      return file;
-    if (file.isDirectory() || folder)
-      file.mkdir();
-    else
-      file.createNewFile();
-    return file;
-  }
-
-  private Session getSession(String workspace, RepositoryService repositoryService) throws Exception {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
   }
 
 }

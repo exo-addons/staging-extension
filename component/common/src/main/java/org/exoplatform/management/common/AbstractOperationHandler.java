@@ -2,19 +2,30 @@ package org.exoplatform.management.common;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.transaction.SystemException;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.transaction.TransactionService;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ActivityStream.Type;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
@@ -28,7 +39,11 @@ import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.ActivityStorageException;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationAttachment;
+import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
+import org.gatein.management.api.operation.OperationNames;
 
 import com.thoughtworks.xstream.XStream;
 
@@ -38,6 +53,9 @@ public abstract class AbstractOperationHandler implements OperationHandler {
 
   protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
+  protected static final int ONE_DAY_IN_SECONDS = 86400;
+  protected static final long ONE_DAY_IN_MS = 86400000;
+
   protected UserACL userACL;
   protected SpaceService spaceService;
   protected ActivityManager activityManager;
@@ -46,6 +64,15 @@ public abstract class AbstractOperationHandler implements OperationHandler {
 
   // This is used to test on duplicated activities
   protected Set<Long> activitiesByPostTime = new HashSet<Long>();
+
+  protected void increaseCurrentTransactionTimeOut(OperationContext operationContext) {
+    TransactionService transactionService = operationContext.getRuntimeContext().getRuntimeComponent(TransactionService.class);
+    try {
+      transactionService.setTransactionTimeout(86400);
+    } catch (SystemException e1) {
+      log.warn("Cannot Change Transaction timeout");
+    }
+  }
 
   protected final void addActivityWithComments(List<ExoSocialActivity> activitiesList, String activityId) {
     if (activityId == null || activityId.isEmpty()) {
@@ -57,6 +84,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
 
   protected void addActivityWithComments(List<ExoSocialActivity> activitiesList, ExoSocialActivity parentActivity) {
     if (parentActivity != null && parentActivity.getParentId() == null && !parentActivity.isComment()) {
+      parentActivity.isComment(false);
       activitiesList.add(parentActivity);
       RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(parentActivity);
       if (commentsListAccess.getSize() > 0) {
@@ -67,6 +95,24 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         }
         activitiesList.addAll(comments);
       }
+    }
+  }
+
+  protected void deleteActivities(ExoSocialActivity[] activities) {
+    for (ExoSocialActivity activity : activities) {
+      deleteActivity(activity);
+    }
+  }
+
+  protected void deleteActivities(List<ExoSocialActivity> activities) {
+    for (ExoSocialActivity activity : activities) {
+      deleteActivity(activity);
+    }
+  }
+
+  protected void deleteActivitiesById(List<String> activityIds) {
+    for (String activityId : activityIds) {
+      deleteActivity(activityId);
     }
   }
 
@@ -93,7 +139,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     activityManager.deleteActivity(activity);
   }
 
-  protected boolean createSpaceIfNotExists(File spaceMetadataFile, String groupId, boolean createSpace) throws IOException {
+  protected final boolean createSpaceIfNotExists(File spaceMetadataFile, String groupId, boolean createSpace) throws Exception {
     Space space = spaceService.getSpaceByGroupId(groupId);
     if (space == null && createSpace) {
       FileInputStream spaceMetadataIS = new FileInputStream(spaceMetadataFile);
@@ -105,9 +151,14 @@ public abstract class AbstractOperationHandler implements OperationHandler {
 
         log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
         space = new Space();
-        space.setPrettyName(spaceMetaData.getPrettyName());
+        String originalSpacePrettyName = spaceMetaData.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
+        if (originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
+          space.setPrettyName(spaceMetaData.getPrettyName());
+        } else {
+          space.setPrettyName(originalSpacePrettyName);
+        }
         space.setDisplayName(spaceMetaData.getDisplayName());
-        space.setGroupId(groupId);
+        space.setGroupId(spaceMetaData.getGroupId());
         space.setTag(spaceMetaData.getTag());
         space.setApp(spaceMetaData.getApp());
         space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userACL.getSuperUser());
@@ -120,6 +171,9 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         space.setPriority(spaceMetaData.getPriority());
         space.setUrl(spaceMetaData.getUrl());
         spaceService.createSpace(space, space.getEditor());
+        if (!originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
+          spaceService.renameSpace(space, spaceMetaData.getDisplayName());
+        }
         return true;
       } finally {
         if (spaceMetadataIS != null) {
@@ -129,12 +183,103 @@ public abstract class AbstractOperationHandler implements OperationHandler {
             log.warn(e);
           }
         }
-        if (spaceMetadataFile != null && spaceMetadataFile.exists()) {
-          spaceMetadataFile.delete();
-        }
       }
     }
     return (space != null);
+  }
+
+  protected void importActivities(File activitiesFile, String spacePrettyName) {
+    List<ExoSocialActivity> activitiesList = retrieveActivitiesFromFile(activitiesFile);
+
+    boolean isParentActivityIgnored = true;
+    String originialParentActivityId = null;
+    ExoSocialActivity parentActivity = null;
+
+    try {
+      for (ExoSocialActivity activity : activitiesList) {
+        if (activity == null) {
+          continue;
+        }
+        if (activity.getId() == null) {
+          log.warn("Attempt to import activity with null id.");
+          continue;
+        }
+        try {
+          if (activity.isComment()) {
+            if (isParentActivityIgnored) {
+              continue;
+            }
+            if (originialParentActivityId == null) {
+              log.warn("Attempt to add a comment activity to a non existing page activity.");
+              continue;
+            }
+            if (activity.getParentId() == null) {
+              log.warn("Attempt to add a comment activity with null parent id.");
+              continue;
+            }
+            if (!activity.getParentId().equals(originialParentActivityId)) {
+              log.warn("Attempt to add a comment activity with different parent id from previous saved Activity.");
+              continue;
+            }
+            if (parentActivity == null) {
+              log.warn("Attempt to add a comment on null parent activity.");
+              continue;
+            }
+            if (this.isActivityNotValid(activity, null)) {
+              continue;
+            }
+            activity.setId(null);
+            saveComment(parentActivity, activity);
+            this.attachActivityToEntity(parentActivity, activity);
+          } else {
+            isParentActivityIgnored = true;
+            originialParentActivityId = null;
+            parentActivity = null;
+
+            // TODO this should be refactored, see up
+            if (this.isActivityNotValid(activity, null)) {
+              continue;
+            }
+
+            activity.setId(null);
+            saveActivity(activity, spacePrettyName);
+            if (activity.getId() == null) {
+              continue;
+            } else {
+              isParentActivityIgnored = false;
+              originialParentActivityId = activity.getId();
+              parentActivity = activity;
+            }
+            this.attachActivityToEntity(activity, null);
+          }
+        } catch (Exception e) {
+          log.warn("Error while adding activity: " + activity.getTitle(), e);
+        }
+      }
+    } finally {
+      deleteTempFile(activitiesFile);
+    }
+  }
+
+  protected InputStream getAttachementInputStream(OperationContext operationContext) {
+    OperationAttachment attachment = operationContext.getAttachment(false);
+    if (attachment == null) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No attachment available for import.");
+    }
+
+    InputStream attachmentInputStream = attachment.getStream();
+    if (attachmentInputStream == null) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for import.");
+    }
+    return attachmentInputStream;
+  }
+
+  protected void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+    throw new UnsupportedOperationException("attachActivityToEntity method should be implemented in Class.");
+  }
+
+  protected boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+    throw new UnsupportedOperationException("isActivityNotValid method should be implemented in Class.");
   }
 
   protected final void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
@@ -169,7 +314,11 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         activityManager.saveActivityNoReturn(activity);
         activity.setUpdated(updatedTime);
         activityManager.updateActivity(activity);
-        log.info("Activity  is imported: '" + activity.getTitle() + "'");
+        if (activity.getId() == null) {
+          log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
+        } else {
+          log.info("Activity  is imported: '" + activity.getTitle() + "'");
+        }
       } catch (ActivityStorageException e) {
         log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
       }
@@ -183,7 +332,11 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         activityManager.saveActivityNoReturn(spaceIdentity, activity);
         activity.setUpdated(updatedTime);
         activityManager.updateActivity(activity);
-        log.info("Activity  is imported: '" + activity.getTitle() + "'");
+        if (activity.getId() == null) {
+          log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
+        } else {
+          log.info("Activity  is imported: '" + activity.getTitle() + "'");
+        }
       } catch (ActivityStorageException e) {
         log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
       }
@@ -258,6 +411,33 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       log.error("Error while retrieving identity: ", e);
     }
     return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  protected List<ExoSocialActivity> retrieveActivitiesFromFile(File activitiesFile) {
+    List<ExoSocialActivity> activities = null;
+
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(activitiesFile);
+      // Unmarshall metadata xml file
+      XStream xstream = new XStream();
+
+      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
+    } catch (FileNotFoundException e) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
+    } finally {
+      if (inputStream != null) {
+        try {
+          inputStream.close();
+        } catch (IOException e) {
+          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
+        }
+      }
+    }
+
+    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
+    return activitiesList;
   }
 
   protected final List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
@@ -347,6 +527,236 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     return ids;
   }
 
+  protected final File copyAttachementToLocalFolder(InputStream attachmentInputStream) throws IOException, FileNotFoundException {
+    File tmpZipFile = File.createTempFile("staging", ".zip");
+    copyAttachementToLocalFolder(attachmentInputStream, tmpZipFile);
+    return tmpZipFile;
+  }
+
+  protected final void copyAttachementToLocalFolder(InputStream attachmentInputStream, File tmpZipFile) throws IOException, FileNotFoundException {
+    NonCloseableZipInputStream zis = null;
+    try {
+      FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
+      IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
+      tmpFileOutputStream.close();
+      attachmentInputStream.close();
+    } finally {
+      if (zis != null) {
+        try {
+          zis.reallyClose();
+        } catch (IOException e) {
+          log.warn("Can't close inputStream of attachement.");
+        }
+      }
+    }
+  }
+
+  protected final static boolean copyToDisk(InputStream input, String output) throws Exception {
+    return copyToDisk(input, new File(output));
+  }
+
+  protected final static boolean copyToDisk(InputStream input, File file) throws Exception {
+    createFile(file, false);
+
+    FileOutputStream fileOuput = null;
+    try {
+      fileOuput = new FileOutputStream(file);
+      IOUtils.copy(input, fileOuput);
+      return true;
+    } catch (Exception e) {
+      log.error("Error while copying file: " + file.getAbsolutePath(), e);
+      return false;
+    } finally {
+      if (fileOuput != null) {
+        fileOuput.close();
+      }
+    }
+  }
+
+  protected final static String replaceSpecialChars(String name) {
+    name = name.replaceAll(":", "_");
+    return name.replaceAll("\\?", "_");
+  }
+
+  protected final static File createFile(File file, boolean folder) throws Exception {
+    if (file.getParentFile() != null)
+      createFile(file.getParentFile(), true);
+    if (file.exists())
+      return file;
+    if (file.isDirectory() || folder)
+      file.mkdir();
+    else
+      file.createNewFile();
+    return file;
+  }
+
+  public final static FileEntry getAndRemoveFileByPath(List<FileEntry> fileEntries, String nodePath) {
+    Iterator<FileEntry> iterator = fileEntries.iterator();
+    while (iterator.hasNext()) {
+      FileEntry fileEntry = (FileEntry) iterator.next();
+      if (fileEntry.getNodePath().equals(nodePath)) {
+        iterator.remove();
+        return fileEntry;
+      }
+    }
+    return null;
+  }
+
+  public final static List<FileEntry> getAndRemoveFilesStartsWith(List<FileEntry> fileEntries, String nodePath) {
+    List<FileEntry> files = new ArrayList<FileEntry>();
+    Iterator<FileEntry> iterator = fileEntries.iterator();
+    while (iterator.hasNext()) {
+      FileEntry fileEntry = (FileEntry) iterator.next();
+      if (fileEntry.getNodePath().startsWith(nodePath)) {
+        files.add(fileEntry);
+        iterator.remove();
+      }
+    }
+    return files;
+  }
+
+  /**
+   * Extract data from zip
+   * 
+   * @param attachment
+   * @return
+   * @return
+   */
+  public final Map<String, List<FileEntry>> extractDataFromZip(InputStream attachmentInputStream) throws Exception {
+    Map<String, List<FileEntry>> contentsByOwner = new HashMap<String, List<FileEntry>>();
+    File tmpZipFile = null;
+    try {
+      tmpZipFile = copyAttachementToLocalFolder(attachmentInputStream);
+
+      // Organize File paths by wikiOwner and extract files from zip to a temp
+      // folder
+      extractFilesByOwner(tmpZipFile, contentsByOwner);
+    } finally {
+      if (tmpZipFile != null) {
+        deleteTempFile(tmpZipFile);
+      }
+    }
+    return contentsByOwner;
+  }
+
+  protected final void extractFilesByOwner(File tmpZipFile, Map<String, List<FileEntry>> contentsByOwner) throws FileNotFoundException, IOException, Exception {
+    // Open an input stream on local zip file
+    NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
+
+    try {
+      ZipEntry entry;
+      while ((entry = zis.getNextEntry()) != null) {
+        String filePath = entry.getName();
+        // Skip entries not managed by this extension
+        if (filePath.equals("") || !filePath.startsWith(this.getManagedFilesPrefix())) {
+          continue;
+        }
+
+        // Skip directories
+        if (entry.isDirectory()) {
+          continue;
+        }
+
+        // Skip non managed
+        boolean isFileNotKnown = this.isUnKnownFileFormat(filePath);
+        if (isFileNotKnown) {
+          log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
+          continue;
+        }
+
+        log.info("Receiving content " + filePath);
+
+        File file = File.createTempFile("staging", ".xml");
+
+        // Put XML Export file in temp folder
+        copyToDisk(zis, file);
+
+        // Extract wiki owner
+        String owner = this.extractIdFromPath(filePath);
+
+        List<FileEntry> fileEntries = contentsByOwner.get(owner);
+        // Add nodePath by Owner
+        if (fileEntries == null) {
+          fileEntries = new ArrayList<FileEntry>();
+          contentsByOwner.put(owner, fileEntries);
+        }
+
+        // Treat special files
+        boolean isSpecialFile = this.addSpecialFile(fileEntries, filePath, file);
+        if (isSpecialFile) {
+          continue;
+        }
+
+        String nodePath = this.getNodePath(filePath);
+        fileEntries.add(new FileEntry(nodePath, file));
+      }
+    } finally {
+      if (zis != null) {
+        zis.reallyClose();
+      }
+    }
+  }
+
+  protected String getNodePath(String filePath) {
+    String[] fileParts = filePath.split("JCR_EXP_DATA");
+    if (fileParts.length != 2) {
+      log.warn("Cannot parse file: " + filePath);
+      return null;
+    }
+    String nodePath = fileParts[1].trim().replaceFirst(".xml$", "");
+    if (!nodePath.startsWith("/")) {
+      nodePath = "/" + nodePath;
+    }
+    return nodePath;
+  }
+
+  protected String getManagedFilesPrefix() {
+    throw new UnsupportedOperationException("getManagedFilesPrefix method should be implemented in Class.");
+  }
+
+  protected boolean isUnKnownFileFormat(String filePath) {
+    throw new UnsupportedOperationException("isUnKnownFileFormat method should be implemented in Class.");
+  }
+
+  protected boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
+    throw new UnsupportedOperationException("treatSpecialFile operation should be implemented in Class.");
+  }
+
+  protected String extractIdFromPath(String path) {
+    throw new UnsupportedOperationException("extractIdFromPath operation should be implemented in Class.");
+  }
+
+  protected static void deleteTempFile(File fileToImport) {
+    try {
+      if (fileToImport != null && fileToImport.exists()) {
+        FileUtils.forceDelete(fileToImport);
+      }
+    } catch (Exception e) {
+      log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
+    }
+  }
+
+  protected static final <T> T deserializeObject(File file, Class<T> objectClass, String alias) throws Exception {
+    FileInputStream inputStream = null;
+    try {
+      inputStream = new FileInputStream(file);
+      return deserializeObject(inputStream, objectClass, alias);
+    } finally {
+      if (inputStream != null) {
+        inputStream.close();
+        deleteTempFile(file);
+      }
+    }
+  }
+
+  protected static final <T> T deserializeObject(final InputStream zin, Class<T> objectClass, String alias) {
+    XStream xStream = new XStream();
+    xStream.alias(alias, objectClass);
+    @SuppressWarnings("unchecked")
+    T object = (T) xStream.fromXML(zin);
+    return object;
+  }
+
   // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
   // stream when
   // it finishes reading an XML document. This is no good when we are using
@@ -367,4 +777,72 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     }
   }
 
+  public static class FileEntry implements Comparable<FileEntry> {
+    String nodePath;
+    File file;
+    File historyFile;
+
+    public FileEntry(String nodePath, File file) {
+      super();
+      this.nodePath = nodePath;
+      this.file = file;
+    }
+
+    public String getNodePath() {
+      return nodePath;
+    }
+
+    public void setNodePath(String nodePath) {
+      this.nodePath = nodePath;
+    }
+
+    public File getFile() {
+      return file;
+    }
+
+    public void setFile(File file) {
+      this.file = file;
+    }
+
+    public File getHistoryFile() {
+      return historyFile;
+    }
+
+    public void setHistoryFile(File historyFile) {
+      this.historyFile = historyFile;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == null) {
+        return false;
+      }
+      if (obj instanceof FileEntry) {
+        if (nodePath != null) {
+          return ((FileEntry) obj).getNodePath().equals(nodePath);
+        }
+      } else if (obj instanceof String) {
+        if (nodePath != null) {
+          return nodePath.equals(obj);
+        }
+      } else if (obj instanceof File) {
+        if (file != null) {
+          return file.equals(obj);
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public int compareTo(FileEntry o) {
+      // aactions should be imported at last place
+      if (this.getNodePath().contains("/exo:actions") && !o.getNodePath().contains("/exo:actions")) {
+        return 1;
+      }
+      if (o.getNodePath().contains("/exo:actions") && !this.getNodePath().contains("/exo:actions")) {
+        return -1;
+      }
+      return this.getNodePath().compareTo(o.getNodePath());
+    }
+  }
 }

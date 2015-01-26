@@ -29,14 +29,21 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public abstract class AbstractSpaceMetadataExportTask implements ExportTask {
+public class SpaceMetadataExportTask implements ExportTask {
 
   public static final String FILENAME = "space.metadata";
 
   protected final Space space;
+  protected final String entryName;
 
-  public AbstractSpaceMetadataExportTask(Space space) {
+  public SpaceMetadataExportTask(Space space, String prefix) {
     this.space = space;
+    this.entryName = (prefix.endsWith("/") ? prefix : (prefix + "/")) + FILENAME;
+  }
+
+  @Override
+  public String getEntry() {
+    return entryName;
   }
 
   @Override
@@ -49,5 +56,4 @@ public abstract class AbstractSpaceMetadataExportTask implements ExportTask {
     xStream.toXML(metaData, writer);
     writer.flush();
   }
-
 }

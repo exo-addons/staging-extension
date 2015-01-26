@@ -25,6 +25,9 @@ import javax.jcr.Node;
 import org.apache.commons.lang.ArrayUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -78,6 +81,8 @@ public class WikiDataExportResource extends AbstractJCROperationHandler {
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
+    increaseCurrentTransactionTimeOut(operationContext);
+
     String wikiOwner = operationContext.getAttributes().getValue("filter");
 
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
@@ -102,6 +107,18 @@ public class WikiDataExportResource extends AbstractJCROperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
+  @Override
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {
+    if (params.length != 3) {
+      log.warn("Cannot add Wiki Export Task, 3 parameters was expected, got: " + ArrayUtils.toString(params));
+      return;
+    }
+
+    String prefix = "wiki/" + wikiType.toString().toLowerCase() + "/___" + params[1];
+    JCRNodeExportTask wikiExportTask = new JCRNodeExportTask(repositoryService, params[0], params[2], prefix, recursive, true);
+    subNodesExportTask.add(wikiExportTask);
+  }
+
   private void exportWiki(List<ExportTask> exportTasks, Wiki wiki, boolean exportSpaceMetadata) {
     if (wiki == null) {
       log.warn("Cannot export Resource: Wiki wasn't found.");
@@ -114,7 +131,8 @@ public class WikiDataExportResource extends AbstractJCROperationHandler {
 
       if (exportSpaceMetadata && WikiType.GROUP.name().equalsIgnoreCase(wiki.getType()) && wiki.getOwner().startsWith(SpaceUtils.SPACE_GROUP + "/")) {
         Space space = spaceService.getSpaceByGroupId(wiki.getOwner());
-        exportTasks.add(new SpaceMetadataExportTask(space, wiki.getOwner()));
+        String prefix = "wiki/" + WikiType.GROUP.toString().toLowerCase() + "/___" + wiki.getOwner() + "---/";
+        exportTasks.add(new SpaceMetadataExportTask(space, prefix));
       }
 
       // export Activities
@@ -141,7 +159,8 @@ public class WikiDataExportResource extends AbstractJCROperationHandler {
       addActivityWithComments(activitiesList, activityId);
     }
     if (!activitiesList.isEmpty()) {
-      exportTasks.add(new WikiActivitiesExportTask(identityManager, activitiesList, wiki.getType(), wiki.getOwner()));
+      String prefix = "wiki/" + wiki.getType().toString().toLowerCase() + "/___" + wiki.getOwner() + "---/";
+      exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
     }
   }
 
@@ -151,16 +170,6 @@ public class WikiDataExportResource extends AbstractJCROperationHandler {
       pages.add(childPageImpl);
       computeChildPages(pages, childPageImpl);
     }
-  }
-
-  @Override
-  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {
-    if (params.length != 3) {
-      log.warn("Cannot add Wiki Export Task, 3 parameters was expected, got: " + ArrayUtils.toString(params));
-      return;
-    }
-    WikiExportTask wikiExportTask = new WikiExportTask(repositoryService, wikiType, params[1], params[0], params[2], recursive);
-    subNodesExportTask.add(wikiExportTask);
   }
 
 }

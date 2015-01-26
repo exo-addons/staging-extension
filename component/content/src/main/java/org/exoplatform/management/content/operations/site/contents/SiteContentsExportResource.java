@@ -16,6 +16,9 @@ import javax.jcr.query.Query;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.log.ExoLogger;
@@ -54,7 +57,6 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
-      SiteMetaData metaData = new SiteMetaData();
       String operationName = operationContext.getOperationName();
       PathAddress address = operationContext.getAddress();
       OperationAttributes attributes = operationContext.getAttributes();
@@ -71,46 +73,13 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
       activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
       activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
 
+      increaseCurrentTransactionTimeOut(operationContext);
+
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
       List<String> excludePaths = attributes.getValues("excludePaths");
       List<String> filters = attributes.getValues("filter");
 
-      boolean exportSiteWithSkeleton = true;
-      String jcrQuery = null;
-
-      // no-skeleton has the priority over query
-      if (!filters.contains("no-skeleton:true") && !filters.contains("no-skeleton:false")) {
-        for (String filterValue : filters) {
-          if (filterValue.startsWith("query:")) {
-            jcrQuery = filterValue.replace("query:", "");
-          }
-        }
-      } else {
-        exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
-      }
-
-      // workspace
-      String workspace = null;
-      for (String filterValue : filters) {
-        if (filterValue.startsWith("workspace:")) {
-          workspace = filterValue.replace("workspace:", "");
-        }
-      }
-
       NodeLocation sitesLocation = wcmConfigurationService.getLivePortalsLocation();
-      String sitePath = sitesLocation.getPath();
-      if (!sitePath.endsWith("/")) {
-        sitePath += "/";
-      }
-      sitePath += siteName;
-
-      if (workspace == null || workspace.isEmpty()) {
-        workspace = sitesLocation.getWorkspace();
-      }
-
-      metaData.getOptions().put(SiteMetaData.SITE_PATH, sitePath);
-      metaData.getOptions().put(SiteMetaData.SITE_WORKSPACE, workspace);
-      metaData.getOptions().put(SiteMetaData.SITE_NAME, siteName);
 
       // "taxonomy" attribute. Defaults to true.
       boolean exportSiteTaxonomy = !filters.contains("taxonomy:false");
@@ -118,6 +87,19 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
       boolean exportVersionHistory = !filters.contains("no-history:true");
       // Exports only metadata
       boolean exportOnlyMetadata = filters.contains("only-metadata:true");
+      // Exports with skeleton
+      boolean exportSiteWithSkeleton = !filters.contains("no-skeleton:true");
+      // get JCR Query
+      String jcrQuery = getParameterValue(filters, "query:", null);
+      // get JCR workspace
+      String workspace = getParameterValue(filters, "workspace:", sitesLocation.getWorkspace());
+      // get JCR Site path
+      String sitePath = (sitesLocation.getPath().endsWith("/") ? sitesLocation.getPath() : (sitesLocation.getPath() + "/")) + siteName;
+
+      SiteMetaData metaData = new SiteMetaData();
+      metaData.getOptions().put(SiteMetaData.SITE_PATH, sitePath);
+      metaData.getOptions().put(SiteMetaData.SITE_WORKSPACE, workspace);
+      metaData.getOptions().put(SiteMetaData.SITE_NAME, siteName);
 
       Set<String> activitiesId = new HashSet<String>();
       // Site contents
@@ -129,8 +111,8 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
         exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath, exportSiteTaxonomy, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
       }
 
-      // Metadata
-      exportTasks.add(getMetaDataExportTask(metaData));
+      // Export Site Metadata
+      exportTasks.add(new SiteMetaDataExportTask(metaData));
 
       // Export activities
       exportActivities(exportTasks, activitiesId, siteName);
@@ -150,7 +132,7 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
           addActivityWithComments(activities, activityId);
         }
         if (!activities.isEmpty()) {
-          exportTasks.add(new SiteContentsActivitiesExportTask(identityManager, activities, siteName));
+          exportTasks.add(new ActivitiesExportTask(identityManager, activities, SiteUtil.getSiteContentsBasePath(siteName)));
         }
       } catch (Exception e) {
         log.warn("Can't export activities", e);
@@ -313,21 +295,21 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
     if (excludedNodes == null || (!excludedNodes.contains(childNode.getName()) && !excludedNodes.contains(childNode.getPath()))) {
       String path = childNode.getPath();
       boolean recursive = isRecursiveExport(childNode);
-      if (childNode.isNodeType("exo:activityInfo")) {
-        String activityId = ActivityTypeUtils.getActivityId(childNode);
-        if (activityId != null && !activityId.isEmpty()) {
-          activitiesId.add(activityId);
-        }
-      }
       if (!exportOnlyMetadata) {
-        SiteContentsExportTask siteContentExportTask = new SiteContentsExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), path, recursive);
+        if (childNode.isNodeType("exo:activityInfo")) {
+          String activityId = ActivityTypeUtils.getActivityId(childNode);
+          if (activityId != null && !activityId.isEmpty()) {
+            activitiesId.add(activityId);
+          }
+        }
+        String prefix = SiteUtil.getSiteContentsBasePath(metaData.getOptions().get(SiteMetaData.SITE_NAME));
+        JCRNodeExportTask siteContentExportTask = new JCRNodeExportTask(repositoryService, workspace, path, prefix, recursive, true);
         subNodesExportTask.add(siteContentExportTask);
         if (exportVersionHistory && childNode.isNodeType(org.exoplatform.ecm.webui.utils.Utils.MIX_VERSIONABLE) && childNode.getVersionHistory().hasNodes()) {
           SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
               path, recursive);
           subNodesExportTask.add(versionHistoryExportTask);
         }
-        metaData.getExportedFiles().put(siteContentExportTask.getEntry(), parentNode.getPath());
       } else {
         NodeMetadata nodeMetadata = new NodeMetadata();
         metaData.getNodesMetadata().put(path, nodeMetadata);
@@ -373,10 +355,17 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
     }
   }
 
-  private SiteMetaDataExportTask getMetaDataExportTask(SiteMetaData metaData) {
-    return new SiteMetaDataExportTask(metaData);
+  private String getParameterValue(List<String> filters, String prefix, String defaultValue) {
+    String value = null;
+    for (String filterValue : filters) {
+      if (filterValue.startsWith(prefix)) {
+        value = filterValue.replace(prefix, "");
+        break;
+      }
+    }
+    if (defaultValue != null && (value == null || value.isEmpty())) {
+      value = defaultValue;
+    }
+    return value;
   }
-
-  @Override
-  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {}
 }

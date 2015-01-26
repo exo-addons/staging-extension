@@ -1,9 +1,13 @@
 package org.exoplatform.management.common;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
@@ -17,10 +21,12 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.jcr.impl.core.SessionImpl;
 import org.gatein.management.api.operation.model.ExportTask;
 
 public abstract class AbstractJCROperationHandler extends AbstractOperationHandler {
@@ -30,7 +36,7 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
 
   private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
-  protected void exportNode(Node childNode, List<ExportTask> subNodesExportTask, String... params) throws Exception {
+  protected final void exportNode(Node childNode, List<ExportTask> subNodesExportTask, String... params) throws Exception {
     String path = childNode.getPath();
     boolean recursive = isRecursiveExport(childNode);
     addJCRNodeExportTask(childNode, subNodesExportTask, recursive, ((String[]) ArrayUtils.add(params, path)));
@@ -45,7 +51,96 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     }
   }
 
-  protected boolean isRecursiveExport(Node node) throws Exception {
+  protected final void importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
+    File xmlFile = fileEntry.getFile();
+    if (xmlFile == null || !xmlFile.exists()) {
+      log.warn("Cannot import file" + xmlFile);
+      return;
+    }
+    FileInputStream fis = new FileInputStream(xmlFile);
+    try {
+      importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication);
+    } finally {
+      if (fis != null) {
+        fis.close();
+      }
+      if (xmlFile != null) {
+        xmlFile.delete();
+      }
+    }
+  }
+
+  protected final void importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
+    String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
+    parentNodePath = parentNodePath.replaceAll("//", "/");
+
+    // Delete old node
+    Session session = getSession(workspace);
+    try {
+      if (session.itemExists(nodePath) && session.getItem(nodePath) instanceof Node) {
+        log.info("Deleting the node " + workspace + ":" + nodePath);
+
+        Node oldNode = (Node) session.getItem(nodePath);
+        if (oldNode.isNodeType("exo:activityInfo") && activityManager != null) {
+          String activityId = ActivityTypeUtils.getActivityId(oldNode);
+          deleteActivity(activityId);
+        }
+
+        oldNode.remove();
+        session.save();
+        session.refresh(false);
+      }
+    } catch (Exception e) {
+      log.error("Error when trying to find and delete the node: '" + nodePath + "'. Ignore this node and continue.", e);
+      return;
+    } finally {
+      if (session != null) {
+        session.logout();
+      }
+    }
+
+    // Import Node from Extracted Zip file
+    session = getSession(workspace);
+    FileInputStream historyFis1 = null, historyFis2 = null;
+    try {
+      log.info("Importing the node '" + nodePath + "'");
+
+      // Create the parent path
+      Node currentNode = createJCRPath(session, parentNodePath);
+
+      session.refresh(false);
+      session.importXML(parentNodePath, inputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+      session.save();
+
+      if (isCleanPublication) {
+        // Clean publication information
+        cleanPublication(parentNodePath, session);
+      } else if (historyFile != null) {
+        log.info("Importing history of the node " + nodePath);
+        historyFis1 = new FileInputStream(historyFile);
+        Map<String, String> mapHistoryValue = org.exoplatform.services.cms.impl.Utils.getMapImportHistory(historyFis1);
+
+        historyFis2 = new FileInputStream(historyFile);
+        org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, historyFis2, mapHistoryValue);
+      }
+    } catch (Exception e) {
+      log.error("Error when trying to import node: " + nodePath, e);
+      // Revert changes
+      session.refresh(false);
+    } finally {
+      if (session != null) {
+        session.logout();
+      }
+      if (historyFis1 != null) {
+        historyFis1.close();
+      }
+      if (historyFis2 != null) {
+        historyFis2.close();
+      }
+    }
+  }
+
+  protected final boolean isRecursiveExport(Node node) throws Exception {
     NodeType nodeType = node.getPrimaryNodeType();
     NodeType[] nodeTypes = node.getMixinNodeTypes();
     boolean recursive = isRecursiveNT(nodeType);
@@ -59,7 +154,7 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     return recursive;
   }
 
-  protected boolean isRecursiveNT(NodeType nodeType) throws Exception {
+  protected final boolean isRecursiveNT(NodeType nodeType) throws Exception {
     if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
       boolean hasMandatoryChild = false;
       NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
@@ -79,14 +174,21 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     return isNTRecursiveMap.get(nodeType.getName());
   }
 
-  protected Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+  protected final Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+    return getSession(repositoryService, workspace);
+  }
+
+  public static final Session getSession(RepositoryService repositoryService, String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
     SessionProvider provider = SessionProvider.createSystemProvider();
     ManageableRepository repository = repositoryService.getCurrentRepository();
     Session session = provider.getSession(workspace, repository);
+    if (session instanceof SessionImpl) {
+      ((SessionImpl) session).setTimeout(ONE_DAY_IN_MS);
+    }
     return session;
   }
 
-  protected void cleanPublication(String path, Session session) throws Exception {
+  protected final void cleanPublication(String path, Session session) throws Exception {
     QueryManager manager = session.getWorkspace().getQueryManager();
     String statement = "select * from nt:base where jcr:path LIKE '" + path + "/%' and publication:liveRevision IS NOT NULL";
     Query query = manager.createQuery(statement.toString(), Query.SQL);
@@ -101,7 +203,7 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     }
   }
 
-  protected void cleanPublication(Node node) throws Exception {
+  protected final void cleanPublication(Node node) throws Exception {
     if (node.hasProperty("publication:currentState")) {
       log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
       // See in case the content is enrolled for the first time but never
@@ -117,7 +219,7 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     }
   }
 
-  protected Node createJCRPath(Session session, String path) throws RepositoryException {
+  protected final Node createJCRPath(Session session, String path) throws RepositoryException {
     String[] ancestors = path.split("/");
     Node current = session.getRootNode();
     for (int i = 0; i < ancestors.length; i++) {
@@ -136,5 +238,5 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     return current;
   }
 
-  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {}
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception {}
 }

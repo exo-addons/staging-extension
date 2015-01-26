@@ -1,9 +1,10 @@
 package org.exoplatform.management.organization.group;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashSet;
@@ -14,23 +15,12 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.Session;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
-import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
-import org.exoplatform.management.organization.OrganizationModelJCRContentExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.jcr.ext.distribution.DataDistributionManager;
-import org.exoplatform.services.jcr.ext.distribution.DataDistributionMode;
-import org.exoplatform.services.jcr.ext.distribution.DataDistributionType;
-import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.Group;
@@ -38,7 +28,6 @@ import org.exoplatform.services.organization.Membership;
 import org.exoplatform.services.organization.MembershipType;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
-import org.exoplatform.services.organization.impl.UserImpl;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
@@ -47,31 +36,24 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
-
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class GroupImportResource extends AbstractOperationHandler {
+public class GroupImportResource extends AbstractJCROperationHandler {
+  private static final String GROUPS_PARENT_PATH = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/";
+
   private static final Log log = ExoLogger.getLogger(GroupImportResource.class);
   private OrganizationService organizationService = null;
-  private RepositoryService repositoryService = null;
-  private NodeHierarchyCreator hierarchyCreator = null;
-  private DataDistributionManager dataDistributionManager = null;
-  private DataDistributionType dataDistributionType = null;
-  private String groupsPath = null;
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (organizationService == null) {
       organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
-      hierarchyCreator = operationContext.getRuntimeContext().getRuntimeComponent(NodeHierarchyCreator.class);
-      dataDistributionManager = operationContext.getRuntimeContext().getRuntimeComponent(DataDistributionManager.class);
-      dataDistributionType = dataDistributionManager.getDataDistributionType(DataDistributionMode.NONE);
-      groupsPath = hierarchyCreator.getJcrPath(OrganizationModelJCRContentExportTask.GROUPS_PATH);
     }
+
+    increaseCurrentTransactionTimeOut(operationContext);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -89,61 +71,15 @@ public class GroupImportResource extends AbstractOperationHandler {
       IOUtils.copy(attachmentInputStream, fos);
       fos.close();
 
-      ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-      ZipEntry entry;
-      Set<String> newlyCreatedGroups = new HashSet<String>();
-      while ((entry = zin.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        if (filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/") && filePath.endsWith("group.xml")) {
-          log.debug("Parsing : " + filePath);
-          String groupId = createGroup(zin, replaceExisting);
-          if (groupId != null) {
-            newlyCreatedGroups.add(groupId);
-          }
-        }
-        try {
-          zin.closeEntry();
-        } catch (Exception e) {
-          // Already closed, expected
-        }
-      }
-      zin.close();
-      zin = new ZipInputStream(new FileInputStream(tempFile));
-      while ((entry = zin.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        if (filePath.endsWith("_membership.xml")) {
-          log.debug("Parsing : " + filePath);
-          createMembership(zin);
-        }
-        try {
-          zin.closeEntry();
-        } catch (Exception e) {
-          // Already closed, expected
-        }
-      }
-      zin.close();
-      zin = new ZipInputStream(new FileInputStream(tempFile));
-      while ((entry = zin.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        if (!filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/")) {
-          continue;
-        }
-        if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
-          continue;
-        }
-        if (filePath.endsWith("g_content.xml")) {
-          log.debug("Parsing : " + filePath);
-          String groupId = extractGroupName(filePath);
-          boolean replaceExistingContent = replaceExisting || newlyCreatedGroups.contains(groupId);
-          createContent(zin, groupId, replaceExistingContent);
-        }
-        try {
-          zin.closeEntry();
-        } catch (Exception e) {
-          // Already closed, expected
-        }
-      }
-      zin.close();
+      // Start by importing all groups
+      Set<String> newlyCreatedGroups = importGroups(tempFile, replaceExisting);
+
+      // Importing memberships
+      importMemberships(tempFile);
+
+      // Importing group JCR contents
+      importGroupJCRNodes(tempFile, newlyCreatedGroups, replaceExisting);
+
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading group from Stream.", e);
@@ -158,14 +94,88 @@ public class GroupImportResource extends AbstractOperationHandler {
     }
   }
 
+  private void importGroupJCRNodes(File tempFile, Set<String> newlyCreatedGroups, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
+    ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
+    String defaultWorkspace = manageableRepository.getConfiguration().getDefaultWorkspaceName();
+
+    ZipEntry entry = null;
+    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
+    while ((entry = zin.getNextEntry()) != null) {
+      String filePath = entry.getName();
+
+      if (!filePath.startsWith(GROUPS_PARENT_PATH) || !filePath.contains("JCR_EXP_DATA")) {
+        continue;
+      }
+      if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
+        continue;
+      }
+
+      log.info("Parsing : " + filePath);
+      String groupId = extractParam(filePath, 1);
+      String nodePath = extractParam(filePath, 2);
+      boolean replaceExistingContent = replaceExisting || newlyCreatedGroups.contains(groupId);
+      if (replaceExistingContent) {
+        importNode(nodePath, defaultWorkspace, zin, null, false);
+      }
+
+      try {
+        zin.closeEntry();
+      } catch (Exception e) {
+        // Already closed, expected
+      }
+    }
+    zin.close();
+  }
+
+  private Set<String> importGroups(File tempFile, boolean replaceExisting) throws Exception {
+    ZipEntry entry = null;
+    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
+    Set<String> newlyCreatedGroups = new HashSet<String>();
+    while ((entry = zin.getNextEntry()) != null) {
+      String filePath = entry.getName();
+      if (filePath.startsWith(GROUPS_PARENT_PATH) && filePath.endsWith("group.xml")) {
+        log.debug("Parsing : " + filePath);
+        String groupId = createGroup(zin, replaceExisting);
+        if (groupId != null) {
+          newlyCreatedGroups.add(groupId);
+        }
+      }
+      try {
+        zin.closeEntry();
+      } catch (Exception e) {
+        // Already closed, expected
+      }
+    }
+    zin.close();
+    return newlyCreatedGroups;
+  }
+
+  private void importMemberships(File tempFile) throws Exception {
+    ZipEntry entry = null;
+    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
+    while ((entry = zin.getNextEntry()) != null) {
+      String filePath = entry.getName();
+      if (filePath.endsWith("_membership.xml")) {
+        log.debug("Parsing : " + filePath);
+        createMembership(zin);
+      }
+      try {
+        zin.closeEntry();
+      } catch (Exception e) {
+        // Already closed, expected
+      }
+    }
+    zin.close();
+  }
+
   @SuppressWarnings("deprecation")
   private void createMembership(final ZipInputStream zin) throws Exception {
     Membership membership = null;
     try {
-      membership = deserializeObject(zin, organizationService.getMembershipHandler().createMembershipInstance().getClass());
+      membership = deserializeObject(zin, organizationService.getMembershipHandler().createMembershipInstance().getClass(), "organization");
     } catch (Exception e) {
-      log.warn("Can't serialize membership with : " + UserImpl.class.getName() + ". Trying with : " + org.exoplatform.services.organization.idm.UserImpl.class.getName());
-      membership = deserializeObject(zin, org.exoplatform.services.organization.idm.MembershipImpl.class);
+      log.warn("Can't serialize membership with. Trying with : " + org.exoplatform.services.organization.idm.MembershipImpl.class.getName());
+      membership = deserializeObject(zin, org.exoplatform.services.organization.idm.MembershipImpl.class, "organization");
     }
     Membership oldMembership = organizationService.getMembershipHandler().findMembership(membership.getId());
     if (oldMembership == null) {
@@ -181,50 +191,8 @@ public class GroupImportResource extends AbstractOperationHandler {
     }
   }
 
-  private void createContent(ZipInputStream zin, String groupId, boolean replaceExisting) {
-    try {
-      SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-      ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
-      String systemWorkspace = manageableRepository.getConfiguration().getDefaultWorkspaceName();
-
-      Session session = sessionProvider.getSession(systemWorkspace, manageableRepository);
-      Node groupsHome = (Node) session.getItem(groupsPath);
-
-      Node groupNode = null;
-      String parentPath = null;
-      try {
-        groupNode = dataDistributionType.getDataNode(groupsHome, groupId);
-        parentPath = groupNode.getParent().getPath();
-      } catch (PathNotFoundException e) {
-        // Nothing to do
-      }
-      if (groupNode == null || replaceExisting) {
-        if (groupNode != null) {
-          groupNode.remove();
-          session.save();
-        }
-        if (parentPath == null) {
-          if (StringUtils.countMatches(groupId, "/") > 1) {
-            String parentId = groupId.substring(0, groupId.lastIndexOf("/") + 1);
-            // Should be found, else an exception will be thrown, because this
-            // will be an incoherence
-            Node parentNode = dataDistributionType.getDataNode(groupsHome, parentId);
-            parentPath = parentNode.getPath();
-          } else {
-            parentPath = groupsPath;
-          }
-        }
-        ByteArrayInputStream bis = new ByteArrayInputStream(IOUtils.toByteArray(zin));
-        session.importXML(parentPath, bis, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-        session.save();
-      }
-    } catch (Exception exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting group's folder:", exception);
-    }
-  }
-
   private String createGroup(final ZipInputStream zin, Boolean replaceExisting) throws Exception {
-    Group group = deserializeObject(zin, organizationService.getGroupHandler().createGroupInstance().getClass());
+    Group group = deserializeObject(zin, organizationService.getGroupHandler().createGroupInstance().getClass(), "organization");
     Group oldGroup = organizationService.getGroupHandler().findGroupById(group.getId());
 
     if (oldGroup != null) {
@@ -235,30 +203,13 @@ public class GroupImportResource extends AbstractOperationHandler {
         log.info("ReplaceExisting is Off: group '" + group.getId() + "' is ignored.");
       }
     } else {
-      Group parent = checkExists(group.getParentId());
+      Group parent = createGroupIfNotExists(group.getParentId());
       organizationService.getGroupHandler().addChild(parent, group, true);
-      try {
-        SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-        ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
-        String systemWorkspace = manageableRepository.getConfiguration().getDefaultWorkspaceName();
-
-        Session session = sessionProvider.getSession(systemWorkspace, manageableRepository);
-        try {
-          Node groupsHome = (Node) session.getItem(groupsPath);
-          Node groupNode = dataDistributionType.getDataNode(groupsHome, group.getId());
-          groupNode.remove();
-          session.save();
-        } catch (PathNotFoundException e) {
-          // Nothing to do
-        }
-      } catch (Exception exception) {
-        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while getting group's folder:", exception);
-      }
     }
     return (oldGroup == null ? group.getId() : null);
   }
 
-  private Group checkExists(String groupId) throws Exception {
+  private Group createGroupIfNotExists(String groupId) throws Exception {
     if (groupId == null || groupId.trim().isEmpty()) {
       return null;
     }
@@ -268,7 +219,7 @@ public class GroupImportResource extends AbstractOperationHandler {
       Group parent = null;
       if (StringUtils.countMatches(groupId, "/") > 1) {
         String parentId = groupId.substring(0, groupId.lastIndexOf("/"));
-        parent = checkExists(parentId);
+        parent = createGroupIfNotExists(parentId);
       }
       String groupName = groupId.substring(groupId.lastIndexOf("/") + 1);
       group = organizationService.getGroupHandler().createGroupInstance();
@@ -280,21 +231,13 @@ public class GroupImportResource extends AbstractOperationHandler {
     return group;
   }
 
-  private String extractGroupName(String filePath) {
-    Pattern pattern = Pattern.compile(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/(.*)/g_content.xml");
+  private static String extractParam(String filePath, int i) {
+    Pattern pattern = Pattern.compile(GROUPS_PARENT_PATH + "(.*)/JCR_EXP_DATA(.*)");
     Matcher matcher = pattern.matcher(filePath);
     if (matcher.find()) {
-      return matcher.group(1);
+      return matcher.group(i);
     } else {
-      throw new IllegalStateException("filePath doesn't match groups/*/g_content.xml");
+      throw new IllegalStateException("filePath can't be managed: " + filePath);
     }
-  }
-
-  private <T> T deserializeObject(final ZipInputStream zin, Class<T> objectClass) {
-    XStream xStream = new XStream();
-    xStream.alias("organization", objectClass);
-    @SuppressWarnings("unchecked")
-    T object = (T) xStream.fromXML(zin);
-    return object;
   }
 }

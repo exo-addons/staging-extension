@@ -28,6 +28,8 @@ import org.exoplatform.calendar.service.GroupCalendarData;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.calendar.CalendarExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
@@ -84,10 +86,9 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
     if (groupCalendar) {
       String filterText = operationContext.getAttributes().getValue("filter");
       if (spaceCalendar) {
-        String displayName = filterText;
-        Space space = spaceService.getSpaceByDisplayName(displayName);
+        Space space = spaceService.getSpaceByDisplayName(filterText);
         if (space == null) {
-          throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't find space with display name: " + displayName);
+          throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't find space with display name: " + filterText);
         }
         filterText = space.getGroupId();
       }
@@ -165,7 +166,8 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
       if (exportSpaceMetadata && spaceCalendar) {
         Space space = spaceService.getSpaceByGroupId(groupId);
         if (space != null) {
-          exportTasks.add(new SpaceMetadataExportTask(space, groupId.replace(SpaceUtils.SPACE_GROUP + "/", "")));
+          String prefix = "calendar/space/" + groupId.replace(SpaceUtils.SPACE_GROUP + "/", "") + "/";
+          exportTasks.add(new SpaceMetadataExportTask(space, prefix));
         }
       }
     } catch (Exception e) {
@@ -210,7 +212,8 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
       addActivityWithComments(activitiesList, event.getActivityId());
     }
     if (!activitiesList.isEmpty()) {
-      exportTasks.add(new CalendarActivitiesExportTask(identityManager, activitiesList, type, events.get(0).getCalendarId()));
+      String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + events.get(0).getCalendarId();
+      exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
     }
   }
 }

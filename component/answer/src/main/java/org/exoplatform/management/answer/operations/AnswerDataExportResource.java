@@ -29,6 +29,8 @@ import org.exoplatform.faq.service.QuestionPageList;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -55,7 +57,6 @@ public class AnswerDataExportResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataExportResource.class);
 
-
   private FAQService faqService;
 
   private IdentityManager identityManager;
@@ -66,7 +67,6 @@ public class AnswerDataExportResource extends AbstractOperationHandler {
   public AnswerDataExportResource(boolean isSpaceType) {
     this.isSpaceType = isSpaceType;
     this.type = isSpaceType ? AnswerExtension.SPACE_FAQ_TYPE : AnswerExtension.PUBLIC_FAQ_TYPE;
-
   }
 
   @Override
@@ -150,7 +150,8 @@ public class AnswerDataExportResource extends AbstractOperationHandler {
       if (space == null) {
         log.warn("Should export space DATA but it is null");
       } else {
-        exportTasks.add(new SpaceMetadataExportTask(space, category.getId()));
+        String prefix = "answer/space/" + category.getId() + "/";
+        exportTasks.add(new SpaceMetadataExportTask(space, prefix));
       }
     }
   }
@@ -187,7 +188,8 @@ public class AnswerDataExportResource extends AbstractOperationHandler {
       }
     }
     if (!activitiesList.isEmpty()) {
-      exportTasks.add(new AnswerActivitiesExportTask(identityManager, activitiesList, type, category.getId()));
+      String prefix = "answer/" + type + "/" + category.getId();
+      exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
     }
   }
 

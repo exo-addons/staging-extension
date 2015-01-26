@@ -37,7 +37,6 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  */
 public class WikiDataReadResource extends AbstractOperationHandler {
 
-
   private WikiType wikiType;
 
   public WikiDataReadResource(WikiType wikiType) {
@@ -62,5 +61,4 @@ public class WikiDataReadResource extends AbstractOperationHandler {
     }
     resultHandler.completed(new ReadResourceModel("All wikis:", children));
   }
-
 }

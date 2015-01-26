@@ -48,6 +48,7 @@ public class ForumDataReadResource extends AbstractOperationHandler {
     this.isSpaceForumType = isSpaceForumType;
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>();
@@ -58,7 +59,7 @@ public class ForumDataReadResource extends AbstractOperationHandler {
       if (spaceCategory != null) {
         List<Forum> forums = null;
         try {
-          forums = forumService.getForums(spaceCategory.getId(), "");
+          forums = forumService.getForums(spaceCategory.getId(), null);
         } catch (Exception e) {
           throw new OperationException(OperationNames.READ_RESOURCE, "Error while getting space forums", e);
         }

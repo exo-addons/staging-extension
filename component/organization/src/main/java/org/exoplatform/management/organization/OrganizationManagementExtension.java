@@ -35,6 +35,7 @@ public class OrganizationManagementExtension implements ManagementExtension {
   public final static String PATH_ORGANIZATION_USER = "user";
   public final static String PATH_ORGANIZATION_GROUP = "group";
   public final static String PATH_ORGANIZATION_ROLE = "role";
+  public static final String GROUPS_PATH = "groupsPath";
 
   @Override
   public void initialize(ExtensionContext context) {

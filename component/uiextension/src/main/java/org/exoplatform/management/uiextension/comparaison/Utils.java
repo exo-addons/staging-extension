@@ -3,8 +3,6 @@ package org.exoplatform.management.uiextension.comparaison;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,9 +13,9 @@ import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.exoplatform.management.common.AbstractOperationHandler.FileEntry;
 import org.exoplatform.management.content.operations.site.contents.NodeMetadata;
 import org.exoplatform.management.content.operations.site.contents.SiteContentsImportResource;
-import org.exoplatform.management.content.operations.site.contents.SiteData;
 import org.exoplatform.management.content.operations.site.contents.SiteMetaData;
 import org.exoplatform.management.content.operations.site.contents.SiteMetaDataExportTask;
 import org.exoplatform.management.service.api.StagingService;
@@ -29,8 +27,9 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
 public class Utils {
+  private static final SiteContentsImportResource SITE_CONTENTS_IMPORT_RESOURCE = new SiteContentsImportResource();
 
-  private static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
+  private static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);
 
   public static List<NodeComparaison> compareLocalNodesWithTargetServer(String workspace, String nodePathToCompare, TargetServer targetServer) throws Exception {
     Map<String, String> exportOptions = new HashMap<String, String>();
@@ -54,7 +53,7 @@ public class Utils {
     return comparaisons;
   }
 
-  private static List<NodeComparaison> compareNodesUsingOptions(TargetServer targetServer, Map<String, String> exportOptions) throws MalformedURLException, IOException, ProtocolException {
+  private static List<NodeComparaison> compareNodesUsingOptions(TargetServer targetServer, Map<String, String> exportOptions) throws Exception {
     Map<String, NodeMetadata> sourceServerMetadata = getSourceServerMetadata(exportOptions);
     Map<String, NodeMetadata> targetServerMetadata = getTargetServerMetadata(targetServer, exportOptions);
 
@@ -160,7 +159,7 @@ public class Utils {
     return sourceServerMetadata;
   }
 
-  private static Map<String, NodeMetadata> getTargetServerMetadata(TargetServer targetServer, Map<String, String> exportOptions) throws MalformedURLException, IOException, ProtocolException {
+  private static Map<String, NodeMetadata> getTargetServerMetadata(TargetServer targetServer, Map<String, String> exportOptions) throws Exception {
     String targetServerURL = CONTENTS_HANDLER.getServerURL(targetServer, StagingService.CONTENT_SITES_PATH + "/shared.zip", exportOptions);
     URL url = new URL(targetServerURL);
 
@@ -176,32 +175,14 @@ public class Utils {
       throw new IllegalStateException("Comparaison operation error, HTTP error code from target server : " + conn.getResponseCode());
     }
 
-    Map<String, SiteData> sitesData = new HashMap<String, SiteData>();
     String tempParentFolderPath = null;
     try {
       // extract data from zip
-      tempParentFolderPath = SiteContentsImportResource.extractDataFromZip(conn.getInputStream(), "shared", sitesData);
-      SiteData siteData = sitesData.get("shared");
-      return siteData.getSiteMetadata().getNodesMetadata();
+      Map<String, List<FileEntry>> fileEntriesMap = SITE_CONTENTS_IMPORT_RESOURCE.extractDataFromZip(conn.getInputStream());
+      List<FileEntry> fileEntries = fileEntriesMap.get("shared");
+      SiteMetaData siteMetadata = SiteContentsImportResource.getSiteMetadata(fileEntries);
+      return siteMetadata.getNodesMetadata();
     } finally {
-      if (sitesData != null && !sitesData.isEmpty()) {
-        // import data of each site
-        for (String site : sitesData.keySet()) {
-          SiteData siteData = sitesData.get(site);
-          if (siteData.getNodeExportHistoryFiles() != null && !siteData.getNodeExportHistoryFiles().isEmpty()) {
-            for (String tempAbsPath : siteData.getNodeExportHistoryFiles().values()) {
-              File file = new File(tempAbsPath);
-              if (file.exists() && !file.isDirectory()) {
-                try {
-                  file.delete();
-                } catch (Exception e) {
-                  // Nothing to do, deleteOnExit is called
-                }
-              }
-            }
-          }
-        }
-      }
       if (tempParentFolderPath != null) {
         File tempFolderFile = new File(tempParentFolderPath);
         if (tempFolderFile.exists()) {

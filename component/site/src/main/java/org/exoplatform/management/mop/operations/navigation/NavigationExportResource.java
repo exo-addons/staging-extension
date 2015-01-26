@@ -53,6 +53,9 @@ public class NavigationExportResource extends AbstractNavigationOperationHandler
     @Override
     protected void execute(OperationContext operationContext, ResultHandler resultHandler, Navigation navigation)
             throws ResourceNotFoundException, OperationException {
+
+        increaseCurrentTransactionTimeOut(operationContext);
+
         List<String> filterAttributes = operationContext.getAttributes().getValues("filter");
         PathTemplateFilter filter;
         try {

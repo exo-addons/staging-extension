@@ -47,6 +47,8 @@ public class MopImportResource extends AbstractOperationHandler {
   public void execute(final OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     final String operationName = operationContext.getOperationName();
 
+    increaseCurrentTransactionTimeOut(operationContext);
+
     OperationAttachment attachment = operationContext.getAttachment(true);
     if (attachment == null)
       throw new OperationException(operationContext.getOperationName(), "No attachment available for MOP import.");

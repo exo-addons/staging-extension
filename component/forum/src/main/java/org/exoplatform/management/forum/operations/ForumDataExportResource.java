@@ -32,6 +32,9 @@ import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.forum.service.impl.model.TopicFilter;
 import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
@@ -61,7 +64,6 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataExportResource.class);
 
-
   private ForumService forumService;
   private PollService pollService;
   private KSDataLocation dataLocation;
@@ -85,6 +87,8 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+
+    increaseCurrentTransactionTimeOut(operationContext);
 
     String name = operationContext.getAttributes().getValue("filter");
 
@@ -131,8 +135,9 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
       log.warn("Cannot add Forum Export Task, 4 parameters was expected, got: " + ArrayUtils.toString(params));
       return;
     }
-    ForumExportTask forumExportTask = new ForumExportTask(repositoryService, type, params[1], params[2], params[0], params[3], recursive);
-    subNodesExportTask.add(forumExportTask);
+    String entryPath = "forum/" + type + "/" + (params[2] == null || params[2].isEmpty() ? params[1] : params[2]);
+    JCRNodeExportTask exportTask = new JCRNodeExportTask(repositoryService, params[0], params[3], entryPath, recursive, true);
+    subNodesExportTask.add(exportTask);
   }
 
   private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName, boolean exportSpaceMetadata) {
@@ -144,7 +149,8 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
 
         forumId = Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName;
         if (exportSpaceMetadata) {
-          exportTasks.add(new SpaceMetadataExportTask(space, forumId));
+          String prefix = "forum/space/" + forumId + "/";
+          exportTasks.add(new SpaceMetadataExportTask(space, prefix));
         }
       }
 
@@ -167,6 +173,7 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
       categoryId = forumService.getCategoryIncludedSpace().getId();
       forumIds.add(forumId);
     } else {
+      @SuppressWarnings("deprecation")
       List<Forum> forums = forumService.getForums(categoryId, null);
       for (Forum forum : forums) {
         forumIds.add(forum.getId());
@@ -195,7 +202,8 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
         }
       }
       if (!activitiesList.isEmpty()) {
-        exportTasks.add(new ForumActivitiesExportTask(identityManager, activitiesList, type, categoryId, forumId));
+        String prefix = "forum/" + type + "/" + ((forumId == null || forumId.isEmpty()) ? categoryId : forumId);
+        exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
       }
     }
   }

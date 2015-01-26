@@ -36,18 +36,18 @@ import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
-import javax.transaction.SystemException;
 
+import org.exoplatform.management.common.AbstractJCROperationHandler;
 import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.ExportTaskWrapper;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionManager;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionMode;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionType;
 import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
-import org.exoplatform.services.transaction.TransactionService;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
@@ -83,8 +83,6 @@ public class SocialDataExportResource extends AbstractOperationHandler {
   final private static Logger log = LoggerFactory.getLogger(SocialDataExportResource.class);
 
   private static final String GROUPS_PATH = "groupsPath";
-
-
 
   private IdentityManager identityManager;
   private ManagementController managementController;
@@ -178,7 +176,8 @@ public class SocialDataExportResource extends AbstractOperationHandler {
       addResourceExportTasks(exportTasks, attributesMap, SocialExtension.SITES_RESOURCE_PATH + space.getGroupId(), space.getPrettyName());
 
       log.info("export space metadata");
-      exportTasks.add(new SpaceMetadataExportTask(space));
+      String prefix = "social/space/" + space.getPrettyName() + "/";
+      exportTasks.add(new SpaceMetadataExportTask(space, prefix));
 
       Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), false);
 
@@ -193,24 +192,15 @@ public class SocialDataExportResource extends AbstractOperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void increaseCurrentTransactionTimeOut(OperationContext operationContext) {
-    TransactionService transactionService = operationContext.getRuntimeContext().getRuntimeComponent(TransactionService.class);
-    try {
-      transactionService.setTransactionTimeout(86400);
-    } catch (SystemException e1) {
-      log.warn("Cannot Change Transaction timeout");
-    }
-  }
-
   private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity, boolean exportWiki) {
     RealtimeListAccess<ExoSocialActivity> spaceActivitiesList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
     ExoSocialActivity[] activities = null;
 
     int size = spaceActivitiesList.getSize(), i = 0;
+    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
     while (i < size) {
       int length = i + 10 < size ? 10 : size - i;
       activities = spaceActivitiesList.load(i, length);
-      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
       for (ExoSocialActivity exoSocialActivity : activities) {
         // Don't export application activities
         if (exoSocialActivity.getType().equals(SocialExtension.SITES_CONTENT_SPACES) || exoSocialActivity.getType().equals(SocialExtension.SITES_FILE_SPACES)
@@ -222,11 +212,10 @@ public class SocialDataExportResource extends AbstractOperationHandler {
         activityManager.getParentActivity(exoSocialActivity);
         addActivityWithComments(activitiesList, exoSocialActivity);
       }
-      if (!activitiesList.isEmpty()) {
-        exportTasks.add(new SpaceActivitiesExportTask(identityManager, activitiesList, space.getPrettyName(), i));
-      }
       i += length;
     }
+    String prefix = "social/space/" + space.getPrettyName() + "/";
+    exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
   }
 
   private void exportSpaceAvatar(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) throws UnsupportedEncodingException, Exception, PathNotFoundException, RepositoryException,
@@ -238,7 +227,7 @@ public class SocialDataExportResource extends AbstractOperationHandler {
       int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
       int endIndexAvatarPath = avatarURL.indexOf("?");
       String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
-      Session session = getSession("social");
+      Session session = AbstractJCROperationHandler.getSession(repositoryService, "social");
       Node avatarNode = (Node) session.getItem(avatarNodePath);
       Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
       String fileName = "avatar";
@@ -278,7 +267,7 @@ public class SocialDataExportResource extends AbstractOperationHandler {
     String contentWorkspace = repositoryService.getCurrentRepository().getConfiguration().getDefaultWorkspaceName();
     String groupsPath = nodeHierarchyCreator.getJcrPath(GROUPS_PATH);
 
-    Session session = SessionProvider.createSystemProvider().getSession(contentWorkspace, repositoryService.getCurrentRepository());
+    Session session = AbstractJCROperationHandler.getSession(repositoryService, contentWorkspace);
     Node groupRootNode = (Node) session.getItem(groupsPath);
     Node spaceNode = dataDistributionType.getDataNode(groupRootNode, space.getGroupId());
 
@@ -298,15 +287,8 @@ public class SocialDataExportResource extends AbstractOperationHandler {
     List<ExportTask> entryExportTasks = model.getTasks();
     String basePath = SocialExtension.SPACE_RESOURCE_PARENT_PATH + "/" + spaceId + "/";
     for (ExportTask exportTask : entryExportTasks) {
-      exportTasks.add(new SocialExportTaskWrapper(exportTask, basePath));
+      exportTasks.add(new ExportTaskWrapper(exportTask, basePath));
     }
-  }
-
-  private Session getSession(String workspace) throws Exception {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    return session;
   }
 
 }

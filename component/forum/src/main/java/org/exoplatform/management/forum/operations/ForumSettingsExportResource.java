@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.JCRNodeExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
@@ -41,24 +42,30 @@ public class ForumSettingsExportResource extends AbstractOperationHandler {
     String workspace = dataLocation.getWorkspace();
 
     if (isExportResource(operationContext, "general-administration")) {
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, SYSTEM_ADMINISTRATION, workspace, "/" + dataLocation.getAdministrationLocation()));
+      String entryPath = "forum/settings/" + SYSTEM_ADMINISTRATION;
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getAdministrationLocation(), entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "banned-ip")) {
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, BANNED_IP, workspace, "/" + dataLocation.getBanIPLocation()));
+      String entryPath = "forum/settings/" + BANNED_IP;
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getBanIPLocation(), entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "user-profiles")) {
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, USER_PROFLES, workspace, "/" + dataLocation.getUserProfilesLocation()));
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, USER_AVATARS, workspace, "/" + dataLocation.getAvatarsLocation()));
+      String entryPath = "forum/settings/" + USER_PROFLES;
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getUserProfilesLocation(), entryPath, true, false));
+      entryPath = "forum/settings/" + USER_AVATARS;
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getAvatarsLocation(), entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "bb-codes")) {
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, BB_CODES, workspace, "/" + dataLocation.getBBCodesLocation()));
+      String entryPath = "forum/settings/" + BB_CODES;
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getBBCodesLocation(), entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "tags")) {
-      exportTasks.add(new ForumSettingsExportTask(repositoryService, TAGS, workspace, "/" + dataLocation.getTagsLocation()));
+      String entryPath = "forum/settings/" + TAGS;
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getTagsLocation(), entryPath, true, false));
     }
 
     resultHandler.completed(new ExportResourceModel(exportTasks));

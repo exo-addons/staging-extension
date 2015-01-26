@@ -55,6 +55,8 @@ public class PageExportResource extends AbstractPageOperationHandler {
             throws ResourceNotFoundException, OperationException {
         SiteKey siteKey = getSiteKey(pages.getSite());
 
+        increaseCurrentTransactionTimeOut(operationContext);
+
         DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
         PageService pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
         BindingProvider bindingProvider = operationContext.getBindingProvider();

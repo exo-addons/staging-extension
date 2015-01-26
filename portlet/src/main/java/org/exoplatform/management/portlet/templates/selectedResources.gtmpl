@@ -158,18 +158,6 @@
       <label class="checkbox uiCheckbox"><input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-history" value="true"
                                                 ng-model="optionsModel['/content/sites_EXPORT_filter/no-history']"/><span>Without Version history</span></label>
     </div>
-    <div ng-show="mode == 'import' || mode == 'synchronize'">
-      <label class="checkbox uiCheckbox"><input id="cleanupPublication" class="option" type="checkbox" name="/content/sites_IMPORT_filter/cleanPublication" value="true"
-                                                ng-model="optionsModel['/content/sites_IMPORT_filter/cleanPublication']"/><span>Cleanup publication (used if Version history isn't exported)</span></label>
-      JCR UUID Behavior
-      <select class="option" name="/content/sites_IMPORT_uuidBehavior"
-              ng-model="optionsModel['/content/sites_IMPORT_uuidBehavior']">
-        <option value="NEW">Create new</option>
-        <option value="REMOVE">Remove existing</option>
-        <option value="REPLACE">Replace existing</option>
-        <option value="THROW">Throw Exception when collision</option>
-      </select>
-    </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
         <tr ng-show="!(resources['/content/sites'] | filter:{selected:true}).length">

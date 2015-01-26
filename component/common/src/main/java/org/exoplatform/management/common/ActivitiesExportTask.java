@@ -36,17 +36,26 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public abstract class AbstractActivitiesExportTask implements ExportTask {
-  protected static final Log log = ExoLogger.getLogger(AbstractActivitiesExportTask.class);
+public class ActivitiesExportTask implements ExportTask {
+  protected static final Log log = ExoLogger.getLogger(ActivitiesExportTask.class);
+
+  public static final String FILENAME = "activities.metadata";
 
   protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
   protected final IdentityManager identityManager;
   protected final List<ExoSocialActivity> activities;
+  protected final String entryName;
 
-  public AbstractActivitiesExportTask(IdentityManager identityManager, List<ExoSocialActivity> activities) {
+  public ActivitiesExportTask(IdentityManager identityManager, List<ExoSocialActivity> activities, String prefix) {
     this.identityManager = identityManager;
     this.activities = activities;
+    this.entryName = (prefix.endsWith("/") ? prefix : (prefix + "/")) + FILENAME;
+  }
+
+  @Override
+  public String getEntry() {
+    return entryName;
   }
 
   @Override

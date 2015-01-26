@@ -1,10 +1,8 @@
 package org.exoplatform.management.answer.operations;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -14,7 +12,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.exoplatform.faq.service.Answer;
 import org.exoplatform.faq.service.Category;
 import org.exoplatform.faq.service.Comment;
@@ -23,12 +20,12 @@ import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.SpaceMetaData;
+import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.SpaceMetadataExportTask;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
-import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
@@ -55,8 +52,6 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
   private FAQService faqService;
 
   private String type;
-
-  final private static int BUFFER = 2048000;
 
   public AnswerDataImportResource(boolean isSpaceType) {
     type = isSpaceType ? AnswerExtension.SPACE_FAQ_TYPE : AnswerExtension.PUBLIC_FAQ_TYPE;
@@ -98,7 +93,10 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
       for (String categoryId : contentsByOwner.keySet()) {
         boolean isSpaceFAQ = categoryId.contains(Utils.CATE_SPACE_ID_PREFIX);
         if (isSpaceFAQ) {
-          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(tempFolderPath, categoryId, createSpace);
+          String groupId = SpaceUtils.SPACE_GROUP + "/" + categoryId.replace(Utils.CATE_SPACE_ID_PREFIX, "");
+          File spaceMetadataFile = new File(tempFolderPath + "/" + getEntryPath(categoryId));
+
+          boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile, groupId, createSpace);
           if (!spaceCreatedOrAlreadyExists) {
             log.warn("Import of Answer category '" + categoryId + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
             continue;
@@ -117,7 +115,7 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
 
       Set<String> categoryIds = contentsByOwner.keySet();
       for (String categoryId : categoryIds) {
-        String activitiesFilePath = tempFolderPath + replaceSpecialChars(AnswerActivitiesExportTask.getEntryPath(type, categoryId));
+        String activitiesFilePath = tempFolderPath + replaceSpecialChars(getEntryPath(type, categoryId));
         File activitiesFile = new File(activitiesFilePath);
         if (activitiesFile.exists()) {
           String spacePrettyName = null;
@@ -151,6 +149,14 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  public static String getEntryPath(String type, String id) {
+    return new StringBuilder("answer/").append(type).append("/").append(id).append(ActivitiesExportTask.FILENAME).toString();
+  }
+
+  public static String getEntryPath(String faqId) {
+    return new StringBuilder("answer/space/").append(faqId).append("/").append(SpaceMetadataExportTask.FILENAME).toString();
+  }
+
   /**
    * Extract data from zip
    * 
@@ -180,28 +186,6 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
       }
     }
     return targetFolderPath;
-  }
-
-  private File copyAttachementToLocalFolder(InputStream attachmentInputStream) throws IOException, FileNotFoundException {
-    NonCloseableZipInputStream zis = null;
-    File tmpZipFile = null;
-    try {
-      // Copy attachement to local File
-      tmpZipFile = File.createTempFile("staging-answer", ".zip");
-      FileOutputStream tmpFileOutputStream = new FileOutputStream(tmpZipFile);
-      IOUtils.copy(attachmentInputStream, tmpFileOutputStream);
-      tmpFileOutputStream.close();
-      attachmentInputStream.close();
-    } finally {
-      if (zis != null) {
-        try {
-          zis.reallyClose();
-        } catch (IOException e) {
-          log.warn("Can't close inputStream of attachement.");
-        }
-      }
-    }
-    return tmpZipFile;
   }
 
   private void importAnswerData(String targetFolderPath, String filePath, boolean replaceExisting) throws Exception {
@@ -396,18 +380,19 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
         }
 
         // Skip non managed
-        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.endsWith(AnswerActivitiesExportTask.FILENAME)) {
+        if (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.endsWith(ActivitiesExportTask.FILENAME)) {
           log.warn("Uknown file format found at location: '" + filePath + "'. Ignore it.");
           continue;
         }
 
         log.info("Receiving content " + filePath);
 
+        File file = new File(targetFolderPath + replaceSpecialChars(filePath));
         // Put XML Export file in temp folder
-        copyToDisk(zis, targetFolderPath + replaceSpecialChars(filePath));
+        copyToDisk(zis, file);
 
         // Skip metadata file
-        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME) || filePath.endsWith(AnswerActivitiesExportTask.FILENAME)) {
+        if (filePath.endsWith(SpaceMetadataExportTask.FILENAME) || filePath.endsWith(ActivitiesExportTask.FILENAME)) {
           continue;
         }
 
@@ -433,94 +418,10 @@ public class AnswerDataImportResource extends AbstractOperationHandler {
    *          The path of the file
    * @return The Wiki owner
    */
-  private String extractIdFromPath(String path) {
+  protected String extractIdFromPath(String path) {
     int beginIndex = ("answer/" + type + "/").length();
     int endIndex = path.indexOf("/", beginIndex + 1);
     return path.substring(beginIndex, endIndex);
-  }
-
-  private boolean createSpaceIfNotExists(String tempFolderPath, String faqId, boolean createSpace) throws Exception {
-    String spaceId = faqId.replace(Utils.CATE_SPACE_ID_PREFIX, "");
-    Space space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spaceId);
-    if (space == null && createSpace) {
-      FileInputStream spaceMetadataFile = new FileInputStream(tempFolderPath + "/" + SpaceMetadataExportTask.getEntryPath(faqId));
-      try {
-        // Unmarshall metadata xml file
-        XStream xstream = new XStream();
-        xstream.alias("metadata", SpaceMetaData.class);
-        SpaceMetaData spaceMetaData = (SpaceMetaData) xstream.fromXML(spaceMetadataFile);
-
-        log.info("Automatically create new space: '" + spaceMetaData.getPrettyName() + "'.");
-        space = new Space();
-
-        String originalSpacePrettyName = spaceMetaData.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
-        if (originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
-          space.setPrettyName(spaceMetaData.getPrettyName());
-        } else {
-          space.setPrettyName(originalSpacePrettyName);
-        }
-        space.setDisplayName(spaceMetaData.getDisplayName());
-        space.setGroupId(spaceMetaData.getGroupId());
-        space.setTag(spaceMetaData.getTag());
-        space.setApp(spaceMetaData.getApp());
-        space.setEditor(spaceMetaData.getEditor() != null ? spaceMetaData.getEditor() : spaceMetaData.getManagers().length > 0 ? spaceMetaData.getManagers()[0] : userACL.getSuperUser());
-        space.setManagers(spaceMetaData.getManagers());
-        space.setInvitedUsers(spaceMetaData.getInvitedUsers());
-        space.setRegistration(spaceMetaData.getRegistration());
-        space.setDescription(spaceMetaData.getDescription());
-        space.setType(spaceMetaData.getType());
-        space.setVisibility(spaceMetaData.getVisibility());
-        space.setPriority(spaceMetaData.getPriority());
-        space.setUrl(spaceMetaData.getUrl());
-        spaceService.createSpace(space, space.getEditor());
-        if (!originalSpacePrettyName.equals(spaceMetaData.getPrettyName())) {
-          spaceService.renameSpace(space, spaceMetaData.getDisplayName());
-        }
-        return true;
-      } finally {
-        if (spaceMetadataFile != null) {
-          try {
-            spaceMetadataFile.close();
-          } catch (Exception e) {
-            log.warn(e);
-          }
-        }
-      }
-    }
-    return (space != null);
-  }
-
-  private static void copyToDisk(InputStream input, String output) throws Exception {
-    byte data[] = new byte[BUFFER];
-    BufferedOutputStream dest = null;
-    try {
-      FileOutputStream fileOuput = new FileOutputStream(createFile(new File(output), false));
-      dest = new BufferedOutputStream(fileOuput, BUFFER);
-      int count = 0;
-      while ((count = input.read(data, 0, BUFFER)) != -1)
-        dest.write(data, 0, count);
-    } finally {
-      if (dest != null) {
-        dest.close();
-      }
-    }
-  }
-
-  private static String replaceSpecialChars(String name) {
-    name = name.replaceAll(":", "_");
-    return name.replaceAll("\\?", "_");
-  }
-
-  private static File createFile(File file, boolean folder) throws Exception {
-    if (file.getParentFile() != null)
-      createFile(file.getParentFile(), true);
-    if (file.exists())
-      return file;
-    if (file.isDirectory() || folder)
-      file.mkdir();
-    else
-      file.createNewFile();
-    return file;
   }
 
 }
