@@ -15,6 +15,7 @@ import javax.jcr.Session;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
 import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.common.api.ActivityImportOperationInterface;
 import org.exoplatform.management.common.api.FileEntry;
 import org.exoplatform.management.common.api.FileImportOperationInterface;
@@ -189,7 +190,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
       return true;
     } else if (filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX)) {
       String path = filePath.replace(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX, "");
-      String[] fileParts = path.split("JCR_EXP_DATA");
+      String[] fileParts = path.split(JCRNodeExportTask.JCR_DATA_SEPARATOR);
       if (fileParts.length != 2) {
         log.warn("Cannot parse Version History file: " + filePath);
         return true;

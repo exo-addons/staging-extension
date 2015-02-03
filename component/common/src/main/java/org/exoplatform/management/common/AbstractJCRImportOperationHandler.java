@@ -15,6 +15,7 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.common.api.FileEntry;
 import org.exoplatform.services.cms.templates.TemplateService;
 
@@ -162,7 +163,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
   }
 
   public String getNodePath(String filePath) {
-    String[] fileParts = filePath.split("JCR_EXP_DATA");
+    String[] fileParts = filePath.split(JCRNodeExportTask.JCR_DATA_SEPARATOR);
     if (fileParts.length != 2) {
       log.warn("Cannot parse file: " + filePath);
       return null;

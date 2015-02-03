@@ -18,6 +18,7 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.poi.util.IOUtils;
 import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -113,7 +114,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     while ((entry = zin.getNextEntry()) != null) {
       String filePath = entry.getName();
 
-      if (!filePath.startsWith(USERS_BASE_PATH) || !filePath.contains("JCR_EXP_DATA")) {
+      if (!filePath.startsWith(USERS_BASE_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
         continue;
       }
       if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
@@ -270,7 +271,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
   }
 
   private static String extractParam(String filePath, int i) {
-    Pattern pattern = Pattern.compile(USERS_BASE_PATH + "(.*)/JCR_EXP_DATA(.*)");
+    Pattern pattern = Pattern.compile(USERS_BASE_PATH + "(.*)/" + JCRNodeExportTask.JCR_DATA_SEPARATOR + "(.*)");
     Matcher matcher = pattern.matcher(filePath);
     if (matcher.find()) {
       return matcher.group(i);
