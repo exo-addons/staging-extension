@@ -1,4 +1,4 @@
-package org.exoplatform.management.common;
+package org.exoplatform.management.common.activities;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -49,7 +50,7 @@ public class JCRNodeExportTask implements ExportTask {
     try {
       log.info("Export: " + workspace + ":" + absolutePath);
 
-      session = AbstractJCROperationHandler.getSession(repositoryService, workspace);
+      session = AbstractJCRImportOperationHandler.getSession(repositoryService, workspace);
       session.exportDocumentView(absolutePath, outputStream, false, !recurse);
     } catch (RepositoryException exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);

@@ -17,7 +17,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.poi.util.IOUtils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -42,7 +42,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class UserImportResource extends AbstractJCROperationHandler {
+public class UserImportResource extends AbstractJCRImportOperationHandler {
   private static final Log log = ExoLogger.getLogger(UserImportResource.class);
 
   private static final String USERS_BASE_PATH = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/";

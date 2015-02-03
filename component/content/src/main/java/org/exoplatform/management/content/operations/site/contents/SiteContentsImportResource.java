@@ -13,8 +13,11 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.api.ActivityImportOperationInterface;
+import org.exoplatform.management.common.api.FileEntry;
+import org.exoplatform.management.common.api.FileImportOperationInterface;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -42,16 +45,16 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @version $Revision$ usage: ssh -p 2000 john@localhost mgmt connect ls cd
  *          content import -f /acmeTest.zip
  */
-public class SiteContentsImportResource extends AbstractJCROperationHandler {
+public class SiteContentsImportResource extends AbstractJCRImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
 
-  final private static Logger log = LoggerFactory.getLogger(SiteContentsImportResource.class);
+  private final static Logger log = LoggerFactory.getLogger(SiteContentsImportResource.class);
+
+  private final static Pattern CONTENT_LINK_PATTERN = Pattern.compile("([a-zA-Z]*)/([a-zA-Z]*)/(.*)");
 
   private static SEOService seoService = null;
 
   private String importedSiteName = null;
   private String filePath = null;
-
-  private Pattern contenLinkPattern = Pattern.compile("([a-zA-Z]*)/([a-zA-Z]*)/(.*)");
 
   public SiteContentsImportResource() {}
 
@@ -119,7 +122,7 @@ public class SiteContentsImportResource extends AbstractJCROperationHandler {
         // Import activities
         if (activitiesFile != null && activitiesFile.getFile().exists() && activityManager != null) {
           log.info("Importing Site Content activities");
-          importActivities(activitiesFile.getFile(), null);
+          importActivities(activitiesFile.getFile(), null, true);
         }
 
         if (seoFiles != null && !seoFiles.isEmpty()) {
@@ -164,16 +167,16 @@ public class SiteContentsImportResource extends AbstractJCROperationHandler {
     return siteMetaData;
   }
 
-  protected String getManagedFilesPrefix() {
+  public String getManagedFilesPrefix() {
     return "content/sites/";
   }
 
-  protected boolean isUnKnownFileFormat(String filePath) {
+  public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(".xml") && !filePath.endsWith(SiteMetaDataExportTask.FILENAME) && !filePath.endsWith(SiteSEOExportTask.FILENAME)
         && !filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX) && !filePath.endsWith(ActivitiesExportTask.FILENAME);
   }
 
-  protected boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
+  public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SiteMetaDataExportTask.FILENAME)) {
       fileEntries.add(new FileEntry(SiteMetaDataExportTask.FILENAME, file));
       return true;
@@ -204,58 +207,63 @@ public class SiteContentsImportResource extends AbstractJCROperationHandler {
     return false;
   }
 
-  protected String extractIdFromPath(String path) {
+  public String extractIdFromPath(String path) {
     int beginIndex = SiteUtil.getSitesBasePath().length() + 1;
     return path.substring(beginIndex, path.indexOf("/", beginIndex));
   }
 
-  protected void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null) {
       return;
     }
     String contentLink = activity.getTemplateParams().get("contenLink");
-    Matcher matcher = contenLinkPattern.matcher(contentLink);
+    Matcher matcher = CONTENT_LINK_PATTERN.matcher(contentLink);
 
-    String workspace = matcher.group(2);
-    String contentPath = "/" + matcher.group(3);
+    if (matcher.matches()) {
+      String workspace = matcher.group(2);
+      String contentPath = "/" + matcher.group(3);
 
-    Session session = null;
-    try {
-      session = getSession(workspace);
-      ActivityTypeUtils.attachActivityId(((Node) session.getItem(contentPath)), activity.getId());
-      session.save();
-    } finally {
-      if (session != null) {
-        session.logout();
+      Session session = null;
+      try {
+        session = getSession(workspace);
+        ActivityTypeUtils.attachActivityId(((Node) session.getItem(contentPath)), activity.getId());
+        session.save();
+      } finally {
+        if (session != null) {
+          session.logout();
+        }
       }
+    } else {
+      log.warn("Cannot attach activity for content activity with contentLink = " + contentLink);
     }
   }
 
-  protected boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
       String contentLink = activity.getTemplateParams().get("contenLink");
       String workspace = null;
       String contentPath = null;
       if (contentLink != null && !contentLink.isEmpty()) {
-        Matcher matcher = contenLinkPattern.matcher(contentLink);
+        Matcher matcher = CONTENT_LINK_PATTERN.matcher(contentLink);
         if (matcher.matches() && matcher.groupCount() == 3) {
           workspace = matcher.group(2);
           contentPath = "/" + matcher.group(3);
-        } else {
+        }
+        if (workspace == null || workspace.isEmpty()) {
           log.warn("ContentLink param was found in activity params, but it doesn't refer to a correct path: " + contentLink);
           return true;
         }
-      }
-      Session session = null;
-      try {
-        session = getSession(workspace);
-        if (!session.itemExists(contentPath)) {
-          log.warn("Document '" + contentPath + "' not found. Cannot import activity '" + activity.getTitle() + "'.");
-          return true;
-        }
-      } finally {
-        if (session != null) {
-          session.logout();
+        Session session = null;
+        try {
+          session = getSession(workspace);
+          if (!session.itemExists(contentPath)) {
+            log.warn("Document '" + contentPath + "' not found. Cannot import activity '" + activity.getTitle() + "'.");
+            return true;
+          }
+        } finally {
+          if (session != null) {
+            session.logout();
+          }
         }
       }
     }

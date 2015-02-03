@@ -16,29 +16,27 @@
  */
 package org.exoplatform.management.answer.operations;
 
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.poi.util.IOUtils;
 import org.exoplatform.faq.service.Category;
-import org.exoplatform.faq.service.Comment;
 import org.exoplatform.faq.service.FAQService;
 import org.exoplatform.faq.service.FileAttachment;
 import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.QuestionPageList;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
-import org.exoplatform.social.common.RealtimeListAccess;
+import org.exoplatform.management.common.AbstractExportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
-import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -53,7 +51,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class AnswerDataExportResource extends AbstractOperationHandler {
+public class AnswerDataExportResource extends AbstractExportOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataExportResource.class);
 
@@ -74,7 +72,6 @@ public class AnswerDataExportResource extends AbstractOperationHandler {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String name = operationContext.getAttributes().getValue("filter");
@@ -161,36 +158,32 @@ public class AnswerDataExportResource extends AbstractOperationHandler {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
     for (Question question : questions) {
       String activityId = faqService.getActivityIdForQuestion(question.getPath());
-      if (activityId == null) {
-        continue;
-      }
-      ExoSocialActivity questionActivity = activityManager.getActivity(activityId);
-      activitiesList.add(questionActivity);
-
-      RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(questionActivity);
-      if (commentsListAccess.getSize() > 0) {
-        List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-        // set CommentId in Link where QuestionLink is added instead
-        for (ExoSocialActivity exoSocialActivity : comments) {
-          if (exoSocialActivity.getTemplateParams().containsKey("Link") && exoSocialActivity.getTemplateParams().get("Link").contains("questionId=")) {
-            Comment[] questionComments = question.getComments();
-            for (Comment comment : questionComments) {
-              String commentActivityId = faqService.getActivityIdForComment(question.getPath(), comment.getId(), question.getLanguage());
-              if (commentActivityId != null && commentActivityId.equals(exoSocialActivity.getId())) {
-                exoSocialActivity.getTemplateParams().put("Link", comment.getId());
-              }
-            }
-          }
-          exoSocialActivity.isComment(true);
-          exoSocialActivity.setParentId(activityId);
-        }
-        activitiesList.addAll(comments);
-      }
+      addActivityWithComments(activitiesList, activityId, question);
     }
     if (!activitiesList.isEmpty()) {
-      String prefix = "answer/" + type + "/" + category.getId();
+      String prefix = "answer/" + type + "/" + category.getId() + "/";
       exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
     }
   }
 
+  @Override
+  protected void refactorActivityComment(ExoSocialActivity activity, ExoSocialActivity comment, Object... params) {
+    if (activity.getTemplateParams().containsKey("Link") && activity.getTemplateParams().get("Link").contains("questionId=")) {
+      Question question = (Question) params[0];
+      String commentActivityId = faqService.getActivityIdForComment(question.getPath(), comment.getId(), question.getLanguage());
+      if (commentActivityId != null && commentActivityId.equals(activity.getId())) {
+        activity.getTemplateParams().put("Link", comment.getId());
+      }
+    }
+  }
+
+  public static class InputStreamWrapper extends ByteArrayInputStream {
+    public InputStreamWrapper() {
+      super(new byte[0]);
+    }
+
+    public InputStreamWrapper(byte[] buf) {
+      super(buf);
+    }
+  }
 }

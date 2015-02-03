@@ -18,7 +18,9 @@ package org.exoplatform.management.calendar.operations;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
@@ -27,9 +29,9 @@ import org.exoplatform.calendar.service.CalendarService;
 import org.exoplatform.calendar.service.GroupCalendarData;
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.calendar.CalendarExtension;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractExportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
@@ -40,7 +42,6 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
-import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
@@ -53,12 +54,13 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class CalendarDataExportResource extends AbstractOperationHandler {
+public class CalendarDataExportResource extends AbstractExportOperationHandler {
 
   private boolean groupCalendar;
   private boolean spaceCalendar;
   private String type;
 
+  private UserACL userACL;
   private IdentityManager identityManager;
   private OrganizationService organizationService;
 
@@ -72,10 +74,9 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     CalendarService calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
-    UserACL userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
+    userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
@@ -159,15 +160,18 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
         }
       }
 
+      Set<String> exportedSpaces = new HashSet<String>();
       for (Calendar calendar : calendars) {
         exportGroupCalendar(calendarService, exportTasks, calendar);
-      }
-
-      if (exportSpaceMetadata && spaceCalendar) {
-        Space space = spaceService.getSpaceByGroupId(groupId);
-        if (space != null) {
-          String prefix = "calendar/space/" + groupId.replace(SpaceUtils.SPACE_GROUP + "/", "") + "/";
-          exportTasks.add(new SpaceMetadataExportTask(space, prefix));
+        if (exportSpaceMetadata && spaceCalendar) {
+          Space space = spaceService.getSpaceByGroupId(calendar.getCalendarOwner());
+          if (space == null) {
+            log.error("Can't export space of calendar '" + calendar.getName() + "', can't find space of owner : " + calendar.getCalendarOwner());
+          } else {
+            exportedSpaces.add(calendar.getCalendarOwner());
+            String prefix = "calendar/space/" + CalendarExportTask.CALENDAR_SEPARATOR + calendar.getId() + "/";
+            exportTasks.add(new SpaceMetadataExportTask(space, prefix));
+          }
         }
       }
     } catch (Exception e) {
@@ -178,11 +182,12 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
   private String[] getAllGroupIDs() throws Exception {
     @SuppressWarnings("unchecked")
     Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
-    List<String> groupIDs = new ArrayList<String>();
+    String[] groupIDs = new String[groups.size()];
+    int i = 0;
     for (Group group : groups) {
-      groupIDs.add(group.getId());
+      groupIDs[i++] = group.getId();
     }
-    return groupIDs.toArray(new String[0]);
+    return groupIDs;
   }
 
   private void exportGroupCalendar(CalendarService calendarService, List<ExportTask> exportTasks, Calendar calendar) throws Exception {
@@ -212,7 +217,7 @@ public class CalendarDataExportResource extends AbstractOperationHandler {
       addActivityWithComments(activitiesList, event.getActivityId());
     }
     if (!activitiesList.isEmpty()) {
-      String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + events.get(0).getCalendarId();
+      String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + events.get(0).getCalendarId() + "/";
       exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
     }
   }

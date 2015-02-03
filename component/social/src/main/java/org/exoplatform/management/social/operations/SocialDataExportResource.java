@@ -37,11 +37,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.ExportTaskWrapper;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractExportOperationHandler;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.ExportTaskWrapper;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionManager;
@@ -57,7 +57,6 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.model.AvatarAttachment;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
-import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.ContentType;
@@ -78,7 +77,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class SocialDataExportResource extends AbstractOperationHandler {
+public class SocialDataExportResource extends AbstractExportOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(SocialDataExportResource.class);
 
@@ -101,7 +100,6 @@ public class SocialDataExportResource extends AbstractOperationHandler {
     dataDistributionManager = operationContext.getRuntimeContext().getRuntimeComponent(DataDistributionManager.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     // Increase current transaction timeout
@@ -227,7 +225,7 @@ public class SocialDataExportResource extends AbstractOperationHandler {
       int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
       int endIndexAvatarPath = avatarURL.indexOf("?");
       String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
-      Session session = AbstractJCROperationHandler.getSession(repositoryService, "social");
+      Session session = AbstractJCRImportOperationHandler.getSession(repositoryService, "social");
       Node avatarNode = (Node) session.getItem(avatarNodePath);
       Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
       String fileName = "avatar";
@@ -267,7 +265,7 @@ public class SocialDataExportResource extends AbstractOperationHandler {
     String contentWorkspace = repositoryService.getCurrentRepository().getConfiguration().getDefaultWorkspaceName();
     String groupsPath = nodeHierarchyCreator.getJcrPath(GROUPS_PATH);
 
-    Session session = AbstractJCROperationHandler.getSession(repositoryService, contentWorkspace);
+    Session session = AbstractJCRImportOperationHandler.getSession(repositoryService, contentWorkspace);
     Node groupRootNode = (Node) session.getItem(groupsPath);
     Node spaceNode = dataDistributionType.getDataNode(groupRootNode, space.getGroupId());
 

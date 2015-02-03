@@ -10,9 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
+import org.exoplatform.management.common.api.ActivityImportOperationInterface;
+import org.exoplatform.management.common.api.FileEntry;
+import org.exoplatform.management.common.api.FileImportOperationInterface;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
@@ -40,7 +43,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
-public class WikiDataImportResource extends AbstractJCROperationHandler {
+public class WikiDataImportResource extends AbstractJCRImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(WikiDataImportResource.class);
 
@@ -85,7 +88,7 @@ public class WikiDataImportResource extends AbstractJCROperationHandler {
         if (WikiType.GROUP.equals(wikiType)) {
           FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
           if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
-            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), wikiOwner, createSpace);
+            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
             if (!spaceCreatedOrAlreadyExists) {
               log.warn("Import of wiki '" + wikiOwner + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
               continue;
@@ -123,7 +126,7 @@ public class WikiDataImportResource extends AbstractJCROperationHandler {
             spacePrettyName = space.getPrettyName();
           }
           log.info("Importing Wiki activities");
-          importActivities(activitiesFile.getFile(), spacePrettyName);
+          importActivities(activitiesFile.getFile(), spacePrettyName, true);
         }
       }
     } catch (Exception e) {
@@ -140,15 +143,15 @@ public class WikiDataImportResource extends AbstractJCROperationHandler {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
-  protected String getManagedFilesPrefix() {
+  public String getManagedFilesPrefix() {
     return "wiki/" + wikiType.name().toLowerCase() + "/";
   }
 
-  protected boolean isUnKnownFileFormat(String filePath) {
+  public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(ActivitiesExportTask.FILENAME);
   }
 
-  protected boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
+  public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
       fileEntries.add(new FileEntry(SpaceMetadataExportTask.FILENAME, file));
       return true;
@@ -159,13 +162,13 @@ public class WikiDataImportResource extends AbstractJCROperationHandler {
     return false;
   }
 
-  protected String extractIdFromPath(String path) {
+  public String extractIdFromPath(String path) {
     int beginIndex = ("wiki/" + wikiType + "/___").length();
     int endIndex = path.indexOf("---/", beginIndex);
     return path.substring(beginIndex, endIndex);
   }
 
-  protected void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null) {
       return;
     }
@@ -177,7 +180,7 @@ public class WikiDataImportResource extends AbstractJCROperationHandler {
     page.getJCRPageNode().getSession().save();
   }
 
-  protected boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
       String pageId = activity.getTemplateParams().get("page_id");
       String pageOwner = activity.getTemplateParams().get("page_owner");

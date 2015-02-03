@@ -17,7 +17,7 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
@@ -40,7 +40,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class GroupImportResource extends AbstractJCROperationHandler {
+public class GroupImportResource extends AbstractJCRImportOperationHandler {
   private static final String GROUPS_PARENT_PATH = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/";
 
   private static final Log log = ExoLogger.getLogger(GroupImportResource.class);

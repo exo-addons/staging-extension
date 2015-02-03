@@ -15,9 +15,9 @@ import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -29,7 +29,6 @@ import org.exoplatform.services.wcm.portal.PortalFolderSchemaHandler;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
-import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
@@ -46,7 +45,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class SiteContentsExportResource extends AbstractJCROperationHandler {
+public class SiteContentsExportResource extends AbstractJCRExportOperationHandler {
   private static final Log log = ExoLogger.getLogger(SiteContentsExportResource.class);
 
   public static final String FILTER_SEPARATOR = ":";
@@ -71,7 +70,6 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
       wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
       activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-      activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
 
       increaseCurrentTransactionTimeOut(operationContext);
 
@@ -368,4 +366,7 @@ public class SiteContentsExportResource extends AbstractJCROperationHandler {
     }
     return value;
   }
+
+  @Override
+  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception {}
 }

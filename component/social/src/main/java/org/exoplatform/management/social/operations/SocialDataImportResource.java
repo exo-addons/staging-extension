@@ -24,10 +24,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.SpaceMetaData;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractImportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
+import org.exoplatform.management.common.api.ActivityImportOperationInterface;
+import org.exoplatform.management.common.api.SpaceMetaData;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.UserACL;
@@ -73,7 +74,7 @@ import com.thoughtworks.xstream.XStream;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class SocialDataImportResource extends AbstractOperationHandler {
+public class SocialDataImportResource extends AbstractImportOperationHandler implements ActivityImportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
 
@@ -185,8 +186,9 @@ public class SocialDataImportResource extends AbstractOperationHandler {
         }
 
         log.info("Importing space '" + extractedSpacePrettyName + "' activities.");
+        activitiesByPostTime.clear();
         for (File file : activitiesFileList) {
-          importActivities(file, extractedSpacePrettyName);
+          importActivities(file, extractedSpacePrettyName, false);
         }
 
         log.info("Import operation finished successfully for space: " + extractedSpacePrettyName);
@@ -309,14 +311,17 @@ public class SocialDataImportResource extends AbstractOperationHandler {
     }
   }
 
-  protected void attachActivityToEntity(ExoSocialActivity activity) throws Exception {
+  public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+    if (comment != null) {
+      activity = comment;
+    }
     Identity spaceIdentity = getIdentity(activity.getStreamOwner());
     if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(activity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(activity.getType())) {
       identityStorage.updateProfileActivityId(spaceIdentity, activity.getId(), Profile.AttachedActivityType.SPACE);
     }
   }
 
-  protected boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
       boolean notValidActivity = activity.getActivityStream() == null || !activity.getActivityStream().getType().equals(Type.SPACE);
       if (notValidActivity) {

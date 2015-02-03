@@ -8,8 +8,8 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -35,7 +35,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class GroupExportResource extends AbstractJCROperationHandler {
+public class GroupExportResource extends AbstractJCRExportOperationHandler {
 
   private OrganizationService organizationService = null;
   private NodeHierarchyCreator hierarchyCreator = null;

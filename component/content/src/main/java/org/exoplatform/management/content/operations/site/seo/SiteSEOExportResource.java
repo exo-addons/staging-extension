@@ -9,7 +9,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.AbstractExportOperationHandler;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.pom.config.POMSession;
@@ -41,7 +41,7 @@ import org.gatein.mop.api.workspace.Workspace;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class SiteSEOExportResource extends AbstractOperationHandler {
+public class SiteSEOExportResource extends AbstractExportOperationHandler {
 
   private DataStorage dataStorage = null;
   private WCMConfigurationService wcmConfigurationService = null;

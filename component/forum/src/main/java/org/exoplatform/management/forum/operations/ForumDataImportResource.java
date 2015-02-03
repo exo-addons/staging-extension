@@ -16,9 +16,12 @@ import org.exoplatform.forum.service.Post;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.forum.service.impl.model.TopicFilter;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
+import org.exoplatform.management.common.api.ActivityImportOperationInterface;
+import org.exoplatform.management.common.api.FileEntry;
+import org.exoplatform.management.common.api.FileImportOperationInterface;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
@@ -44,7 +47,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataImportResource extends AbstractJCROperationHandler {
+public class ForumDataImportResource extends AbstractJCRImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataImportResource.class);
 
@@ -95,11 +98,9 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
         boolean isSpaceForum = categoryId.contains(Utils.FORUM_SPACE_ID_PREFIX);
         if (isSpaceForum) {
           String forumId = categoryId;
-          String spacePrettyName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-          String groupId = SpaceUtils.SPACE_GROUP + "/" + spacePrettyName;
           FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
           if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
-            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), groupId, createSpace);
+            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
             if (!spaceCreatedOrAlreadyExists) {
               log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
               continue;
@@ -136,7 +137,7 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
             Space space = spaceService.getSpaceByGroupId(spaceGroupId);
 
             log.info("Importing Forum activities");
-            importActivities(activitiesFile.getFile(), space.getPrettyName());
+            importActivities(activitiesFile.getFile(), space.getPrettyName(), true);
           }
         } else {
           Category category = forumService.getCategory(categoryId);
@@ -167,7 +168,7 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
           // Import activities
           if (activitiesFile != null && activitiesFile.getFile().exists()) {
             log.info("Importing Forum activities");
-            importActivities(activitiesFile.getFile(), null);
+            importActivities(activitiesFile.getFile(), null, true);
           }
         }
       }
@@ -187,19 +188,19 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
   }
 
   @Override
-  protected String getNodePath(String filePath) {
+  public String getNodePath(String filePath) {
     return super.getNodePath(filePath);
   }
-  
-  protected String getManagedFilesPrefix() {
+
+  public String getManagedFilesPrefix() {
     return "forum/" + type + "/";
   }
 
-  protected boolean isUnKnownFileFormat(String filePath) {
+  public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(ActivitiesExportTask.FILENAME);
   }
 
-  protected boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
+  public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
       fileEntries.add(new FileEntry(SpaceMetadataExportTask.FILENAME, file));
       return true;
@@ -210,7 +211,7 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
     return false;
   }
 
-  protected void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (activity.getTemplateParams().containsKey("PollLink")) {
       if (comment == null) {
         String topicId = activity.getTemplateParams().get("Id");
@@ -242,7 +243,7 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
     }
   }
 
-  protected boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+  public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (activity.getTemplateParams().containsKey("PollLink")) {
       String topicId = activity.getTemplateParams().get("Id");
       if (topicId == null) {
@@ -287,7 +288,7 @@ public class ForumDataImportResource extends AbstractJCROperationHandler {
     return false;
   }
 
-  protected String extractIdFromPath(String path) {
+  public String extractIdFromPath(String path) {
     int beginIndex = ("forum/" + type + "/").length();
     int endIndex = path.indexOf("/", beginIndex + 1);
     return path.substring(beginIndex, endIndex);

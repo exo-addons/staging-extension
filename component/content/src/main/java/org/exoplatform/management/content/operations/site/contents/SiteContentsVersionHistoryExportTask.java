@@ -23,8 +23,8 @@ import javax.jcr.query.QueryResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.ecm.webui.utils.Utils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.compress.CompressData;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -78,7 +78,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     try {
       Node currentNode = getCurrentNode();
       String sysWsName = repositoryService.getCurrentRepository().getConfiguration().getSystemWorkspaceName();
-      session = AbstractJCROperationHandler.getSession(repositoryService, sysWsName);
+      session = AbstractJCRImportOperationHandler.getSession(repositoryService, sysWsName);
       if (recurse) {
         // Export version history of sub nodes
         QueryResult queryResult = getQueryResult(currentNode);
@@ -164,7 +164,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   private Node getCurrentNode() throws Exception {
     Session session = null;
     try {
-      session = AbstractJCROperationHandler.getSession(repositoryService, workspace);
+      session = AbstractJCRImportOperationHandler.getSession(repositoryService, workspace);
       return (Node) session.getItem(absolutePath);
     } catch (RepositoryException exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);

@@ -7,8 +7,8 @@ import java.util.List;
 import javax.jcr.Node;
 
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -31,7 +31,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  *         Khanfir</a>
  * @version $Revision$
  */
-public class UserExportResource extends AbstractJCROperationHandler {
+public class UserExportResource extends AbstractJCRExportOperationHandler {
   private OrganizationService organizationService = null;
   private NodeHierarchyCreator hierarchyCreator = null;
 

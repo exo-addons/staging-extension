@@ -1,4 +1,4 @@
-package org.exoplatform.management.common;
+package org.exoplatform.management.common.api;
 
 import java.io.Serializable;
 

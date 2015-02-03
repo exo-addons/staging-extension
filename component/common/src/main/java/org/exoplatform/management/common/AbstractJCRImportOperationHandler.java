@@ -3,53 +3,24 @@ package org.exoplatform.management.common;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.nodetype.NodeDefinition;
-import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.api.FileEntry;
 import org.exoplatform.services.cms.templates.TemplateService;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.jcr.impl.core.SessionImpl;
-import org.gatein.management.api.operation.model.ExportTask;
 
-public abstract class AbstractJCROperationHandler extends AbstractOperationHandler {
+public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {
 
-  protected RepositoryService repositoryService = null;
   protected TemplateService templateService = null;
-
-  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
-
-  protected final void exportNode(Node childNode, List<ExportTask> subNodesExportTask, String... params) throws Exception {
-    String path = childNode.getPath();
-    boolean recursive = isRecursiveExport(childNode);
-    addJCRNodeExportTask(childNode, subNodesExportTask, recursive, ((String[]) ArrayUtils.add(params, path)));
-
-    // If not export the whole node
-    if (!recursive) {
-      NodeIterator nodeIterator = childNode.getNodes();
-      while (nodeIterator.hasNext()) {
-        Node node = nodeIterator.nextNode();
-        exportNode(node, subNodesExportTask, params);
-      }
-    }
-  }
 
   protected final void importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
     File xmlFile = fileEntry.getFile();
@@ -140,65 +111,17 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     }
   }
 
-  protected final boolean isRecursiveExport(Node node) throws Exception {
-    NodeType nodeType = node.getPrimaryNodeType();
-    NodeType[] nodeTypes = node.getMixinNodeTypes();
-    boolean recursive = isRecursiveNT(nodeType);
-    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
-      int i = 0;
-      while (!recursive && i < nodeTypes.length) {
-        recursive = isRecursiveNT(nodeTypes[i]);
-        i++;
-      }
-    }
-    return recursive;
-  }
-
-  protected final boolean isRecursiveNT(NodeType nodeType) throws Exception {
-    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
-      boolean hasMandatoryChild = false;
-      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
-      if (nodeDefinitions != null) {
-        int i = 0;
-        while (!hasMandatoryChild && i < nodeDefinitions.length) {
-          hasMandatoryChild = nodeDefinitions[i].isMandatory();
-          i++;
-        }
-      }
-      boolean recursive = hasMandatoryChild;
-      if (templateService != null) {
-        recursive |= templateService.isManagedNodeType(nodeType.getName());
-      }
-      isNTRecursiveMap.put(nodeType.getName(), recursive);
-    }
-    return isNTRecursiveMap.get(nodeType.getName());
-  }
-
-  protected final Session getSession(String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    return getSession(repositoryService, workspace);
-  }
-
-  public static final Session getSession(RepositoryService repositoryService, String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    Session session = provider.getSession(workspace, repository);
-    if (session instanceof SessionImpl) {
-      ((SessionImpl) session).setTimeout(ONE_DAY_IN_MS);
-    }
-    return session;
-  }
-
-  protected final void cleanPublication(String path, Session session) throws Exception {
+  protected final void cleanPublication(String parentPath, Session session) throws Exception {
     QueryManager manager = session.getWorkspace().getQueryManager();
-    String statement = "select * from nt:base where jcr:path LIKE '" + path + "/%' and publication:liveRevision IS NOT NULL";
+    String statement = "select * from nt:base where jcr:path LIKE '" + parentPath + "/%' and publication:liveRevision IS NOT NULL";
     Query query = manager.createQuery(statement.toString(), Query.SQL);
     NodeIterator iter = query.execute().getNodes();
     while (iter.hasNext()) {
       Node node = iter.nextNode();
       cleanPublication(node);
     }
-    if (session.itemExists(path)) {
-      Node node = (Node) session.getItem(path);
+    if (session.itemExists(parentPath)) {
+      Node node = (Node) session.getItem(parentPath);
       cleanPublication(node);
     }
   }
@@ -238,5 +161,16 @@ public abstract class AbstractJCROperationHandler extends AbstractOperationHandl
     return current;
   }
 
-  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception {}
+  public String getNodePath(String filePath) {
+    String[] fileParts = filePath.split("JCR_EXP_DATA");
+    if (fileParts.length != 2) {
+      log.warn("Cannot parse file: " + filePath);
+      return null;
+    }
+    String nodePath = fileParts[1].trim().replaceFirst(".xml$", "");
+    if (!nodePath.startsWith("/")) {
+      nodePath = "/" + nodePath;
+    }
+    return nodePath;
+  }
 }

@@ -13,7 +13,7 @@ import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
-import org.exoplatform.management.common.AbstractOperationHandler.FileEntry;
+import org.exoplatform.management.common.api.FileEntry;
 import org.exoplatform.management.content.operations.site.contents.NodeMetadata;
 import org.exoplatform.management.content.operations.site.contents.SiteContentsImportResource;
 import org.exoplatform.management.content.operations.site.contents.SiteMetaData;

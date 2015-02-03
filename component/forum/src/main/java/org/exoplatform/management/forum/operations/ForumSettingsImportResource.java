@@ -19,7 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
+import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
@@ -30,7 +30,7 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-public class ForumSettingsImportResource extends AbstractJCROperationHandler {
+public class ForumSettingsImportResource extends AbstractJCRImportOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumSettingsImportResource.class);
 

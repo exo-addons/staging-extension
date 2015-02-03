@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.exoplatform.forum.common.jcr.KSDataLocation;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.common.JCRNodeExportTask;
+import org.exoplatform.management.common.AbstractExportOperationHandler;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
@@ -14,7 +14,7 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
-public class ForumSettingsExportResource extends AbstractOperationHandler {
+public class ForumSettingsExportResource extends AbstractExportOperationHandler {
   public static final String SYSTEM_ADMINISTRATION = "Administration.xml";
   public static final String BANNED_IP = "BannedIP.xml";
   public static final String USER_PROFLES = "UserProfiles.xml";

@@ -24,10 +24,10 @@ import javax.jcr.Node;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.JCRNodeExportTask;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -55,7 +55,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
-public class WikiDataExportResource extends AbstractJCROperationHandler {
+public class WikiDataExportResource extends AbstractJCRExportOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(WikiDataExportResource.class);
 

@@ -34,6 +34,8 @@ import com.thoughtworks.xstream.XStream;
  * @version $Revision$
  */
 public class AnswerExportTask implements ExportTask {
+  public static final String FILENAME = "/category.xml";
+
   private final String type;
   private final Category category;
   private final List<Question> questions;
@@ -50,7 +52,7 @@ public class AnswerExportTask implements ExportTask {
   }
 
   public static String getEntryPath(String type, String id) {
-    return new StringBuilder("answer/").append(type).append("/").append(id).append("/category.xml").toString();
+    return new StringBuilder("answer/").append(type).append("/").append(id).append(FILENAME).toString();
   }
 
   @Override

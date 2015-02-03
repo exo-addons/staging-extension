@@ -31,10 +31,10 @@ import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.forum.service.impl.model.TopicFilter;
-import org.exoplatform.management.common.AbstractJCROperationHandler;
-import org.exoplatform.management.common.ActivitiesExportTask;
-import org.exoplatform.management.common.JCRNodeExportTask;
-import org.exoplatform.management.common.SpaceMetadataExportTask;
+import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.activities.ActivitiesExportTask;
+import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
@@ -45,7 +45,6 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
-import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -60,7 +59,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataExportResource extends AbstractJCROperationHandler {
+public class ForumDataExportResource extends AbstractJCRExportOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataExportResource.class);
 
@@ -85,7 +84,6 @@ public class ForumDataExportResource extends AbstractJCROperationHandler {
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-    activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
