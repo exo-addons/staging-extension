@@ -19,7 +19,9 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
       return;
     }
     ExoSocialActivity parentActivity = activityManager.getActivity(activityId);
-    addActivityWithComments(activitiesList, parentActivity, params);
+    if (parentActivity != null) {
+      addActivityWithComments(activitiesList, parentActivity, params);
+    }
   }
 
   protected void addActivityWithComments(List<ExoSocialActivity> activitiesList, ExoSocialActivity parentActivity, Object... params) {

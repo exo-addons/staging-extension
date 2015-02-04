@@ -52,7 +52,6 @@ import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
-import org.exoplatform.social.core.storage.cache.CachedActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.ContentType;
@@ -216,15 +215,19 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
   }
 
   private void deleteSpaceActivities(String extractedSpacePrettyName) {
-    log.info("Delete space activities");
-
-    if (activityStorage instanceof CachedActivityStorage) {
-      ((CachedActivityStorage) activityStorage).clearCache();
-    }
     Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, extractedSpacePrettyName, false);
     RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
-    ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
-    deleteActivities(activities);
+
+    // To refresh activities list from storage
+    listAccess.getNumberOfUpgrade();
+
+    if (listAccess.getSize() > 0) {
+      ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
+      log.info("Delete " + listAccess.getSize() + " space activities");
+      deleteActivities(activities);
+    }
+    RequestLifeCycle.end();
+    RequestLifeCycle.begin(PortalContainer.getInstance());
   }
 
   private void updateAvatar(Space space, File fileToImport) {
@@ -312,11 +315,11 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
   }
 
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
-    if (comment != null) {
-      activity = comment;
-    }
     Identity spaceIdentity = getIdentity(activity.getStreamOwner());
     if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(activity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(activity.getType())) {
+      if (comment != null) {
+        activity = comment;
+      }
       identityStorage.updateProfileActivityId(spaceIdentity, activity.getId(), Profile.AttachedActivityType.SPACE);
     }
   }

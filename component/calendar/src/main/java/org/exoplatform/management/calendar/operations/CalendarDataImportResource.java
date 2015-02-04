@@ -39,7 +39,6 @@ import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
-import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
@@ -131,9 +130,7 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
           importCalendar(fileEntry.getFile(), spaceMetadataFile == null ? null : spaceMetadataFile.getFile(), replaceExisting, createSpace);
         }
         if (activitiesFile != null) {
-          String spaceGroupId = activitiesFile.getNodePath();
-          Space space = spaceService.getSpaceByGroupId(spaceGroupId);
-          importActivities(activitiesFile.getFile(), space.getPrettyName(), true);
+          importActivities(activitiesFile.getFile(), null, true);
         }
       }
     } catch (Exception e) {
@@ -264,6 +261,7 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
   }
 
   private void saveEvent(CalendarEvent event, ExoSocialActivity exoSocialActivity) throws Exception {
+    event.setActivityId(exoSocialActivity.getId());
     Calendar calendar = calendarService.getCalendarById(event.getCalendarId());
     if (calendar.getCalendarOwner().startsWith("/")) {
       calendarStorage.savePublicEvent(event.getCalendarId(), event, false);

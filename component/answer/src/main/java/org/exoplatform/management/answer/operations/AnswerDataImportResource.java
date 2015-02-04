@@ -86,11 +86,11 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
         boolean isSpaceFAQ = categoryId.contains(Utils.CATE_SPACE_ID_PREFIX);
         if (isSpaceFAQ) {
           if (activitiesFile != null && activitiesFile.getFile().exists()) {
-            String spaceGroupId = activitiesFile.getNodePath();
-            Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+            String spacePrettyName = categoryId.replace(Utils.CATE_SPACE_ID_PREFIX, "");
+            Space space = spaceService.getSpaceByPrettyName(spacePrettyName);
 
             log.info("Importing Answer activities");
-            importActivities(activitiesFile.getFile(), space.getPrettyName(), true);
+            importActivities(activitiesFile.getFile(), space == null ? null : spacePrettyName, true);
           }
         }
       }

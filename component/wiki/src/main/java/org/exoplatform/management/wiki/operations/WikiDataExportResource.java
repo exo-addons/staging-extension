@@ -114,7 +114,7 @@ public class WikiDataExportResource extends AbstractJCRExportOperationHandler {
       return;
     }
 
-    String prefix = "wiki/" + wikiType.toString().toLowerCase() + "/___" + params[1];
+    String prefix = "wiki/" + wikiType.toString().toLowerCase() + "/___" + params[1] + "---/";
     JCRNodeExportTask wikiExportTask = new JCRNodeExportTask(repositoryService, params[0], params[2], prefix, recursive, true);
     subNodesExportTask.add(wikiExportTask);
   }

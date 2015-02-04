@@ -92,7 +92,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     if (activity == null) {
       return;
     }
-    log.info("   Delete activity : " + activity.getTitle() + " and its comments.");
+    log.info("   Delete activity : '" + activity.getTitle() + "' and its comments.");
     RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
     if (commentsListAccess.getSize() > 0) {
       List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
@@ -289,49 +289,6 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         } else {
           log.info("Activity  is imported: '" + activity.getTitle() + "'");
         }
-      } catch (ActivityStorageException e) {
-        log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
-      }
-    }
-  }
-
-  protected final void saveActivity(ExoSocialActivity activity, Identity spaceIdentity) {
-    activityStorage.setInjectStreams(false);
-    long updatedTime = activity.getUpdated().getTime();
-    try {
-      activityManager.saveActivityNoReturn(spaceIdentity, activity);
-      activity.setUpdated(updatedTime);
-      activityManager.updateActivity(activity);
-      log.info("Activity  is imported: '" + activity.getTitle() + "'.");
-    } catch (ActivityStorageException e) {
-      log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
-    }
-  }
-
-  protected final void saveActivity(ExoSocialActivity activity) {
-    activityStorage.setInjectStreams(false);
-    long updatedTime = activity.getUpdated().getTime();
-    if (activity.getActivityStream().getType().equals(Type.SPACE)) {
-      String spacePrettyName = activity.getActivityStream().getPrettyId();
-      Identity spaceIdentity = getIdentity(spacePrettyName);
-      if (spaceIdentity == null) {
-        log.warn("Activity is not imported'" + activity.getTitle() + "'.");
-        return;
-      }
-      try {
-        activityManager.saveActivityNoReturn(spaceIdentity, activity);
-        activity.setUpdated(updatedTime);
-        activityManager.updateActivity(activity);
-        log.info("Activity : '" + activity.getTitle() + " is imported.");
-      } catch (ActivityStorageException e) {
-        log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
-      }
-    } else {
-      try {
-        activityManager.saveActivityNoReturn(activity);
-        activity.setUpdated(updatedTime);
-        activityManager.updateActivity(activity);
-        log.info("Activity : '" + activity.getTitle() + " is imported.");
       } catch (ActivityStorageException e) {
         log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
       }

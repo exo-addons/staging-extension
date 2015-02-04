@@ -23,14 +23,13 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
+import org.exoplatform.forum.service.ForumPageList;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
-import org.exoplatform.forum.service.impl.model.TopicFilter;
 import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
 import org.exoplatform.management.common.activities.ActivitiesExportTask;
 import org.exoplatform.management.common.activities.JCRNodeExportTask;
@@ -178,12 +177,12 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler {
       }
     }
     for (String tmpForumId : forumIds) {
-      TopicFilter topicFilter = new TopicFilter(categoryId, tmpForumId);
-      ListAccess<Topic> topicsListAccess = forumService.getTopics(topicFilter);
-      if (topicsListAccess.getSize() == 0) {
+      ForumPageList topicsListAccess = ((ForumPageList) forumService.getPageTopic(categoryId, tmpForumId, null, null));
+      if (topicsListAccess.getAvailable() == 0) {
         continue;
       }
-      Topic[] topics = topicsListAccess.load(0, topicsListAccess.getSize());
+      @SuppressWarnings("unchecked")
+      List<Topic> topics = topicsListAccess.getAll();
       List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
       for (Topic topic : topics) {
         String activityId = forumService.getActivityIdForOwnerId(topic.getId());

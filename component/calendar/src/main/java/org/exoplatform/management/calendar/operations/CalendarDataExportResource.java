@@ -36,7 +36,10 @@ import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.organization.Group;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
@@ -212,13 +215,48 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler {
   }
 
   private void exportActivities(List<ExportTask> exportTasks, List<CalendarEvent> events) throws Exception {
+    if (events == null || events.isEmpty()) {
+      return;
+    }
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    for (CalendarEvent event : events) {
-      addActivityWithComments(activitiesList, event.getActivityId());
+    String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + events.get(0).getCalendarId().replace("_space_calendar", "");
+    Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+    if (space == null) {
+      log.warn("Can't find space with group id: " + spaceGroupId);
+      return;
+    }
+    Identity identity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), false);
+    RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(identity);
+    listAccess.getNumberOfUpgrade();
+    if (listAccess.getSize() == 0) {
+      return;
+    }
+    ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
+    for (ExoSocialActivity activity : activities) {
+      if (activity.getType() != null && activity.getType().equals("cs-calendar:spaces")) {
+        String eventId = activity.getTemplateParams().get("EventID");
+        CalendarEvent event = getEventFromList(eventId, events);
+        if (event != null) {
+          addActivityWithComments(activitiesList, activity);
+        } else {
+          log.warn("Can't find event of calendar activity: " + activity.getTitle());
+        }
+      }
     }
     if (!activitiesList.isEmpty()) {
       String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + events.get(0).getCalendarId() + "/";
       exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
     }
+  }
+
+  private CalendarEvent getEventFromList(String eventId, List<CalendarEvent> events) {
+    CalendarEvent event = null;
+    for (CalendarEvent tmpEvent : events) {
+      if (tmpEvent.getId().equals(eventId)) {
+        event = tmpEvent;
+        break;
+      }
+    }
+    return event;
   }
 }
