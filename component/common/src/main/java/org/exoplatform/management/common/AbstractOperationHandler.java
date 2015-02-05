@@ -21,7 +21,13 @@ import org.exoplatform.services.jcr.impl.core.SessionImpl;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.transaction.TransactionService;
+import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
+import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
+import org.exoplatform.social.core.space.SpaceUtils;
+import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationHandler;
 
@@ -35,6 +41,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   protected static final long ONE_DAY_IN_MS = 86400000L;
 
   protected RepositoryService repositoryService = null;
+  protected IdentityStorage identityStorage = null;
   protected SpaceService spaceService = null;
 
   // This is used to test on duplicated activities
@@ -71,6 +78,33 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       ((SessionImpl) session).setTimeout(ONE_DAY_IN_MS);
     }
     return session;
+  }
+
+  protected final Identity getIdentity(String id) {
+    try {
+      Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, id);
+
+      if (userIdentity != null) {
+        return userIdentity;
+      } else {
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, id);
+
+        // Try to see if space was renamed
+        if (spaceIdentity == null) {
+          Space space = spaceService.getSpaceByGroupId(id);
+          if (space == null) {
+            space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + id);
+          }
+          if (space != null) {
+            spaceIdentity = getIdentity(space.getPrettyName());
+          }
+        }
+        return spaceIdentity;
+      }
+    } catch (Exception e) {
+      log.error("Error while retrieving identity: ", e);
+    }
+    return null;
   }
 
   // Bug in SUN's JDK XMLStreamReader implementation closes the underlying

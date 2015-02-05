@@ -43,6 +43,7 @@ import org.gatein.management.spi.ManagementExtension;
  * Mar 5, 2014  
  */
 public class WikiExtension implements ManagementExtension {
+  public static final String WIKI_ACTIVITY_TYPE = "ks-wiki:spaces";
 
   @Override
   public void initialize(ExtensionContext context) {

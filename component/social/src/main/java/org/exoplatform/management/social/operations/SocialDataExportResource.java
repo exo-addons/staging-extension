@@ -207,7 +207,6 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
             || exoSocialActivity.getType().equals(SocialExtension.CALENDAR_ACTIVITY_TYPE)) {
           continue;
         }
-        activityManager.getParentActivity(exoSocialActivity);
         addActivityWithComments(activitiesList, exoSocialActivity);
       }
       i += length;

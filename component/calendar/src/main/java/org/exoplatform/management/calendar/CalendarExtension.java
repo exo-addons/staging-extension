@@ -41,6 +41,9 @@ import org.gatein.management.spi.ManagementExtension;
  */
 public class CalendarExtension implements ManagementExtension {
 
+  public static final String EVENT_LINK_KEY = "EventLink";
+  public static final String EVENT_ID_KEY = "EventID";
+  public static final String CALENDAR_ACTIVITY_TYPE = "cs-calendar:spaces";
   public static final String SPACE_CALENDAR_TYPE = "space";
   public static final String GROUP_CALENDAR_TYPE = "group";
   public static final String PERSONAL_CALENDAR_TYPE = "personal";
@@ -71,8 +74,7 @@ public class CalendarExtension implements ManagementExtension {
   }
 
   @Override
-  public void destroy() {
-  }
+  public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {

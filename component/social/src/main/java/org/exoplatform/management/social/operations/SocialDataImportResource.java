@@ -52,6 +52,7 @@ import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
+import org.exoplatform.social.core.storage.cache.CachedActivityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.ContentType;
@@ -78,10 +79,8 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
 
   private OrganizationService organizationService;
-
   private IdentityManager identityManager;
   private ManagementController managementController;
-
   private DataStorage dataStorage;
 
   @Override
@@ -228,6 +227,9 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
     RequestLifeCycle.end();
     RequestLifeCycle.begin(PortalContainer.getInstance());
+    if (activityStorage instanceof CachedActivityStorage) {
+      ((CachedActivityStorage) activityStorage).clearCache();
+    }
   }
 
   private void updateAvatar(Space space, File fileToImport) {
@@ -459,6 +461,11 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
       spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
       space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
     }
+
+    // FIXME Workaround, after replacing space, it still using flag deleted=false
+    Identity identity = getIdentity(spaceMetaData.getPrettyName());
+    identity.setDeleted(false);
+    identityStorage.saveIdentity(identity);
 
     RequestLifeCycle.begin(PortalContainer.getInstance());
     log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");

@@ -31,15 +31,13 @@ import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ActivityStream.Type;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
-import org.exoplatform.social.core.identity.provider.OrganizationIdentityProvider;
-import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.ActivityStorageException;
 import org.exoplatform.social.core.storage.api.ActivityStorage;
-import org.exoplatform.social.core.storage.api.IdentityStorage;
+import org.exoplatform.social.core.storage.cache.CachedActivityStorage;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationContext;
@@ -57,7 +55,6 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
   protected SpaceService spaceService;
   protected ActivityManager activityManager;
   protected ActivityStorage activityStorage;
-  protected IdentityStorage identityStorage;
 
   // This is used to test on duplicated activities
   protected Set<Long> activitiesByPostTime = new HashSet<Long>();
@@ -101,6 +98,9 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
       }
     }
     activityManager.deleteActivity(activity);
+    if (activityStorage instanceof CachedActivityStorage) {
+      ((CachedActivityStorage) activityStorage).clearActivityCached(activity.getId());
+    }
   }
 
   protected final boolean createSpaceIfNotExists(File spaceMetadataFile, boolean createSpace) throws Exception {
@@ -600,33 +600,6 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         deleteTempFile(file);
       }
     }
-  }
-
-  protected final Identity getIdentity(String id) {
-    try {
-      Identity userIdentity = identityStorage.findIdentity(OrganizationIdentityProvider.NAME, id);
-
-      if (userIdentity != null) {
-        return userIdentity;
-      } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, id);
-
-        // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(id);
-          if (space == null) {
-            space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + id);
-          }
-          if (space != null) {
-            spaceIdentity = getIdentity(space.getPrettyName());
-          }
-        }
-        return spaceIdentity;
-      }
-    } catch (Exception e) {
-      log.error("Error while retrieving identity: ", e);
-    }
-    return null;
   }
 
   protected static final <T> T deserializeObject(final InputStream zin, Class<T> objectClass, String alias) {

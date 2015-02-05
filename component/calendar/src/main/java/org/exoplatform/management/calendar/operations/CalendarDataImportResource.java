@@ -68,10 +68,8 @@ import com.thoughtworks.xstream.XStream;
 public class CalendarDataImportResource extends AbstractImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
   final private static Logger log = LoggerFactory.getLogger(CalendarDataImportResource.class);
 
-  public static final String EVENT_ID_KEY = "EventID";
   public static final String CALENDAR_PORTLET_NAME = "CalendarPortlet";
   public static final String INVITATION_DETAIL = "/invitation/detail/";
-  public static final String EVENT_LINK_KEY = "EventLink";
 
   private CalendarService calendarService;
   private JCRDataStorage calendarStorage;
@@ -155,7 +153,7 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     if (comment != null) {
       return;
     }
-    String eventId = activity.getTemplateParams().get(EVENT_ID_KEY);
+    String eventId = activity.getTemplateParams().get(CalendarExtension.EVENT_ID_KEY);
     CalendarEvent event = calendarService.getEventById(eventId);
     saveEvent(event, activity);
   }
@@ -165,7 +163,7 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     if (comment != null) {
       return false;
     }
-    String eventId = activity.getTemplateParams().get(EVENT_ID_KEY);
+    String eventId = activity.getTemplateParams().get(CalendarExtension.EVENT_ID_KEY);
     if (eventId == null) {
       log.warn("An unkown Calendar activity was found: " + activity.getTitle());
       return true;
@@ -278,8 +276,8 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     ExoSocialActivity activity = activityManager.getActivity(event.getActivityId());
     if (activity != null) {
       Map<String, String> templateParams = activity.getTemplateParams();
-      if (templateParams.containsKey(EVENT_LINK_KEY)) {
-        templateParams.put(EVENT_LINK_KEY, getLink(event, activity, groupId));
+      if (templateParams.containsKey(CalendarExtension.EVENT_LINK_KEY)) {
+        templateParams.put(CalendarExtension.EVENT_LINK_KEY, getLink(event, activity, groupId));
         activityManager.updateActivity(activity);
       }
     }

@@ -22,6 +22,8 @@ import org.gatein.management.spi.ManagementExtension;
  */
 public class ContentManagementExtension implements ManagementExtension {
 
+  public static final String SITES_CONTENT_SPACES = "contents:spaces";
+  public static final String SITES_FILE_SPACES = "files:spaces";
   public final static String PATH_CONTENT = "content";
   public final static String PATH_CONTENT_SITES = "sites";
   public final static String PATH_CONTENT_SITES_CONTENTS = "contents";
