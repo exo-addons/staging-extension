@@ -358,6 +358,11 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
 
         deleteSpaceActivities(spaceMetaData.getPrettyName());
 
+        String[] members = space.getMembers();
+        for (String member : members) {
+          spaceService.removeMember(space, member);
+        }
+
         log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
         spaceService.deleteSpace(space);
 
@@ -462,7 +467,8 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
       space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
     }
 
-    // FIXME Workaround, after replacing space, it still using flag deleted=false
+    // FIXME Workaround, after replacing space, it still using flag
+    // deleted=false
     Identity identity = getIdentity(spaceMetaData.getPrettyName());
     identity.setDeleted(false);
     identityStorage.saveIdentity(identity);
