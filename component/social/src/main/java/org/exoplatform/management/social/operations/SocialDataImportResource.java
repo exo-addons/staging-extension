@@ -358,22 +358,29 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
 
         deleteSpaceActivities(spaceMetaData.getPrettyName());
 
-        String[] members = space.getMembers();
-        for (String member : members) {
-          spaceService.removeMember(space, member);
-        }
-
         log.info("Delete space: '" + spaceMetaData.getPrettyName() + "'.");
-        spaceService.deleteSpace(space);
+        RequestLifeCycle.begin(PortalContainer.getInstance());
+        try {
+          String[] members = space.getMembers();
+          for (String member : members) {
+            spaceService.removeMember(space, member);
+          }
+          spaceService.deleteSpace(space);
+        } finally {
+          RequestLifeCycle.end();
+        }
 
         // FIXME Workaround: deleting a space don't delete the corresponding
         // group
         RequestLifeCycle.begin(PortalContainer.getInstance());
-        Group group = organizationService.getGroupHandler().findGroupById(groupId);
-        if (group != null) {
-          organizationService.getGroupHandler().removeGroup(group, true);
+        try {
+          Group group = organizationService.getGroupHandler().findGroupById(groupId);
+          if (group != null) {
+            organizationService.getGroupHandler().removeGroup(group, true);
+          }
+        } finally {
+          RequestLifeCycle.end();
         }
-        RequestLifeCycle.end();
 
         // FIXME Answer Bug: deleting a space don't delete answers category, but
         // it will be deleted if answer data is imported
@@ -385,10 +392,10 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
 
     if (createAbsentUsers) {
-      RequestLifeCycle.begin(PortalContainer.getInstance());
       log.info("Create not found users of space: '" + spaceMetaData.getPrettyName() + "'.");
       String[] members = spaceMetaData.getMembers();
       for (String member : members) {
+        RequestLifeCycle.begin(PortalContainer.getInstance());
         try {
           User user = organizationService.getUserHandler().findUserByName(member);
           if (user == null) {
@@ -413,9 +420,10 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
           }
         } catch (Exception e) {
           log.warn("Exception while creating the user: " + member, e);
+        } finally {
+          RequestLifeCycle.end();
         }
       }
-      RequestLifeCycle.end();
     }
 
     log.info("Create new space: '" + spaceMetaData.getPrettyName() + "'.");
@@ -460,51 +468,73 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     space.setVisibility(spaceMetaData.getVisibility());
     space.setPriority(spaceMetaData.getPriority());
     space.setUrl(spaceMetaData.getUrl());
-    space = spaceService.createSpace(space, space.getEditor());
-    if (isRenamed) {
-      log.info("Rename space from '" + oldSpacePrettyName + "' to '" + newSpacePrettyName + "'.");
-      spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
-      space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
+
+    RequestLifeCycle.begin(PortalContainer.getInstance());
+    try {
+      space = spaceService.createSpace(space, space.getEditor());
+      if (isRenamed) {
+        log.info("Rename space from '" + oldSpacePrettyName + "' to '" + newSpacePrettyName + "'.");
+        spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
+        space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
+      }
+    } finally {
+      RequestLifeCycle.end();
     }
 
     // FIXME Workaround, after replacing space, it still using flag
     // deleted=false
-    Identity identity = getIdentity(spaceMetaData.getPrettyName());
-    identity.setDeleted(false);
-    identityStorage.saveIdentity(identity);
+    RequestLifeCycle.begin(PortalContainer.getInstance());
+    try {
+      Identity identity = getIdentity(spaceMetaData.getPrettyName());
+      if (identity.isDeleted()) {
+        log.info("Set space identity not deleted, it was deleted=" + spaceMetaData.getPrettyName() + "'.");
+        identity.setDeleted(false);
+        identityStorage.saveIdentity(identity);
+      }
+    } finally {
+      RequestLifeCycle.end();
+    }
 
     RequestLifeCycle.begin(PortalContainer.getInstance());
-    log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");
+    try {
+      log.info("Add members to space: '" + spaceMetaData.getPrettyName() + "'.");
 
-    space.setEditor(managers[0]);
-    space.setMembers(members);
-    space = spaceService.updateSpace(space);
+      space.setEditor(managers[0]);
+      space.setMembers(members);
+      space = spaceService.updateSpace(space);
 
-    for (String member : members) {
-      try {
-        SpaceUtils.addUserToGroupWithMemberMembership(member, space.getGroupId());
-        log.info("  User '" + member + "' added to space as member: '" + spaceMetaData.getPrettyName() + "'.");
-      } catch (Exception e) {
-        log.warn("  Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
+      for (String member : members) {
+        try {
+          SpaceUtils.addUserToGroupWithMemberMembership(member, space.getGroupId());
+          log.info("  User '" + member + "' added to space as member: '" + spaceMetaData.getPrettyName() + "'.");
+        } catch (Exception e) {
+          log.warn("  Cannot add member '" + member + "' to space: " + space.getPrettyName(), e);
+        }
       }
+    } finally {
+      RequestLifeCycle.end();
     }
 
-    log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
+    RequestLifeCycle.begin(PortalContainer.getInstance());
+    try {
+      log.info("Set manager(s) of space: '" + spaceMetaData.getPrettyName() + "'.");
 
-    space.setEditor(managers[0]);
-    space.setManagers(managers);
-    space = spaceService.updateSpace(space);
+      space.setEditor(managers[0]);
+      space.setManagers(managers);
+      space = spaceService.updateSpace(space);
 
-    for (String manager : managers) {
-      try {
-        log.info("  User '" + manager + "' promoted to manager of space: '" + spaceMetaData.getPrettyName() + "'.");
-        SpaceUtils.addUserToGroupWithManagerMembership(manager, space.getGroupId());
+      for (String manager : managers) {
+        try {
+          log.info("  User '" + manager + "' promoted to manager of space: '" + spaceMetaData.getPrettyName() + "'.");
+          SpaceUtils.addUserToGroupWithManagerMembership(manager, space.getGroupId());
 
-      } catch (Exception e) {
-        log.warn("  Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
+        } catch (Exception e) {
+          log.warn("  Cannot add manager '" + manager + "' to space: " + space.getPrettyName(), e);
+        }
       }
+    } finally {
+      RequestLifeCycle.end();
     }
-    RequestLifeCycle.end();
 
     deleteSpaceActivities(spaceMetaData.getPrettyName());
     return false;

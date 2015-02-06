@@ -15,6 +15,8 @@ import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
 import org.exoplatform.calendar.service.impl.CalendarServiceImpl;
 import org.exoplatform.calendar.service.impl.JCRDataStorage;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.calendar.CalendarExtension;
 import org.exoplatform.management.common.AbstractImportOperationHandler;
 import org.exoplatform.management.common.MockHttpServletRequest;
@@ -125,7 +127,12 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
         FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
         FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
         for (FileEntry fileEntry : fileEntries) {
-          importCalendar(fileEntry.getFile(), spaceMetadataFile == null ? null : spaceMetadataFile.getFile(), replaceExisting, createSpace);
+          RequestLifeCycle.begin(PortalContainer.getInstance());
+          try {
+            importCalendar(fileEntry.getFile(), spaceMetadataFile == null ? null : spaceMetadataFile.getFile(), replaceExisting, createSpace);
+          } finally {
+            RequestLifeCycle.end();
+          }
         }
         if (activitiesFile != null) {
           importActivities(activitiesFile.getFile(), null, true);
@@ -155,12 +162,15 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
     String eventId = activity.getTemplateParams().get(CalendarExtension.EVENT_ID_KEY);
     CalendarEvent event = calendarService.getEventById(eventId);
+    if (event == null) {
+      event = calendarService.getGroupEvent(eventId);
+    }
     saveEvent(event, activity);
   }
 
   @Override
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
-    if (comment != null) {
+    if (comment != null || activity.isComment()) {
       return false;
     }
     String eventId = activity.getTemplateParams().get(CalendarExtension.EVENT_ID_KEY);
@@ -170,8 +180,11 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
     CalendarEvent event = calendarService.getEventById(eventId);
     if (event == null) {
-      log.warn("Calendar event not found. Cannot import activity '" + activity.getTitle() + "'.");
-      return true;
+      event = calendarService.getGroupEvent(eventId);
+      if (event == null) {
+        log.warn("Calendar event not found. Cannot import activity '" + activity.getTitle() + "'.");
+        return true;
+      }
     }
     return false;
   }

@@ -28,6 +28,16 @@ public class PushPageActionComponent extends UIContainer {
     }
   }
 
+  public static void addButtonToComponent(org.exoplatform.webui.core.UIContainer uicomponent) throws Exception {
+    PushPageActionComponent pushPageActionComponent = uicomponent.getChild(PushPageActionComponent.class);
+    if (pushPageActionComponent == null) {
+      pushPageActionComponent = uicomponent.addChild(PushPageActionComponent.class, null, null);
+    }
+    pushPageActionComponent.setRendered(true);
+    uicomponent.renderChild(PushPageActionComponent.class);
+    pushPageActionComponent.setRendered(false);
+  }
+
   public static class PushPageActionListener extends EventListener<PushPageActionComponent> {
     @Override
     public void execute(Event<PushPageActionComponent> event) throws Exception {

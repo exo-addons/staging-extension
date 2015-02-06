@@ -13,4 +13,6 @@ public interface ChromatticService {
 
   public void removeSynchonizationServer(TargetServer targetServer);
 
+  TargetServer getServerByName(String name);
+
 }

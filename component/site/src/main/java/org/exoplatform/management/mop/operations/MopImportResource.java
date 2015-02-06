@@ -24,6 +24,7 @@ import org.exoplatform.portal.mop.navigation.NavigationService;
 import org.exoplatform.portal.mop.page.PageService;
 import org.exoplatform.portal.pom.config.POMSession;
 import org.exoplatform.portal.pom.config.POMSessionManager;
+import org.exoplatform.web.application.RequestContext;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.ContentType;
@@ -48,6 +49,16 @@ public class MopImportResource extends AbstractOperationHandler {
     final String operationName = operationContext.getOperationName();
 
     increaseCurrentTransactionTimeOut(operationContext);
+
+    RequestContext requestContext;
+    try {
+      requestContext = RequestContext.getCurrentInstance();
+      if (requestContext != null) {
+        requestContext.getUserPortal();
+      }
+    } catch (Exception e) {
+      RequestContext.setCurrentInstance(null);
+    }
 
     OperationAttachment attachment = operationContext.getAttachment(true);
     if (attachment == null)

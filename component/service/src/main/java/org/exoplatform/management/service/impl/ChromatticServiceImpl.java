@@ -1,7 +1,14 @@
 package org.exoplatform.management.service.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
 
 import org.chromattic.api.Chromattic;
 import org.chromattic.api.ChromatticBuilder;
@@ -12,6 +19,12 @@ import org.exoplatform.management.service.api.ChromatticService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.api.model.TargetServerChromattic;
 import org.exoplatform.management.service.integration.CurrentRepositoryLifeCycle;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.jcr.core.ExtendedNode;
+import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
 import org.picocontainer.Startable;
 
 /**
@@ -19,13 +32,38 @@ import org.picocontainer.Startable;
  */
 public class ChromatticServiceImpl implements ChromatticService, Startable {
 
+  private static final String EXO_PRIVILEGEABLE_MIXIN = "exo:privilegeable";
+
+  private static final Log LOG = ExoLogger.getLogger(SynchronizationServiceImpl.class);
+
+  private static Map<String, String[]> DEFAULT_PERMISSIONS = new HashMap<String, String[]>();
+  static {
+    try {
+      DEFAULT_PERMISSIONS.put("*:/platform/administrators", new String[] { "read", "set_property", "add_node", "remove" });
+      DEFAULT_PERMISSIONS.put("*:/platform/web-contributors", new String[] { "read", "set_property", "add_node", "remove" });
+    } catch (Exception e) {
+      LOG.error(e);
+      DEFAULT_PERMISSIONS = null;
+    }
+  }
+
   public final static String STAGING_SERVERS_ROOT_PATH = "/exo:applications/staging/servers";
+
+  private String workspaceName = null;
+  private RepositoryService repositoryService;
 
   Chromattic chromattic;
 
-  public ChromatticServiceImpl(ChromatticManager chromatticManager) {
+  public ChromatticServiceImpl(ChromatticManager chromatticManager, RepositoryService repositoryService) {
     // Nothing to do with chromatticManager, it's only to ensure that
     // ChromatticManager is started before this service
+    this.repositoryService = repositoryService;
+    try {
+      workspaceName = repositoryService.getDefaultRepository().getConfiguration().getDefaultWorkspaceName();
+    } catch (Exception e) {
+      workspaceName = "collaboration";
+    }
+    setPermissions(STAGING_SERVERS_ROOT_PATH, DEFAULT_PERMISSIONS);
   }
 
   @Override
@@ -39,6 +77,7 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     builder.setOptionValue(ChromatticBuilder.ROOT_NODE_PATH, STAGING_SERVERS_ROOT_PATH);
 
     chromattic = builder.build();
+
   }
 
   @Override
@@ -67,11 +106,40 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   }
 
   @Override
+  public TargetServer getServerByName(String name) {
+    TargetServer targetServer = null;
+    ChromatticSession session = null;
+    try {
+      session = openSession();
+      TargetServerChromattic server = session.findByPath(TargetServerChromattic.class, STAGING_SERVERS_ROOT_PATH + "/" + name);
+      if (server != null) {
+        targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), server.getPassword(), server.isSsl());
+      }
+      session.save();
+    } finally {
+      if (session != null) {
+        session.close();
+      }
+    }
+    return targetServer;
+  }
+
+  @Override
   public void addSynchonizationServer(TargetServer targetServer) {
     ChromatticSession session = null;
 
     try {
       session = openSession();
+
+      TargetServerChromattic chromatticObject = null;
+      try {
+        chromatticObject = session.findByPath(TargetServerChromattic.class, STAGING_SERVERS_ROOT_PATH + "/" + targetServer.getName());
+        if (chromatticObject != null) {
+          throw new IllegalStateException("Attempt to add server with same name");
+        }
+      } catch (Exception e) {
+        // Nothing to do
+      }
 
       TargetServerChromattic server = session.insert(TargetServerChromattic.class, targetServer.getName());
       server.setHost(targetServer.getHost());
@@ -81,6 +149,9 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
       server.setSsl(targetServer.isSsl());
 
       session.save();
+
+      String jcrPath = session.getPath(server);
+      setPermissions(jcrPath, DEFAULT_PERMISSIONS);
     } finally {
       if (session != null) {
         session.close();
@@ -109,10 +180,34 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   }
 
   private ChromatticSession openSession() {
-    return chromattic.openSession("collaboration");
+    return chromattic.openSession(workspaceName);
+  }
+
+  public void setPermissions(String jcrPath, Map<String, String[]> permissions) {
+    Session session = null;
+    try {
+      session = getSession(repositoryService, workspaceName);
+      ExtendedNode extendedNode = (ExtendedNode) session.getItem(jcrPath);
+      if (extendedNode.canAddMixin(EXO_PRIVILEGEABLE_MIXIN)) {
+        extendedNode.addMixin(EXO_PRIVILEGEABLE_MIXIN);
+        extendedNode.setPermissions(permissions);
+        session.save();
+      }
+    } catch (Exception e) {
+      LOG.error(e);
+    } finally {
+      if (session != null) {
+        session.logout();
+      }
+    }
+  }
+
+  public static final Session getSession(RepositoryService repositoryService, String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
+    SessionProvider provider = SessionProvider.createSystemProvider();
+    ManageableRepository repository = repositoryService.getCurrentRepository();
+    return provider.getSession(workspace, repository);
   }
 
   @Override
-  public void stop() {
-  }
+  public void stop() {}
 }

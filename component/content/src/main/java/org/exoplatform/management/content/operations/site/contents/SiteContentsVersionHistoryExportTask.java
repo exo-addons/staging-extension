@@ -59,7 +59,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
 
   @Override
   public String getEntry() {
-    return SiteUtil.getSiteContentsBasePath(siteName) + absolutePath + VERSION_HISTORY_FILE_SUFFIX;
+    return SiteUtil.getSiteContentsBasePath(siteName) + "/" + JCRNodeExportTask.JCR_DATA_SEPARATOR + absolutePath + VERSION_HISTORY_FILE_SUFFIX;
   }
 
   @Override

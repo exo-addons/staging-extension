@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd"
+	xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
+	<component><!-- Loaded from 'null' -->
+		<key>org.exoplatform.services.deployment.WCMContentInitializerService</key>
+		<type>org.exoplatform.services.deployment.WCMContentInitializerService</type>
+	</component>
+	<external-component-plugins>
+		<target-component>org.exoplatform.services.deployment.WCMContentInitializerService</target-component>
+		<component-plugin><!-- Loaded from 'null' -->
+			<name>shared Content Initializer Service</name>
+			<set-method>addPlugin</set-method>
+			<type>org.exoplatform.services.deployment.plugins.XMLDeploymentPlugin</type>
+			<init-params>
+				<value-param>
+					<name>override</name>
+					<value>true</value>
+				</value-param>
+				<object-param>
+					<name>/sites/shared/js/stagingmessage.xml</name>
+					<object type="org.exoplatform.services.deployment.DeploymentDescriptor">
+						<field name="target">
+							<object
+								type="org.exoplatform.services.deployment.DeploymentDescriptor$Target">
+								<field name="workspace">
+									<string>collaboration</string>
+								</field>
+								<field name="nodePath">
+									<string>/sites/shared/js</string>
+								</field>
+							</object>
+						</field>
+						<field name="sourcePath">
+							<string>war:/conf/staging-extension/wcm/content/sites/shared/js/stagingmessage.xml</string>
+						</field>
+						<field name="cleanupPublication">
+							<boolean>false</boolean>
+						</field>
+					</object>
+				</object-param>
+				<object-param>
+					<name>/sites/shared/css/StagingStylesheet.xml</name>
+					<object type="org.exoplatform.services.deployment.DeploymentDescriptor">
+						<field name="target">
+							<object
+								type="org.exoplatform.services.deployment.DeploymentDescriptor$Target">
+								<field name="workspace">
+									<string>collaboration</string>
+								</field>
+								<field name="nodePath">
+									<string>/sites/shared/css</string>
+								</field>
+							</object>
+						</field>
+						<field name="sourcePath">
+							<string>war:/conf/staging-extension/wcm/content/sites/shared/css/StagingStylesheet.xml</string>
+						</field>
+						<field name="cleanupPublication">
+							<boolean>false</boolean>
+						</field>
+					</object>
+				</object-param>
+			</init-params>
+		</component-plugin>
+	</external-component-plugins>
+</configuration>

@@ -168,10 +168,6 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     return path.substring(beginIndex, endIndex);
   }
 
-  public static void main(String[] args) {
-    System.out.println(new WikiDataImportResource(WikiType.GROUP).extractIdFromPath("wiki/group/___/spaces/functional_qa_vn/JCR_EXP_DATA/Groups/spaces/functional_qa_vn/ApplicationData/eXoWiki.xml"));
-  }
-
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null) {
       return;

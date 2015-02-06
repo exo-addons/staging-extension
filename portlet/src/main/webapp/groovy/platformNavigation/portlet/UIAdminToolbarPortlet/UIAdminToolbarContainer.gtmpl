@@ -74,18 +74,14 @@
 							$addPageLabel
 						</a>
 					</li>
-					<li class="divider">&nbsp;</li>
-					<li>
-						<%
-						PushPageActionComponent pushPageActionComponent = uicomponent.getChild(PushPageActionComponent.class);
-						if(pushPageActionComponent == null) {
-							pushPageActionComponent = uicomponent.addChild(PushPageActionComponent.class, null, null);
-						}
-						pushPageActionComponent.setRendered(true);
-						uicomponent.renderChild(PushPageActionComponent.class);
-						pushPageActionComponent.setRendered(false);
-						%>
-					</li>
+					<% if(userCouldEditPortal){ %>
+            <li class="divider">&nbsp;</li>
+            <li>
+              <%
+              PushPageActionComponent.addButtonToComponent(uicomponent);
+              %>
+            </li>
+          <% } %>
 				</ul>
 			</li>
 			<% } %>
@@ -119,13 +115,7 @@
 					<li class="divider">&nbsp;</li>
 					<li>
 						<%
-						PushSiteActionComponent pushSiteActionComponent = uicomponent.getChild(PushSiteActionComponent.class);
-						if(pushSiteActionComponent == null) {
-							pushSiteActionComponent = uicomponent.addChild(PushSiteActionComponent.class, null, null);
-						}
-						pushSiteActionComponent.setRendered(true);
-						uicomponent.renderChild(PushSiteActionComponent.class);
-						pushSiteActionComponent.setRendered(false);
+						PushSiteActionComponent.addButtonToComponent(uicomponent);
 						%>
 					</li>
 					<% } %>

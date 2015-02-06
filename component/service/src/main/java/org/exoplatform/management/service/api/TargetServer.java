@@ -14,8 +14,7 @@ public class TargetServer {
   private String password;
   private boolean ssl;
 
-  public TargetServer() {
-  }
+  public TargetServer() {}
 
   public TargetServer(String id, String name, String host, String port, String username, String password, boolean ssl) {
     this.id = id;
@@ -89,5 +88,22 @@ public class TargetServer {
 
   public void setSsl(boolean ssl) {
     this.ssl = ssl;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (obj instanceof TargetServer) {
+      TargetServer server = (TargetServer) obj;
+      return host.equals(server.getHost()) && port.equals(server.getPort()) && username.equals(server.getUsername());
+    }
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return "[name=" + name + ",host=" + host + ",port" + port + ",username" + username + ",isSSL" + ssl + "]";
   }
 }

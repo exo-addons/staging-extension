@@ -11,6 +11,9 @@
 		<type>org.exoplatform.management.service.impl.ChromatticServiceImpl</type>
 	</component>
 	<component>
+		<type>org.exoplatform.management.service.impl.StagingMessageREST</type>
+	</component>
+	<component>
 		<key>org.exoplatform.management.service.api.StagingService</key>
 		<type>org.exoplatform.management.service.impl.StagingServiceImpl</type>
 	</component>
