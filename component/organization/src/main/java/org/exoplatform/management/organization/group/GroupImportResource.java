@@ -17,8 +17,8 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.poi.util.IOUtils;
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;

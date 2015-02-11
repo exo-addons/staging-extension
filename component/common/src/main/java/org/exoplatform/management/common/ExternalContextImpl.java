@@ -1,4 +1,4 @@
-package org.exoplatform.management.service.impl;
+package org.exoplatform.management.common;
 
 import org.exoplatform.services.security.ConversationState;
 import org.exoplatform.services.security.Identity;

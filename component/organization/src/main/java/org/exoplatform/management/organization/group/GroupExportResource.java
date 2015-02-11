@@ -8,8 +8,8 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.exoplatform.commons.utils.ListAccess;
-import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.exportop.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
 import org.exoplatform.services.jcr.RepositoryService;

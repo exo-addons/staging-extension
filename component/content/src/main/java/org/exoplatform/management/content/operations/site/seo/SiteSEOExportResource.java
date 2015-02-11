@@ -9,7 +9,7 @@ import java.util.List;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.exoplatform.management.common.AbstractExportOperationHandler;
+import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.pom.config.POMSession;

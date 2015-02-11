@@ -1,4 +1,4 @@
-package org.exoplatform.management.common;
+package org.exoplatform.management.common.importop;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,10 +20,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
-import org.exoplatform.management.common.api.ActivityImportOperationInterface;
-import org.exoplatform.management.common.api.FileEntry;
-import org.exoplatform.management.common.api.FileImportOperationInterface;
-import org.exoplatform.management.common.api.SpaceMetaData;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.common.FileEntry;
+import org.exoplatform.management.common.SpaceMetaData;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;

@@ -19,7 +19,7 @@ import org.apache.commons.io.FileUtils;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Utils;
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;

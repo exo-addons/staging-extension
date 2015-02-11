@@ -1,4 +1,4 @@
-package org.exoplatform.management.common.api;
+package org.exoplatform.management.common.exportop;
 
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 

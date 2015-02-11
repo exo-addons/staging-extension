@@ -1,4 +1,4 @@
-package org.exoplatform.management.common.activities;
+package org.exoplatform.management.common.exportop;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.exoplatform.forum.common.jcr.KSDataLocation;
-import org.exoplatform.management.common.AbstractExportOperationHandler;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;

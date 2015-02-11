@@ -1,7 +1,9 @@
-package org.exoplatform.management.common.api;
+package org.exoplatform.management.common.importop;
 
 import java.io.File;
 import java.util.List;
+
+import org.exoplatform.management.common.FileEntry;
 
 public interface FileImportOperationInterface {
   String getManagedFilesPrefix();

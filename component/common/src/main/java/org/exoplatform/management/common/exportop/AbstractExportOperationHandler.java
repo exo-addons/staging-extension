@@ -1,10 +1,9 @@
-package org.exoplatform.management.common;
+package org.exoplatform.management.common.exportop;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.exoplatform.management.common.activities.ActivitiesExportTask;
-import org.exoplatform.management.common.api.ActivityExportOperationInterface;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.social.common.RealtimeListAccess;

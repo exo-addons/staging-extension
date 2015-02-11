@@ -14,13 +14,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.exoplatform.management.common.activities;
+package org.exoplatform.management.common.exportop;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
-import org.exoplatform.management.common.api.SpaceMetaData;
+import org.exoplatform.management.common.SpaceMetaData;
 import org.exoplatform.social.core.space.model.Space;
 import org.gatein.management.api.operation.model.ExportTask;
 

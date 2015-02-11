@@ -1,4 +1,4 @@
-package org.exoplatform.management.common;
+package org.exoplatform.management.common.exportop;
 
 import java.util.HashMap;
 import java.util.List;

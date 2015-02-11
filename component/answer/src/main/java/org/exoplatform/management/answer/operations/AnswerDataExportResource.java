@@ -16,7 +16,6 @@
  */
 package org.exoplatform.management.answer.operations;
 
-import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,9 +27,10 @@ import org.exoplatform.faq.service.Question;
 import org.exoplatform.faq.service.QuestionPageList;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
-import org.exoplatform.management.common.AbstractExportOperationHandler;
-import org.exoplatform.management.common.activities.ActivitiesExportTask;
-import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
+import org.exoplatform.management.common.InputStreamWrapper;
+import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
@@ -174,16 +174,6 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler {
       if (commentActivityId != null && commentActivityId.equals(activity.getId())) {
         activity.getTemplateParams().put("Link", comment.getId());
       }
-    }
-  }
-
-  public static class InputStreamWrapper extends ByteArrayInputStream {
-    public InputStreamWrapper() {
-      super(new byte[0]);
-    }
-
-    public InputStreamWrapper(byte[] buf) {
-      super(buf);
     }
   }
 }

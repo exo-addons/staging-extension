@@ -15,9 +15,9 @@ import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCRExportOperationHandler;
-import org.exoplatform.management.common.activities.ActivitiesExportTask;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.exportop.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -112,8 +112,10 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       // Export Site Metadata
       exportTasks.add(new SiteMetaDataExportTask(metaData));
 
-      // Export activities
-      exportActivities(exportTasks, activitiesId, siteName);
+      if (!exportOnlyMetadata) {
+        // Export activities
+        exportActivities(exportTasks, activitiesId, siteName);
+      }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {

@@ -23,8 +23,8 @@ import javax.jcr.query.QueryResult;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.ecm.webui.utils.Utils;
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.services.compress.CompressData;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -66,8 +66,9 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   public void export(OutputStream outputStream) throws IOException {
     log.info("Export VersionHistory: " + workspace + ":" + absolutePath);
 
-    OutputStream out = null;
-    InputStream in = null;
+    List<OutputStream> ousList = new ArrayList<OutputStream>();
+    List<InputStream> isList = new ArrayList<InputStream>();
+
     File exportedFile = null;
     File zipFile = null;
     File propertiesFile = getExportedFile("mapping", ".properties");
@@ -86,8 +87,10 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
         while (queryIter.hasNext()) {
           Node node = queryIter.nextNode();
           exportedFile = getExportedFile("data", ".xml");
-          out = new BufferedOutputStream(new FileOutputStream(exportedFile));
-          in = new BufferedInputStream(new TempFileInputStream(exportedFile));
+          OutputStream out = new BufferedOutputStream(new FileOutputStream(exportedFile));
+          ousList.add(out);
+          InputStream in = new BufferedInputStream(new TempFileInputStream(exportedFile));
+          isList.add(in);
           String historyValue = getHistoryValue(node);
           propertiesBOS.write(historyValue.getBytes());
           propertiesBOS.write('\n');
@@ -99,8 +102,10 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
       if (currentNode.isNodeType(Utils.MIX_VERSIONABLE)) {
         // Export version history of current nodes
         exportedFile = getExportedFile("data", ".xml");
-        out = new BufferedOutputStream(new FileOutputStream(exportedFile));
-        in = new BufferedInputStream(new TempFileInputStream(exportedFile));
+        OutputStream out = new BufferedOutputStream(new FileOutputStream(exportedFile));
+        ousList.add(out);
+        InputStream in = new BufferedInputStream(new TempFileInputStream(exportedFile));
+        isList.add(in);
         String historyValue = getHistoryValue(currentNode);
         propertiesBOS.write(historyValue.getBytes());
         propertiesBOS.write('\n');
@@ -111,8 +116,10 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
       propertiesBOS.flush();
       zipService.addInputStream("mapping.properties", propertiesBIS);
       zipFile = getExportedFile("data", ".zip");
-      in = new BufferedInputStream(new TempFileInputStream(zipFile));
-      out = new BufferedOutputStream(new FileOutputStream(zipFile));
+      InputStream in = new BufferedInputStream(new TempFileInputStream(zipFile));
+      isList.add(in);
+      OutputStream out = new BufferedOutputStream(new FileOutputStream(zipFile));
+      ousList.add(out);
       out.flush();
       zipService.createZip(out);
       IOUtils.copy(in, outputStream);
@@ -124,11 +131,15 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     } finally {
       propertiesBOS.close();
       propertiesBIS.close();
-      if (out != null) {
-        out.close();
+      for (InputStream inputStream : isList) {
+        if (inputStream != null) {
+          inputStream.close();
+        }
       }
-      if (in != null) {
-        in.close();
+      for (OutputStream ous : ousList) {
+        if (ous != null) {
+          ous.close();
+        }
       }
       if (session != null) {
         session.logout();

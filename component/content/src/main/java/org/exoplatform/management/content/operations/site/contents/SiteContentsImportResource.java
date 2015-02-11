@@ -13,12 +13,12 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
-import org.exoplatform.management.common.activities.ActivitiesExportTask;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
-import org.exoplatform.management.common.api.ActivityImportOperationInterface;
-import org.exoplatform.management.common.api.FileEntry;
-import org.exoplatform.management.common.api.FileImportOperationInterface;
+import org.exoplatform.management.common.FileEntry;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.importop.ActivityImportOperationInterface;
+import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
 import org.exoplatform.services.jcr.RepositoryService;

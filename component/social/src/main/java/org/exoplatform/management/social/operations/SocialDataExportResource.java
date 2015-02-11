@@ -37,11 +37,11 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.ValueFormatException;
 
-import org.exoplatform.management.common.AbstractExportOperationHandler;
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
-import org.exoplatform.management.common.activities.ActivitiesExportTask;
-import org.exoplatform.management.common.activities.ExportTaskWrapper;
-import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
+import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.ExportTaskWrapper;
+import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
 import org.exoplatform.management.social.SocialExtension;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.ext.distribution.DataDistributionManager;

@@ -1,5 +1,4 @@
-<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.exoplaform.org/xml/ns/kernel_1_2.xsd http://www.exoplaform.org/xml/ns/kernel_1_2.xsd"
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.exoplaform.org/xml/ns/kernel_1_2.xsd http://www.exoplaform.org/xml/ns/kernel_1_2.xsd"
 	xmlns="http://www.exoplaform.org/xml/ns/kernel_1_2.xsd">
 	<component>
 		<key>org.gatein.management.api.ManagementService</key>
@@ -7,8 +6,7 @@
 	</component>
 	<component>
 		<key>org.gatein.management.api.controller.ManagementController</key>
-		<type>org.gatein.management.core.api.controller.SimpleManagementController
-		</type>
+		<type>org.gatein.management.core.api.controller.SimpleManagementController</type>
 	</component>
 	<component>
 		<type>org.gatein.management.rest.RestApplication</type>
@@ -17,7 +15,7 @@
 		<type>org.gatein.management.runtime.RuntimeContextImpl</type>
 	</component>
 	<component>
-		<type>org.exoplatform.management.service.impl.ExternalContextImpl</type>
+		<type>org.exoplatform.management.common.ExternalContextImpl</type>
 	</component>
 	<component>
 		<type>org.gatein.management.runtime.ManagementBootstrap</type>

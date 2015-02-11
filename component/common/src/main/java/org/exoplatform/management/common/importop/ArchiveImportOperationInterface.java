@@ -1,4 +1,4 @@
-package org.exoplatform.management.common.api;
+package org.exoplatform.management.common.importop;
 
 public interface ArchiveImportOperationInterface {
 

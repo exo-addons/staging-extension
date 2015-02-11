@@ -1,4 +1,4 @@
-package org.exoplatform.management.common.activities;
+package org.exoplatform.management.common.exportop;
 
 import java.io.IOException;
 import java.io.OutputStream;

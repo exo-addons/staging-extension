@@ -1,4 +1,4 @@
-package org.exoplatform.management.common;
+package org.exoplatform.management.common.importop;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,8 +15,8 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.activities.JCRNodeExportTask;
-import org.exoplatform.management.common.api.FileEntry;
+import org.exoplatform.management.common.FileEntry;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.services.cms.templates.TemplateService;
 
 public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {

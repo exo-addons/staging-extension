@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.AbstractJCRImportOperationHandler;
-import org.exoplatform.management.common.activities.ActivitiesExportTask;
-import org.exoplatform.management.common.activities.SpaceMetadataExportTask;
-import org.exoplatform.management.common.api.ActivityImportOperationInterface;
-import org.exoplatform.management.common.api.FileEntry;
-import org.exoplatform.management.common.api.FileImportOperationInterface;
+import org.exoplatform.management.common.FileEntry;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.importop.ActivityImportOperationInterface;
+import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
