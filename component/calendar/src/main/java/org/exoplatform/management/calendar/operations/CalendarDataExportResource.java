@@ -199,7 +199,7 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     if (events.size() > 0) {
       String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + calendar.getId().replace("_space_calendar", "");
       String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + calendar.getId() + "/";
-      exportActivities(exportTasks, spaceGroupId, CalendarExtension.CALENDAR_ACTIVITY_TYPE, prefix);
+      exportActivities(exportTasks, spaceGroupId, prefix, CALENDAR_ACTIVITY_TYPE);
     }
   }
 
@@ -211,7 +211,7 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
           List<CalendarEvent> events = calendarService.getUserEventByCalendar(username, Collections.list(calendar.getId()));
           exportTasks.add(new CalendarExportTask(type, calendar, events));
           String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + events.get(0).getCalendarId() + "/";
-          exportActivities(exportTasks, username, CalendarExtension.CALENDAR_ACTIVITY_TYPE, prefix);
+          exportActivities(exportTasks, username, prefix, CALENDAR_ACTIVITY_TYPE);
         }
       }
     } catch (Exception e) {

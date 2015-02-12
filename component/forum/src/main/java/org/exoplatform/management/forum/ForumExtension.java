@@ -44,9 +44,6 @@ import org.gatein.management.spi.ManagementExtension;
  */
 public class ForumExtension implements ManagementExtension {
 
-  public static final String POLL_ACTIVITY_TYPE = "ks-poll:spaces";
-  public static final String FORUM_ACTIVITY_TYPE = "ks-forum:spaces";
-
   public static final String PUBLIC_FORUM_TYPE = "public";
   public static final String SPACE_FORUM_TYPE = "space";
 

@@ -1,6 +1,7 @@
 package org.exoplatform.management.common.exportop;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.exoplatform.management.common.AbstractOperationHandler;
@@ -22,11 +23,11 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
   protected ActivityManager activityManager;
   protected IdentityManager identityManager;
 
-  protected void exportActivities(List<ExportTask> exportTasks, String id, String type, String pathPrefix) throws Exception {
+  protected void exportActivities(List<ExportTask> exportTasks, String identityId, String pathPrefix, String... type) throws Exception {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    Identity identity = getIdentity(id);
+    Identity identity = getIdentity(identityId);
     if (identity == null) {
-      log.warn("Can't export activities of null identity for id = " + id);
+      log.warn("Can't export activities of null identity for id = " + identityId);
       return;
     }
     RealtimeListAccess<ExoSocialActivity> listAccess = null;
@@ -42,9 +43,10 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
     if (listAccess.getSize() == 0) {
       return;
     }
+    List<String> types = Arrays.asList(type);
     ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
     for (ExoSocialActivity activity : activities) {
-      if (activity.getType() != null && activity.getType().equals(type)) {
+      if (activity.getType() != null && types.contains(activity.getType())) {
         if (!activity.isComment() && ((ActivityExportOperationInterface) this).isActivityValid(activity)) {
           addActivityWithComments(activitiesList, activity);
         }
@@ -55,17 +57,17 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
     }
   }
 
-  protected final void addActivityWithComments(List<ExoSocialActivity> activitiesList, String activityId, Object... params) {
+  protected final void addActivityWithComments(List<ExoSocialActivity> activitiesList, String activityId) {
     if (activityId == null || activityId.isEmpty()) {
       return;
     }
     ExoSocialActivity parentActivity = activityManager.getActivity(activityId);
     if (parentActivity != null) {
-      addActivityWithComments(activitiesList, parentActivity, params);
+      addActivityWithComments(activitiesList, parentActivity);
     }
   }
 
-  protected void addActivityWithComments(List<ExoSocialActivity> activitiesList, ExoSocialActivity parentActivity, Object... params) {
+  protected void addActivityWithComments(List<ExoSocialActivity> activitiesList, ExoSocialActivity parentActivity) {
     // FIXME getParentId not compatible with 4.0.7
     // if (parentActivity != null && parentActivity.getParentId() == null &&
     // !parentActivity.isComment()) {
@@ -76,7 +78,7 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
       if (commentsListAccess.getSize() > 0) {
         List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
         for (ExoSocialActivity comment : comments) {
-          this.refactorActivityComment(parentActivity, comment, params);
+          this.refactorActivityComment(parentActivity, comment);
           comment.isComment(true);
           // FIXME setParentId not compatible with 4.0.7
           // comment.setParentId(parentActivity.getId());
@@ -86,5 +88,5 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
     }
   }
 
-  protected void refactorActivityComment(ExoSocialActivity parentActivity, ExoSocialActivity comment, Object... params) {}
+  protected void refactorActivityComment(ExoSocialActivity parentActivity, ExoSocialActivity comment) {}
 }

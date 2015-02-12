@@ -51,7 +51,6 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
   public static final String FILTER_SEPARATOR = ":";
 
   private WCMConfigurationService wcmConfigurationService = null;
-  private IdentityManager identityManager = null;
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {

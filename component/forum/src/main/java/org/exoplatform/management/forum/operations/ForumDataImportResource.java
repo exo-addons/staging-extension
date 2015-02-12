@@ -25,7 +25,6 @@ import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.management.forum.ForumExtension;
 import org.exoplatform.poll.service.Poll;
 import org.exoplatform.poll.service.PollService;
-import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -67,7 +66,6 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     forumService = operationContext.getRuntimeContext().getRuntimeComponent(ForumService.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
-    userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
@@ -230,7 +228,7 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     } else {
       String forumId = activity.getTemplateParams().get("ForumId");
       String topicId = activity.getTemplateParams().get("TopicId");
-      Topic topic = forumService.getTopic(catId, forumId, topicId, userACL.getSuperUser());
+      Topic topic = forumService.getTopic(catId, forumId, topicId, null);
       if (comment == null) {
         forumService.saveActivityIdForOwnerPath(topic.getPath(), activity.getId());
       } else {
@@ -269,7 +267,7 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
         log.warn("Activity template params are inconsistent: '" + activity.getTitle() + "'.");
         return true;
       }
-      Topic topic = forumService.getTopic(catId, forumId, topicId, userACL.getSuperUser());
+      Topic topic = forumService.getTopic(catId, forumId, topicId, null);
       if (topic == null) {
         log.warn("Forum Topic not found. Cannot import activity '" + activity.getTitle() + "'.");
         return true;

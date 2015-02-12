@@ -83,11 +83,9 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
 
   private static final String GROUPS_PATH = "groupsPath";
 
-  private IdentityManager identityManager;
   private ManagementController managementController;
   private NodeHierarchyCreator nodeHierarchyCreator;
   private DataDistributionManager dataDistributionManager;
-  private RepositoryService repositoryService;
 
   // TODO For Space Dashboard export/import
   // private DataStorage dataStorage;
@@ -199,15 +197,14 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     while (i < size) {
       int length = i + 10 < size ? 10 : size - i;
       activities = spaceActivitiesList.load(i, length);
-      for (ExoSocialActivity exoSocialActivity : activities) {
+      for (ExoSocialActivity activity : activities) {
         // Don't export application activities
-        if (exoSocialActivity.getType().equals(SocialExtension.SITES_CONTENT_SPACES) || exoSocialActivity.getType().equals(SocialExtension.SITES_FILE_SPACES)
-            || exoSocialActivity.getType().equals(SocialExtension.FORUM_ACTIVITY_TYPE) || exoSocialActivity.getType().equals(SocialExtension.POLL_ACTIVITY_TYPE)
-            || exoSocialActivity.getType().equals(SocialExtension.WIKI_ACTIVITY_TYPE) || exoSocialActivity.getType().equals(SocialExtension.ANSWER_ACTIVITY_TYPE)
-            || exoSocialActivity.getType().equals(SocialExtension.CALENDAR_ACTIVITY_TYPE)) {
+        if (activity.getType().equals(CONTENT_ACTIVITY_TYPE) || activity.getType().equals(FILE_ACTIVITY_TYPE) || activity.getType().equals(FORUM_ACTIVITY_TYPE)
+            || activity.getType().equals(POLL_ACTIVITY_TYPE) || activity.getType().equals(WIKI_ACTIVITY_TYPE) || activity.getType().equals(ANSWER_ACTIVITY_TYPE)
+            || activity.getType().equals(CALENDAR_ACTIVITY_TYPE)) {
           continue;
         }
-        addActivityWithComments(activitiesList, exoSocialActivity);
+        addActivityWithComments(activitiesList, activity);
       }
       i += length;
     }

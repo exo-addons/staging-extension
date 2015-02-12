@@ -33,6 +33,14 @@ import org.gatein.management.api.operation.OperationHandler;
 
 public abstract class AbstractOperationHandler implements OperationHandler {
 
+  public static final String POLL_ACTIVITY_TYPE = "ks-poll:spaces";
+  public static final String FORUM_ACTIVITY_TYPE = "ks-forum:spaces";
+  public static final String CALENDAR_ACTIVITY_TYPE = "cs-calendar:spaces";
+  public static final String ANSWER_ACTIVITY_TYPE = "ks-answer:spaces";
+  public static final String WIKI_ACTIVITY_TYPE = "ks-wiki:spaces";
+  public static final String CONTENT_ACTIVITY_TYPE = "contents:spaces";
+  public static final String FILE_ACTIVITY_TYPE = "files:spaces";
+
   protected static final Log log = ExoLogger.getLogger(AbstractOperationHandler.class);
 
   protected static final String[] EMPTY_STRING_ARRAY = new String[0];
@@ -87,17 +95,17 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       if (userIdentity != null) {
         return userIdentity;
       } else {
-        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, id);
-
+        Identity spaceIdentity = null;
         // Try to see if space was renamed
-        if (spaceIdentity == null) {
-          Space space = spaceService.getSpaceByGroupId(id);
+        Space space = spaceService.getSpaceByGroupId(id);
+        if (space == null) {
+          space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + id);
           if (space == null) {
-            space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + id);
+            space = spaceService.getSpaceByPrettyName(id);
           }
-          if (space != null) {
-            spaceIdentity = getIdentity(space.getPrettyName());
-          }
+        }
+        if (space != null) {
+          spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, space.getPrettyName());
         }
         return spaceIdentity;
       }

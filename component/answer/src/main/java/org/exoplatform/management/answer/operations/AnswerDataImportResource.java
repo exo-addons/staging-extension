@@ -247,7 +247,7 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
     }
     Question question = faqService.getQuestionById(questionId);
     if (question == null) {
-      log.warn("Question not found. Cannot import activity '" + comment.getTitle() + "'.");
+      log.warn("Question not found. Cannot import activity '" + activity.getTitle() + "'.");
       return true;
     }
     if (comment != null) {

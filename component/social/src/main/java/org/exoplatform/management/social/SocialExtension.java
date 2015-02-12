@@ -61,14 +61,6 @@ public class SocialExtension implements ManagementExtension {
   public static final String SITES_IMPORT_RESOURCE_PATH = "/site";
   public static final String GROUP_SITE_RESOURCE_PATH = "/group/spaces";
 
-  public static final String POLL_ACTIVITY_TYPE = "ks-poll:spaces";
-  public static final String FORUM_ACTIVITY_TYPE = "ks-forum:spaces";
-  public static final String CALENDAR_ACTIVITY_TYPE = "cs-calendar:spaces";
-  public static final String ANSWER_ACTIVITY_TYPE = "ks-answer:spaces";
-  public static final String WIKI_ACTIVITY_TYPE = "ks-wiki:spaces";
-  public static final String SITES_CONTENT_SPACES = "contents:spaces";
-  public static final String SITES_FILE_SPACES = "files:spaces";
-
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration socialRegistration = context.registerManagedComponent("social");

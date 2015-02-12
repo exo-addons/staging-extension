@@ -44,7 +44,6 @@ import org.gatein.management.spi.ManagementExtension;
  */
 public class AnswerExtension implements ManagementExtension {
 
-  public static final String ANSWER_ACTIVITY_TYPE = "ks-answer:spaces";
   public static final FAQSetting EMPTY_FAQ_SETTIGNS = new FAQSetting();
   static {
     EMPTY_FAQ_SETTIGNS.setDisplayMode("");
@@ -82,8 +81,7 @@ public class AnswerExtension implements ManagementExtension {
   }
 
   @Override
-  public void destroy() {
-  }
+  public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {

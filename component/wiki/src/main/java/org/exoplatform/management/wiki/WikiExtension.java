@@ -37,53 +37,37 @@ import org.gatein.management.spi.ExtensionContext;
 import org.gatein.management.spi.ManagementExtension;
 
 /**
- * Created by The eXo Platform SAS
- * Author : eXoPlatform
- *          exo@exoplatform.com
- * Mar 5, 2014  
+ * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
+ * 5, 2014
  */
 public class WikiExtension implements ManagementExtension {
-  public static final String WIKI_ACTIVITY_TYPE = "ks-wiki:spaces";
-
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration wikiRegistration = context.registerManagedComponent("wiki");
 
-    ManagedResource.Registration wiki = 
-        wikiRegistration.registerManagedResource(description("Wiki resources."));
-    
-    wiki.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiReadResource(), 
-                                  description("Lists available wikis"));
-    
+    ManagedResource.Registration wiki = wikiRegistration.registerManagedResource(description("Wiki resources."));
+
+    wiki.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiReadResource(), description("Lists available wikis"));
+
     ManagedResource.Registration portal = wiki.registerSubResource("portal", description("portal wikis"));
-    portal.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.PORTAL), 
-                                    description("portal wiki resources"));
-    portal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.PORTAL), 
-                                    description("export portal wiki"));
-    portal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.PORTAL), 
-                                    description("import portal wiki"));
-    
+    portal.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.PORTAL), description("portal wiki resources"));
+    portal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.PORTAL), description("export portal wiki"));
+    portal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.PORTAL), description("import portal wiki"));
+
     ManagedResource.Registration group = wiki.registerSubResource("group", description("group wikis"));
-    group.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.GROUP), 
-                                    description("group wiki resources"));
-    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.GROUP), 
-                                    description("export group wiki"));
-    group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.GROUP), 
-                                    description("import groups wiki"));
-    
+    group.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.GROUP), description("group wiki resources"));
+    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.GROUP), description("export group wiki"));
+    group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.GROUP), description("import groups wiki"));
+
     ManagedResource.Registration user = wiki.registerSubResource("user", description("users wikis"));
-    user.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.USER), 
-                                    description("users wiki resources"));
-    user.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.USER), 
-                                    description("export users wiki"));
-    user.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.USER), 
-                                    description("import users wiki"));
-    
+    user.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.USER), description("users wiki resources"));
+    user.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.USER), description("export users wiki"));
+    user.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.USER), description("import users wiki"));
+
   }
-  
+
   @Override
-  public void destroy() {
-  }
+  public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {

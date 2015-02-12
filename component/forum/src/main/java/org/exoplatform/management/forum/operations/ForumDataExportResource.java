@@ -23,15 +23,15 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
-import org.exoplatform.forum.service.ForumPageList;
 import org.exoplatform.forum.service.ForumService;
 import org.exoplatform.forum.service.Topic;
 import org.exoplatform.forum.service.Utils;
 import org.exoplatform.management.common.exportop.AbstractJCRExportOperationHandler;
-import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.ActivityExportOperationInterface;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
 import org.exoplatform.management.forum.ForumExtension;
@@ -44,6 +44,7 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -58,17 +59,17 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumDataExportResource extends AbstractJCRExportOperationHandler {
+public class ForumDataExportResource extends AbstractJCRExportOperationHandler implements ActivityExportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(ForumDataExportResource.class);
 
   private ForumService forumService;
   private PollService pollService;
   private KSDataLocation dataLocation;
-  private IdentityManager identityManager;
 
   private boolean isSpaceForumType;
   private String type;
+  private ThreadLocal<String> formIdThreadLocal = new ThreadLocal<String>();
 
   public ForumDataExportResource(boolean isSpaceForumType) {
     this.isSpaceForumType = isSpaceForumType;
@@ -84,6 +85,7 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler {
     dataLocation = operationContext.getRuntimeContext().getRuntimeComponent(KSDataLocation.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
 
@@ -157,51 +159,66 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler {
       exportNode(parentNode, exportTasks, workspace, categoryId, forumId);
 
       // export Activities
-      exportActivities(exportTasks, categoryId, forumId);
+      String prefix = "forum/" + type + "/" + ((forumId == null || forumId.isEmpty()) ? categoryId : forumId);
+      if (isSpaceForumType) {
+        categoryId = forumService.getCategoryIncludedSpace().getId();
+        Forum forum = forumService.getForum(categoryId, forumId);
+        formIdThreadLocal.set(forum.getId());
+        exportActivities(exportTasks, StringUtils.isEmpty(spacePrettyName) ? forum.getModerators()[0] : spacePrettyName, prefix, FORUM_ACTIVITY_TYPE, POLL_ACTIVITY_TYPE);
+      } else {
+        @SuppressWarnings("deprecation")
+        List<Forum> forums = forumService.getForums(categoryId, null);
+        for (Forum forum : forums) {
+          exportActivities(exportTasks, StringUtils.isEmpty(spacePrettyName) ? forum.getModerators()[0] : spacePrettyName, prefix, FORUM_ACTIVITY_TYPE, POLL_ACTIVITY_TYPE);
+        }
+      }
+
     } catch (Exception exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting forum", exception);
     }
   }
 
-  private void exportActivities(List<ExportTask> exportTasks, String categoryId, String forumId) throws Exception {
-    log.info("export forum activities");
-    List<String> forumIds = new ArrayList<String>();
-    if (isSpaceForumType) {
-      categoryId = forumService.getCategoryIncludedSpace().getId();
-      forumIds.add(forumId);
+  @Override
+  public boolean isActivityValid(ExoSocialActivity activity) throws Exception {
+    if (activity.isComment()) {
+      return true;
+    }
+    String originalForumId = formIdThreadLocal.get();
+    if (activity.getTemplateParams().containsKey("PollLink")) {
+      String topicId = activity.getTemplateParams().get("Id");
+      if (topicId == null) {
+        log.warn("Poll with null id of topic. Cannot import activity '" + activity.getTitle() + "'.");
+        return false;
+      }
+      String pollId = topicId.replace(Utils.TOPIC, Utils.POLL);
+      Poll poll = pollService.getPoll(pollId);
+      if (poll == null) {
+        log.warn("Poll not found. Cannot import activity '" + activity.getTitle() + "'.");
+        return false;
+      }
+      String forumId = poll.getParentPath().substring(0, poll.getParentPath().indexOf("/topic"));
+      forumId = forumId.substring(forumId.lastIndexOf("/") + 1);
+      return forumId.equals(originalForumId);
+    }
+    String catId = activity.getTemplateParams().get("CateId");
+    if (catId == null) {
+      return true;
     } else {
-      @SuppressWarnings("deprecation")
-      List<Forum> forums = forumService.getForums(categoryId, null);
-      for (Forum forum : forums) {
-        forumIds.add(forum.getId());
+      String forumId = activity.getTemplateParams().get("ForumId");
+      String topicId = activity.getTemplateParams().get("TopicId");
+      if (forumId == null || topicId == null) {
+        log.warn("Activity template params are inconsistent: '" + activity.getTitle() + "'.");
+        return false;
+      }
+      if (!forumId.equals(originalForumId)) {
+        return false;
+      }
+      Topic topic = forumService.getTopic(catId, forumId, topicId, null);
+      if (topic == null) {
+        log.warn("Forum Topic not found. Cannot import activity '" + activity.getTitle() + "'.");
+        return false;
       }
     }
-    for (String tmpForumId : forumIds) {
-      ForumPageList topicsListAccess = ((ForumPageList) forumService.getPageTopic(categoryId, tmpForumId, null, null));
-      if (topicsListAccess.getAvailable() == 0) {
-        continue;
-      }
-      @SuppressWarnings("unchecked")
-      List<Topic> topics = topicsListAccess.getAll();
-      List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-      for (Topic topic : topics) {
-        String activityId = forumService.getActivityIdForOwnerId(topic.getId());
-        addActivityWithComments(activitiesList, activityId);
-
-        if (topic.getIsPoll()) {
-          String pollId = topic.getId().replace(Utils.TOPIC, Utils.POLL);
-          Poll poll = pollService.getPoll(pollId);
-          if (poll != null) {
-            String pollPath = poll.getParentPath() + "/" + poll.getId();
-            String pollActivityId = pollService.getActivityIdForOwner(pollPath);
-            addActivityWithComments(activitiesList, pollActivityId);
-          }
-        }
-      }
-      if (!activitiesList.isEmpty()) {
-        String prefix = "forum/" + type + "/" + ((forumId == null || forumId.isEmpty()) ? categoryId : forumId);
-        exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
-      }
-    }
+    return true;
   }
 }

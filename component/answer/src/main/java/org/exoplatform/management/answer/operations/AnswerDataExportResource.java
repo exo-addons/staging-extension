@@ -29,7 +29,7 @@ import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
 import org.exoplatform.management.common.InputStreamWrapper;
 import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
-import org.exoplatform.management.common.exportop.ActivitiesExportTask;
+import org.exoplatform.management.common.exportop.ActivityExportOperationInterface;
 import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -37,6 +37,7 @@ import org.exoplatform.social.core.manager.IdentityManager;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -51,16 +52,16 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class AnswerDataExportResource extends AbstractExportOperationHandler {
+public class AnswerDataExportResource extends AbstractExportOperationHandler implements ActivityExportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataExportResource.class);
 
   private FAQService faqService;
 
-  private IdentityManager identityManager;
-
   private boolean isSpaceType;
   private String type;
+
+  private ThreadLocal<Category> categoryThreadLocal = new ThreadLocal<Category>();
 
   public AnswerDataExportResource(boolean isSpaceType) {
     this.isSpaceType = isSpaceType;
@@ -73,6 +74,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler {
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+    identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
     String name = operationContext.getAttributes().getValue("filter");
 
@@ -141,39 +143,58 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler {
       }
     }
     exportTasks.add(new AnswerExportTask(type, category, questions));
-    exportActivities(exportTasks, category, questions);
+
+    categoryThreadLocal.set(category);
+    String prefix = "answer/" + type + "/" + category.getId() + "/";
+    exportActivities(exportTasks, space == null ? category.getModerators()[0] : space.getPrettyName(), prefix, ANSWER_ACTIVITY_TYPE);
 
     if (exportSpaceMetadata && isSpaceType) {
       if (space == null) {
         log.warn("Should export space DATA but it is null");
       } else {
-        String prefix = "answer/space/" + category.getId() + "/";
+        prefix = "answer/space/" + category.getId() + "/";
         exportTasks.add(new SpaceMetadataExportTask(space, prefix));
       }
     }
   }
 
-  private void exportActivities(List<ExportTask> exportTasks, Category category, List<Question> questions) throws Exception {
-    log.info("export answer activities");
-    List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
-    for (Question question : questions) {
-      String activityId = faqService.getActivityIdForQuestion(question.getPath());
-      addActivityWithComments(activitiesList, activityId, question);
-    }
-    if (!activitiesList.isEmpty()) {
-      String prefix = "answer/" + type + "/" + category.getId() + "/";
-      exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
-    }
-  }
-
   @Override
-  protected void refactorActivityComment(ExoSocialActivity activity, ExoSocialActivity comment, Object... params) {
+  protected void refactorActivityComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     if (activity.getTemplateParams().containsKey("Link") && activity.getTemplateParams().get("Link").contains("questionId=")) {
-      Question question = (Question) params[0];
+      String questionId = activity.getTemplateParams().get("Id");
+      Question question = null;
+      try {
+        question = faqService.getQuestionById(questionId);
+      } catch (Exception e) {
+        throw new RuntimeException("error while retrieving question", e);
+      }
       String commentActivityId = faqService.getActivityIdForComment(question.getPath(), comment.getId(), question.getLanguage());
       if (commentActivityId != null && commentActivityId.equals(activity.getId())) {
         activity.getTemplateParams().put("Link", comment.getId());
       }
+    }
+  }
+
+  @Override
+  public boolean isActivityValid(ExoSocialActivity activity) throws Exception {
+    if (activity.isComment()) {
+      return true;
+    } else {
+      String questionId = activity.getTemplateParams().get("Id");
+      if (questionId == null) {
+        log.warn("An activity that is not a question nor an answer nor a comment was found in Answer activities.");
+        return false;
+      }
+      Question question = faqService.getQuestionById(questionId);
+      if (question == null) {
+        log.warn("Question not found. Cannot import activity '" + activity.getTitle() + "'.");
+        return false;
+      }
+      if (categoryThreadLocal.get() == null) {
+        log.warn("Cannot import activity, no category is selected for '" + activity.getTitle() + "'.");
+        return false;
+      }
+      return categoryThreadLocal.get().getId().equals(question.getCategoryId());
     }
   }
 }
