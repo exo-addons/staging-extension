@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
@@ -77,6 +76,8 @@ import com.thoughtworks.xstream.XStream;
 public class SocialDataImportResource extends AbstractImportOperationHandler implements ActivityImportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
+
+  final private static String MANAGED_ENTRY_PATH_PREFIX = "social/space/";
 
   private OrganizationService organizationService;
   private IdentityManager identityManager;
@@ -196,17 +197,10 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
       log.warn("Cannot create temporary file.", e);
     } finally {
       if (tmpZipFile != null) {
-        try {
-          String tempFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "");
-          File tempFolderFile = new File(tempFolderPath);
-          if (tempFolderFile.exists()) {
-            FileUtils.deleteDirectory(tempFolderFile);
-          }
-          FileUtils.forceDelete(tmpZipFile);
-        } catch (Exception e) {
-          log.warn("Unable to delete temp file: " + tmpZipFile.getAbsolutePath() + ". Not blocker.");
-          tmpZipFile.deleteOnExit();
-        }
+        String tempFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "");
+        File tempFolderFile = new File(tempFolderPath);
+        deleteTempFile(tempFolderFile);
+        deleteTempFile(tmpZipFile);
       }
     }
 
@@ -626,12 +620,11 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     List<String> ignoredSpaces = new ArrayList<String>();
     try {
       Map<String, ZipOutputStream> zipOutputStreamMap = new HashMap<String, ZipOutputStream>();
-      String managedEntryPathPrefix = "social/space/";
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
         String zipEntryPath = entry.getName();
         // Skip entries not managed by this extension
-        if (!zipEntryPath.startsWith(managedEntryPathPrefix)) {
+        if (!zipEntryPath.startsWith(MANAGED_ENTRY_PATH_PREFIX)) {
           continue;
         }
 
@@ -641,7 +634,7 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
           createFile(new File(targetFolderPath + replaceSpecialChars(zipEntryPath)), true);
           continue;
         }
-        int idBeginIndex = ("social/space/").length();
+        int idBeginIndex = MANAGED_ENTRY_PATH_PREFIX.length();
         String spacePrettyName = zipEntryPath.substring(idBeginIndex, zipEntryPath.indexOf("/", idBeginIndex));
         if (ignoredSpaces.contains(spacePrettyName)) {
           continue;

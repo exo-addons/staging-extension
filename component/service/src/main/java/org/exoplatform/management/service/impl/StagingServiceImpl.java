@@ -70,6 +70,7 @@ public class StagingServiceImpl implements StagingService {
     try {
       file = File.createTempFile("staging", "-export.zip");
       file.deleteOnExit();
+      // FileOutputStream will be closed by ZipOutputStream.close
       exportFileOS = new ZipOutputStream(new FileOutputStream(file));
     } catch (Exception ex) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while creating a zip temp file to export resources", ex);

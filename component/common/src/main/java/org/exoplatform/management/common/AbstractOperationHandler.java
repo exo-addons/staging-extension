@@ -70,7 +70,10 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         FileUtils.forceDelete(fileToImport);
       }
     } catch (Exception e) {
-      log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
+      if (log.isDebugEnabled()) {
+        log.debug("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ".Not blocker.", e);
+      }
+      fileToImport.deleteOnExit();
     }
   }
 

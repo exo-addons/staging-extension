@@ -106,7 +106,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         exportOptionsTmp.put("filter/" + resourcePath, null);
       }
     }
-    if(!exportOptionsTmp.isEmpty()) {
+    if (!exportOptionsTmp.isEmpty()) {
       export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptionsTmp);
     }
   }
@@ -227,6 +227,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     try {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
       tmpFile = File.createTempFile("staging", "-export.zip");
+      tmpFile.deleteOnExit();
 
       outputStream = new FileOutputStream(tmpFile);
       managedResponse.writeResult(outputStream, false);
@@ -360,7 +361,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       try {
         FileUtils.forceDelete(tempFile);
       } catch (Exception e) {
-        log.warn("Unable to delete temp file: " + tempFile.getAbsolutePath() + ". Not blocker.");
+        if (log.isDebugEnabled()) {
+          log.debug("Unable to delete temp file: " + tempFile.getAbsolutePath() + ". Not blocker.");
+        }
         tempFile.deleteOnExit();
       }
     }

@@ -576,13 +576,19 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
-  protected static void deleteTempFile(File fileToImport) {
+  protected static void deleteTempFile(File file) {
     try {
-      if (fileToImport != null && fileToImport.exists()) {
-        FileUtils.forceDelete(fileToImport);
+      if (file != null && file.exists()) {
+        if (file.isDirectory()) {
+          FileUtils.deleteDirectory(file);
+        } else {
+          FileUtils.forceDelete(file);
+        }
       }
     } catch (Exception e) {
-      log.warn("Cannot delete temporary file from disk: " + fileToImport.getAbsolutePath() + ". It seems we have an opened InputStream. Anyway, it's not blocker.", e);
+      if (log.isDebugEnabled()) {
+        log.debug("Cannot delete temporary file from disk: " + file.getAbsolutePath() + ". Not blocker.", e);
+      }
     }
   }
 

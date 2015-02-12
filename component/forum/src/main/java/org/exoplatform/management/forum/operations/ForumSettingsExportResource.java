@@ -43,32 +43,46 @@ public class ForumSettingsExportResource extends AbstractExportOperationHandler 
 
     if (isExportResource(operationContext, "general-administration")) {
       String entryPath = "forum/settings/" + SYSTEM_ADMINISTRATION;
-      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getAdministrationLocation(), entryPath, true, false));
+      String path = sanitizePath(dataLocation.getAdministrationLocation());
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, path, entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "banned-ip")) {
       String entryPath = "forum/settings/" + BANNED_IP;
-      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getBanIPLocation(), entryPath, true, false));
+      String path = sanitizePath(dataLocation.getBanIPLocation());
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, path, entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "user-profiles")) {
       String entryPath = "forum/settings/" + USER_PROFLES;
-      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getUserProfilesLocation(), entryPath, true, false));
+      String path = sanitizePath(dataLocation.getUserProfilesLocation());
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, path, entryPath, true, false));
       entryPath = "forum/settings/" + USER_AVATARS;
-      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getAvatarsLocation(), entryPath, true, false));
+      path = sanitizePath(dataLocation.getAvatarsLocation());
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, path, entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "bb-codes")) {
       String entryPath = "forum/settings/" + BB_CODES;
-      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getBBCodesLocation(), entryPath, true, false));
+      String path = sanitizePath(dataLocation.getBBCodesLocation());
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, path, entryPath, true, false));
     }
 
     if (isExportResource(operationContext, "tags")) {
       String entryPath = "forum/settings/" + TAGS;
-      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, dataLocation.getTagsLocation(), entryPath, true, false));
+      String path = sanitizePath(dataLocation.getTagsLocation());
+      exportTasks.add(new JCRNodeExportTask(repositoryService, workspace, path, entryPath, true, false));
     }
 
     resultHandler.completed(new ExportResourceModel(exportTasks));
+  }
+
+  private String sanitizePath(String path) {
+    if (path.startsWith("/")) {
+      return path;
+    } else {
+      return "/" + path;
+    }
   }
 
   private boolean isExportResource(OperationContext operationContext, String resourceName) {
