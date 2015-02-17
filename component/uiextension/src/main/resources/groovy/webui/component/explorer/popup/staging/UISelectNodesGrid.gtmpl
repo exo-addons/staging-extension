@@ -14,35 +14,70 @@
    else if(beanFields != null && beanFields.length > 0)
       colnum = beanFields.length;
 
-   def colWidth = ["100px", "220px", "80px", "145px", "145px", "130px"];
-
+   def colWidth = ["110px", "175px", "50px", "145px", "145px", "130px"];
+   
    UIComponent uiParent = uicomponent.getParent();
    String name = uicomponent.getLabel();
    UIForm uiForm = uicomponent.getAncestorOfType(UIForm.class);
 %>
 <div id="$uicomponent.id">
-<div class="uiListGrid" style="width: auto;">
-	<div class="uiBox noRounded" style="margin-bottom:7px;">
+<div class="uiListGrid">
+	<div class="uiBox noRounded">
 		<div class="titleTable clearfix">
-			<div class="lineLeft" style="cursor:default;"><span></span></div>
-         <% 
-	         int i = 0;
-	         for (field in beanFields) { %>
-   			<div class="columnName" style="width:<%=colWidth[i]%>;">
-   				<%=_ctx.appRes(uiParent.getName() + ".header." + field)%>
+			<div class="lineLeft"><span></span></div>
+         	<div class="columnName" style="width:<%=colWidth[0]%>;">
+   				<%=_ctx.appRes("SelectNodesComponent.header.title")%>
+   				<br/>
+				<% uiForm.renderField(uiForm.FILTER_CONTENT_FIELD_NAME);%>
+				<i class="uiIconSearch uiIconLightGray"></i>
    			</div>
-			<div class="lineLeft" style="cursor:default;"><span></span></div>
-          <% i++;} %>
-         <%	if (beanActions != null && beanActions.length > 0) { %>
-   			<div class="columnName" style="width:50px;">
-   				<%=_ctx.appRes(uiParent.getName() + ".header.action")%>
+			<div class="lineLeft"><span></span></div>
+
+         	<div class="columnName" style="width:<%=colWidth[1]%>;">
+   				<%=_ctx.appRes("SelectNodesComponent.header.path")%>
+   				<br/>
    			</div>
-        <% } %>
+			<div class="lineLeft"><span></span></div>
+
+         	<div class="columnName" style="width:<%=colWidth[2]%>;">
+   				<%=_ctx.appRes("SelectNodesComponent.header.published")%>
+   				<br/>
+				<% uiForm.renderField(uiForm.PUBLISHED_CONTENT_ONLY_FIELD_NAME) ;%>&nbsp;&nbsp;
+			</div>
+			<div class="lineLeft"><span></span></div>
+
+         	<div class="columnName" style="width:<%=colWidth[3]%>;">
+   				<%=_ctx.appRes("SelectNodesComponent.header.sourceModificationDate")%>
+   				<br/>
+				<% uiForm.renderField(uiForm.PUBLICATION_DATE_FIELD_NAME);%>
+   			</div>
+			<div class="lineLeft"><span></span></div>
+         	<div class="columnName" style="width:<%=colWidth[4]%>;">
+   				<%=_ctx.appRes("SelectNodesComponent.header.targetModificationDate")%>
+   			</div>
+			<div class="lineLeft"><span></span></div>
+         	<div class="columnName" style="width:<%=colWidth[5]%>;">
+   				<%=_ctx.appRes("SelectNodesComponent.header.stateLocalized")%>
+   				<br/>
+				<% uiForm.renderField(uiForm.CONTENT_STATE_FIELD_NAME);%>
+   			</div>
+			<div class="lineLeft"><span></span></div>
+
+			<% if (beanActions != null && beanActions.length > 0) { %>
+	   			<div class="columnName headerActions">
+	   				<%=_ctx.appRes("SelectNodesComponent.header.action")%>
+	   				<br/>
+	   				<% def link = uiForm.event("SelectAll").replace("javascript:","");%>
+					<button class="btn" onclick="$link;event.preventDefault();">
+						<%=_ctx.appRes(uiForm.getName() + ".label.selectAll")%>
+					</button>
+	   			</div>
+			<% } %>
      </div>
 
       <% if (uicomponent.getUIPageIterator().getAvailable() < 1)
       { %>
-      	 <div class="rowView odd clearfix" style="text-align: center;">
+      	 <div class="rowView odd clearfix emptyRow">
             <%=_ctx.appRes("UIGrid.msg.empty")%>
          </div>
       <% }
@@ -56,30 +91,32 @@
             else rowClass = "odd rowView clearfix";
             even = !even;
       %>
-      <div class="$rowClass" style="padding-left:3px;">
+      <div class="$rowClass">
          <%
                EntityEncoder encoder = HTMLEntityEncoder.getInstance();
-	           i = 0;
+         		int i = 0;
                for (field in beanFields)
                {
 			      def fieldValue = uicomponent.getFieldValue(bean, field);
                   def cssClass = "";
                   if(fieldValue != null) {
                      def fieldClass = fieldValue.getClass();
-                     if(fieldClass == Integer.class)	cssClass = "number";
-                     else if(java.util.Date.class.isAssignableFrom(fieldClass)) {
+                     if(fieldClass == Integer.class) {
+                       cssClass = "number";
+                     } else if(java.util.Date.class.isAssignableFrom(fieldClass)) {
                         def dateFormat = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
                         cssClass = "columnDatetime";
                         fieldValue = dateFormat.format(fieldValue);
-                  }
-                  else cssClass = "";
+                  	 } else {
+                  	   cssClass = "";
+                  	 }
                   } else {
                      fieldValue = "";
                   }
                   String value = encoder.encode(fieldValue.toString());
                   %>
                   <div class="column $cssClass" title="$value" style="width:<%=colWidth[i]%>;">$value</div>
-				  <div class="lineLeft" style="cursor:default;"><span></span></div>
+				  <div class="lineLeft"><span></span></div>
                   <%
                   i++;
                }
@@ -87,14 +124,14 @@
                {
          %>
            <% if(bean.getState() != null && !bean.getState().getKey().equals("not_found_source") && !bean.getState().getKey().equals("unkown")) { %>
-	            <div class="column"  style="padding-left: 22px;width:auto;">
+	            <div class="column actions">
 	               	   <%
 	                     def beanIdField = uicomponent.getBeanIdField();
 	                     def beanId = uicomponent.getBeanIdFor(bean);
 	                     for (action in beanActions)
 	                     {
 	                        if (action == null) continue;
-	                        String title = _ctx.appRes(uiParent.getName() + ".action.title." + action);
+	                        String title = _ctx.appRes("SelectNodesComponent.action.title." + action);
 	                        String actionLink = "";
 	                        if (uiForm != null)
 	                        {
@@ -105,7 +142,7 @@
 	                           actionLink = uiParent.event(action, beanId);
 	                        }
 		               %>
-		               	<img onclick="$actionLink" alt="$action" title="$title" src="/eXoResources/skin/sharedImages/Blank.gif" class="${action}Icon"/>
+		               	<img onclick="$actionLink" alt="$action" title="$title" src="/staging-extension-portlet/skin/images/${action}.gif"/>
 		               <% } %>
 	            </div>
             <% } %>

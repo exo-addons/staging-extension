@@ -20,10 +20,10 @@
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
 		</msg>
 		<state>
-			<not_found_source>Manquant sur le server source</not_found_source>
-			<not_found_target>Manquant sur le serveur cible</not_found_target>
-			<modified_source>Modifié sur le server source</modified_source>
-			<modified_target>Modifié sur le serveur cible</modified_target>
+			<not_found_source>Manquant (ici)</not_found_source>
+			<not_found_target>Manquant (serveur cible)</not_found_target>
+			<modified_source>Modifié (ici)</modified_source>
+			<modified_target>Modifié (serveur cible)</modified_target>
 			<same>Egaux</same>
 			<unkown>Inconnu</unkown>
 			<all>Tout</all>
@@ -36,8 +36,8 @@
 			<password>Mot de passe</password>
 			<synchronizationNode>Noeud</synchronizationNode>
 			<publishOnTarget>Publier sur le serveur cible</publishOnTarget>
-      <currentContent>Contenu courant</currentContent>
-      <currentSubContents>Sous-contenus du contenu courant</currentSubContents>
+			<currentContent>Contenu courant</currentContent>
+			<currentSubContents>Sous-contenus du contenu courant</currentSubContents>
 		</label>
 		<action>
 			<Select>Modifier la sélection</Select>
@@ -53,17 +53,13 @@
 			<action>Action</action>
 		</header>
 	</PushContentPopupComponent>
-	<SelectNodesPopupWindow>
-		<title>
-			<SelectNodesPopupComponent>Sélectionner manuellement les contenus à synchroniser</SelectNodesPopupComponent>
-		</title>
-	</SelectNodesPopupWindow>
-	<SelectNodesPopupComponent>
+	<SelectNodesComponent>
 		<header>
 			<title>Titre</title>
-			<path>Chemin</path>
+			<path>Chemin d'accès</path>
 			<lastModifierUserName>Modifié par</lastModifierUserName>
-			<sourceModificationDate>Modifié le (source)</sourceModificationDate>
+			<published>Publié</published>
+			<sourceModificationDate>Modifié le (ici)</sourceModificationDate>
 			<targetModificationDate>Modifié le (cible)</targetModificationDate>
 			<stateLocalized>Etat</stateLocalized>
 			<action>Action</action>
@@ -77,14 +73,14 @@
 			<contentState>Etat</contentState>
 			<search>Rechercher</search>
 			<filter>Filtrer</filter>
-			<modifiedAfter>Modifié sur ce serveur, après</modifiedAfter>
+			<modifiedAfter>Modifié ici, après</modifiedAfter>
 			<publishedContentOnly>Contenu publié seulement</publishedContentOnly>
-			<selectContent>Résultat du filtre</selectContent>
+			<selectContent>Contenus</selectContent>
 			<selectedContent>Contenus sélectionnés</selectedContent>
 			<selectAll>Sélectionner tout</selectAll>
 			<deleteAll>Supprimer Tout</deleteAll>
 		</label>
-	</SelectNodesPopupComponent>
+	</SelectNodesComponent>
 	<UIPopupWindow>
 		<title>
 			<PushContentPopupComponent>Synchroniser un contenu</PushContentPopupComponent>

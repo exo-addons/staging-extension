@@ -260,6 +260,13 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
           if (!session.itemExists(contentPath)) {
             log.warn("Document '" + contentPath + "' not found. Cannot import activity '" + activity.getTitle() + "'.");
             return true;
+          } else {
+            // delete old activity
+            Node node = (Node) session.getItem(contentPath);
+            if (node.isNodeType("exo:activityInfo") && activityManager != null) {
+              String activityId = ActivityTypeUtils.getActivityId(node);
+              deleteActivity(activityId);
+            }
           }
         } finally {
           if (session != null) {

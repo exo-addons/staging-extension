@@ -2,67 +2,23 @@
 	<%
 	  uiform.begin()
 	%>
-	<div>
-		<div class="controls FL" style="margin:10px;">
-			<% uiform.renderField("contentState") ; %>
-		</div>
-		<div class="controls uiSearchInput FR" style="margin:10px;">
-			<input name="filter" type="text" name="filter" id="filter"
-				placeholder='<%=_ctx.appRes(uicomponent.getName() + ".label.search")%>'>
-		</div>
+	<div class="ClearBoth">
+		<h5 class="FL"><%=_ctx.appRes(uicomponent.getName() + ".label.selectContent")%></h5>
+		<hr class="FR withLabel">
 	</div>
-	<br>
-	<br>
-	<div style="clear:both;">
-		<div class="controls FL" style="line-height: 35px;margin:10px;">
-			<% uiform.renderField("publishedContentOnly") ;%>&nbsp;&nbsp;
-			<%=_ctx.appRes(uicomponent.getName() + ".label.publishedContentOnly")%>
-		</div>
-		<div class="controls FR" style="margin:10px;">
-			<%=_ctx.appRes(uicomponent.getName() + ".label.modifiedAfter")%>
-			<% uiform.renderField("modifiedAfter") ; %>
-		</div>
+	<div class="ClearBoth">
+		<%
+		  uiform.renderField("selectNodesGrid");
+		%>
 	</div>
-	<br>
-	<br>
-	<% String link = uicomponent.event("Filter").replace("javascript:",""); %>
-	<div style="clear:both;">
-		<div class="controls FR uiAction" style="padding:0;">
-			<button class="btn btn-large" onclick="$link;event.preventDefault();" style="width:150px;"><%=_ctx.appRes(uicomponent.getName() + ".label.filter")%></button>
-		</div>
-		<hr class="FR" style="margin: 20px 5px;width: 65%;">
-		<h5 class="FL" style="margin-top: 10px;"><%=_ctx.appRes(uicomponent.getName() + ".label.selectContent")%></h5>
-	</div>
-	<br>
-	<br>
-	<div style="clear:both;">
-		<div class="controls">
-			<%
-			  uiform.renderField("selectNodesGrid");
-			%>
-		</div>
-	</div>
-	<% link = uicomponent.event("SelectAll").replace("javascript:",""); %>
-	<div style="clear:both;">
-		<div class="controls FR uiAction" style="padding:0;">
-			<button class="btn btn-large" onclick="$link;event.preventDefault();" style="width:150px;"><%=_ctx.appRes(uicomponent.getName() + ".label.selectAll")%></button>
-		</div>
+	<div class="ClearBoth">
 		<h5 class="FL"><%=_ctx.appRes(uicomponent.getName() + ".label.selectedContent")%></h5>
-		<hr class="FR" style="margin: 20px 5px;;width: 65%;">
+		<hr class="FR withLabel">
 	</div>
-	<div style="clear:both;">
-		<div class="controls">
-			<%
-			  uiform.renderField("uiSelectedNodesGrid");
-			%>
-		</div>
-	</div>
-	<% link = uicomponent.event("DeleteAll").replace("javascript:",""); %>
-	<div style="clear:both;">
-		<div class="controls FR uiAction" style="padding:0;">
-			<button class="btn btn-large" onclick="$link;event.preventDefault();" style="width:150px;"><%=_ctx.appRes(uicomponent.getName() + ".label.deleteAll")%></button>
-		</div>
-		<hr class="FR" style="margin: 20px 5px;;width: 82%;">
+	<div class="ClearBoth">
+		<%
+		  uiform.renderField("uiSelectedNodesGrid");
+		%>
 	</div>
 	<%
 	  uiform.end()

@@ -20,10 +20,10 @@
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>
 		</msg>
 		<state>
-			<not_found_source>Not found on source</not_found_source>
-			<not_found_target>Not found on target</not_found_target>
-			<modified_source>Modified on source</modified_source>
-			<modified_target>Modified on target</modified_target>
+			<not_found_source>Not found (here)</not_found_source>
+			<not_found_target>Not found (target)</not_found_target>
+			<modified_source>Modified (source)</modified_source>
+			<modified_target>Modified (target)</modified_target>
 			<same>Same</same>
 			<unkown>Unknown</unkown>
 			<all>All</all>
@@ -36,8 +36,8 @@
 			<password>Password</password>
 			<synchronizationNode>Node</synchronizationNode>
 			<publishOnTarget>Publish on target server</publishOnTarget>
-			<currentContent>Current Content</currentContent>
-			<currentSubContents>Sub contents of the current content</currentSubContents>
+      <currentContent>Current Content</currentContent>
+      <currentSubContents>Sub contents of the current content</currentSubContents>
 		</label>
 		<action>
 			<Select>Edit selection</Select>
@@ -53,17 +53,13 @@
 			<action>Action</action>
 		</header>
 	</PushContentPopupComponent>
-	<SelectNodesPopupWindow>
-		<title>
-			<SelectNodesPopupComponent>Select Nodes to synchronize</SelectNodesPopupComponent>
-		</title>
-	</SelectNodesPopupWindow>
-	<SelectNodesPopupComponent>
+	<SelectNodesComponent>
 		<header>
 			<title>Title</title>
 			<path>Path</path>
 			<lastModifierUserName>Modified by</lastModifierUserName>
-			<sourceModificationDate>Modified (source)</sourceModificationDate>
+			<published>Published</published>
+			<sourceModificationDate>Modified (here)</sourceModificationDate>
 			<targetModificationDate>Modified (target)</targetModificationDate>
 			<stateLocalized>State</stateLocalized>
 			<action>Action</action>
@@ -79,12 +75,12 @@
 			<filter>Filter</filter>
 			<modifiedAfter>Modified here after</modifiedAfter>
 			<publishedContentOnly>Published content only</publishedContentOnly>
-			<selectContent>Filter results</selectContent>
+			<selectContent>Contents</selectContent>
 			<selectedContent>Selected contents</selectedContent>
 			<selectAll>Select all</selectAll>
 			<deleteAll>Delete all</deleteAll>
 		</label>
-	</SelectNodesPopupComponent>
+	</SelectNodesComponent>
 	<UIPopupWindow>
 		<title>
 			<PushContentPopupComponent>Push Content</PushContentPopupComponent>

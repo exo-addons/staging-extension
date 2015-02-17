@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -295,28 +297,13 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
   @SuppressWarnings("unchecked")
   protected List<ExoSocialActivity> retrieveActivitiesFromFile(File activitiesFile) {
     List<ExoSocialActivity> activities = null;
-
-    FileInputStream inputStream = null;
     try {
-      inputStream = new FileInputStream(activitiesFile);
       // Unmarshall metadata xml file
-      XStream xstream = new XStream();
-
-      activities = (List<ExoSocialActivity>) xstream.fromXML(inputStream);
-    } catch (FileNotFoundException e) {
+      activities = (List<ExoSocialActivity>) deserializeObject(activitiesFile, List.class, null);
+    } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Cannot find extracted file: " + (activitiesFile != null ? activitiesFile.getAbsolutePath() : activitiesFile), e);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException e) {
-          log.warn("Cannot close input stream: " + activitiesFile.getAbsolutePath() + ". Ignore non blocking operation.");
-        }
-      }
     }
-
-    List<ExoSocialActivity> activitiesList = sanitizeContent(activities);
-    return activitiesList;
+    return sanitizeContent(activities);
   }
 
   protected final List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
@@ -573,6 +560,10 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
       if (zis != null) {
         zis.reallyClose();
       }
+    }
+    Collection<List<FileEntry>> lists = contentsByOwner.values();
+    for (List<FileEntry> list : lists) {
+      Collections.sort(list);
     }
   }
 

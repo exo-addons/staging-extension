@@ -58,14 +58,14 @@ public class PushContentActionComponent extends UIComponent {
       if (pushContentPopupContainer != null) {
         pushContentPopupContainer = uiActionBar.removeChild(PushContentPopupComponent.class);
       }
-      pushContentPopupContainer = uiActionBar.createUIComponent(PushContentPopupComponent.class, null, null);
+      pushContentPopupContainer = uiActionBar.createUIComponent(PushContentPopupComponent.class, null, "PushContentPopupComponent");
 
       pushContentPopupContainer.setSynchronizationService(SYNCHRONIZATION_SERVICE);
       pushContentPopupContainer.setCurrentPath(uiExplorer.getCurrentPath());
       pushContentPopupContainer.setWorkspace(uiExplorer.getWorkspaceName());
       pushContentPopupContainer.init();
 
-      uiPopupContainer.activate(pushContentPopupContainer, 700, 0);
+      uiPopupContainer.activate(pushContentPopupContainer, 1024, 0);
       event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
     }
   }

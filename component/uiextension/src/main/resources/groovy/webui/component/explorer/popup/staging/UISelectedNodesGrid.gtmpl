@@ -21,26 +21,29 @@
    UIForm uiForm = uicomponent.getAncestorOfType(UIForm.class);
 %>
 <div id="$uicomponent.id">
-  <div class="UIGrid uiListGrid" style="width: auto;">
-    <div class="uiBox noRounded" style="margin-bottom:7px;">
+  <div class="UIGrid uiListGrid">
+    <div class="uiBox noRounded">
       <div class="titleTable clearfix">
         <%
         int i = 0;
         for (field in beanFields) { %>
-        <div class="columnName lineLeft" style="width:<%=colWidth[i]%>;cursor:default;">
+        <div class="columnName lineLeft" style="width:<%=colWidth[i]%>;">
           <%=_ctx.appRes(uiParent.getName() + ".header." + field)%>
         </div>
         <% i++;} %>
         <%	if (beanActions != null && beanActions.length > 0) { %>
-        <div class="columnName lineLeft" style="width:50px;cursor:default;">
-          <%=_ctx.appRes(uiParent.getName() + ".header.action")%>
+        <div class="columnName lineLeft">
         </div>
+        <% link = uiForm.event("DeleteAll").replace("javascript:","");%>
+		<button class="btn" onclick="$link;event.preventDefault();">
+			<%=_ctx.appRes(uiForm.getName() + ".label.deleteAll")%>
+		</button>
         <% } %>
       </div>
 
       <% if (uicomponent.getUIPageIterator().getAvailable() < 1)
       { %>
-      <div class="rowView odd clearfix">
+      <div class="rowView odd">
         <%=_ctx.appRes("UIGrid.msg.empty")%>
       </div>
       <% }
@@ -76,14 +79,14 @@
         }
         String value = encoder.encode(fieldValue.toString());
         %>
-        <div class="column lineLeft $cssClass" title="$value" style="width:<%=colWidth[i]%>;cursor:default;">$value</div>
+        <div class="column lineLeft $cssClass" title="$value" style="width:<%=colWidth[i]%>;">$value</div>
         <%
         i++;
         }
         if (beanActions != null && beanActions.length > 0)
         {
         %>
-        <div class="column lineLeft" style="width:50px;padding-left: 25px;cursor:default;">
+        <div class="column lineLeft actions">
         <% if(!uicomponent.getParent().isDefaultEntry(bean.getPath())) { %>
           <%
           def beanIdField = uicomponent.getBeanIdField();
@@ -102,7 +105,7 @@
           actionLink = uiParent.event(action, beanId);
           }
           %>
-          <img onclick="$actionLink" alt="$action" title="$title" src="/eXoResources/skin/sharedImages/Blank.gif" class="${action}Icon" style="cursor:pointer;"/>
+          <img onclick="$actionLink" alt="$action" title="$title" src="/staging-extension-portlet/skin/images/${action}.gif"/>
           <% } %>
         <% } %>
         </div>

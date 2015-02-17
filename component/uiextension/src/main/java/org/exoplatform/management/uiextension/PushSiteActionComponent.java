@@ -13,7 +13,7 @@ import org.exoplatform.webui.event.EventListener;
  * @version $Revision$
  */
 @ComponentConfig(
-  template = "classpath:groovy/webui/component/explorer/popup/staging/PushSiteActionComponent.gtmpl",
+  template = "classpath:groovy/webui/component/staging/site/PushSiteActionComponent.gtmpl",
   events = { @EventConfig(
     listeners = PushSiteActionComponent.PushSiteActionListener.class) })
 public class PushSiteActionComponent extends UIContainer {

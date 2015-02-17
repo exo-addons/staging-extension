@@ -80,6 +80,9 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
       // Create the parent path
       Node currentNode = createJCRPath(session, parentNodePath);
 
+      if (parentNodePath.isEmpty()) {
+        parentNodePath = "/";
+      }
       session.refresh(false);
       session.importXML(parentNodePath, inputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
       session.save();

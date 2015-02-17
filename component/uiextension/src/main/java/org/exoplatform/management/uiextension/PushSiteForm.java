@@ -39,7 +39,7 @@ import org.exoplatform.webui.form.UIFormSelectBox;
 
 @ComponentConfig(
   lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/explorer/popup/staging/PushSite.gtmpl",
+  template = "classpath:groovy/webui/component/staging/site/PushSite.gtmpl",
   events = { @EventConfig(
     listeners = PushSiteForm.CloseActionListener.class), @EventConfig(
     listeners = PushSiteForm.PushActionListener.class) })
