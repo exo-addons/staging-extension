@@ -149,7 +149,7 @@
                      ng-model="optionsModel['/content/sites_EXPORT_filter/query']">
             </div>
             <button type="button" class="btn" id="sitesContentSQLButton" ng-click="validateQuery()">Validate Query</button>
-            <div id="sitesContentSQLResult" class="alert {{validateQueryResultMessageClass}}" ng-bind-html-unsafe="validateQueryResultMessage" ng-show="validateQueryResultMessage.length"></div>
+            <div id="sitesContentSQLResult" class="alert {{validateQueryResultMessageClass}}" ng-bind-html="validateQueryResultMessage" ng-show="validateQueryResultMessage.length"></div>
           </div>
         </div>
       </div>

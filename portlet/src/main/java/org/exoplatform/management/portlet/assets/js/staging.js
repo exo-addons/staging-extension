@@ -5,7 +5,7 @@
 require( ["SHARED/jquery", "stagingControllers", "stagingServices"], function ( $,  stagingControllers, stagingServices)
 {
   var stagingAppRoot = $('#staging');
-  var stagingApp = angular.module('stagingApp', []);
+  var stagingApp = angular.module('stagingApp', ['ngSanitize']);
   stagingApp.controller('stagingCtrl', stagingControllers);
   stagingApp.service('stagingService', stagingServices);
   angular.bootstrap(stagingAppRoot, ['stagingApp']);

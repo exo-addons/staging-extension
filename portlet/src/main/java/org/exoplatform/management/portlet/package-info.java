@@ -15,7 +15,8 @@
     @Script(id = "jQueryFileDownload", src = "js/lib/jquery.fileDownload.js"),
     // AngularJS is still global, should be AMDified
     @Script(id = "angularjs", src = "js/lib/angular.min.js"),
-    // services and controllers js are AMD modules, required by staging.js
+    @Script(id = "ngSanitize", src = "js/lib/angular-sanitize.js"),
+       // services and controllers js are AMD modules, required by staging.js
     @Script(id = "services", src = "js/services.js"),
     @Script(id = "controllers", src = "js/controllers.js"),
     @Script(id = "staging", src = "js/staging.js")

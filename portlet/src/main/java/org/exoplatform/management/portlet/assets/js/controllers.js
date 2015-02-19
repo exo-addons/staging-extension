@@ -472,11 +472,11 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           ,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (data) {
+            $scope.validateQueryResultMessage = data;
             $scope.validateQueryResultMessageClass = "alert-info";
-            $scope.validateQueryResultMessage = data;
           }).error(function (data) {
-            $scope.validateQueryResultMessageClass = "alert-error";
             $scope.validateQueryResultMessage = data;
+            $scope.validateQueryResultMessageClass = "alert-error";
           });
       }
     };
