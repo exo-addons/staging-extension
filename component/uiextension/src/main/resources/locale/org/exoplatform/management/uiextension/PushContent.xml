@@ -36,11 +36,11 @@
 			<password>Password</password>
 			<synchronizationNode>Node</synchronizationNode>
 			<publishOnTarget>Publish on target server</publishOnTarget>
-      <currentContent>Current Content</currentContent>
-      <currentSubContents>Sub contents of the current content</currentSubContents>
+			<currentContent>Current Content</currentContent>
+			<currentSubContents>Sub contents of the current content</currentSubContents>
 		</label>
 		<action>
-			<Select>Edit selection</Select>
+			<Select>Modify selection</Select>
 			<Push>Push</Push>
 			<Close>Close</Close>
 			<title>
@@ -70,11 +70,8 @@
 			</title>
 		</action>
 		<label>
-			<contentState>State</contentState>
-			<search>Search</search>
-			<filter>Filter</filter>
-			<modifiedAfter>Modified here after</modifiedAfter>
-			<publishedContentOnly>Published content only</publishedContentOnly>
+			<published>Published</published>
+			<notPublished>Not published</notPublished>
 			<selectContent>Contents</selectContent>
 			<selectedContent>Selected contents</selectedContent>
 			<selectAll>Select all</selectAll>

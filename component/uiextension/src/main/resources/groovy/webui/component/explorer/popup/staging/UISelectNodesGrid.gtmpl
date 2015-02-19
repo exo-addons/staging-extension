@@ -14,7 +14,7 @@
    else if(beanFields != null && beanFields.length > 0)
       colnum = beanFields.length;
 
-   def colWidth = ["110px", "175px", "50px", "145px", "145px", "130px"];
+   def colWidth = ["110px", "145px", "80px", "145px", "145px", "130px"];
    
    UIComponent uiParent = uicomponent.getParent();
    String name = uicomponent.getLabel();
@@ -104,10 +104,12 @@
                      if(fieldClass == Integer.class) {
                        cssClass = "number";
                      } else if(java.util.Date.class.isAssignableFrom(fieldClass)) {
-                        def dateFormat = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
-                        cssClass = "columnDatetime";
-                        fieldValue = dateFormat.format(fieldValue);
-                  	 } else {
+                       def dateFormat = new SimpleDateFormat("HH:mm:ss yyyy-MM-dd");
+                       cssClass = "columnDatetime";
+                       fieldValue = dateFormat.format(fieldValue);
+                  	 } else if(fieldClass == Boolean.class) {
+                  	   fieldValue =  fieldValue ? _ctx.appRes("SelectNodesComponent.label.published") :_ctx.appRes("SelectNodesComponent.label.notPublished");
+                     } else {
                   	   cssClass = "";
                   	 }
                   } else {

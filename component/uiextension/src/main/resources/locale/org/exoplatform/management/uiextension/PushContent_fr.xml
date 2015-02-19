@@ -70,11 +70,8 @@
 			</title>
 		</action>
 		<label>
-			<contentState>Etat</contentState>
-			<search>Rechercher</search>
-			<filter>Filtrer</filter>
-			<modifiedAfter>Modifié ici, après</modifiedAfter>
-			<publishedContentOnly>Contenu publié seulement</publishedContentOnly>
+			<published>Publié</published>
+			<notPublished>Non publié</notPublished>
 			<selectContent>Contenus</selectContent>
 			<selectedContent>Contenus sélectionnés</selectedContent>
 			<selectAll>Sélectionner tout</selectAll>

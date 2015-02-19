@@ -514,14 +514,17 @@ public class StagingExtensionController {
   @juzu.Resource
   public Response executeSQL(String sql, String[] sites) throws IOException {
     try {
-      Set<String> resultedNodePaths = stagingService.executeSQL(sql, new HashSet<String>(Arrays.asList(sites)));
-      StringBuilder builder = new StringBuilder("<ul>");
-      for (String path : resultedNodePaths) {
-        builder.append("<li>");
-        builder.append(path);
-        builder.append("</li>");
+      StringBuilder builder = new StringBuilder();
+      if (sites != null && sites.length > 0) {
+        builder.append("<ul>");
+        Set<String> resultedNodePaths = stagingService.executeSQL(sql, new HashSet<String>(Arrays.asList(sites)));
+        for (String path : resultedNodePaths) {
+          builder.append("<li>");
+          builder.append(path);
+          builder.append("</li>");
+        }
+        builder.append("</ul>");
       }
-      builder.append("</ul>");
       return Response.ok(builder.toString());
     } catch (Exception e) {
       log.error("Error while executing request: " + sql, e);

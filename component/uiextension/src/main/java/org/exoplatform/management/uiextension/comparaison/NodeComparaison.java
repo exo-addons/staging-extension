@@ -21,7 +21,7 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
 
   String sourceModificationDate;
   String targetModificationDate;
-  boolean publishedOnSource;
+  Boolean publishedOnSource;
   NodeComparaisonState state;
 
   public String getTitle() {
@@ -73,11 +73,11 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
     this.path = path;
   }
 
-  public boolean isPublishedOnSource() {
+  public Boolean isPublishedOnSource() {
     return publishedOnSource;
   }
 
-  public void setPublishedOnSource(boolean publishedOnSource) {
+  public void setPublishedOnSource(Boolean publishedOnSource) {
     this.publishedOnSource = publishedOnSource;
   }
 
