@@ -112,6 +112,8 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   public TargetServer getServerByName(String name) {
     TargetServer targetServer = null;
     ChromatticSession session = null;
+    ConversationState originalState = ConversationState.getCurrent();
+    ConversationState.setCurrent(new ConversationState(new Identity(IdentityConstants.SYSTEM)));
     try {
       session = openSession();
       TargetServerChromattic server = null;
@@ -126,6 +128,7 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
         targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), server.getPassword(), server.isSsl());
       }
     } finally {
+      ConversationState.setCurrent(originalState);
       if (session != null) {
         session.close();
       }
@@ -189,7 +192,6 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   }
 
   private ChromatticSession openSession() {
-    ConversationState.setCurrent(new ConversationState(new Identity(IdentityConstants.SYSTEM)));
     return chromattic.openSession(workspaceName);
   }
 
