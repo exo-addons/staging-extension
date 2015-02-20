@@ -25,6 +25,9 @@ import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.services.security.Identity;
+import org.exoplatform.services.security.IdentityConstants;
 import org.picocontainer.Startable;
 
 /**
@@ -34,7 +37,7 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
 
   private static final String EXO_PRIVILEGEABLE_MIXIN = "exo:privilegeable";
 
-  private static final Log LOG = ExoLogger.getLogger(SynchronizationServiceImpl.class);
+  private static final Log LOG = ExoLogger.getLogger(ChromatticServiceImpl.class);
 
   private static Map<String, String[]> DEFAULT_PERMISSIONS = new HashMap<String, String[]>();
   static {
@@ -58,26 +61,26 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     // Nothing to do with chromatticManager, it's only to ensure that
     // ChromatticManager is started before this service
     this.repositoryService = repositoryService;
+  }
+
+  @Override
+  public void start() {
     try {
       workspaceName = repositoryService.getDefaultRepository().getConfiguration().getDefaultWorkspaceName();
     } catch (Exception e) {
       workspaceName = "collaboration";
     }
-    setPermissions(STAGING_SERVERS_ROOT_PATH, DEFAULT_PERMISSIONS);
-  }
 
-  @Override
-  public void start() {
+    setPermissions(STAGING_SERVERS_ROOT_PATH, DEFAULT_PERMISSIONS);
+
     // Init Chromattic
     ChromatticBuilder builder = ChromatticBuilder.create();
     builder.add(TargetServerChromattic.class);
-
     builder.setOptionValue(ChromatticBuilder.SESSION_LIFECYCLE_CLASSNAME, CurrentRepositoryLifeCycle.class.getName());
     builder.setOptionValue(ChromatticBuilder.CREATE_ROOT_NODE, true);
     builder.setOptionValue(ChromatticBuilder.ROOT_NODE_PATH, STAGING_SERVERS_ROOT_PATH);
 
     chromattic = builder.build();
-
   }
 
   @Override
@@ -111,11 +114,17 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     ChromatticSession session = null;
     try {
       session = openSession();
-      TargetServerChromattic server = session.findByPath(TargetServerChromattic.class, STAGING_SERVERS_ROOT_PATH + "/" + name);
+      TargetServerChromattic server = null;
+      QueryResult<TargetServerChromattic> servers = session.createQueryBuilder(TargetServerChromattic.class).where("jcr:path like '" + STAGING_SERVERS_ROOT_PATH + "/" + name + "'").get().objects();
+      if (servers.size() == 0) {
+        return null;
+      } else if (servers.size() > 1) {
+        throw new IllegalStateException("found more than one server with name: " + name);
+      }
+      server = servers.next();
       if (server != null) {
         targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), server.getPassword(), server.isSsl());
       }
-      session.save();
     } finally {
       if (session != null) {
         session.close();
@@ -180,6 +189,7 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   }
 
   private ChromatticSession openSession() {
+    ConversationState.setCurrent(new ConversationState(new Identity(IdentityConstants.SYSTEM)));
     return chromattic.openSession(workspaceName);
   }
 

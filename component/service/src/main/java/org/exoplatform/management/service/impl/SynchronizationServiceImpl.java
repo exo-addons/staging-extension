@@ -19,9 +19,9 @@ public class SynchronizationServiceImpl implements SynchronizationService, Start
 
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("^\\$\\{(.*)\\}$");
 
-  private Log log = ExoLogger.getLogger(SynchronizationServiceImpl.class);
+  private static final Log LOG = ExoLogger.getLogger(SynchronizationServiceImpl.class);
 
-  ChromatticService chromatticService;
+  private ChromatticService chromatticService;
 
   public SynchronizationServiceImpl(ChromatticService chromatticService) {
     this.chromatticService = chromatticService;
@@ -74,7 +74,7 @@ public class SynchronizationServiceImpl implements SynchronizationService, Start
       if (resourceHandler != null) {
         resourceHandler.synchronize(selectedResourceCategory.getResources(), selectedResourceCategory.getExportOptions(), selectedResourceCategory.getImportOptions(), targetServer);
       } else {
-        log.error("No handler for " + selectedResourceCategory.getPath());
+        LOG.error("No handler for " + selectedResourceCategory.getPath());
         throw new Exception("No handler for " + selectedResourceCategory.getPath());
       }
     }
