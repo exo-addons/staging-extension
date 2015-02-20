@@ -21,18 +21,21 @@ import java.util.Map;
 
 import javax.jcr.Node;
 
-import org.exoplatform.portal.webui.util.Util;
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.services.security.IdentityConstants;
 import org.exoplatform.services.wcm.extensions.publication.PublicationManager;
 import org.exoplatform.services.wcm.extensions.publication.lifecycle.impl.LifecyclesConfig.Lifecycle;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.exoplatform.webui.ext.filter.UIExtensionFilter;
 import org.exoplatform.webui.ext.filter.UIExtensionFilterType;
 
-public class CanPushFilter implements UIExtensionFilter {
+public class CanPushContentFilter implements UIExtensionFilter {
 
-  private static final Log LOG = ExoLogger.getLogger(CanPushFilter.class.getName());
+  private static final String PERMISSIONS_VARIABLE = "exo.staging.explorer.content.permissions";
+  private static final Log LOG = ExoLogger.getLogger(CanPushContentFilter.class.getName());
 
   /**
    * This method checks if the current node is of the right type
@@ -40,13 +43,20 @@ public class CanPushFilter implements UIExtensionFilter {
   public boolean accept(Map<String, Object> context) throws Exception {
     // Retrieve the current node from the context
     Node currentNode = (Node) context.get(Node.class.getName());
-    String userId;
-    try {
-      userId = Util.getPortalRequestContext().getRemoteUser();
-    } catch (Exception e) {
-      userId = currentNode.getSession().getUserID();
+    ConversationState state = ConversationState.getCurrent();
+    if (state == null || state.getIdentity() == null) {
+      return false;
     }
-    if (currentNode.hasProperty("publication:currentState") && currentNode.hasProperty("publication:lifecycle")) {
+    String userId = state.getIdentity().getUserId();
+    if (StringUtils.isEmpty(userId)) {
+      return false;
+    } else if (userId.equals(IdentityConstants.ANONIM)) {
+      return false;
+    }
+    String pushContentPermmission = System.getProperty(PERMISSIONS_VARIABLE, null);
+    if (pushContentPermmission != null && pushContentPermmission.trim().length() > 0) {
+      return Utils.hasPushButtonPermission(PERMISSIONS_VARIABLE);
+    } else if (currentNode.hasProperty("publication:currentState") && currentNode.hasProperty("publication:lifecycle")) {
       String currentState = currentNode.getProperty("publication:currentState").getString();
       if ("published".equals(currentState)) {
         String nodeLifecycle = currentNode.getProperty("publication:lifecycle").getString();

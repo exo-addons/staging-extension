@@ -74,14 +74,14 @@
 							$addPageLabel
 						</a>
 					</li>
-					<% if(userCouldEditPortal){ %>
-            <li class="divider">&nbsp;</li>
-            <li>
-              <%
-              PushPageActionComponent.addButtonToComponent(uicomponent);
-              %>
-            </li>
-          <% } %>
+					<% if(PushPageActionComponent.isShowButton()){ %>
+			            <li class="divider">&nbsp;</li>
+       				    <li>
+           				  <%
+				              PushPageActionComponent.addButtonToComponent(uicomponent);
+			              %>
+			            </li>
+    		      <% } %>
 				</ul>
 			</li>
 			<% } %>
@@ -106,18 +106,20 @@
 					</li>
 					<% } %>
 					<% if(userCouldEditPortal){ %>
-					<li class="divider">&nbsp;</li>
-					<li>	
-						<a href="javascript:void(0);" onclick="javascript:ajaxGet(eXo.env.server.createPortalURL('UIWorkingWorkspace', 'CreatePortal', true))">
-							$addSiteLabel
-						</a>
-					</li>
-					<li class="divider">&nbsp;</li>
-					<li>
-						<%
-						PushSiteActionComponent.addButtonToComponent(uicomponent);
-						%>
-					</li>
+						<li class="divider">&nbsp;</li>
+						<li>	
+							<a href="javascript:void(0);" onclick="javascript:ajaxGet(eXo.env.server.createPortalURL('UIWorkingWorkspace', 'CreatePortal', true))">
+								$addSiteLabel
+							</a>
+						</li>
+						<% if(PushSiteActionComponent.isShowButton()){ %>
+							<li class="divider">&nbsp;</li>
+							<li>
+								<%
+									PushSiteActionComponent.addButtonToComponent(uicomponent);
+								%>
+							</li>
+						<% } %>
 					<% } %>
 				</ul>
 			</li>

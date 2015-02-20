@@ -21,7 +21,6 @@ import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.management.uiextension.comparaison.NodeComparaison;
 import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
-import org.exoplatform.management.uiextension.comparaison.Utils;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.web.application.ApplicationMessage;

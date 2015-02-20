@@ -1,4 +1,4 @@
-package org.exoplatform.management.uiextension.comparaison;
+package org.exoplatform.management.uiextension;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +22,9 @@ import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
+import org.exoplatform.management.uiextension.comparaison.NodeComparaison;
+import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
+import org.exoplatform.services.security.ConversationState;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
@@ -30,6 +33,32 @@ public class Utils {
   private static final SiteContentsImportResource SITE_CONTENTS_IMPORT_RESOURCE = new SiteContentsImportResource();
 
   private static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);
+
+  public static boolean hasPushButtonPermission(String varName) {
+    ConversationState state = ConversationState.getCurrent();
+    if (state == null || state.getIdentity() == null) {
+      return false;
+    }
+    String pushButtonPermmission = System.getProperty(varName, null);
+    if (pushButtonPermmission != null && pushButtonPermmission.trim().length() > 0) {
+      String[] permissions = pushButtonPermmission.split(";");
+      for (String permission : permissions) {
+        permission = permission.trim();
+        if (permission.isEmpty()) {
+          continue;
+        }
+        String[] permissionParts = permission.split(":");
+        String group = permissionParts.length > 1 ? permissionParts[1] : permissionParts[0];
+        String membershipType = permissionParts.length > 1 ? permissionParts[0] : "*";
+        if (state.getIdentity().isMemberOf(group, membershipType)) {
+          return true;
+        }
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
 
   public static List<NodeComparaison> compareLocalNodesWithTargetServer(String workspace, String nodePathToCompare, TargetServer targetServer) throws Exception {
     Map<String, String> exportOptions = new HashMap<String, String>();

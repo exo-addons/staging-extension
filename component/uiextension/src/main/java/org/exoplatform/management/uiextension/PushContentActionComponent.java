@@ -32,7 +32,7 @@ public class PushContentActionComponent extends UIComponent {
   private static SynchronizationService SYNCHRONIZATION_SERVICE;
   private static boolean servicesStarted = false;
 
-  private static final List<UIExtensionFilter> FILTERS = Arrays.asList(new UIExtensionFilter[] { new CanAddNodeFilter(), new IsNotLockedFilter(), new IsCheckedOutFilter(), new CanPushFilter(),
+  private static final List<UIExtensionFilter> FILTERS = Arrays.asList(new UIExtensionFilter[] { new CanAddNodeFilter(), new IsNotLockedFilter(), new IsCheckedOutFilter(), new CanPushContentFilter(),
       new IsNotEditingDocumentFilter() });
 
   @UIExtensionFilters

@@ -2,7 +2,6 @@ package org.exoplatform.management.uiextension;
 
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.portal.webui.container.UIContainer;
-import org.exoplatform.wcm.webui.Utils;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
 import org.exoplatform.webui.config.annotation.EventConfig;
 import org.exoplatform.webui.event.Event;
@@ -18,6 +17,8 @@ import org.exoplatform.webui.event.EventListener;
     listeners = PushSiteActionComponent.PushSiteActionListener.class) })
 public class PushSiteActionComponent extends UIContainer {
 
+  private static final String PERMISSIONS_VARIABLE = "exo.staging.site.button.permissions";
+
   private static SynchronizationService SYNCHRONIZATION_SERVICE;
   private static boolean servicesStarted = false;
 
@@ -29,7 +30,7 @@ public class PushSiteActionComponent extends UIContainer {
   }
 
   public static void addButtonToComponent(org.exoplatform.webui.core.UIContainer uicomponent) throws Exception {
-    if (Utils.isAdministratorUser()) {
+    if (isShowButton()) {
       PushSiteActionComponent pushSiteActionComponent = uicomponent.getChild(PushSiteActionComponent.class);
       if (pushSiteActionComponent == null) {
         pushSiteActionComponent = uicomponent.addChild(PushSiteActionComponent.class, null, null);
@@ -38,6 +39,10 @@ public class PushSiteActionComponent extends UIContainer {
       uicomponent.renderChild(PushSiteActionComponent.class);
       pushSiteActionComponent.setRendered(false);
     }
+  }
+
+  public static boolean isShowButton() {
+    return org.exoplatform.wcm.webui.Utils.isAdministratorUser() && Utils.hasPushButtonPermission(PERMISSIONS_VARIABLE);
   }
 
   public static class PushSiteActionListener extends EventListener<PushSiteActionComponent> {
@@ -49,7 +54,7 @@ public class PushSiteActionComponent extends UIContainer {
       pushSiteForm.setSynchronizationService(SYNCHRONIZATION_SERVICE);
       pushSiteForm.init();
 
-      Utils.createPopupWindow(actionComponent, pushSiteForm, PushSiteForm.POPUP_WINDOW, true, 640);
+      org.exoplatform.wcm.webui.Utils.createPopupWindow(actionComponent, pushSiteForm, PushSiteForm.POPUP_WINDOW, true, 640);
     }
   }
 

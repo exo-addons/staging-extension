@@ -2,7 +2,6 @@ package org.exoplatform.management.uiextension;
 
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.portal.webui.container.UIContainer;
-import org.exoplatform.wcm.webui.Utils;
 import org.exoplatform.webui.config.annotation.ComponentConfig;
 import org.exoplatform.webui.config.annotation.EventConfig;
 import org.exoplatform.webui.event.Event;
@@ -18,6 +17,8 @@ import org.exoplatform.webui.event.EventListener;
     listeners = PushPageActionComponent.PushPageActionListener.class) })
 public class PushPageActionComponent extends UIContainer {
 
+  private static final String PERMISSIONS_VARIABLE = "exo.staging.page.button.permissions";
+
   private static SynchronizationService SYNCHRONIZATION_SERVICE;
   private static boolean servicesStarted = false;
 
@@ -29,13 +30,19 @@ public class PushPageActionComponent extends UIContainer {
   }
 
   public static void addButtonToComponent(org.exoplatform.webui.core.UIContainer uicomponent) throws Exception {
-    PushPageActionComponent pushPageActionComponent = uicomponent.getChild(PushPageActionComponent.class);
-    if (pushPageActionComponent == null) {
-      pushPageActionComponent = uicomponent.addChild(PushPageActionComponent.class, null, null);
+    if (isShowButton()) {
+      PushPageActionComponent pushPageActionComponent = uicomponent.getChild(PushPageActionComponent.class);
+      if (pushPageActionComponent == null) {
+        pushPageActionComponent = uicomponent.addChild(PushPageActionComponent.class, null, null);
+      }
+      pushPageActionComponent.setRendered(true);
+      uicomponent.renderChild(PushPageActionComponent.class);
+      pushPageActionComponent.setRendered(false);
     }
-    pushPageActionComponent.setRendered(true);
-    uicomponent.renderChild(PushPageActionComponent.class);
-    pushPageActionComponent.setRendered(false);
+  }
+
+  public static boolean isShowButton() {
+    return Utils.hasPushButtonPermission(PERMISSIONS_VARIABLE);
   }
 
   public static class PushPageActionListener extends EventListener<PushPageActionComponent> {
@@ -47,7 +54,7 @@ public class PushPageActionComponent extends UIContainer {
       pushPageForm.setSynchronizationService(SYNCHRONIZATION_SERVICE);
       pushPageForm.init();
 
-      Utils.createPopupWindow(actionComponent, pushPageForm, PushPageForm.POPUP_WINDOW, true, 640);
+      org.exoplatform.wcm.webui.Utils.createPopupWindow(actionComponent, pushPageForm, PushPageForm.POPUP_WINDOW, true, 640);
     }
   }
 
