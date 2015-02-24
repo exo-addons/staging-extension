@@ -87,8 +87,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     options.add(new SelectItemOption<String>(resourceBundle.getString("PushContent.state.all"), ""));
     options.add(new SelectItemOption<String>(NodeComparaisonState.MODIFIED_ON_SOURCE.getLabel(resourceBundle), NodeComparaisonState.MODIFIED_ON_SOURCE.getKey()));
     options.add(new SelectItemOption<String>(NodeComparaisonState.MODIFIED_ON_TARGET.getLabel(resourceBundle), NodeComparaisonState.MODIFIED_ON_TARGET.getKey()));
-    options.add(new SelectItemOption<String>(NodeComparaisonState.NOT_FOUND_ON_SOURCE.getLabel(resourceBundle), NodeComparaisonState.NOT_FOUND_ON_SOURCE.getKey()));
-    options.add(new SelectItemOption<String>(NodeComparaisonState.NOT_FOUND_ON_TARGET.getLabel(resourceBundle), NodeComparaisonState.NOT_FOUND_ON_TARGET.getKey()));
+
     options.add(new SelectItemOption<String>(NodeComparaisonState.SAME.getLabel(resourceBundle), NodeComparaisonState.SAME.getKey()));
     options.add(new SelectItemOption<String>(NodeComparaisonState.UNKNOWN.getLabel(resourceBundle), NodeComparaisonState.UNKNOWN.getKey()));
 
@@ -312,8 +311,15 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
       isMatch = modifiedDateFilter == null || nodeComparaison.getSourceModificationDateCalendar() == null || modifiedDateFilter.before(nodeComparaison.getSourceModificationDateCalendar());
     }
 
+    NodeComparaisonState state = nodeComparaison.getState();
+    if (state != null && state.equals(NodeComparaisonState.NOT_FOUND_ON_TARGET)) {
+      state = NodeComparaisonState.MODIFIED_ON_SOURCE;
+    } else if (state != null && state.equals(NodeComparaisonState.NOT_FOUND_ON_SOURCE)) {
+      state = NodeComparaisonState.MODIFIED_ON_TARGET;
+    }
+
     if (isMatch) {
-      isMatch = stateString == null || stateString.isEmpty() || nodeComparaison.getState().getKey().equals(stateString);
+      isMatch = stateString == null || stateString.isEmpty() || state.getKey().equals(stateString);
     }
 
     if (isMatch) {

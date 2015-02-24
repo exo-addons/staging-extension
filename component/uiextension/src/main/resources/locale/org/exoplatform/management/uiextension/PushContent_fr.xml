@@ -20,10 +20,10 @@
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
 		</msg>
 		<state>
-			<not_found_source>Manquant (ici)</not_found_source>
-			<not_found_target>Manquant (serveur cible)</not_found_target>
+			<not_found_source>Créé (sur la cible)</not_found_source>
+			<not_found_target>Créé (ici)</not_found_target>
 			<modified_source>Modifié (ici)</modified_source>
-			<modified_target>Modifié (serveur cible)</modified_target>
+			<modified_target>Modifié (cible)</modified_target>
 			<same>Egaux</same>
 			<unkown>Inconnu</unkown>
 			<all>Tout</all>

@@ -20,8 +20,8 @@
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>
 		</msg>
 		<state>
-			<not_found_source>Not found (here)</not_found_source>
-			<not_found_target>Not found (target)</not_found_target>
+			<not_found_source>New (on target)</not_found_source>
+			<not_found_target>New (here)</not_found_target>
 			<modified_source>Modified (source)</modified_source>
 			<modified_target>Modified (target)</modified_target>
 			<same>Same</same>
