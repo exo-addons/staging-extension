@@ -12,18 +12,27 @@
 		<dependency>
 			<groupId>org.gatein.management</groupId>
 			<artifactId>gatein-management-spi</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.gatein.portal</groupId>
+			<artifactId>exo.portal.component.web.controller</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.gatein.portal</groupId>
 			<artifactId>exo.portal.component.application-registry</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.gatein.portal</groupId>
 			<artifactId>exo.portal.component.common</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.gatein.portal</groupId>
 			<artifactId>exo.portal.component.portal</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.addons.staging</groupId>

@@ -12,18 +12,22 @@
 		<dependency>
 			<groupId>org.gatein.management</groupId>
 			<artifactId>gatein-management-spi</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.forum</groupId>
 			<artifactId>forum-answer-service</artifactId>
+			<scope>provided</scope>
 		</dependency>
     <dependency>
 		  <groupId>org.exoplatform.social</groupId>
 		  <artifactId>social-component-core</artifactId>
+			<scope>provided</scope>
     </dependency>
 		<dependency>
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-webui</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.addons.staging</groupId>

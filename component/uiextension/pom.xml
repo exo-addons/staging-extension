@@ -13,6 +13,7 @@
 		<dependency>
 			<groupId>org.exoplatform.ecms</groupId>
 			<artifactId>ecms-core-webui-explorer</artifactId>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.addons.staging</groupId>
@@ -35,6 +36,7 @@
 		<dependency>
 			<groupId>org.gatein.management</groupId>
 			<artifactId>gatein-management-spi</artifactId>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>
