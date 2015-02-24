@@ -39,104 +39,87 @@
         <artifactId>staging-extension-cli</artifactId>
         <version>${project.version}</version>
         <type>war</type>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-portlet</artifactId>
         <version>${project.version}</version>
         <type>war</type>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.exoplatform.addons.staging</groupId>
         <artifactId>staging-extension-common</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-service</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-uiextension</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-content</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-ecmadmin</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-site</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-gadget</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-registry</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-organization</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-wiki</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-answer</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-forum</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-calendar</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-social</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>staging-extension-config</artifactId>
         <version>${project.version}</version>
-        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.gatein.management</groupId>
