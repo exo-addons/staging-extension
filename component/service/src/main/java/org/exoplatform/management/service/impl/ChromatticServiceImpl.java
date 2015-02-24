@@ -25,9 +25,6 @@ import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
-import org.exoplatform.services.security.ConversationState;
-import org.exoplatform.services.security.Identity;
-import org.exoplatform.services.security.IdentityConstants;
 import org.picocontainer.Startable;
 
 /**
@@ -112,8 +109,6 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   public TargetServer getServerByName(String name) {
     TargetServer targetServer = null;
     ChromatticSession session = null;
-    ConversationState originalState = ConversationState.getCurrent();
-    ConversationState.setCurrent(new ConversationState(new Identity(IdentityConstants.SYSTEM)));
     try {
       session = openSession();
       TargetServerChromattic server = null;
@@ -128,7 +123,6 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
         targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), server.getPassword(), server.isSsl());
       }
     } finally {
-      ConversationState.setCurrent(originalState);
       if (session != null) {
         session.close();
       }

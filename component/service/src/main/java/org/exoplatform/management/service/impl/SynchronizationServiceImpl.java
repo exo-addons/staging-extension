@@ -13,6 +13,9 @@ import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.security.ConversationState;
+import org.exoplatform.services.security.Identity;
+import org.exoplatform.services.security.IdentityConstants;
 import org.picocontainer.Startable;
 
 public class SynchronizationServiceImpl implements SynchronizationService, Startable {
@@ -89,11 +92,22 @@ public class SynchronizationServiceImpl implements SynchronizationService, Start
     String password = System.getProperty("exo.staging.server.default.password");
     String isSSLString = System.getProperty("exo.staging.server.default.isSSL");
     if (!StringUtils.isEmpty(name) && !StringUtils.isEmpty(host) && !StringUtils.isEmpty(port) && !StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
-      TargetServer server = chromatticService.getServerByName(name);
-      if (server == null) {
+      ConversationState originalState = ConversationState.getCurrent();
+      if (originalState == null) {
+        ConversationState.setCurrent(new ConversationState(new Identity(IdentityConstants.SYSTEM)));
+      }
+      try {
+        TargetServer server = chromatticService.getServerByName(name);
+        if (server != null) {
+          LOG.info("Delete server info for: " + name);
+          chromatticService.removeSynchonizationServer(server);
+        }
+        LOG.info("Persist server info for: " + name);
         boolean isSSL = StringUtils.isEmpty(isSSLString) ? false : Boolean.parseBoolean(isSSLString);
         server = new TargetServer(name, host, port, username, password, isSSL);
         addSynchonizationServer(server);
+      } finally {
+        ConversationState.setCurrent(originalState);
       }
     }
   }
