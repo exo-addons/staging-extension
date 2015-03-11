@@ -69,14 +69,17 @@ public class StagingExtensionController {
   Template indexTmpl;
 
   private static final List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
-  private static final int SPACES_CATEGORY_INDEX;
-  private static final int FORUM_CATEGORY_INDEX;
-  private static final int ANSWER_CATEGORY_INDEX;
-  private static final int CALENDAR_CATEGORY_INDEX;
-  private static final int WIKI_CATEGORY_INDEX;
-  private static final int COUNT_ALL;
+  private static int SPACES_CATEGORY_INDEX = -1;
+  private static int FORUM_CATEGORY_INDEX = -1;
+  private static int ANSWER_CATEGORY_INDEX = -1;
+  private static int CALENDAR_CATEGORY_INDEX = -1;
+  private static int WIKI_CATEGORY_INDEX = -1;
+  private static int COUNT_ALL = 0;
 
   static {
+    String activatedModules = System.getProperty("exo.staging.portlet.modules", "");
+    activatedModules = activatedModules == null ? "" : activatedModules.trim();
+
     // ZIP PATH EXCEPTIONS
     IMPORT_ZIP_PATH_EXCEPTIONS.put("/portal", "/site/portalsites");
     IMPORT_ZIP_PATH_EXCEPTIONS.put("/group", "/site/groupsites");
@@ -88,74 +91,162 @@ public class StagingExtensionController {
     IMPORT_PATH_EXCEPTIONS.put("/site/usersites", "/site");
 
     // RESOURCES CATEGORIES
-    ResourceCategory sites = new ResourceCategory("Sites", "/site");
-    sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
-    sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
-    sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
-    resourceCategories.add(sites);
+    if (activatedModules.isEmpty() || activatedModules.contains("/site:activated")) {
+      ResourceCategory sites = new ResourceCategory("Sites", "/site");
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SITES_PORTAL_PATH + ":activated")) {
+        sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SITES_GROUP_PATH + ":activated")) {
+        sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SITES_USER_PATH + ":activated")) {
+        sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
+      }
+      resourceCategories.add(sites);
+    }
 
-    ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);
-    social.getSubResourceCategories().add(new ResourceCategory("Spaces", StagingService.SOCIAL_SPACE_PATH));
-    resourceCategories.add(social);
-    SPACES_CATEGORY_INDEX = resourceCategories.size() - 1;
+    if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SOCIAL_PARENT_PATH + ":activated")) {
+      ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SOCIAL_SPACE_PATH + ":activated")) {
+        social.getSubResourceCategories().add(new ResourceCategory("Spaces", StagingService.SOCIAL_SPACE_PATH));
+      }
+      resourceCategories.add(social);
+      SPACES_CATEGORY_INDEX = resourceCategories.size() - 1;
+    }
 
-    ResourceCategory contents = new ResourceCategory("Contents", "/content");
-    contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
-    resourceCategories.add(contents);
+    if (activatedModules.isEmpty() || activatedModules.contains("/content:activated")) {
+      ResourceCategory contents = new ResourceCategory("Contents", "/content");
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.CONTENT_SITES_PATH + ":activated")) {
+        contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
+      }
+      resourceCategories.add(contents);
+    }
 
-    ResourceCategory answers = new ResourceCategory("Answers", StagingService.ANSWERS_PARENT_PATH);
-    answers.getSubResourceCategories().add(new ResourceCategory("Public Answers", StagingService.PUBLIC_ANSWER_PATH));
-    answers.getSubResourceCategories().add(new ResourceCategory("Space Answers", StagingService.SPACE_ANSWER_PATH));
-    answers.getSubResourceCategories().add(new ResourceCategory("FAQ Template", StagingService.FAQ_TEMPLATE_PATH));
-    resourceCategories.add(answers);
-    ANSWER_CATEGORY_INDEX = resourceCategories.size() - 1;
+    if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ANSWERS_PARENT_PATH + ":activated")) {
+      ResourceCategory answers = new ResourceCategory("Answers", StagingService.ANSWERS_PARENT_PATH);
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PUBLIC_ANSWER_PATH + ":activated")) {
+        answers.getSubResourceCategories().add(new ResourceCategory("Public Answers", StagingService.PUBLIC_ANSWER_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SPACE_ANSWER_PATH + ":activated")) {
+        answers.getSubResourceCategories().add(new ResourceCategory("Space Answers", StagingService.SPACE_ANSWER_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FAQ_TEMPLATE_PATH + ":activated")) {
+        answers.getSubResourceCategories().add(new ResourceCategory("FAQ Template", StagingService.FAQ_TEMPLATE_PATH));
+      }
+      resourceCategories.add(answers);
+      ANSWER_CATEGORY_INDEX = resourceCategories.size() - 1;
+    }
 
-    ResourceCategory forums = new ResourceCategory("Forums", StagingService.FORUMS_PARENT_PATH);
-    forums.getSubResourceCategories().add(new ResourceCategory("Public Forum", StagingService.PUBLIC_FORUM_PATH));
-    forums.getSubResourceCategories().add(new ResourceCategory("Space Forum", StagingService.SPACE_FORUM_PATH));
-    forums.getSubResourceCategories().add(new ResourceCategory("Forum settings", StagingService.FORUM_SETTINGS));
-    resourceCategories.add(forums);
-    FORUM_CATEGORY_INDEX = resourceCategories.size() - 1;
+    if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FORUMS_PARENT_PATH + ":activated")) {
+      ResourceCategory forums = new ResourceCategory("Forums", StagingService.FORUMS_PARENT_PATH);
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PUBLIC_FORUM_PATH + ":activated")) {
+        forums.getSubResourceCategories().add(new ResourceCategory("Public Forum", StagingService.PUBLIC_FORUM_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SPACE_FORUM_PATH + ":activated")) {
+        forums.getSubResourceCategories().add(new ResourceCategory("Space Forum", StagingService.SPACE_FORUM_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FORUM_SETTINGS + ":activated")) {
+        forums.getSubResourceCategories().add(new ResourceCategory("Forum settings", StagingService.FORUM_SETTINGS));
+      }
+      resourceCategories.add(forums);
+      FORUM_CATEGORY_INDEX = resourceCategories.size() - 1;
+    }
 
-    ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
-    calendars.getSubResourceCategories().add(new ResourceCategory("Group Calendar", StagingService.GROUP_CALENDAR_PATH));
-    calendars.getSubResourceCategories().add(new ResourceCategory("Space Calendar", StagingService.SPACE_CALENDAR_PATH));
-    calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
-    resourceCategories.add(calendars);
-    CALENDAR_CATEGORY_INDEX = resourceCategories.size() - 1;
+    if (activatedModules.isEmpty() || activatedModules.contains(StagingService.CALENDARS_PARENT_PATH + ":activated")) {
+      ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GROUP_CALENDAR_PATH + ":activated")) {
+        calendars.getSubResourceCategories().add(new ResourceCategory("Group Calendar", StagingService.GROUP_CALENDAR_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SPACE_CALENDAR_PATH + ":activated")) {
+        calendars.getSubResourceCategories().add(new ResourceCategory("Space Calendar", StagingService.SPACE_CALENDAR_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PERSONAL_FORUM_PATH + ":activated")) {
+        calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
+      }
+      resourceCategories.add(calendars);
+      CALENDAR_CATEGORY_INDEX = resourceCategories.size() - 1;
+    }
 
-    ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
-    wikis.getSubResourceCategories().add(new ResourceCategory("Portal wikis", StagingService.PORTAL_WIKIS_PATH));
-    wikis.getSubResourceCategories().add(new ResourceCategory("Space wikis", StagingService.GROUP_WIKIS_PATH));
-    wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
-    resourceCategories.add(wikis);
-    WIKI_CATEGORY_INDEX = resourceCategories.size() - 1;
+    if (activatedModules.isEmpty() || activatedModules.contains(StagingService.WIKIS_PARENT_PATH + ":activated")) {
+      ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PORTAL_WIKIS_PATH + ":activated")) {
+        wikis.getSubResourceCategories().add(new ResourceCategory("Portal wikis", StagingService.PORTAL_WIKIS_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GROUP_WIKIS_PATH + ":activated")) {
+        wikis.getSubResourceCategories().add(new ResourceCategory("Space wikis", StagingService.GROUP_WIKIS_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.USER_WIKIS_PATH + ":activated")) {
+        wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
+      }
+      resourceCategories.add(wikis);
+      WIKI_CATEGORY_INDEX = resourceCategories.size() - 1;
+    }
 
-    ResourceCategory organization = new ResourceCategory("Organization", "/organization");
-    organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));
-    organization.getSubResourceCategories().add(new ResourceCategory("Groups", StagingService.GROUPS_PATH));
-    organization.getSubResourceCategories().add(new ResourceCategory("Roles", StagingService.ROLE_PATH));
-    resourceCategories.add(organization);
+    if (activatedModules.isEmpty() || activatedModules.contains("/organization:activated")) {
+      ResourceCategory organization = new ResourceCategory("Organization", "/organization");
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.USERS_PATH + ":activated")) {
+        organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GROUPS_PATH + ":activated")) {
+        organization.getSubResourceCategories().add(new ResourceCategory("Groups", StagingService.GROUPS_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ROLE_PATH + ":activated")) {
+        organization.getSubResourceCategories().add(new ResourceCategory("Roles", StagingService.ROLE_PATH));
+      }
+      resourceCategories.add(organization);
+    }
 
-    ResourceCategory applications = new ResourceCategory("Applications", "/application");
-    applications.getSubResourceCategories().add(new ResourceCategory("Applications Registry", StagingService.REGISTRY_PATH));
-    applications.getSubResourceCategories().add(new ResourceCategory("Gadgets", StagingService.GADGET_PATH));
-    resourceCategories.add(applications);
+    if (activatedModules.isEmpty() || activatedModules.contains("/application:activated")) {
+      ResourceCategory applications = new ResourceCategory("Applications", "/application");
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.REGISTRY_PATH + ":activated")) {
+        applications.getSubResourceCategories().add(new ResourceCategory("Applications Registry", StagingService.REGISTRY_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GADGET_PATH + ":activated")) {
+        applications.getSubResourceCategories().add(new ResourceCategory("Gadgets", StagingService.GADGET_PATH));
+      }
+      resourceCategories.add(applications);
+    }
 
-    ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", "/ecmadmin");
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Search Templates", StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Metadata Templates", StagingService.ECM_TEMPLATES_METADATA_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Taxonomies", StagingService.ECM_TAXONOMY_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Queries", StagingService.ECM_QUERY_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Drives", StagingService.ECM_DRIVE_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("ECMS Groovy Script", StagingService.ECM_SCRIPT_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Templates", StagingService.ECM_VIEW_TEMPLATES_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Configuration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
-    ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
-    resourceCategories.add(ecmAdmin);
+    if (activatedModules.isEmpty() || activatedModules.contains("/ecmadmin:activated")) {
+      ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", "/ecmadmin");
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Search Templates", StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_METADATA_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Metadata Templates", StagingService.ECM_TEMPLATES_METADATA_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TAXONOMY_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Taxonomies", StagingService.ECM_TAXONOMY_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_QUERY_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Queries", StagingService.ECM_QUERY_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_DRIVE_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Drives", StagingService.ECM_DRIVE_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_SCRIPT_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("ECMS Groovy Script", StagingService.ECM_SCRIPT_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_VIEW_TEMPLATES_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Templates", StagingService.ECM_VIEW_TEMPLATES_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_VIEW_CONFIGURATION_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Configuration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_ACTION_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
+      }
+      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_NODETYPE_PATH + ":activated")) {
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
+      }
+      resourceCategories.add(ecmAdmin);
+    }
 
     COUNT_ALL = resourceCategories.size();
   }
@@ -163,19 +254,20 @@ public class StagingExtensionController {
   @View
   public Response.Render index() {
     if (resourceCategories.size() == COUNT_ALL) {
-      if (!isWikiActivated()) {
+
+      if (!isWikiActivated() && WIKI_CATEGORY_INDEX > 0) {
         resourceCategories.remove(WIKI_CATEGORY_INDEX);
       }
-      if (!isCalendarActivated()) {
+      if (!isCalendarActivated() && CALENDAR_CATEGORY_INDEX > 0) {
         resourceCategories.remove(CALENDAR_CATEGORY_INDEX);
       }
-      if (!isForumActivated()) {
+      if (!isForumActivated() && FORUM_CATEGORY_INDEX > 0) {
         resourceCategories.remove(FORUM_CATEGORY_INDEX);
       }
-      if (!isAnswerActivated()) {
+      if (!isAnswerActivated() && ANSWER_CATEGORY_INDEX > 0) {
         resourceCategories.remove(ANSWER_CATEGORY_INDEX);
       }
-      if (!isSocialActivated()) {
+      if (!isSocialActivated() && SPACES_CATEGORY_INDEX > 0) {
         resourceCategories.remove(SPACES_CATEGORY_INDEX);
       }
     }
