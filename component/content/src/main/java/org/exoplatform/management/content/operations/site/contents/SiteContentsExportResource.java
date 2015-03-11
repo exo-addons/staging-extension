@@ -101,11 +101,11 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       Set<String> activitiesId = new HashSet<String>();
       // Site contents
       if (!StringUtils.isEmpty(jcrQuery)) {
-        exportTasks.addAll(exportQueryResult(sitesLocation, sitePath, jcrQuery, excludePaths, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        exportTasks.addAll(exportQueryResult(workspace, sitePath, jcrQuery, excludePaths, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
       } else if (exportSiteWithSkeleton) {
-        exportTasks.addAll(exportSite(sitesLocation, sitePath, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        exportTasks.addAll(exportSite(workspace, sitePath, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
       } else {
-        exportTasks.addAll(exportSiteWithoutSkeleton(sitesLocation, sitePath, exportSiteTaxonomy, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        exportTasks.addAll(exportSiteWithoutSkeleton(workspace, sitePath, exportSiteTaxonomy, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
       }
 
       // Export Site Metadata
@@ -141,30 +141,30 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
 
   /**
    * 
-   * @param sitesLocation
+   * @param workspace
    * @param siteRootNodePath
    * @param exportVersionHistory
    * @param metaData
    * @param exportOnlyMetadata
    * @return
    */
-  private List<ExportTask> exportSite(NodeLocation sitesLocation, String siteRootNodePath, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId, boolean exportOnlyMetadata)
+  private List<ExportTask> exportSite(String workspace, String siteRootNodePath, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId, boolean exportOnlyMetadata)
       throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    Session session = getSession(sitesLocation.getWorkspace());
+    Session session = getSession(workspace);
 
     Node siteNode = (Node) session.getItem(siteRootNodePath);
     Node parentNode = siteNode.getParent();
 
-    exportNode(sitesLocation.getWorkspace(), parentNode, null, exportVersionHistory, exportTasks, siteNode, metaData, activitiesId, exportOnlyMetadata);
+    exportNode(workspace, parentNode, null, exportVersionHistory, exportTasks, siteNode, metaData, activitiesId, exportOnlyMetadata);
 
     return exportTasks;
   }
 
   /**
    * 
-   * @param sitesLocation
+   * @param workspace
    * @param siteRootNodePath
    * @param excludePaths
    * @param exportVersionHistory
@@ -172,7 +172,7 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
    * @param exportOnlyMetadata
    * @return
    */
-  private List<ExportTask> exportQueryResult(NodeLocation sitesLocation, String siteRootNodePath, String jcrQuery, List<String> excludePaths, boolean exportVersionHistory, SiteMetaData metaData,
+  private List<ExportTask> exportQueryResult(String workspace, String siteRootNodePath, String jcrQuery, List<String> excludePaths, boolean exportVersionHistory, SiteMetaData metaData,
       Set<String> activitiesId, boolean exportOnlyMetadata) throws Exception {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
@@ -192,20 +192,20 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       }
     }
 
-    Session session = getSession(sitesLocation.getWorkspace());
+    Session session = getSession(workspace);
 
     Query query = session.getWorkspace().getQueryManager().createQuery(jcrQuery, Query.SQL);
     NodeIterator nodeIterator = query.execute().getNodes();
     while (nodeIterator.hasNext()) {
       Node node = nodeIterator.nextNode();
-      exportNode(sitesLocation.getWorkspace(), node.getParent(), excludePaths, exportVersionHistory, exportTasks, node, metaData, activitiesId, exportOnlyMetadata);
+      exportNode(workspace, node.getParent(), excludePaths, exportVersionHistory, exportTasks, node, metaData, activitiesId, exportOnlyMetadata);
     }
     return exportTasks;
   }
 
   /**
    * 
-   * @param sitesLocation
+   * @param workspace
    * @param path
    * @param exportSiteTaxonomy
    * @param exportVersionHistory
@@ -215,53 +215,53 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
    * @throws Exception
    * @throws RepositoryException
    */
-  private List<ExportTask> exportSiteWithoutSkeleton(NodeLocation sitesLocation, String path, boolean exportSiteTaxonomy, boolean exportVersionHistory, SiteMetaData metaData,
-      Set<String> activitiesId, boolean exportOnlyMetadata) throws Exception, RepositoryException {
+  private List<ExportTask> exportSiteWithoutSkeleton(String workspace, String path, boolean exportSiteTaxonomy, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId,
+      boolean exportOnlyMetadata) throws Exception, RepositoryException {
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    NodeLocation nodeLocation = new NodeLocation("repository", sitesLocation.getWorkspace(), path, null, true);
+    NodeLocation nodeLocation = new NodeLocation("repository", workspace, path, null, true);
     Node portalNode = NodeLocation.getNodeByLocation(nodeLocation);
 
     PortalFolderSchemaHandler portalFolderSchemaHandler = new PortalFolderSchemaHandler();
 
     // CSS Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getCSSFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getCSSFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // JS Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getJSFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getJSFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Document Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getDocumentStorage(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getDocumentStorage(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Images Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getImagesFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getImagesFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Audio Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getAudioFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getAudioFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Video Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getVideoFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getVideoFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Multimedia Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory,
-        metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory, metaData, activitiesId,
+        exportOnlyMetadata));
 
     // Link Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getLinkFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getLinkFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // WebContent Folder
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory, metaData,
-        activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory, metaData, activitiesId,
+        exportOnlyMetadata));
 
     // Site Artifacts Folder
     Node webContentNode = portalFolderSchemaHandler.getWebContentStorage(portalNode);
-    exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), webContentNode.getNode("site artifacts"), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, webContentNode.getNode("site artifacts"), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     if (exportSiteTaxonomy) {
       // Categories Folder
       Node categoriesNode = portalNode.getNode("categories");
-      exportTasks.addAll(exportSubNodes(sitesLocation.getWorkspace(), categoriesNode, null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+      exportTasks.addAll(exportSubNodes(workspace, categoriesNode, null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
     }
     return exportTasks;
   }
