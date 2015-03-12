@@ -166,7 +166,8 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
       try {
         chromatticObject = session.findByPath(TargetServerChromattic.class, STAGING_SERVERS_ROOT_PATH + "/" + targetServer.getName());
         if (chromatticObject != null) {
-          throw new IllegalStateException("Attempt to add server with same name");
+          LOG.warn("Attempt to add server with same name");
+          return;
         }
       } catch (Exception e) {
         // Nothing to do
@@ -184,12 +185,13 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
 
       String jcrPath = session.getPath(server);
       setPermissions(jcrPath, DEFAULT_PERMISSIONS);
+    } catch (Exception e) {
+      LOG.warn("error while adding server details" + targetServer.getName(), e);
     } finally {
       if (session != null) {
         session.close();
       }
     }
-
   }
 
   @Override
