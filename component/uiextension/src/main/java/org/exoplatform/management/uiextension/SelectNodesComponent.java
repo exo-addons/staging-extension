@@ -110,9 +110,11 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
 
     nodesGrid = addChild(UIGrid.class, "selectNodesGrid", "selectNodesGrid");
     nodesGrid.configure("path", COMPARAISON_BEAN_FIELD, COMPARAISON_BEAN_ACTION);
+    nodesGrid.getUIPageIterator().setId("UISelectNodesGridIterator");
 
     selectedNodesGrid = addChild(UIGrid.class, "uiSelectedNodesGrid", "uiSelectedNodesGrid");
     selectedNodesGrid.configure("path", SELECTED_COMPARAISON_BEAN_FIELD, SELECTED_COMPARAISON_BEAN_ACTION);
+    selectedNodesGrid.getUIPageIterator().setId("UISelectedNodesGridIterator");
   }
 
   public void init() throws Exception {
