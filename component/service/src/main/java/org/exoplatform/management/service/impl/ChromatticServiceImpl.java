@@ -85,8 +85,6 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
       workspaceName = "collaboration";
     }
 
-    setPermissions(STAGING_SERVERS_ROOT_PATH, DEFAULT_PERMISSIONS);
-
     // Init Chromattic
     ChromatticBuilder builder = ChromatticBuilder.create();
     builder.add(TargetServerChromattic.class);
@@ -95,6 +93,8 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     builder.setOptionValue(ChromatticBuilder.ROOT_NODE_PATH, STAGING_SERVERS_ROOT_PATH);
 
     chromattic = builder.build();
+
+    setPermissions(STAGING_SERVERS_ROOT_PATH, DEFAULT_PERMISSIONS);
 
     try {
       initCodec();
