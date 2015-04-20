@@ -2,6 +2,7 @@ package org.exoplatform.management.service.impl;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.log.ExoLogger;
@@ -22,6 +23,7 @@ public class StagingMessageREST implements ResourceContainer, Startable {
 
   @GET
   @Path("get")
+  @Produces("text/html")
   public String getMessageTodisplayInUI() {
     try {
       if (Utils.isAdministratorUser() || userACL.isUserInGroup("/platform/web-contributors")) {
