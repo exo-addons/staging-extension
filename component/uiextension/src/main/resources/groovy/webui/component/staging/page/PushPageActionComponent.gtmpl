@@ -1,4 +1,5 @@
 <script type="text/javascript">
+  require(["SHARED/uiForm"]);
   function openPushPageForm(event) {
     var evt = event || window.event;
     var mouse_cordinate = evt.clientY + "," + evt.clientX;
