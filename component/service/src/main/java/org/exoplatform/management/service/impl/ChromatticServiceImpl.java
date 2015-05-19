@@ -135,18 +135,25 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     ChromatticSession session = null;
     try {
       session = openSession();
+      if (!session.getJCRSession().itemExists(STAGING_SERVERS_ROOT_PATH)) {
+        return null;
+      }
+
       TargetServerChromattic server = null;
-      QueryResult<TargetServerChromattic> servers = session.createQueryBuilder(TargetServerChromattic.class).where("jcr:path like '" + STAGING_SERVERS_ROOT_PATH + "/" + name + "'").get().objects();
+      QueryResult<TargetServerChromattic> servers = session.createQueryBuilder(TargetServerChromattic.class).where("jcr:path = '" + STAGING_SERVERS_ROOT_PATH + "/" + name + "'").get().objects();
       if (servers.size() == 0) {
         return null;
       } else if (servers.size() > 1) {
         throw new IllegalStateException("found more than one server with name: " + name);
+      } else if (servers.hasNext()) {
+        server = servers.next();
       }
-      server = servers.next();
       if (server != null) {
         String password = decodePassword(server.getPassword());
         targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), password, server.isSsl());
       }
+    } catch (RepositoryException e) {
+      throw new IllegalStateException("Error while attempting to access JCR repository", e);
     } finally {
       if (session != null) {
         session.close();
@@ -221,6 +228,9 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     Session session = null;
     try {
       session = getSession(repositoryService, workspaceName);
+      if (!session.itemExists(jcrPath)) {
+        return;
+      }
       ExtendedNode extendedNode = (ExtendedNode) session.getItem(jcrPath);
       if (extendedNode.canAddMixin(EXO_PRIVILEGEABLE_MIXIN)) {
         extendedNode.addMixin(EXO_PRIVILEGEABLE_MIXIN);
