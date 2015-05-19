@@ -1,4 +1,7 @@
-<div id="staging" class="staging">
+<div id="StagingLoadingBar">
+  <div class="alert alert-warning" role="alert"><h4>Loading ...</h4></div>
+</div>
+<div id="staging" class="staging" style="visibility:hidden;">
   <div ng-controller="stagingCtrl">
     <div class="uiBox modes">
       <div class="mode-items">

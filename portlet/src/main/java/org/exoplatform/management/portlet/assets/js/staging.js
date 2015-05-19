@@ -4,9 +4,13 @@
 // - it is a good practice if we want to allow several ng app in the same html page (which could be the case with several portlets)
 require( ["SHARED/jquery", "stagingControllers", "stagingServices"], function ( $,  stagingControllers, stagingServices)
 {
-  var stagingAppRoot = $('#staging');
-  var stagingApp = angular.module('stagingApp', ['ngSanitize']);
-  stagingApp.controller('stagingCtrl', stagingControllers);
-  stagingApp.service('stagingService', stagingServices);
-  angular.bootstrap(stagingAppRoot, ['stagingApp']);
+	$( document ).ready(function() {
+	  var stagingAppRoot = $('#staging');
+      var stagingApp = angular.module('stagingApp', ['ngSanitize']);
+	  stagingApp.controller('stagingCtrl', stagingControllers);
+	  stagingApp.service('stagingService', stagingServices);
+	  angular.bootstrap(stagingAppRoot, ['stagingApp']);
+	  $('#StagingLoadingBar').remove();
+	  $('#staging').css('visibility', 'visible');
+	});
 });
