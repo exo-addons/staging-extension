@@ -76,9 +76,14 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $scope.syncServersMessageClass = "alert-info";
       $scope.syncServersMessage = "Deleting server ...";
       $http.post(stagingContainer.jzURL('StagingExtensionController.removeSynchonizationServer') + '&id='+id).success(function (data) {
-        $scope.syncServersMessageClass = "alert-success";
-        $scope.syncServersMessage = "Server deleted !";
-        $scope.loadServers();
+        if(data.indexOf('<body') >= 0) {
+	        $scope.syncServersMessageClass = "alert-error";
+	        $scope.syncServersMessage = "Session timeout, please retry again.";
+        } else {
+	        $scope.syncServersMessageClass = "alert-success";
+	        $scope.syncServersMessage = "Server deleted !";
+	        $scope.loadServers();
+        }
       }).error(function (data) {
         $scope.syncServersMessageClass = "alert-error";
         $scope.syncServersMessage = "Error while deleting the server";
@@ -286,9 +291,15 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
             headers : {'Content-Type':undefined},
             transformRequest: function(data) { return data; }
           }).success(function (data) {
-            $scope.setResultMessage(data, "success");
-            $scope.button_clicked = false;
-            $scope.refreshController();
+			if(data.indexOf('<body') >= 0) {
+	            $scope.setResultMessage("Session timeout, please retry again.", "error");
+	            $scope.button_clicked = false;
+	            $scope.refreshController();
+        	} else {
+	            $scope.setResultMessage(data, "success");
+	            $scope.button_clicked = false;
+	            $scope.refreshController();
+	        }
           }).error(function (data) {
             $scope.setResultMessage("Import failed. " + data, "error");
             $scope.button_clicked = false;
@@ -437,9 +448,15 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	          data: paramsTargetServer + paramsResourceCategories + paramsResources + paramsOptions,
 	          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 	        }).success(function (data) {
-	          $scope.setResultMessage(data, "success");
-    	      $scope.button_clicked = false;
-    	      $scope.refreshController();
+				if(data.indexOf('<body') >= 0) {
+		            $scope.setResultMessage("Session timeout, please retry again.", "error");
+		            $scope.button_clicked = false;
+		            $scope.refreshController();
+	        	} else {
+		          $scope.setResultMessage(data, "success");
+	    	      $scope.button_clicked = false;
+	    	      $scope.refreshController();
+	    	  }
 	        }).error(function (data) {
 	          $scope.setResultMessage(data, "error");
     	      $scope.button_clicked = false;
@@ -472,8 +489,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           ,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (data) {
-            $scope.validateQueryResultMessage = data;
-            $scope.validateQueryResultMessageClass = "alert-info";
+			if(data.indexOf('<body') >= 0) {
+	            $scope.validateQueryResultMessage = "Session timeout, please retry again.";
+	            $scope.validateQueryResultMessageClass = "alert-error";
+        	} else {
+	            $scope.validateQueryResultMessage = data;
+	            $scope.validateQueryResultMessageClass = "alert-info";
+        	}
           }).error(function (data) {
             $scope.validateQueryResultMessage = data;
             $scope.validateQueryResultMessageClass = "alert-error";
