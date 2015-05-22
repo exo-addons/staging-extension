@@ -56,7 +56,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
   public static final String PUBLICATION_DATE_FIELD_NAME = "modifiedAfter";
   public static final String PUBLISHED_CONTENT_ONLY_FIELD_NAME = "publishedContentOnly";
 
-  public static String[] COMPARAISON_BEAN_FIELD = { "title", "path", "publishedOnSource", "sourceModificationDate", "targetModificationDate", "stateLocalized" };
+  public static String[] COMPARAISON_BEAN_FIELD = { "title", "path", "published", "sourceModificationDate", "targetModificationDate", "stateLocalized" };
 
   public static String[] COMPARAISON_BEAN_ACTION = { "Select" };
 
@@ -268,6 +268,9 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
       PushContentPopupComponent pushContentPopupComponent = selectNodesComponent.getPushContentPopupComponent();
       List<NodeComparaison> comparaisons = selectNodesComponent.getFilteredComparaison();
       for (NodeComparaison nodeComparaison : comparaisons) {
+        if (nodeComparaison.getState().equals("unknown")) {
+          continue;
+        }
         pushContentPopupComponent.addSelection(nodeComparaison);
       }
       selectNodesComponent.computeComparaisons();
@@ -325,7 +328,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
 
     if (isMatch) {
-      isMatch = !publishedContentOnly || nodeComparaison.isPublishedOnSource();
+      isMatch = !publishedContentOnly || nodeComparaison.isPublished();
     }
     return isMatch;
   }

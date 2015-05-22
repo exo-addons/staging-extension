@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.ActivitiesExportTask;
@@ -96,11 +97,6 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
       for (String site : contentsByOwner.keySet()) {
         List<FileEntry> fileEntries = contentsByOwner.get(site);
 
-        if (fileEntries == null || fileEntries.isEmpty()) {
-          log.info("No data available to import for site: " + site);
-          continue;
-        }
-
         FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
         List<FileEntry> seoFiles = getAndRemoveFilesStartsWith(fileEntries, SiteSEOExportTask.FILENAME);
 
@@ -112,12 +108,21 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
         log.info("Reading metadata options for import: workspace: " + workspace);
 
         try {
-          for (FileEntry fileEntry : fileEntries) {
-            importNode(fileEntry, workspace, isCleanPublication);
+          if(fileEntries != null) {
+            for (FileEntry fileEntry : fileEntries) {
+              importNode(fileEntry, workspace, isCleanPublication);
+            }
           }
           log.info("Content import has been finished");
         } catch (Exception e) {
           log.error("Error while importing site: " + site, e);
+        }
+
+        // Delete
+        String removeNodes = metaDataOptions.get("removeNodes");
+        if (!StringUtils.isEmpty(removeNodes)) {
+          String[] removeNodePaths = removeNodes.split(";");
+          removeNodes(workspace, removeNodePaths);
         }
 
         // Import activities
@@ -153,6 +158,26 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
       }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
+  }
+
+  private void removeNodes(String workspace, String[] removeNodePaths) throws Exception {
+    Session session = getSession(workspace);
+
+    for (String nodeToRemovePath : removeNodePaths) {
+      if (StringUtils.isEmpty(nodeToRemovePath) || !nodeToRemovePath.startsWith("/")) {
+        log.warn("Ignore node to delete: '" + nodeToRemovePath + "'");
+        continue;
+      }
+
+      if (session.itemExists(nodeToRemovePath)) {
+        log.info("Remove node  '" + nodeToRemovePath + "'");
+        session.getItem(nodeToRemovePath).remove();
+        session.save();
+        session.refresh(false);
+      } else {
+        log.warn("Cannot remove node because it doesn't exist '" + nodeToRemovePath + "'");
+      }
+    }
   }
 
   public static SiteMetaData getSiteMetadata(List<FileEntry> fileEntries) throws Exception {

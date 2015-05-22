@@ -95,7 +95,7 @@ public class Utils {
       NodeComparaison comparaison = new NodeComparaison();
       comparaison.setTitle(sourceNodeMetadata.getTitle());
       comparaison.setPath(path);
-      comparaison.setPublishedOnSource(sourceNodeMetadata.isPublished());
+      comparaison.setPublished(sourceNodeMetadata.isPublished());
 
       comparaison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getDateModified() != null ? targetNodeMetadata.getDateModified() : null);
       comparaison.setSourceModificationDateCalendar(sourceNodeMetadata.getDateModified() != null ? sourceNodeMetadata.getDateModified() : null);
@@ -154,7 +154,7 @@ public class Utils {
         NodeComparaison comparaison = new NodeComparaison();
         comparaison.setTitle(targetNodeMetadata.getTitle());
         comparaison.setPath(path);
-        comparaison.setPublishedOnSource(false);
+        comparaison.setPublished(targetNodeMetadata.isPublished());
         comparaison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
         comparaison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getDateModified() : null);
         comparaison.setSourceModificationDateCalendar(null);

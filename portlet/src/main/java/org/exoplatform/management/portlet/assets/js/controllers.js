@@ -76,14 +76,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $scope.syncServersMessageClass = "alert-info";
       $scope.syncServersMessage = "Deleting server ...";
       $http.post(stagingContainer.jzURL('StagingExtensionController.removeSynchonizationServer') + '&id='+id).success(function (data) {
-        if(data.indexOf('<body') >= 0) {
-	        $scope.syncServersMessageClass = "alert-error";
-	        $scope.syncServersMessage = "Session timeout, please retry again.";
-        } else {
-	        $scope.syncServersMessageClass = "alert-success";
-	        $scope.syncServersMessage = "Server deleted !";
-	        $scope.loadServers();
-        }
+        $scope.syncServersMessageClass = "alert-success";
+        $scope.syncServersMessage = "Server deleted !";
+        $scope.loadServers();
       }).error(function (data) {
         $scope.syncServersMessageClass = "alert-error";
         $scope.syncServersMessage = "Error while deleting the server";
@@ -291,15 +286,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
             headers : {'Content-Type':undefined},
             transformRequest: function(data) { return data; }
           }).success(function (data) {
-			if(data.indexOf('<body') >= 0) {
-	            $scope.setResultMessage("Session timeout, please retry again.", "error");
-	            $scope.button_clicked = false;
-	            $scope.refreshController();
-        	} else {
-	            $scope.setResultMessage(data, "success");
-	            $scope.button_clicked = false;
-	            $scope.refreshController();
-	        }
+            $scope.setResultMessage(data, "success");
+            $scope.button_clicked = false;
+            $scope.refreshController();
           }).error(function (data) {
             $scope.setResultMessage("Import failed. " + data, "error");
             $scope.button_clicked = false;

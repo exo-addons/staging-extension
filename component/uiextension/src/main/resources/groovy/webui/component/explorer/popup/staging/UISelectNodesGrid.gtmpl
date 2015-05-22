@@ -5,6 +5,7 @@
    import java.text.SimpleDateFormat;
    import org.gatein.common.text.EntityEncoder;
    import org.exoplatform.commons.utils.HTMLEntityEncoder;
+   import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
 
    String[] beanFields = uicomponent.getBeanFields();
    String[] beanActions = uicomponent.getBeanActions();
@@ -125,7 +126,7 @@
                if (beanActions != null && beanActions.length > 0)
                {
          %>
-           <% if(bean.getState() != null && !bean.getState().getKey().equals("not_found_source") && !bean.getState().getKey().equals("unkown")) { %>
+           <% if(bean.getState() != null && !bean.getState().equals(NodeComparaisonState.UNKNOWN)) { %>
 	            <div class="column actions">
 	               	   <%
 	                     def beanIdField = uicomponent.getBeanIdField();
@@ -143,9 +144,19 @@
 	                        {
 	                           actionLink = uiParent.event(action, beanId);
 	                        }
-		               %>
-		               	<img onclick="$actionLink" alt="$action" title="$title" src="/staging-extension-portlet/skin/images/${action}.gif"/>
-		               <% } %>
+                            def icon = "Select.gif";
+                            if(bean.getState().equals(NodeComparaisonState.NOT_FOUND_ON_SOURCE)) {
+                              icon = "Erase.gif";
+                            } else if(bean.getState().equals(NodeComparaisonState.NOT_FOUND_ON_TARGET)) {
+                              icon = "Add.gif";
+                            } else if(bean.getState().equals(NodeComparaisonState.MODIFIED_ON_TARGET)) {
+                              icon = "ForceUpdate.gif";
+                            } else if(bean.getState().equals(NodeComparaisonState.MODIFIED_ON_SOURCE)) {
+                              icon = "Update.gif";
+                            }
+                          %>
+                          <img onclick="$actionLink" alt="$action" title="$title" src="/staging-extension-portlet/skin/images/${icon}"/>
+		             <% } %>
 	            </div>
             <% } %>
 			<%

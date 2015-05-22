@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
 import org.exoplatform.management.service.api.Resource;
@@ -65,6 +66,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   // public static final String PUBLISH_FIELD_NAME = "publishOnTarget";
 
   public static final String INFO_FIELD_NAME = "info";
+  private static final String CLEANUP_PUBLICATION = "exo.staging.explorer.content.noVersion";
 
   private List<NodeComparaison> defaultSelection = new ArrayList<NodeComparaison>();
   private SynchronizationService synchronizationService_;
@@ -77,11 +79,11 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   private final UIFormSelectBox targetServerInput;
   private final UIFormInputInfo infoField;
   private final SelectNodesComponent selectNodesComponent;
+  private final ResourceBundle resourceBundle;
 
   private List<TargetServer> targetServers;
   private String currentPath;
   private String workspace;
-  private final ResourceBundle resourceBundle;
 
   List<NodeComparaison> selectedNodes = new ArrayList<NodeComparaison>();
 
@@ -239,24 +241,36 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           uiPopupContainer.deActivate();
           uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
         } else {
-          // Different contents was selected
+          // Multiple contents was selected, synchronize one by one
 
           for (NodeComparaison nodeComparaison : selectedComparaisons) {
             List<Resource> resources = new ArrayList<Resource>();
-            resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
+            resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared/contents", "shared", "shared"));
 
             Map<String, String> exportOptions = new HashMap<String, String>();
-            String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparaison.getPath() + "'";
-            exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
-            exportOptions.put("filter/taxonomy", "false");
-            exportOptions.put("filter/no-history", "" + cleanupPublication);
-            exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
-
             Map<String, String> importOptions = new HashMap<String, String>();
 
-            // importOptions.put("filter/cleanPublication", "" +
-            // cleanupPublication);
+            if (nodeComparaison.getState().equals(NodeComparaisonState.NOT_FOUND_ON_SOURCE)) {
+              exportOptions.put("filter/removeNodes", nodeComparaison.getPath());
+            } else {
 
+              boolean noVersion = false;
+              String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
+              if (!StringUtils.isEmpty(noVersionString)) {
+                noVersion = noVersionString.trim().equals("true");
+              }
+
+              if (noVersion) {
+                exportOptions.put("filter/no-history", "true");
+                importOptions.put("filter/cleanPublication", "true");
+              }
+
+              String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparaison.getPath() + "'";
+              exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
+              exportOptions.put("filter/taxonomy", "false");
+              exportOptions.put("filter/no-history", "" + cleanupPublication);
+              exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
+            }
             CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
           }
 

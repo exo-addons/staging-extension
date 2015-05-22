@@ -90,6 +90,9 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       String jcrQuery = getParameterValue(filters, "query:", null);
       // get JCR workspace
       String workspace = getParameterValue(filters, "workspace:", sitesLocation.getWorkspace());
+      // get JCR workspace
+      String removeNodes = getParameterValue(filters, "removeNodes:", null);
+
       // get JCR Site path
       String sitePath = (sitesLocation.getPath().endsWith("/") ? sitesLocation.getPath() : (sitesLocation.getPath() + "/")) + siteName;
 
@@ -97,24 +100,27 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       metaData.getOptions().put(SiteMetaData.SITE_PATH, sitePath);
       metaData.getOptions().put(SiteMetaData.SITE_WORKSPACE, workspace);
       metaData.getOptions().put(SiteMetaData.SITE_NAME, siteName);
-
-      Set<String> activitiesId = new HashSet<String>();
-      // Site contents
-      if (!StringUtils.isEmpty(jcrQuery)) {
-        exportTasks.addAll(exportQueryResult(workspace, sitePath, jcrQuery, excludePaths, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
-      } else if (exportSiteWithSkeleton) {
-        exportTasks.addAll(exportSite(workspace, sitePath, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+      if (!StringUtils.isEmpty(removeNodes)) {
+        metaData.getOptions().put("removeNodes", removeNodes);
       } else {
-        exportTasks.addAll(exportSiteWithoutSkeleton(workspace, sitePath, exportSiteTaxonomy, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        Set<String> activitiesId = new HashSet<String>();
+        // Site contents
+        if (!StringUtils.isEmpty(jcrQuery)) {
+          exportTasks.addAll(exportQueryResult(workspace, sitePath, jcrQuery, excludePaths, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        } else if (exportSiteWithSkeleton) {
+          exportTasks.addAll(exportSite(workspace, sitePath, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        } else {
+          exportTasks.addAll(exportSiteWithoutSkeleton(workspace, sitePath, exportSiteTaxonomy, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
+        }
+
+        if (!exportOnlyMetadata) {
+          // Export activities
+          exportActivities(exportTasks, activitiesId, siteName);
+        }
       }
 
       // Export Site Metadata
       exportTasks.add(new SiteMetaDataExportTask(metaData));
-
-      if (!exportOnlyMetadata) {
-        // Export activities
-        exportActivities(exportTasks, activitiesId, siteName);
-      }
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
