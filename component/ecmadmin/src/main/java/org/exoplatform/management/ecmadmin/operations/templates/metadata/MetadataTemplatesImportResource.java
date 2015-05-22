@@ -68,6 +68,8 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
       }
     }
 
+    metadatas.clear();
+
     try {
       final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
       ZipEntry entry;
@@ -115,8 +117,7 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
 
       Iterator<Map.Entry<String, byte[]>> templatesContentIterator = templatesContent.entrySet().iterator();
       while (templatesContentIterator.hasNext()) {
-        Map.Entry<java.lang.String, byte[]> templateContentEntry = (Map.Entry<java.lang.String, byte[]>) templatesContentIterator
-            .next();
+        Map.Entry<java.lang.String, byte[]> templateContentEntry = (Map.Entry<java.lang.String, byte[]>) templatesContentIterator.next();
 
         Matcher matcher = templateEntryPattern.matcher(templateContentEntry.getKey());
         if (!matcher.find()) {
@@ -135,8 +136,7 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
-  private void updateTemplateContent(String templateType, String nodeTypeName, String templateName, InputStream inputStream)
-      throws Exception {
+  private void updateTemplateContent(String templateType, String nodeTypeName, String templateName, InputStream inputStream) throws Exception {
     boolean isExists = metadataService.hasMetadata(nodeTypeName);
     if (isExists) {
       if (replaceExisting) {

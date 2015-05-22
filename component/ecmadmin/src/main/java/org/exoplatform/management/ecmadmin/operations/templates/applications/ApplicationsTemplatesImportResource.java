@@ -28,10 +28,10 @@ import com.thoughtworks.xstream.XStream;
  */
 public class ApplicationsTemplatesImportResource extends ECMAdminImportResource {
   final private static Logger log = LoggerFactory.getLogger(ApplicationsTemplatesImportResource.class);
+  final private static Pattern templateEntryPattern = Pattern.compile("templates/applications/(.*)/(.*)/(.*)\\.gtmpl");
+
   private ApplicationTemplateManagerService applicationTemplateManagerService;
   private TemplateService templateService;
-
-  private Pattern templateEntryPattern = Pattern.compile("templates/applications/(.*)/(.*)/(.*)\\.gtmpl");
 
   public ApplicationsTemplatesImportResource() {
     super(null);

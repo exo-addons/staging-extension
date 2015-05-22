@@ -69,6 +69,8 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
       }
     }
 
+    metadatas.clear();
+
     try {
       final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
       ZipEntry entry;
@@ -116,8 +118,7 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
 
       Iterator<Map.Entry<String, byte[]>> templatesContentIterator = templatesContent.entrySet().iterator();
       while (templatesContentIterator.hasNext()) {
-        Map.Entry<java.lang.String, byte[]> templateContentEntry = (Map.Entry<java.lang.String, byte[]>) templatesContentIterator
-            .next();
+        Map.Entry<java.lang.String, byte[]> templateContentEntry = (Map.Entry<java.lang.String, byte[]>) templatesContentIterator.next();
 
         Matcher matcher = templateEntryPattern.matcher(templateContentEntry.getKey());
         if (!matcher.find()) {
@@ -127,8 +128,7 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
         String nodeTypeName = matcher.group(1);
         String templateType = matcher.group(2);
         String templateName = matcher.group(3);
-        updateTemplateContent(templateType, nodeTypeName, templateName, replaceExisting, new ByteArrayInputStream(
-            templateContentEntry.getValue()));
+        updateTemplateContent(templateType, nodeTypeName, templateName, replaceExisting, new ByteArrayInputStream(templateContentEntry.getValue()));
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing nodetype templates", e);
@@ -137,8 +137,7 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
-  private void updateTemplateContent(String templateType, String nodeTypeName, String templateName, boolean replaceExisting,
-      InputStream inputStream) throws Exception {
+  private void updateTemplateContent(String templateType, String nodeTypeName, String templateName, boolean replaceExisting, InputStream inputStream) throws Exception {
     String templateContent;
     try {
       templateContent = templateService.getTemplate(templateType, nodeTypeName, templateName);
@@ -167,8 +166,7 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
     }
 
     // add/update the template content
-    templateService.addTemplate(templateType, nodeTypeName, nodeTypeTemplatesMetaData.getLabel(), true, templateName, roles,
-        inputStream);
+    templateService.addTemplate(templateType, nodeTypeName, nodeTypeTemplatesMetaData.getLabel(), true, templateName, roles, inputStream);
   }
 
   private void putData(String nodeTypeName, String contentType, String fileName, InputStream inputStream) throws Exception {
