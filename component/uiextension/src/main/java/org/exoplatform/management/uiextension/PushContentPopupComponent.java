@@ -222,13 +222,24 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
 
           Map<String, String> exportOptions = new HashMap<String, String>();
+          Map<String, String> importOptions = new HashMap<String, String>();
+
           String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
           exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
           exportOptions.put("filter/taxonomy", "false");
           exportOptions.put("filter/no-history", "" + cleanupPublication);
           exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
 
-          Map<String, String> importOptions = new HashMap<String, String>();
+          boolean noVersion = false;
+          String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
+          if (!StringUtils.isEmpty(noVersionString)) {
+            noVersion = noVersionString.trim().equals("true");
+          }
+
+          if (noVersion) {
+            exportOptions.put("filter/no-history", "true");
+            importOptions.put("filter/cleanPublication", "true");
+          }
 
           // importOptions.put("filter/cleanPublication", "" +
           // cleanupPublication);
