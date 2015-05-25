@@ -113,19 +113,21 @@ public class StagingServiceImpl implements StagingService {
     Set<String> paths = new HashSet<String>();
     for (String sitePath : sites) {
       String realSQL = sql;
-      sitePath = sitesLocation.getPath() + sitePath.replace(CONTENT_SITES_PATH, "") + "/";
-      sitePath = sitePath.replaceAll("//", "/");
-      String queryPath = "jcr:path = '" + sitePath + "%'";
-      if (realSQL.contains("where")) {
-        int startIndex = realSQL.indexOf("where");
-        int endIndex = startIndex + "where".length();
+      if (!sql.contains("jcr:path")) {
+        sitePath = sitesLocation.getPath() + sitePath.replace(CONTENT_SITES_PATH, "") + "/";
+        sitePath = sitePath.replaceAll("//", "/");
+        String queryPath = "jcr:path = '" + sitePath + "%'";
+        if (realSQL.contains("where")) {
+          int startIndex = realSQL.indexOf("where");
+          int endIndex = startIndex + "where".length();
 
-        String condition = realSQL.substring(endIndex);
-        condition = queryPath + " AND (" + condition + ")";
+          String condition = realSQL.substring(endIndex);
+          condition = queryPath + " AND (" + condition + ")";
 
-        realSQL = realSQL.substring(0, startIndex) + " where " + condition;
-      } else {
-        realSQL += " where " + queryPath;
+          realSQL = realSQL.substring(0, startIndex) + " where " + condition;
+        } else {
+          realSQL += " where " + queryPath;
+        }
       }
 
       SessionProvider provider = SessionProvider.createSystemProvider();
@@ -137,6 +139,9 @@ public class StagingServiceImpl implements StagingService {
       while (nodeIterator.hasNext()) {
         javax.jcr.Node node = nodeIterator.nextNode();
         paths.add(node.getPath());
+      }
+      if (sql.contains("jcr:path")) {
+        break;
       }
     }
     return paths;
@@ -169,11 +174,12 @@ public class StagingServiceImpl implements StagingService {
   public Set<Resource> getWikiPortalResources() {
     return getResources(PORTAL_WIKIS_PATH);
   }
-  
+
   @Override
   public Set<Resource> getWikiGroupResources() {
     return getResources(GROUP_WIKIS_PATH);
   }
+
   @Override
   public Set<Resource> getWikiUserResources() {
     return getResources(USER_WIKIS_PATH);

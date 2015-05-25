@@ -474,8 +474,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         $http({
           method: 'POST',
           url: stagingContainer.jzURL('StagingExtensionController.executeSQL'),
-          data: 'sql=' + sql + paramsSites
-          ,
+          data: 'sql=' + encodeURIComponent(sql) + paramsSites,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (data) {
 			if(data.indexOf('<body') >= 0) {
