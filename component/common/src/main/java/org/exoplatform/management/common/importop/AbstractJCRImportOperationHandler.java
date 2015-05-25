@@ -132,17 +132,21 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
 
   protected final void cleanPublication(Node node) throws Exception {
     if (node.hasProperty("publication:currentState")) {
-      log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
-      // See in case the content is enrolled for the first time but never
-      // published in "source server", if yes, set manually "published" state
-      Value[] values = node.getProperty("publication:revisionData").getValues();
-      if (values.length < 2) {
-        String user = node.getProperty("publication:lastUser").getString();
-        node.setProperty("publication:revisionData", new String[] { node.getUUID() + ",published," + user });
+      String state = node.getProperty("publication:currentState").getString();
+      // Cleanup only already published nodes
+      if (state.equals("published")) {
+        log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
+        // See in case the content is enrolled for the first time but never
+        // published in "source server", if yes, set manually "published" state
+        Value[] values = node.getProperty("publication:revisionData").getValues();
+        if (values.length < 2) {
+          String user = node.getProperty("publication:lastUser").getString();
+          node.setProperty("publication:revisionData", new String[] { node.getUUID() + ",published," + user });
+        }
+        node.setProperty("publication:liveRevision", "");
+        node.setProperty("publication:currentState", "published");
+        node.save();
       }
-      node.setProperty("publication:liveRevision", "");
-      node.setProperty("publication:currentState", "published");
-      node.save();
     }
   }
 
