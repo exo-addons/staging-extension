@@ -104,23 +104,30 @@ public class Utils {
         comparison.setState(NodeComparisonState.NOT_FOUND_ON_TARGET);
         comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
       } else {
-        boolean sameDate = false;
+        boolean sameContent = false;
         if (targetNodeMetadata.getLiveDate() != null && sourceNodeMetadata.getLiveDate() != null) {
           int comp = targetNodeMetadata.getLiveDate().compareTo(sourceNodeMetadata.getLiveDate());
-          sameDate = comp == 0;
-          if (!sameDate) {
+          sameContent = comp == 0;
+          if (!sameContent) {
             comparison.setState(comp > 0 ? NodeComparisonState.MODIFIED_ON_TARGET : NodeComparisonState.MODIFIED_ON_SOURCE);
             comparison.setLastModifierUserName(comp > 0 ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata.getLastModifier());
+          } else if (targetNodeMetadata.isPublished() && !sourceNodeMetadata.isPublished()) {
+            comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
+            comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
           }
         } else if (targetNodeMetadata.getLiveDate() == null && sourceNodeMetadata.getLiveDate() == null) {
-          sameDate = true;
+          sameContent = true;
+        } else if (targetNodeMetadata.getLiveDate() == null) {
+          comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
+          comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
+        } else if (sourceNodeMetadata.getLiveDate() == null) {
+          comparison.setState(NodeComparisonState.MODIFIED_ON_TARGET);
+          comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
         } else {
-          // If one date is null and the other not, state = uknown
           comparison.setState(NodeComparisonState.UNKNOWN);
-          comparison.setLastModifierUserName((targetNodeMetadata != null && targetNodeMetadata.getLastModifier() != null) ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata
-              .getLastModifier());
+          comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
         }
-        if(sameDate) {
+        if (sameContent) {
           comparison.setState(NodeComparisonState.SAME);
           comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
         }
