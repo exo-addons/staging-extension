@@ -134,7 +134,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     if (node.hasProperty("publication:currentState")) {
       log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
       // See in case the content is enrolled for the first time but never
-      // publisher in "source server", if yes, set manually "published" state
+      // published in "source server", if yes, set manually "published" state
       Value[] values = node.getProperty("publication:revisionData").getValues();
       if (values.length < 2) {
         String user = node.getProperty("publication:lastUser").getString();

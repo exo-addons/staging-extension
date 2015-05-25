@@ -8,8 +8,8 @@ import java.util.ResourceBundle;
 
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
-import org.exoplatform.management.uiextension.comparaison.NodeComparaison;
-import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
+import org.exoplatform.management.uiextension.comparison.NodeComparison;
+import org.exoplatform.management.uiextension.comparison.NodeComparisonState;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.web.application.ApplicationMessage;
@@ -56,13 +56,13 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
   public static final String PUBLICATION_DATE_FIELD_NAME = "modifiedAfter";
   public static final String PUBLISHED_CONTENT_ONLY_FIELD_NAME = "publishedContentOnly";
 
-  public static String[] COMPARAISON_BEAN_FIELD = { "title", "path", "published", "sourceModificationDate", "targetModificationDate", "stateLocalized" };
+  public static String[] COMPARISON_BEAN_FIELD = { "title", "path", "published", "sourceModificationDate", "targetModificationDate", "stateLocalized" };
 
-  public static String[] COMPARAISON_BEAN_ACTION = { "Select" };
+  public static String[] COMPARISON_BEAN_ACTION = { "Select" };
 
-  public static String[] SELECTED_COMPARAISON_BEAN_FIELD = { "title", "path", "stateLocalized" };
+  public static String[] SELECTED_COMPARISON_BEAN_FIELD = { "title", "path", "actionLocalized" };
 
-  public static String[] SELECTED_COMPARAISON_BEAN_ACTION = { "Delete" };
+  public static String[] SELECTED_COMPARISON_BEAN_ACTION = { "Delete" };
 
   private UIGrid nodesGrid;
   private UIGrid selectedNodesGrid;
@@ -77,19 +77,19 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
   String filterString = null;
   boolean publishedContentOnly = false;
 
-  private List<NodeComparaison> comparaisons;
-  private List<NodeComparaison> filteredComparaison;
+  private List<NodeComparison> comparisons;
+  private List<NodeComparison> filteredComparison;
 
   public SelectNodesComponent() throws Exception {
     ResourceBundle resourceBundle = WebuiRequestContext.getCurrentInstance().getApplicationResourceBundle();
 
     List<SelectItemOption<String>> options = new ArrayList<SelectItemOption<String>>();
     options.add(new SelectItemOption<String>(resourceBundle.getString("PushContent.state.all"), ""));
-    options.add(new SelectItemOption<String>(NodeComparaisonState.MODIFIED_ON_SOURCE.getLabel(resourceBundle), NodeComparaisonState.MODIFIED_ON_SOURCE.getKey()));
-    options.add(new SelectItemOption<String>(NodeComparaisonState.MODIFIED_ON_TARGET.getLabel(resourceBundle), NodeComparaisonState.MODIFIED_ON_TARGET.getKey()));
+    options.add(new SelectItemOption<String>(NodeComparisonState.MODIFIED_ON_SOURCE.getLabel(resourceBundle), NodeComparisonState.MODIFIED_ON_SOURCE.getKey()));
+    options.add(new SelectItemOption<String>(NodeComparisonState.MODIFIED_ON_TARGET.getLabel(resourceBundle), NodeComparisonState.MODIFIED_ON_TARGET.getKey()));
 
-    options.add(new SelectItemOption<String>(NodeComparaisonState.SAME.getLabel(resourceBundle), NodeComparaisonState.SAME.getKey()));
-    options.add(new SelectItemOption<String>(NodeComparaisonState.UNKNOWN.getLabel(resourceBundle), NodeComparaisonState.UNKNOWN.getKey()));
+    options.add(new SelectItemOption<String>(NodeComparisonState.SAME.getLabel(resourceBundle), NodeComparisonState.SAME.getKey()));
+    options.add(new SelectItemOption<String>(NodeComparisonState.UNKNOWN.getLabel(resourceBundle), NodeComparisonState.UNKNOWN.getKey()));
 
     stateSelectBoxInput = new UIFormSelectBox(CONTENT_STATE_FIELD_NAME, CONTENT_STATE_FIELD_NAME, options);
     addUIFormInput(stateSelectBoxInput);
@@ -109,11 +109,11 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     fromDateModified.setHTMLAttribute("style", "width:135px;");
 
     nodesGrid = addChild(UIGrid.class, "selectNodesGrid", "selectNodesGrid");
-    nodesGrid.configure("path", COMPARAISON_BEAN_FIELD, COMPARAISON_BEAN_ACTION);
+    nodesGrid.configure("path", COMPARISON_BEAN_FIELD, COMPARISON_BEAN_ACTION);
     nodesGrid.getUIPageIterator().setId("UISelectNodesGridIterator");
 
     selectedNodesGrid = addChild(UIGrid.class, "uiSelectedNodesGrid", "uiSelectedNodesGrid");
-    selectedNodesGrid.configure("path", SELECTED_COMPARAISON_BEAN_FIELD, SELECTED_COMPARAISON_BEAN_ACTION);
+    selectedNodesGrid.configure("path", SELECTED_COMPARISON_BEAN_FIELD, SELECTED_COMPARISON_BEAN_ACTION);
     selectedNodesGrid.getUIPageIterator().setId("UISelectedNodesGridIterator");
   }
 
@@ -140,33 +140,33 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     publishedCheckBoxInput.setChecked(this.publishedContentOnly);
   }
 
-  public void setComparaisons(List<NodeComparaison> comparaisons) {
-    this.comparaisons = comparaisons;
-    filteredComparaison = new ArrayList<NodeComparaison>(comparaisons);
-    computeComparaisons();
+  public void setComparisons(List<NodeComparison> comparisons) {
+    this.comparisons = comparisons;
+    filteredComparison = new ArrayList<NodeComparison>(comparisons);
+    computeComparisons();
   }
 
-  public void computeComparaisons() {
-    List<NodeComparaison> alreadySelectedNodes = pushContentPopupComponent.getSelectedNodes();
-    filteredComparaison.clear();
+  public void computeComparisons() {
+    List<NodeComparison> alreadySelectedNodes = pushContentPopupComponent.getSelectedNodes();
+    filteredComparison.clear();
 
     pushContentPopupComponent.filterString = filterString = filterField.getValue();
     pushContentPopupComponent.modifiedDateFilter = modifiedDateFilter = fromDateModified.getCalendar();
     pushContentPopupComponent.stateString = stateString = stateSelectBoxInput.getValue();
     pushContentPopupComponent.publishedContentOnly = publishedContentOnly = publishedCheckBoxInput.getValue();
 
-    for (NodeComparaison nodeComparaison : comparaisons) {
-      if (!alreadySelectedNodes.contains(nodeComparaison) && checkFilter(nodeComparaison)) {
-        filteredComparaison.add(nodeComparaison);
+    for (NodeComparison nodeComparison : comparisons) {
+      if (!alreadySelectedNodes.contains(nodeComparison) && checkFilter(nodeComparison)) {
+        filteredComparison.add(nodeComparison);
       }
     }
-    nodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, filteredComparaison), 5));
+    nodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, filteredComparison), 5));
 
     if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
       selectedNodesGrid.getUIPageIterator().setPageList(
-          new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getDefaultSelection()), 5));
+          new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
     } else {
-      selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getSelectedNodes()), 5));
+      selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
     }
   }
 
@@ -175,7 +175,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
 
-      selectNodesComponent.computeComparaisons();
+      selectNodesComponent.computeComparisons();
       event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesComponent.getNodesGrid());
     }
   }
@@ -188,17 +188,17 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
 
       String path = event.getRequestContext().getRequestParameter(OBJECTID);
 
-      Iterator<NodeComparaison> comparaisons = selectNodesComponent.getComparaisons().iterator();
-      NodeComparaison selectedNodeComparaison = null;
-      while (selectedNodeComparaison == null && comparaisons.hasNext()) {
-        NodeComparaison tmpNodeComparaison = comparaisons.next();
-        if (path.equals(tmpNodeComparaison.getPath())) {
-          selectedNodeComparaison = tmpNodeComparaison;
+      Iterator<NodeComparison> comparisons = selectNodesComponent.getComparisons().iterator();
+      NodeComparison selectedNodeComparison = null;
+      while (selectedNodeComparison == null && comparisons.hasNext()) {
+        NodeComparison tmpNodeComparison = comparisons.next();
+        if (path.equals(tmpNodeComparison.getPath())) {
+          selectedNodeComparison = tmpNodeComparison;
           break;
         }
       }
-      pushContentPopupComponent.addSelection(selectedNodeComparaison);
-      selectNodesComponent.computeComparaisons();
+      pushContentPopupComponent.addSelection(selectedNodeComparison);
+      selectNodesComponent.computeComparisons();
 
       event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesComponent);
     }
@@ -209,10 +209,10 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
       selectNodesComponent.getSelectedNodesGrid().getUIPageIterator()
-          .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, selectNodesComponent.getPushContentPopupComponent().getDefaultSelection()), 5));
+          .setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, selectNodesComponent.getPushContentPopupComponent().getDefaultSelection()), 5));
 
       selectNodesComponent.getPushContentPopupComponent().getSelectedNodes().clear();
-      selectNodesComponent.computeComparaisons();
+      selectNodesComponent.computeComparisons();
       event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesComponent.getNodesGrid());
       event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesComponent.getSelectedNodesGrid());
     }
@@ -230,31 +230,31 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
       String path = event.getRequestContext().getRequestParameter(OBJECTID);
 
       try {
-        Iterator<NodeComparaison> comparaisons = pushContentPopupComponent.getSelectedNodes().iterator();
+        Iterator<NodeComparison> comparisons = pushContentPopupComponent.getSelectedNodes().iterator();
         boolean removed = false;
-        while (!removed && comparaisons.hasNext()) {
-          NodeComparaison comparaison = comparaisons.next();
-          if (path.equals(comparaison.getPath())) {
-            comparaisons.remove();
+        while (!removed && comparisons.hasNext()) {
+          NodeComparison comparison = comparisons.next();
+          if (path.equals(comparison.getPath())) {
+            comparisons.remove();
             removed = true;
           }
         }
         if (removed) {
           if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
             pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator()
-                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getDefaultSelection()), 5));
+                .setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
           } else {
             pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator()
-                .setPageList(new LazyPageList<NodeComparaison>(new ListAccessImpl<NodeComparaison>(NodeComparaison.class, pushContentPopupComponent.getSelectedNodes()), 5));
+                .setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
           }
         }
         if (pushContentPopupComponent.getSelectNodesComponent().isRendered()) {
-          pushContentPopupComponent.getSelectNodesComponent().computeComparaisons();
+          pushContentPopupComponent.getSelectNodesComponent().computeComparisons();
           event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getSelectNodesComponent());
         }
       } catch (Exception ex) {
         ApplicationMessage message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
-        message.setResourceBundle(pushContentPopupComponent.getResourceBundle());
+        message.setResourceBundle(PushContentPopupComponent.getResourceBundle());
         pushContentPopupComponent.getUIFormInputInfo(PushContentPopupComponent.INFO_FIELD_NAME).setValue(message.getMessage());
         LOG.error("Error while deleting '" + path + "' from selected contents:", ex);
       }
@@ -266,14 +266,14 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
       PushContentPopupComponent pushContentPopupComponent = selectNodesComponent.getPushContentPopupComponent();
-      List<NodeComparaison> comparaisons = selectNodesComponent.getFilteredComparaison();
-      for (NodeComparaison nodeComparaison : comparaisons) {
-        if (nodeComparaison.getState().equals("unknown")) {
+      List<NodeComparison> comparisons = selectNodesComponent.getFilteredComparison();
+      for (NodeComparison nodeComparison : comparisons) {
+        if (nodeComparison.getState().equals("unknown")) {
           continue;
         }
-        pushContentPopupComponent.addSelection(nodeComparaison);
+        pushContentPopupComponent.addSelection(nodeComparison);
       }
-      selectNodesComponent.computeComparaisons();
+      selectNodesComponent.computeComparisons();
       event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesComponent.getNodesGrid());
       event.getRequestContext().addUIComponentToUpdateByAjax(selectNodesComponent.getSelectedNodesGrid());
     }
@@ -293,12 +293,12 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     return nodesGrid;
   }
 
-  public List<NodeComparaison> getComparaisons() {
-    return comparaisons;
+  public List<NodeComparison> getComparisons() {
+    return comparisons;
   }
 
-  public List<NodeComparaison> getFilteredComparaison() {
-    return filteredComparaison;
+  public List<NodeComparison> getFilteredComparison() {
+    return filteredComparison;
   }
 
   public void setPushContentPopupComponent(PushContentPopupComponent pushContentPopupComponent) {
@@ -309,18 +309,18 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     return pushContentPopupComponent;
   }
 
-  private boolean checkFilter(NodeComparaison nodeComparaison) {
-    boolean isMatch = filterString == null || filterString.isEmpty() || nodeComparaison.getTitle().toLowerCase().contains(filterString.toLowerCase());
+  private boolean checkFilter(NodeComparison nodeComparison) {
+    boolean isMatch = filterString == null || filterString.isEmpty() || nodeComparison.getTitle().toLowerCase().contains(filterString.toLowerCase());
 
     if (isMatch) {
-      isMatch = modifiedDateFilter == null || nodeComparaison.getSourceModificationDateCalendar() == null || modifiedDateFilter.before(nodeComparaison.getSourceModificationDateCalendar());
+      isMatch = modifiedDateFilter == null || nodeComparison.getSourceModificationDateCalendar() == null || modifiedDateFilter.before(nodeComparison.getSourceModificationDateCalendar());
     }
 
-    NodeComparaisonState state = nodeComparaison.getState();
-    if (state != null && state.equals(NodeComparaisonState.NOT_FOUND_ON_TARGET)) {
-      state = NodeComparaisonState.MODIFIED_ON_SOURCE;
-    } else if (state != null && state.equals(NodeComparaisonState.NOT_FOUND_ON_SOURCE)) {
-      state = NodeComparaisonState.MODIFIED_ON_TARGET;
+    NodeComparisonState state = nodeComparison.getState();
+    if (state != null && state.equals(NodeComparisonState.NOT_FOUND_ON_TARGET)) {
+      state = NodeComparisonState.MODIFIED_ON_SOURCE;
+    } else if (state != null && state.equals(NodeComparisonState.NOT_FOUND_ON_SOURCE)) {
+      state = NodeComparisonState.MODIFIED_ON_TARGET;
     }
 
     if (isMatch) {
@@ -328,14 +328,14 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
 
     if (isMatch) {
-      isMatch = !publishedContentOnly || nodeComparaison.isPublished();
+      isMatch = !publishedContentOnly || nodeComparison.isPublished();
     }
     return isMatch;
   }
 
   public boolean isDefaultEntry(String path) {
-    for (NodeComparaison comparaison : pushContentPopupComponent.getDefaultSelection()) {
-      if (path.equals(comparaison.getPath())) {
+    for (NodeComparison comparison : pushContentPopupComponent.getDefaultSelection()) {
+      if (path.equals(comparison.getPath())) {
         return true;
       }
     }

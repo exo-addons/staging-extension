@@ -1,17 +1,16 @@
-package org.exoplatform.management.uiextension.comparaison;
+package org.exoplatform.management.uiextension.comparison;
 
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.ResourceBundle;
 
-public class NodeComparaison implements Comparable<NodeComparaison>, Serializable {
+import org.exoplatform.management.uiextension.PushContentPopupComponent;
+
+public class NodeComparison implements Comparable<NodeComparison>, Serializable {
   private static final long serialVersionUID = -3678314428635211056L;
 
   private static final DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy (HH:mm:ss)");
-
-  public static ResourceBundle resourceBundle;
 
   String title;
   String path;
@@ -22,7 +21,7 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
   String sourceModificationDate;
   String targetModificationDate;
   Boolean published;
-  NodeComparaisonState state;
+  NodeComparisonState state;
 
   public String getTitle() {
     return title;
@@ -49,19 +48,28 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
   }
 
   public String getStateLocalized() {
-    return state.getLabel(resourceBundle);
+    return state.getLabel(PushContentPopupComponent.getResourceBundle());
+  }
+
+  public String getActionLocalized() {
+    return state.getAction(PushContentPopupComponent.getResourceBundle());
   }
 
   // fakeMethod
   public void setStateLocalized(String fake) {
-    // nothinh to do here
+    // nothing to do here
   }
 
-  public NodeComparaisonState getState() {
+  // fakeMethod
+  public void setActionLocalized(String fake) {
+    // nothing to do here
+  }
+  
+  public NodeComparisonState getState() {
     return state;
   }
 
-  public void setState(NodeComparaisonState state) {
+  public void setState(NodeComparisonState state) {
     this.state = state;
   }
 
@@ -100,20 +108,20 @@ public class NodeComparaison implements Comparable<NodeComparaison>, Serializabl
   }
 
   @Override
-  public int compareTo(NodeComparaison o) {
+  public int compareTo(NodeComparison o) {
     if (o.getState().equals(getState())) {
-      return o.getPath().compareTo(path);
+      return title.compareTo(o.getTitle());
     } else {
-      return o.getState().compareTo(getState());
+      return getState().compareTo(o.getState());
     }
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == null || !(obj instanceof NodeComparaison)) {
+    if (obj == null || !(obj instanceof NodeComparison)) {
       return false;
     }
-    String otherPath = ((NodeComparaison) obj).getPath();
+    String otherPath = ((NodeComparison) obj).getPath();
     return path != null && otherPath != null && otherPath.equals(path);
   }
 

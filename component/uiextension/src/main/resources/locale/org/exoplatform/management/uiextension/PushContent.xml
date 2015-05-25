@@ -28,6 +28,14 @@
 			<unkown>Unknown</unkown>
 			<all>All</all>
 		</state>
+		<action>
+			<not_found_source>Delete from target</not_found_source>
+			<not_found_target>Add to target</not_found_target>
+			<modified_source>Update on target</modified_source>
+			<modified_target>Force update on target</modified_target>
+			<same>Update on target</same>
+			<unkown>Unknown</unkown>
+		</action>
 	</PushContent>
 	<PushContentPopupComponent>
 		<label>
@@ -62,13 +70,9 @@
 			<sourceModificationDate>Modified (here)</sourceModificationDate>
 			<targetModificationDate>Modified (target)</targetModificationDate>
 			<stateLocalized>State</stateLocalized>
+			<actionLocalized>Action</actionLocalized>
 			<action>Action</action>
 		</header>
-		<action>
-			<title>
-				<Select>Select content</Select>
-			</title>
-		</action>
 		<label>
 			<published>Published</published>
 			<notPublished>Not published</notPublished>

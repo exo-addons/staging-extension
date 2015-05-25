@@ -5,7 +5,7 @@
    import java.text.SimpleDateFormat;
    import org.gatein.common.text.EntityEncoder;
    import org.exoplatform.commons.utils.HTMLEntityEncoder;
-   import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
+   import org.exoplatform.management.uiextension.comparison.NodeComparisonState;
 
    String[] beanFields = uicomponent.getBeanFields();
    String[] beanActions = uicomponent.getBeanActions();
@@ -126,7 +126,7 @@
                if (beanActions != null && beanActions.length > 0)
                {
          %>
-           <% if(bean.getState() != null && !bean.getState().equals(NodeComparaisonState.UNKNOWN)) { %>
+           <% if(bean.getState() != null && !bean.getState().equals(NodeComparisonState.UNKNOWN)) { %>
 	            <div class="column actions">
 	               	   <%
 	                     def beanIdField = uicomponent.getBeanIdField();
@@ -134,7 +134,7 @@
 	                     for (action in beanActions)
 	                     {
 	                        if (action == null) continue;
-	                        String title = _ctx.appRes("SelectNodesComponent.action.title." + action);
+	                        String title = _ctx.appRes("PushContent.action." + bean.getState().getKey());
 	                        String actionLink = "";
 	                        if (uiForm != null)
 	                        {
@@ -145,17 +145,17 @@
 	                           actionLink = uiParent.event(action, beanId);
 	                        }
                             def icon = "Select.gif";
-                            if(bean.getState().equals(NodeComparaisonState.NOT_FOUND_ON_SOURCE)) {
+                            if(bean.getState().equals(NodeComparisonState.NOT_FOUND_ON_SOURCE)) {
                               icon = "Erase.gif";
-                            } else if(bean.getState().equals(NodeComparaisonState.NOT_FOUND_ON_TARGET)) {
+                            } else if(bean.getState().equals(NodeComparisonState.NOT_FOUND_ON_TARGET)) {
                               icon = "Add.gif";
-                            } else if(bean.getState().equals(NodeComparaisonState.MODIFIED_ON_TARGET)) {
+                            } else if(bean.getState().equals(NodeComparisonState.MODIFIED_ON_TARGET)) {
                               icon = "ForceUpdate.gif";
-                            } else if(bean.getState().equals(NodeComparaisonState.MODIFIED_ON_SOURCE)) {
+                            } else if(bean.getState().equals(NodeComparisonState.MODIFIED_ON_SOURCE)) {
                               icon = "Update.gif";
                             }
                           %>
-                          <img onclick="$actionLink" alt="$action" title="$title" src="/staging-extension-portlet/skin/images/${icon}"/>
+                          <img onclick="$actionLink" alt="$title" title="$title" src="/staging-extension-portlet/skin/images/${icon}"/>
 		             <% } %>
 	            </div>
             <% } %>
