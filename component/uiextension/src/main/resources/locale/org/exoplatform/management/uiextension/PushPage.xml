@@ -18,9 +18,9 @@
 			<Close>Close</Close>
 		</action>
 	</PushPageForm>
-	<StagingPushPageWindow>
+	<PushPagePopupWindow>
 		<title>
 			<PushPageForm>Push current page</PushPageForm>
 		</title>
-	</StagingPushPageWindow>
+	</PushPagePopupWindow>
 </bundle>
