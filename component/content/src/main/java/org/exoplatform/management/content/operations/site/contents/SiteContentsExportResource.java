@@ -10,7 +10,6 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
-import javax.jcr.Value;
 import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
@@ -332,21 +331,8 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
         if (childNode.hasProperty("publication:currentState")) {
           nodeMetadata.setPublished(childNode.getProperty("publication:currentState").getString().equals("published"));
         }
-        if (childNode.hasProperty("exo:dateModified")) {
-          nodeMetadata.setDateModified(childNode.getProperty("exo:dateModified").getDate());
-        }
-        if (childNode.hasProperty("publication:history")) {
-          Value[] values = childNode.getProperty("publication:history").getValues();
-          if (values != null) {
-            StringBuilder sB = new StringBuilder();
-            for (int i = 0; i < values.length; i++) {
-              if (i > 0) {
-                sB.append("; ");
-              }
-              sB.append(values[i].getString());
-            }
-            nodeMetadata.setPublicationHistory(sB.toString());
-          }
+        if (childNode.hasProperty("publication:liveDate")) {
+          nodeMetadata.setLiveDate(childNode.getProperty("publication:liveDate").getDate());
         }
       }
       // If not export the whole node

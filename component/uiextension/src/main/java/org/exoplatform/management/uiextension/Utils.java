@@ -22,8 +22,8 @@ import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.management.service.handler.content.SiteContentsHandler;
-import org.exoplatform.management.uiextension.comparaison.NodeComparaison;
-import org.exoplatform.management.uiextension.comparaison.NodeComparaisonState;
+import org.exoplatform.management.uiextension.comparison.NodeComparison;
+import org.exoplatform.management.uiextension.comparison.NodeComparisonState;
 import org.exoplatform.services.security.ConversationState;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.operation.model.ExportResourceModel;
@@ -60,7 +60,7 @@ public class Utils {
     }
   }
 
-  public static List<NodeComparaison> compareLocalNodesWithTargetServer(String workspace, String nodePathToCompare, TargetServer targetServer) throws Exception {
+  public static List<NodeComparison> compareLocalNodesWithTargetServer(String workspace, String nodePathToCompare, TargetServer targetServer) throws Exception {
     Map<String, String> exportOptions = new HashMap<String, String>();
     // Select all descendants
     String sqlQueryFilter = "query:select * from nt:base where publication:currentState IS NOT NULL and jcr:path like '" + nodePathToCompare + "/%' ";
@@ -68,7 +68,7 @@ public class Utils {
     exportOptions.put("filter/query", sqlQueryFilter);
     exportOptions.put("filter/only-metadata", "true");
 
-    List<NodeComparaison> comparaisons = compareNodesUsingOptions(targetServer, exportOptions);
+    List<NodeComparison> comparisons = compareNodesUsingOptions(targetServer, exportOptions);
 
     exportOptions = new HashMap<String, String>();
     // Select the current node
@@ -77,94 +77,77 @@ public class Utils {
     exportOptions.put("filter/query", sqlQueryFilter);
     exportOptions.put("filter/only-metadata", "true");
 
-    comparaisons.addAll(compareNodesUsingOptions(targetServer, exportOptions));
+    comparisons.addAll(compareNodesUsingOptions(targetServer, exportOptions));
 
-    return comparaisons;
+    return comparisons;
   }
 
-  private static List<NodeComparaison> compareNodesUsingOptions(TargetServer targetServer, Map<String, String> exportOptions) throws Exception {
+  private static List<NodeComparison> compareNodesUsingOptions(TargetServer targetServer, Map<String, String> exportOptions) throws Exception {
     Map<String, NodeMetadata> sourceServerMetadata = getSourceServerMetadata(exportOptions);
     Map<String, NodeMetadata> targetServerMetadata = getTargetServerMetadata(targetServer, exportOptions);
 
-    List<NodeComparaison> nodesComparaison = new ArrayList<NodeComparaison>();
+    List<NodeComparison> nodesComparison = new ArrayList<NodeComparison>();
     Collection<NodeMetadata> sourceNodeMetadatas = sourceServerMetadata.values();
     for (NodeMetadata sourceNodeMetadata : sourceNodeMetadatas) {
       String path = sourceNodeMetadata.getPath();
       NodeMetadata targetNodeMetadata = targetServerMetadata.get(path);
 
-      NodeComparaison comparaison = new NodeComparaison();
-      comparaison.setTitle(sourceNodeMetadata.getTitle());
-      comparaison.setPath(path);
-      comparaison.setPublished(sourceNodeMetadata.isPublished());
+      NodeComparison comparison = new NodeComparison();
+      comparison.setTitle(sourceNodeMetadata.getTitle());
+      comparison.setPath(path);
+      comparison.setPublished(sourceNodeMetadata.isPublished());
 
-      comparaison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getDateModified() != null ? targetNodeMetadata.getDateModified() : null);
-      comparaison.setSourceModificationDateCalendar(sourceNodeMetadata.getDateModified() != null ? sourceNodeMetadata.getDateModified() : null);
+      comparison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getLiveDate() != null ? targetNodeMetadata.getLiveDate() : null);
+      comparison.setSourceModificationDateCalendar(sourceNodeMetadata.getLiveDate() != null ? sourceNodeMetadata.getLiveDate() : null);
 
       if (targetNodeMetadata == null) {
-        comparaison.setState(NodeComparaisonState.NOT_FOUND_ON_TARGET);
-        comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
+        comparison.setState(NodeComparisonState.NOT_FOUND_ON_TARGET);
+        comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
       } else {
         boolean sameDate = false;
-        if (targetNodeMetadata.getDateModified() != null && sourceNodeMetadata.getDateModified() != null) {
-          int comp = targetNodeMetadata.getDateModified().compareTo(sourceNodeMetadata.getDateModified());
+        if (targetNodeMetadata.getLiveDate() != null && sourceNodeMetadata.getLiveDate() != null) {
+          int comp = targetNodeMetadata.getLiveDate().compareTo(sourceNodeMetadata.getLiveDate());
           sameDate = comp == 0;
           if (!sameDate) {
-            comparaison.setState(comp > 0 ? NodeComparaisonState.MODIFIED_ON_TARGET : NodeComparaisonState.MODIFIED_ON_SOURCE);
-            comparaison.setLastModifierUserName(comp > 0 ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata.getLastModifier());
+            comparison.setState(comp > 0 ? NodeComparisonState.MODIFIED_ON_TARGET : NodeComparisonState.MODIFIED_ON_SOURCE);
+            comparison.setLastModifierUserName(comp > 0 ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata.getLastModifier());
           }
-        } else if (targetNodeMetadata.getDateModified() == null && sourceNodeMetadata.getDateModified() == null) {
+        } else if (targetNodeMetadata.getLiveDate() == null && sourceNodeMetadata.getLiveDate() == null) {
           sameDate = true;
         } else {
           // If one date is null and the other not, state = uknown
-          comparaison.setState(NodeComparaisonState.UNKNOWN);
-          comparaison.setLastModifierUserName((targetNodeMetadata != null && targetNodeMetadata.getLastModifier() != null) ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata
+          comparison.setState(NodeComparisonState.UNKNOWN);
+          comparison.setLastModifierUserName((targetNodeMetadata != null && targetNodeMetadata.getLastModifier() != null) ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata
               .getLastModifier());
         }
-        if (comparaison.getState() == null) {
-          if (targetNodeMetadata.getPublicationHistory() != null && sourceNodeMetadata.getPublicationHistory() != null) {
-            if (targetNodeMetadata.getPublicationHistory().length() > sourceNodeMetadata.getPublicationHistory().length()) {
-              comparaison.setState(NodeComparaisonState.MODIFIED_ON_TARGET);
-              comparaison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
-            } else if (targetNodeMetadata.getPublicationHistory().length() < sourceNodeMetadata.getPublicationHistory().length()) {
-              comparaison.setState(NodeComparaisonState.MODIFIED_ON_SOURCE);
-              comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
-            } else {
-              comparaison.setState(NodeComparaisonState.SAME);
-              comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
-            }
-          } else if (targetNodeMetadata.getPublicationHistory() == null && sourceNodeMetadata.getPublicationHistory() == null) {
-            comparaison.setState(NodeComparaisonState.SAME);
-            comparaison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
-          } else {
-            comparaison.setState(NodeComparaisonState.UNKNOWN);
-            comparaison.setLastModifierUserName((targetNodeMetadata != null && targetNodeMetadata.getLastModifier() != null) ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata
-                .getLastModifier());
-          }
+        if(sameDate) {
+          comparison.setState(NodeComparisonState.SAME);
+          comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
         }
       }
-      nodesComparaison.add(comparaison);
+      nodesComparison.add(comparison);
     }
     Collection<NodeMetadata> targetNodeMetadatas = targetServerMetadata.values();
 
-    // Check only nodes added on target and not presen in source
+    // Check only nodes added on target and not present in source
     for (NodeMetadata targetNodeMetadata : targetNodeMetadatas) {
       String path = targetNodeMetadata.getPath();
       NodeMetadata sourceNodeMetadata = sourceServerMetadata.get(path);
       if (sourceNodeMetadata == null) {
-        NodeComparaison comparaison = new NodeComparaison();
-        comparaison.setTitle(targetNodeMetadata.getTitle());
-        comparaison.setPath(path);
-        comparaison.setPublished(targetNodeMetadata.isPublished());
-        comparaison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
-        comparaison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getDateModified() : null);
-        comparaison.setSourceModificationDateCalendar(null);
+        NodeComparison comparison = new NodeComparison();
+        comparison.setTitle(targetNodeMetadata.getTitle());
+        comparison.setPath(path);
+        comparison.setPublished(targetNodeMetadata.isPublished());
+        comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
+        comparison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getLiveDate() : null);
+        comparison.setSourceModificationDateCalendar(null);
 
-        comparaison.setState(NodeComparaisonState.NOT_FOUND_ON_SOURCE);
-        nodesComparaison.add(comparaison);
+        comparison.setState(NodeComparisonState.NOT_FOUND_ON_SOURCE);
+        nodesComparison.add(comparison);
       }
     }
-    Collections.sort(nodesComparaison);
-    return nodesComparaison;
+    Collections.sort(nodesComparison);
+    return nodesComparison;
   }
 
   private static Map<String, NodeMetadata> getSourceServerMetadata(Map<String, String> exportOptions) {
@@ -201,7 +184,7 @@ public class Utils {
     conn.setRequestProperty("Connection", "Keep-Alive");
 
     if (conn.getResponseCode() != 200) {
-      throw new IllegalStateException("Comparaison operation error, HTTP error code from target server : " + conn.getResponseCode());
+      throw new IllegalStateException("Comparison operation error, HTTP error code from target server : " + conn.getResponseCode());
     }
 
     String tempParentFolderPath = null;

@@ -9,9 +9,8 @@ public class NodeMetadata implements Serializable {
 
   private String path;
   private String title;
-  private Calendar dateModified;
+  private Calendar liveDate;
   private String lastModifier;
-  private String publicationHistory;
   private boolean published;
 
   public String getPath() {
@@ -22,20 +21,12 @@ public class NodeMetadata implements Serializable {
     this.path = path;
   }
 
-  public Calendar getDateModified() {
-    return dateModified;
+  public Calendar getLiveDate() {
+    return liveDate;
   }
 
-  public void setDateModified(Calendar dateModified) {
-    this.dateModified = dateModified;
-  }
-
-  public String getPublicationHistory() {
-    return publicationHistory;
-  }
-
-  public void setPublicationHistory(String publicationHistory) {
-    this.publicationHistory = publicationHistory;
+  public void setLiveDate(Calendar dateModified) {
+    this.liveDate = dateModified;
   }
 
   public String getLastModifier() {
