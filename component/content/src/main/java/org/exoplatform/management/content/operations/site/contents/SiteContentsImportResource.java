@@ -222,7 +222,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
       }
       FileEntry fileEntry = getAndRemoveFileByPath(fileEntries, fileParts[1]);
       if (fileEntry == null) {
-        log.warn("Cannot parse file '" + filePath + "', no XML file found for this Version History file for node path: " + fileParts[1]);
+        log.error("Cannot parse file '" + filePath + "', no XML file found for this Version History file for node path: " + fileParts[1]);
         return true;
       }
       fileEntry.setHistoryFile(file);

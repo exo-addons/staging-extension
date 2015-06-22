@@ -554,6 +554,9 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         }
 
         String nodePath = ((FileImportOperationInterface) this).getNodePath(filePath);
+        if(nodePath == null) {
+          continue;
+        }
         fileEntries.add(new FileEntry(nodePath, file));
       }
     } finally {

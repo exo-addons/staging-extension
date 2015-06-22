@@ -172,7 +172,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
   public String getNodePath(String filePath) {
     String[] fileParts = filePath.split(JCRNodeExportTask.JCR_DATA_SEPARATOR);
     if (fileParts.length != 2) {
-      log.warn("Cannot parse file: " + filePath);
+      log.error("Cannot parse file: " + filePath);
       return null;
     }
     String nodePath = fileParts[1].trim().replaceFirst(".xml$", "");
