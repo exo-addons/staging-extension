@@ -1,0 +1,39 @@
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+	<id>staging-extension-jpp</id>
+	<formats>
+		<format>zip</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<dependencySets>
+		<!-- Staging wars -->
+		<dependencySet>
+			<useProjectArtifact>false</useProjectArtifact>
+			<outputDirectory>/gatein/extensions</outputDirectory>
+			<includes>
+				<include>${project.groupId}:staging-extension-cli:war</include>
+			</includes>
+			<scope>provided</scope>
+			<outputFileNameMapping>gatein-management-cli.war</outputFileNameMapping>
+		</dependencySet>
+		<!-- Libraries -->
+		<dependencySet>
+			<useProjectArtifact>false</useProjectArtifact>
+			<outputDirectory>/modules/system/layers/gatein/org/gatein/lib/main</outputDirectory>
+			<includes>
+				<include>${project.groupId}:staging-extension-*:jar</include>
+			</includes>
+			<scope>provided</scope>
+			<outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+		</dependencySet>
+	</dependencySets>
+	<fileSets>
+		<fileSet>
+			<includes>
+				<include>module.xml</include>
+			</includes>
+			<directory>src/main/resources</directory>
+			<outputDirectory>/modules/system/layers/gatein/org/gatein/lib/main</outputDirectory>
+		</fileSet>
+	</fileSets>
+</assembly>
