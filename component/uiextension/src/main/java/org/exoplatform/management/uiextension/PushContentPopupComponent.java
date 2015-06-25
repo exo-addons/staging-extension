@@ -227,22 +227,15 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
           exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
           exportOptions.put("filter/taxonomy", "false");
-          exportOptions.put("filter/no-history", "" + cleanupPublication);
           exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
 
-          boolean noVersion = false;
           String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
           if (!StringUtils.isEmpty(noVersionString)) {
-            noVersion = noVersionString.trim().equals("true");
+            cleanupPublication = noVersionString.trim().equals("true");
           }
 
-          if (noVersion) {
-            exportOptions.put("filter/no-history", "true");
-            importOptions.put("filter/cleanPublication", "true");
-          }
-
-          // importOptions.put("filter/cleanPublication", "" +
-          // cleanupPublication);
+          exportOptions.put("filter/no-history", "" + cleanupPublication);
+          importOptions.put("filter/cleanPublication", "" + cleanupPublication);
 
           CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
           uiPopupContainer.deActivate();
@@ -264,13 +257,11 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
               boolean noVersion = false;
               String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
               if (!StringUtils.isEmpty(noVersionString)) {
-                noVersion = noVersionString.trim().equals("true");
+                cleanupPublication = nodeComparison.isPublished() && noVersionString.trim().equals("true");
               }
 
-              if (noVersion && nodeComparison.isPublished()) {
-                exportOptions.put("filter/no-history", "true");
-                importOptions.put("filter/cleanPublication", "true");
-              }
+              exportOptions.put("filter/no-history", "" + cleanupPublication);
+              importOptions.put("filter/cleanPublication", "" + cleanupPublication);
 
               String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparison.getPath() + "'";
               exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));

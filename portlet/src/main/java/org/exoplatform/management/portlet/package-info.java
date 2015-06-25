@@ -1,40 +1,35 @@
 @Portlet
 @Application(name = "StagingExtension")
-@Bindings(
-  {
+@Bindings({
     @Binding(value = ManagementController.class),
     @Binding(value = ManagementService.class),
     @Binding(value = StagingService.class),
     @Binding(value = SynchronizationService.class),
     @Binding(value = RepositoryService.class),
     @Binding(value = ChromatticService.class)
-  }
-)
-@Assets(
-  scripts = {
-    @Script(id = "jQueryFileDownload", src = "js/lib/jquery.fileDownload.js"),
+})
+@Scripts({
+    @Script(id = "jQueryFileDownload", value = "js/lib/jquery.fileDownload.js"),
     // AngularJS is still global, should be AMDified
-    @Script(id = "angularjs", src = "js/lib/angular.min.js"),
-    @Script(id = "ngSanitize", src = "js/lib/angular-sanitize.js"),
-       // services and controllers js are AMD modules, required by staging.js
-    @Script(id = "services", src = "js/services.js"),
-    @Script(id = "controllers", src = "js/controllers.js"),
-    @Script(id = "staging", src = "js/staging.js")
-  },
-  stylesheets = {
-    @Stylesheet(src = "style/staging.css", location = AssetLocation.APPLICATION)
-  }
-
-)
-@Less("style/staging.less")
+    @Script(id = "angularjs", value = "js/lib/angular.min.js"),
+    @Script(id = "ngSanitize", value = "js/lib/angular-sanitize.js", depends = "angularjs"),
+    // services and controllers js are AMD modules, required by staging.js
+    @Script(id = "services", value = "js/services.js", depends = "angularjs"),
+    @Script(id = "controllers", value = "js/controllers.js", depends = {"angularjs"}),
+    @Script(id = "staging", value = "js/staging.js", depends = {"controllers", "services"})
+})
+@Less("style/StagingSkin.less")
+@Stylesheets({ @Stylesheet(id = "stagingSkin", value = "style/staging.css") })
+@Assets("*")
 
 package org.exoplatform.management.portlet;
 
 import juzu.Application;
-import juzu.asset.AssetLocation;
 import juzu.plugin.asset.Assets;
 import juzu.plugin.asset.Script;
+import juzu.plugin.asset.Scripts;
 import juzu.plugin.asset.Stylesheet;
+import juzu.plugin.asset.Stylesheets;
 import juzu.plugin.binding.Binding;
 import juzu.plugin.binding.Bindings;
 import juzu.plugin.less.Less;

@@ -2,7 +2,9 @@ package org.exoplatform.management.common;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
@@ -25,6 +27,8 @@ public class NavigationUtils {
 
   private final static UserNodeFilterConfig FILTER_CONFIG;
 
+  private final static Map<String, String> URIS_CACHE = new HashMap<String, String>();
+
   static {
     UserNodeFilterConfig.Builder builder = UserNodeFilterConfig.builder();
     builder.withAuthMode(UserNodeFilterConfig.AUTH_READ);
@@ -41,6 +45,9 @@ public class NavigationUtils {
    * @throws Exception
    */
   public static String getNavURIWithApplication(PageService pageService, DataStorage dataStorage, UserPortal userPortal, SiteKey siteKey, String applicationName) throws Exception {
+    if (URIS_CACHE.containsKey(siteKey.toString() + applicationName)) {
+      return URIS_CACHE.get(siteKey.toString() + applicationName);
+    }
     Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, siteKey.getType(), siteKey.getName(), null, null).iterator();
     // Map of (key: JCR Node path, Value: Page that has a portlet that
     // references the JCR Path)
@@ -58,6 +65,7 @@ public class NavigationUtils {
       // Search navigation node that references the page
       UserNode node = searchUserNodeByPageReference(userPortal, navigation, page.getPageId());
       if (node != null) {
+        URIS_CACHE.put(siteKey.toString() + applicationName, node.getURI());
         return node.getURI();
       }
     }

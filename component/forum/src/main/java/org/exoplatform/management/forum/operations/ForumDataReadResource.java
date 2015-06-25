@@ -28,19 +28,22 @@ import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.core.space.SpaceUtils;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
+import org.gatein.common.logging.Logger;
+import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
-import org.mortbay.log.Log;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class ForumDataReadResource extends AbstractOperationHandler {
+
+  final private static Logger log = LoggerFactory.getLogger(ForumDataReadResource.class);
 
   private boolean isSpaceForumType;
 
@@ -66,7 +69,7 @@ public class ForumDataReadResource extends AbstractOperationHandler {
         for (Forum forum : forums) {
           String spaceDisplayName = getSpaceDisplayName(spaceService, forum);
           if (spaceDisplayName == null) {
-            Log.warn("Cannot find space for forum: " + forum.getForumName());
+            log.warn("Cannot find space for forum: " + forum.getForumName());
           } else {
             children.add(spaceDisplayName);
           }

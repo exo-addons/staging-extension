@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -34,7 +35,9 @@ import org.exoplatform.portal.config.UserPortalConfigService;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.SiteType;
 import org.exoplatform.portal.mop.page.PageService;
+import org.exoplatform.portal.mop.user.UserNavigation;
 import org.exoplatform.portal.mop.user.UserPortal;
+import org.exoplatform.portal.mop.user.UserPortalContext;
 import org.exoplatform.portal.url.PortalURLContext;
 import org.exoplatform.portal.webui.util.Util;
 import org.exoplatform.services.security.ConversationState;
@@ -304,7 +307,14 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
       siteKey = SiteKey.group(spaceGroupId);
     }
     PortalRequestContext prc = Util.getPortalRequestContext();
-    UserPortal userPortal = prc.getUserPortal();
+    UserPortal userPortal = null;
+    if (prc == null) {
+      // Get User navigation nodes defined for {siteName}
+      userPortal = portalConfigService.getUserPortalConfig(
+          portalConfigService.getDefaultPortal(), "root", NULL_CONTEXT).getUserPortal();
+    } else {
+      userPortal = prc.getUserPortal();
+    }
     String uri = NavigationUtils.getNavURIWithApplication(pageService, dataStorage, userPortal, siteKey, CALENDAR_PORTLET_NAME);
     if (uri != null) {
       String username = ConversationState.getCurrent().getIdentity().getUserId();
@@ -313,6 +323,16 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
     return StringUtils.EMPTY;
   }
+
+  private static final UserPortalContext NULL_CONTEXT = new UserPortalContext() {
+    public ResourceBundle getBundle(UserNavigation navigation) {
+      return null;
+    }
+
+    public Locale getUserLocale() {
+      return Locale.ENGLISH;
+    }
+  };
 
   private RequestContext fixPortalRequest() {
     RequestContext originalRequestContext;

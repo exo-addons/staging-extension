@@ -89,13 +89,17 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
       return;
     }
     log.info("   Delete activity : '" + activity.getTitle() + "' and its comments.");
-    RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
-    if (commentsListAccess.getSize() > 0) {
-      List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
-      for (ExoSocialActivity commentActivity : comments) {
-        activityManager.deleteActivity(commentActivity);
-      }
-    }
+//    RealtimeListAccess<ExoSocialActivity> commentsListAccess = activityManager.getCommentsWithListAccess(activity);
+//    if (commentsListAccess.getSize() > 0) {
+//      List<ExoSocialActivity> comments = commentsListAccess.loadAsList(0, commentsListAccess.getSize());
+//      for (ExoSocialActivity commentActivity : comments) {
+//        try {
+//          activityManager.deleteComment(activity, commentActivity);
+//        } catch (Exception e) {
+//          log.warn("Can't delete comment '" + commentActivity.getTitle() + "' of activity '" + activity.getTitle() + "'");
+//        }
+//      }
+//    }
     activityManager.deleteActivity(activity);
     if (activityStorage instanceof CachedActivityStorage) {
       ((CachedActivityStorage) activityStorage).clearActivityCached(activity.getId());
@@ -554,7 +558,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         }
 
         String nodePath = ((FileImportOperationInterface) this).getNodePath(filePath);
-        if(nodePath == null) {
+        if (nodePath == null) {
           continue;
         }
         fileEntries.add(new FileEntry(nodePath, file));

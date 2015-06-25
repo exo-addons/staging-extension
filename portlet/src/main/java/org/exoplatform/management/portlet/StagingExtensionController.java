@@ -24,6 +24,7 @@ import juzu.Route;
 import juzu.SessionScoped;
 import juzu.View;
 import juzu.impl.request.Request;
+import juzu.request.RequestParameter;
 import juzu.template.Template;
 
 import org.apache.commons.fileupload.FileItem;
@@ -120,21 +121,6 @@ public class StagingExtensionController {
         contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
       }
       resourceCategories.add(contents);
-    }
-
-    if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ANSWERS_PARENT_PATH + ":activated")) {
-      ResourceCategory answers = new ResourceCategory("Answers", StagingService.ANSWERS_PARENT_PATH);
-      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PUBLIC_ANSWER_PATH + ":activated")) {
-        answers.getSubResourceCategories().add(new ResourceCategory("Public Answers", StagingService.PUBLIC_ANSWER_PATH));
-      }
-      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SPACE_ANSWER_PATH + ":activated")) {
-        answers.getSubResourceCategories().add(new ResourceCategory("Space Answers", StagingService.SPACE_ANSWER_PATH));
-      }
-      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FAQ_TEMPLATE_PATH + ":activated")) {
-        answers.getSubResourceCategories().add(new ResourceCategory("FAQ Template", StagingService.FAQ_TEMPLATE_PATH));
-      }
-      resourceCategories.add(answers);
-      ANSWER_CATEGORY_INDEX = resourceCategories.size() - 1;
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FORUMS_PARENT_PATH + ":activated")) {
@@ -252,7 +238,7 @@ public class StagingExtensionController {
   }
 
   @View
-  public Response.Render index() {
+  public Response.Content index() {
     if (resourceCategories.size() == COUNT_ALL) {
 
       if (!isWikiActivated() && WIKI_CATEGORY_INDEX > 0) {
@@ -325,7 +311,7 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response.Content<?> prepareImportResources(FileItem file) throws IOException {
+  public Response.Content prepareImportResources(FileItem file) throws IOException {
     if (file == null || file.getSize() == 0) {
       return Response.content(500, "File is empty");
     }
@@ -366,7 +352,7 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response.Content<?> export(String[] resourceCategories, String[] resources, String[] options) throws IOException {
+  public Response.Content export(String[] resourceCategories, String[] resources, String[] options) throws IOException {
     // Create selected resources categories
     List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
     for (String selectedResourcesCategory : resourceCategories) {
@@ -426,19 +412,19 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response.Content<?> importResources(FileItem file) throws IOException {
+  public Response.Content importResources(FileItem file) throws IOException {
     if (file == null || file.getSize() == 0) {
       return Response.content(500, "File is empty.");
     }
 
-    Map<String, String[]> parameters = Request.getCurrent().getParameters();
-    String[] selectedResourcesCategories = parameters.get("staging:resourceCategory");
+    Map<String, RequestParameter> parameters = Request.getCurrent().getParameterArguments();
+    RequestParameter selectedResourcesCategories = parameters.get("staging:resourceCategory");
 
-    if (selectedResourcesCategories == null || selectedResourcesCategories.length == 0) {
+    if (selectedResourcesCategories == null || selectedResourcesCategories.size() == 0) {
       return Response.content(500, "You must select a resource category.");
     }
 
-    List<String> selectedResourcesCategoriesList = new ArrayList<String>(Arrays.asList(selectedResourcesCategories));
+    List<String> selectedResourcesCategoriesList = new ArrayList<String>(selectedResourcesCategories);
     Collections.sort(selectedResourcesCategoriesList, new Comparator<String>() {
       @Override
       public int compare(String o1, String o2) {
@@ -456,7 +442,7 @@ public class StagingExtensionController {
         for (String param : parameters.keySet()) {
           if (param.startsWith(PARAM_PREFIX_OPTION)) {
             String paramPath = param.replace(PARAM_PREFIX_OPTION, "");
-            if (parameters.get(param) == null || parameters.get(param).length == 0) {
+            if (parameters.get(param) == null || parameters.get(param).size() == 0) {
               log.error("Can't parse empty parameters for filter: " + paramPath);
               continue;
             }
@@ -468,15 +454,16 @@ public class StagingExtensionController {
                   attributes.put("filter", new ArrayList<String>());
                 }
                 List<String> values = attributes.get("filter");
-                if (parameters.get(param).length > 1) {
-                  log.error("Can't parse all parameters for filter: '" + paramPath + "' with values = " + parameters.get(param) + ". Only first parameter will be used: " + parameters.get(param)[0]);
+                if (parameters.get(param).size() > 1) {
+                  log.error("Can't parse all parameters for filter: '" + paramPath + "' with values = " + parameters.get(param) + ". Only first parameter will be used: "
+                      + parameters.get(param).get(0));
                 }
-                String value = parameters.get(param)[0];
+                String value = parameters.get(param).get(0);
                 attributeName = attributeName.replace("filter/", "");
                 value = attributeName + ":" + value;
                 values.add(value);
               } else {
-                attributes.put(attributeName, Arrays.asList(parameters.get(param)));
+                attributes.put(attributeName, parameters.get(param));
               }
             }
           }
