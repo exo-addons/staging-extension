@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>org.exoplatform.addons.staging</groupId>
 		<artifactId>staging-extension-component</artifactId>
-		<version>2.4.x-SNAPSHOT</version>
+		<version>2.4.0-alpha-1</version>
 	</parent>
 	<artifactId>staging-extension-calendar</artifactId>
 	<name>Staging Extension - Calendar</name>
