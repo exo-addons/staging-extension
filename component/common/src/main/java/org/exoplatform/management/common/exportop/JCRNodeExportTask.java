@@ -33,7 +33,7 @@ public class JCRNodeExportTask implements ExportTask {
     this.repositoryService = repositoryService;
     this.workspace = workspace;
     if (isPrefix) {
-      this.entryPath = entryPath + "/" + JCR_DATA_SEPARATOR + absolutePath + ".xml";
+      this.entryPath = entryPath + (entryPath.endsWith("/") ? "" : "/") + JCR_DATA_SEPARATOR + absolutePath + ".xml";
     } else {
       this.entryPath = entryPath;
     }
