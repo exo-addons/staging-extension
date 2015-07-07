@@ -11,6 +11,7 @@ import javax.jcr.Node;
 
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
+import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
@@ -82,7 +83,7 @@ public class ApplicationTemplatesReadResource extends AbstractOperationHandler {
 
   private List<String> getTemplateList(String portletName, String category) throws Exception {
     List<String> templateOptionList = new ArrayList<String>();
-    List<Node> templateNodeList = templateManagerService.getTemplatesByCategory(portletName, category, WCMCoreUtils.getUserSessionProvider());
+    List<Node> templateNodeList = templateManagerService.getTemplatesByCategory(portletName, category, SessionProvider.createSystemProvider());
     for (Node templateNode : templateNodeList) {
       templateOptionList.add(templateNode.getPath());
     }
