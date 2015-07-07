@@ -435,7 +435,7 @@
       <label>New password:<input class="option" type="text" name="/organization/user_EXPORT_filter/new-password"
                                  ng-model="optionsModel['/organization/user_EXPORT_filter/new-password']"/></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-jcr-content"
-                                                ng-model="optionsModel['/organization/user_EXPORT_filter/with-jcr-content']"/><span>With Personel JCR Content</span></label>
+                                                ng-model="optionsModel['/organization/user_EXPORT_filter/with-jcr-content']"/><span>With Personal JCR Content</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-membership"
                                                 ng-model="optionsModel['/organization/user_EXPORT_filter/with-membership']"/><span>With memberships</span></label>
     </div>

@@ -65,7 +65,7 @@
       </div>
       <div id="syncServerSaveAs" class="control-group {{serverNameClass}}">
         <button type="button" class="btn button-saveserver" ng-click="saveServer(newServer)">Save as</button>
-        <input type="text" id="newSaveName" ng-model="newServer.name" required></input>
+        <input type="text" id="newSaveName" placeholder="Server title" ng-model="newServer.name" required></input>
         <span class="help-inline">Server name is required</span>
       </div>
     </form>

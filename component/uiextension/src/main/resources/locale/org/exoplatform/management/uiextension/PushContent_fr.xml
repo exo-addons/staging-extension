@@ -66,9 +66,9 @@
 			<title>Titre</title>
 			<path>Chemin d'accès</path>
 			<lastModifierUserName>Modifié par</lastModifierUserName>
-			<published>Publié</published>
-			<sourceModificationDate>Publié le (ici)</sourceModificationDate>
-			<targetModificationDate>Publié le (cible)</targetModificationDate>
+			<published>Publié ici</published>
+			<sourceModificationDate>Modifié (ici)</sourceModificationDate>
+			<targetModificationDate>Modifié (cible)</targetModificationDate>
 			<stateLocalized>Etat</stateLocalized>
 			<actionLocalized>Action</actionLocalized>
 			<action>Action</action>

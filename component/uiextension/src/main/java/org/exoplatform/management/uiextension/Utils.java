@@ -97,16 +97,18 @@ public class Utils {
       comparison.setPath(path);
       comparison.setPublished(sourceNodeMetadata.isPublished());
 
-      comparison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getLiveDate() != null ? targetNodeMetadata.getLiveDate() : null);
-      comparison.setSourceModificationDateCalendar(sourceNodeMetadata.getLiveDate() != null ? sourceNodeMetadata.getLiveDate() : null);
+      comparison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getLastModificationDate() != null ? targetNodeMetadata.getLastModificationDate() : null);
+      comparison.setTargetPublicationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getLiveDate() != null ? targetNodeMetadata.getLiveDate() : null);
+      comparison.setSourceModificationDateCalendar(sourceNodeMetadata != null && sourceNodeMetadata.getLastModificationDate() != null ? sourceNodeMetadata.getLastModificationDate() : null);
+      comparison.setSourcePublicationDateCalendar(sourceNodeMetadata != null && sourceNodeMetadata.getLiveDate() != null ? sourceNodeMetadata.getLiveDate() : null);
 
       if (targetNodeMetadata == null) {
         comparison.setState(NodeComparisonState.NOT_FOUND_ON_TARGET);
         comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
       } else {
         boolean sameContent = false;
-        if (targetNodeMetadata.getLiveDate() != null && sourceNodeMetadata.getLiveDate() != null) {
-          int comp = targetNodeMetadata.getLiveDate().compareTo(sourceNodeMetadata.getLiveDate());
+        if (targetNodeMetadata.getLastModificationDate() != null && sourceNodeMetadata.getLastModificationDate() != null) {
+          int comp = targetNodeMetadata.getLastModificationDate().compareTo(sourceNodeMetadata.getLastModificationDate());
           sameContent = comp == 0;
           if (!sameContent) {
             comparison.setState(comp > 0 ? NodeComparisonState.MODIFIED_ON_TARGET : NodeComparisonState.MODIFIED_ON_SOURCE);
@@ -115,12 +117,12 @@ public class Utils {
             comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
             comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
           }
-        } else if (targetNodeMetadata.getLiveDate() == null && sourceNodeMetadata.getLiveDate() == null) {
+        } else if (targetNodeMetadata.getLastModificationDate() == null && sourceNodeMetadata.getLastModificationDate() == null) {
           sameContent = true;
-        } else if (targetNodeMetadata.getLiveDate() == null) {
+        } else if (targetNodeMetadata.getLastModificationDate() == null) {
           comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
           comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
-        } else if (sourceNodeMetadata.getLiveDate() == null) {
+        } else if (sourceNodeMetadata.getLastModificationDate() == null) {
           comparison.setState(NodeComparisonState.MODIFIED_ON_TARGET);
           comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
         } else {
@@ -144,9 +146,10 @@ public class Utils {
         NodeComparison comparison = new NodeComparison();
         comparison.setTitle(targetNodeMetadata.getTitle());
         comparison.setPath(path);
-        comparison.setPublished(targetNodeMetadata.isPublished());
+        comparison.setPublished(false);
         comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
-        comparison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getLiveDate() : null);
+        comparison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getLastModificationDate() : null);
+        comparison.setTargetPublicationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getLastModificationDate() : null);
         comparison.setSourceModificationDateCalendar(null);
 
         comparison.setState(NodeComparisonState.NOT_FOUND_ON_SOURCE);

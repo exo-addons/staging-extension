@@ -16,6 +16,8 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
   String path;
   String lastModifierUserName;
   Calendar sourceModificationDateCalendar;
+  Calendar sourcePublicationDateCalendar;
+  Calendar targetPublicationDateCalendar;
   Calendar targetModificationDateCalendar;
 
   String sourceModificationDate;
@@ -43,6 +45,30 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
     return sourceModificationDate;
   }
 
+  public Calendar getSourcePublicationDateCalendar() {
+    return sourcePublicationDateCalendar;
+  }
+
+  public void setSourceModificationDate(String sourceModificationDate) {
+    this.sourceModificationDate = sourceModificationDate;
+  }
+
+  public Calendar getTargetPublicationDateCalendar() {
+    return targetPublicationDateCalendar;
+  }
+
+  public void setTargetModificationDate(String targetModificationDate) {
+    this.targetModificationDate = targetModificationDate;
+  }
+
+  public void setSourcePublicationDateCalendar(Calendar sourcePublicationDateCalendar) {
+    this.sourcePublicationDateCalendar = sourcePublicationDateCalendar;
+  }
+
+  public void setTargetPublicationDateCalendar(Calendar targetPublicationDateCalendar) {
+    this.targetPublicationDateCalendar = targetPublicationDateCalendar;
+  }
+
   public String getTargetModificationDate() {
     return targetModificationDate;
   }
@@ -64,7 +90,7 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
   public void setActionLocalized(String fake) {
     // nothing to do here
   }
-  
+
   public NodeComparisonState getState() {
     return state;
   }

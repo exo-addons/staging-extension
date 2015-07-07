@@ -66,9 +66,9 @@
 			<title>Title</title>
 			<path>Path</path>
 			<lastModifierUserName>Modified by</lastModifierUserName>
-			<published>Published</published>
-			<sourceModificationDate>Published (here)</sourceModificationDate>
-			<targetModificationDate>Published (target)</targetModificationDate>
+			<published>Published here</published>
+			<sourceModificationDate>Modified (here)</sourceModificationDate>
+			<targetModificationDate>Modified (target)</targetModificationDate>
 			<stateLocalized>State</stateLocalized>
 			<actionLocalized>Action</actionLocalized>
 			<action>Action</action>

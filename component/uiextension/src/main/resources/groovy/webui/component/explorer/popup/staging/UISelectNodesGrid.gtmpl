@@ -15,7 +15,7 @@
    else if(beanFields != null && beanFields.length > 0)
       colnum = beanFields.length;
 
-   def colWidth = ["110px", "145px", "80px", "145px", "145px", "130px"];
+   def colWidth = ["110px", "140px", "95px", "145px", "140px", "130px"];
    
    UIComponent uiParent = uicomponent.getParent();
    String name = uicomponent.getLabel();
