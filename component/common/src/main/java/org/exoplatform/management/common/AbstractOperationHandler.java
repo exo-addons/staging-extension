@@ -84,6 +84,9 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   public static final Session getSession(RepositoryService repositoryService, String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
     SessionProvider provider = SessionProvider.createSystemProvider();
     ManageableRepository repository = repositoryService.getCurrentRepository();
+    if (workspace == null) {
+      workspace = repository.getConfiguration().getDefaultWorkspaceName();
+    }
     Session session = provider.getSession(workspace, repository);
     if (session instanceof SessionImpl) {
       ((SessionImpl) session).setTimeout(ONE_DAY_IN_MS);
