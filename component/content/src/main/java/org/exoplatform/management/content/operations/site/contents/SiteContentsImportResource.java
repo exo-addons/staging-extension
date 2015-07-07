@@ -22,9 +22,11 @@ import org.exoplatform.management.common.importop.ActivityImportOperationInterfa
 import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.management.content.operations.site.SiteUtil;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportTask;
+import org.exoplatform.services.ecm.publication.PublicationService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.seo.PageMetadataModel;
 import org.exoplatform.services.seo.SEOService;
+import org.exoplatform.services.wcm.publication.WCMPublicationService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.space.spi.SpaceService;
@@ -73,6 +75,8 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     seoService = operationContext.getRuntimeContext().getRuntimeComponent(SEOService.class);
+    publicationService = operationContext.getRuntimeContext().getRuntimeComponent(PublicationService.class);
+    wcmPublicationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMPublicationService.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
 

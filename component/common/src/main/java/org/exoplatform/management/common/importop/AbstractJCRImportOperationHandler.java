@@ -17,11 +17,13 @@ import javax.jcr.query.QueryManager;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
-import org.exoplatform.services.cms.templates.TemplateService;
+import org.exoplatform.services.ecm.publication.PublicationService;
+import org.exoplatform.services.wcm.publication.WCMPublicationService;
 
 public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {
 
-  protected TemplateService templateService = null;
+  protected PublicationService publicationService;
+  protected WCMPublicationService wcmPublicationService;
 
   protected final void importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
     File xmlFile = fileEntry.getFile();
@@ -132,21 +134,24 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
 
   protected final void cleanPublication(Node node) throws Exception {
     if (node.hasProperty("publication:currentState")) {
-      String state = node.getProperty("publication:currentState").getString();
-      // Cleanup only already published nodes
-      if (state.equals("published")) {
-        log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
-        // See in case the content is enrolled for the first time but never
-        // published in "source server", if yes, set manually "published" state
+      log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
+      // See in case the content is enrolled for the first time but never
+      // published in "source server", if yes, set manually "published" state
+      if (node.hasProperty("publication:revisionData")) {
         Value[] values = node.getProperty("publication:revisionData").getValues();
         if (values.length < 2) {
-          String user = node.getProperty("publication:lastUser").getString();
+          String user = node.hasProperty("publication:lastUser") ? node.getProperty("publication:lastUser").getString() : null;
           node.setProperty("publication:revisionData", new String[] { node.getUUID() + ",published," + user });
         }
-        node.setProperty("publication:liveRevision", "");
-        node.setProperty("publication:currentState", "published");
-        node.save();
       }
+      node.setProperty("publication:liveRevision", "");
+      node.setProperty("publication:currentState", "published");
+      node.getSession().save();
+
+      if (publicationService.isNodeEnrolledInLifecycle(node))
+        publicationService.unsubcribeLifecycle(node);
+      wcmPublicationService.updateLifecyleOnChangeContent(node, "default", "__system", "published");
+      node.save();
     }
   }
 
