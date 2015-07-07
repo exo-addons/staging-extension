@@ -10,18 +10,18 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.poi.util.IOUtils;
+import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.Group;
@@ -43,7 +43,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class UserImportResource extends AbstractJCRImportOperationHandler {
+public class UserImportResource extends AbstractJCRImportOperationHandler implements FileImportOperationInterface {
   private static final Log log = ExoLogger.getLogger(UserImportResource.class);
 
   private static final String USERS_BASE_PATH = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/";
@@ -89,7 +89,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
       importMemberships(tempFile, newUsers, replaceExisting);
 
       // Content
-      importUserJCRNodes(tempFile, newUsers, replaceExisting);
+      importUserJCRNodes(tempFile);
 
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
@@ -105,37 +105,24 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     }
   }
 
-  private void importUserJCRNodes(File tempFile, Set<String> newlyCreatedUsers, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
-    ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
-    String defaultWorkspace = manageableRepository.getConfiguration().getDefaultWorkspaceName();
+  private void importUserJCRNodes(File tempFile) throws Exception {
+    // extract data from zip
+    Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(new FileInputStream(tempFile));
 
-    ZipEntry entry = null;
-    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
-
-      if (!filePath.startsWith(USERS_BASE_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
-        continue;
-      }
-      if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
-        continue;
-      }
-
-      log.info("Parsing : " + filePath);
-      String username = extractUserName(filePath);
-      String nodePath = extractParam(filePath, 2);
-      boolean replaceExistingContent = replaceExisting || newlyCreatedUsers.contains(username);
-      if (replaceExistingContent) {
-        importNode(nodePath, defaultWorkspace, zin, null, false);
-      }
-
+    for (String site : contentsByOwner.keySet()) {
+      List<FileEntry> fileEntries = contentsByOwner.get(site);
       try {
-        zin.closeEntry();
+        if (fileEntries != null) {
+          for (FileEntry fileEntry : fileEntries) {
+            log.info("Importing content '" + fileEntry.getNodePath() + "'.");
+            importNode(fileEntry, null, false);
+          }
+          log.info("Content import is done.");
+        }
       } catch (Exception e) {
-        // Already closed, expected
+        log.error("Error while importing site: " + site, e);
       }
     }
-    zin.close();
   }
 
   private void importMemberships(File tempFile, Set<String> newUsers, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
@@ -144,8 +131,8 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     while ((entry = zin.getNextEntry()) != null) {
       String filePath = entry.getName();
       if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("_membership.xml")) {
-        log.debug("Parsing : " + filePath);
-        String userName = extractUserName(filePath);
+        log.info("Parsing : " + filePath);
+        String userName = extractIdFromPath(filePath);
         if (replaceExisting || newUsers.contains(userName)) {
           createMembership(zin);
         }
@@ -166,7 +153,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
       String filePath = entry.getName();
       if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("user.xml")) {
         log.debug("Parsing : " + filePath);
-        String userName = extractUserName(filePath);
+        String userName = extractIdFromPath(filePath);
         User existingUser = organizationService.getUserHandler().findUserByName(userName);
         if (existingUser == null) {
           newUsers.add(userName);
@@ -189,7 +176,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
       String filePath = entry.getName();
       if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("profile.xml")) {
         log.debug("Parsing : " + filePath);
-        String userName = extractUserName(filePath);
+        String userName = extractIdFromPath(filePath);
         if (replaceExisting || newUsers.contains(userName)) {
           createUserProfile(userName, zin);
         }
@@ -203,23 +190,6 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     zin.close();
   }
 
-  /**
-   * Extract the username from the file path
-   * 
-   * @param filePath
-   * @return
-   */
-  private String extractUserName(String filePath) {
-    String username = null;
-    if (filePath.startsWith(USERS_BASE_PATH)) {
-      String filePathEnd = filePath.substring(USERS_BASE_PATH.length());
-      username = filePathEnd.substring(0, filePathEnd.indexOf("/"));
-    } else {
-      throw new IllegalStateException("Incorrect file path (" + filePath + ") must start with /organization/users/");
-    }
-    return username;
-  }
-
   private void createUser(String username, final ZipInputStream zin, User existingUser, boolean replaceExisting) throws Exception {
 
     boolean alreadyExists = (existingUser != null);
@@ -231,7 +201,12 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     } else if (replaceExisting && alreadyExists) {
       log.info("ReplaceExisting is On: Updating user '" + username + "'");
       User user = deserializeObject(zin, organizationService.getUserHandler().createUserInstance("test").getClass(), "organization");
-      organizationService.getUserHandler().saveUser(user, true);
+      try {
+        organizationService.getUserHandler().saveUser(user, true);
+      } catch (Exception e) {
+        log.warn("Error while updating user '" + username + "'. Save operation will try with broadcast = false.", e);
+        organizationService.getUserHandler().saveUser(user, false);
+      }
 
       // Delete Memberships to replace it by what is unserialized
       Collection<?> memberships = organizationService.getMembershipHandler().findMembershipsByUser(user.getUserName());
@@ -262,6 +237,10 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     if (oldMembership == null) {
       log.info("Membership '" + membership.getMembershipType() + ":" + membership.getGroupId() + "' was not found for user " + membership.getUserName() + ", creating it.");
       Group group = organizationService.getGroupHandler().findGroupById(membership.getGroupId());
+      if (group == null) {
+        log.info("Can't create Membership '" + membership.getMembershipType() + ":" + membership.getGroupId() + ":" + membership.getUserName() + "', the group was not found.");
+        return;
+      }
       User user = organizationService.getUserHandler().findUserByName(membership.getUserName());
       MembershipType membershipType = organizationService.getMembershipTypeHandler().findMembershipType(membership.getMembershipType());
       organizationService.getMembershipHandler().linkMembership(user, group, membershipType, true);
@@ -270,13 +249,30 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     }
   }
 
-  private static String extractParam(String filePath, int i) {
-    Pattern pattern = Pattern.compile(USERS_BASE_PATH + "(.*)/" + JCRNodeExportTask.JCR_DATA_SEPARATOR + "(.*)");
-    Matcher matcher = pattern.matcher(filePath);
-    if (matcher.find()) {
-      return matcher.group(i);
+  @Override
+  public String getManagedFilesPrefix() {
+    return "organization/user/";
+  }
+
+  @Override
+  public boolean isUnKnownFileFormat(String filePath) {
+    return !filePath.endsWith(".xml") || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR);
+  }
+
+  @Override
+  public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
+    return false;
+  }
+
+  @Override
+  public String extractIdFromPath(String filePath) {
+    String username = null;
+    if (filePath.startsWith(USERS_BASE_PATH)) {
+      String filePathEnd = filePath.substring(USERS_BASE_PATH.length());
+      username = filePathEnd.substring(0, filePathEnd.indexOf("/"));
     } else {
-      throw new IllegalStateException("filePath can't be managed: " + filePath);
+      throw new IllegalStateException("Incorrect file path (" + filePath + ") must start with /organization/users/");
     }
+    return username;
   }
 }
