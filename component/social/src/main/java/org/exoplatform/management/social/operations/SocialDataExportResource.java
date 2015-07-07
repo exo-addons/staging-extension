@@ -111,9 +111,8 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     List<String> operationFilters = attributes.getValues("filter");
 
     // "replace-existing" attribute. Defaults to false.
-    boolean exportWiki = false, exportAnswer = false, exportCalendar = false, exportForum = false;
+    boolean exportAnswer = false, exportCalendar = false, exportForum = false;
     if (operationFilters != null) {
-      exportWiki = operationFilters.contains("export-wiki:true");
       exportAnswer = operationFilters.contains("export-answer:true");
       exportForum = operationFilters.contains("export-forum:true");
       exportCalendar = operationFilters.contains("export-calendar:true");
@@ -137,7 +136,7 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
 
       for (String application : appsSet) {
         String path = getEntryResourcePath(application);
-        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.WIKI_RESOURCE_PATH) && !exportWiki)
+        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum)
             || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer)
             || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
           continue;
@@ -181,14 +180,14 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
       exportSpaceAvatar(exportTasks, space, spaceIdentity);
 
       log.info("export space activities");
-      exportSpaceActivities(exportTasks, space, spaceIdentity, exportWiki);
+      exportSpaceActivities(exportTasks, space, spaceIdentity);
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't export Space", e);
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity, boolean exportWiki) {
+  private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) {
     RealtimeListAccess<ExoSocialActivity> spaceActivitiesList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
     ExoSocialActivity[] activities = null;
 
