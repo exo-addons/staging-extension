@@ -89,7 +89,7 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       String jcrQuery = getParameterValue(filters, "query:", null);
       // get JCR workspace
       String workspace = getParameterValue(filters, "workspace:", sitesLocation.getWorkspace());
-      // get JCR workspace
+      // remove JCR Nodes
       String removeNodes = getParameterValue(filters, "removeNodes:", null);
 
       // get JCR Site path
@@ -333,6 +333,9 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
         }
         if (childNode.hasProperty("publication:liveDate")) {
           nodeMetadata.setLiveDate(childNode.getProperty("publication:liveDate").getDate());
+        }
+        if (childNode.hasProperty("exo:lastModifiedDate")) {
+          nodeMetadata.setLastModificationDate(childNode.getProperty("exo:lastModifiedDate").getDate());
         }
       }
       // If not export the whole node
