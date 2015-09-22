@@ -19,6 +19,7 @@ package org.exoplatform.management.forum;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.forum.operations.ForumDataExportResource;
 import org.exoplatform.management.forum.operations.ForumDataImportResource;
@@ -36,13 +37,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ForumExtension implements ManagementExtension {
+public class ForumExtension extends AbstractManagementExtension {
 
   public static final String PUBLIC_FORUM_TYPE = "public";
   public static final String SPACE_FORUM_TYPE = "space";
@@ -75,33 +75,4 @@ public class ForumExtension implements ManagementExtension {
     group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(true), description("export forum category"));
     group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(true), description("import forum category"));
   }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static class ReadResource extends AbstractOperationHandler {
-    private String[] values;
-    private String description;
-
-    public ReadResource(String description, String... values) {
-      this.values = values;
-      this.description = description;
-    }
-
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel(description, values == null ? new HashSet<String>() : new HashSet<String>(Arrays.asList(values))));
-    }
-
-  }
-
 }

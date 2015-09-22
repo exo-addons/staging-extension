@@ -19,6 +19,7 @@ package org.exoplatform.management.social;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.social.operations.SocialDataExportResource;
 import org.exoplatform.management.social.operations.SocialDataImportResource;
@@ -33,13 +34,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class SocialExtension implements ManagementExtension {
+public class SocialExtension extends AbstractManagementExtension {
 
   public static final String SPACE_RESOURCE = "space";
   public static final String DASHBOARD_PORTLET = "DashboardPortlet";
@@ -76,33 +76,5 @@ public class SocialExtension implements ManagementExtension {
     space.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SocialDataExportResource(), description("export space"));
     space.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new SocialDataImportResource(), description("import space"));
     space.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Empty resource"), description("Empty resource"));
-  }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static class ReadResource extends AbstractOperationHandler {
-    private String[] values;
-    private String description;
-
-    public ReadResource(String description, String... values) {
-      this.values = values;
-      this.description = description;
-    }
-
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel(description, values == null ? new HashSet<String>() : new HashSet<String>(Arrays.asList(values))));
-    }
-
   }
 }

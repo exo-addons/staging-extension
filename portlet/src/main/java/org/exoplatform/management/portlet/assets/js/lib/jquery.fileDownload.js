@@ -333,7 +333,7 @@ require( ["SHARED/jquery"], function ($) {
 	
 	                return;
 	            }
-	
+
 	            //has an error occured?
 	            //if neither containers exist below then the file download is occuring on the current window
 	            if (downloadWindow || $iframe) {

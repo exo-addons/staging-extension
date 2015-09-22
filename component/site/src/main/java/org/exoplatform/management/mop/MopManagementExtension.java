@@ -22,6 +22,7 @@
 
 package org.exoplatform.management.mop;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.mop.binding.MopBindingProvider;
 import org.exoplatform.management.mop.operations.MopImportResource;
 import org.exoplatform.management.mop.operations.MopReadResource;
@@ -41,13 +42,12 @@ import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
-public class MopManagementExtension implements ManagementExtension {
+public class MopManagementExtension extends AbstractManagementExtension {
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("site");
@@ -112,17 +112,5 @@ public class MopManagementExtension implements ManagementExtension {
 
     // Navigation node management resource registration
     navigation.registerSubResource("{nav-uri: .*}", description("Management resource responsible for handling management operations on specific navigation nodes."));
-  }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
   }
 }

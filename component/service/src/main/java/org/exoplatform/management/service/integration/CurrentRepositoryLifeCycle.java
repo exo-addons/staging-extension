@@ -56,9 +56,8 @@ public class CurrentRepositoryLifeCycle implements SessionLifeCycle {
 
       //
       Method getDefaultRepositoryMethod = repositoryService.getClass().getMethod("getCurrentRepository");
-      return (Repository)getDefaultRepositoryMethod.invoke(repositoryService);
-    }
-    catch (Exception e)
+      return (Repository) getDefaultRepositoryMethod.invoke(repositoryService);
+    } catch (Exception e)
     {
       throw new RepositoryException("Could not obtain repository", e);
     }
@@ -90,7 +89,9 @@ public class CurrentRepositoryLifeCycle implements SessionLifeCycle {
 
   public void save(Session session) throws RepositoryException
   {
-    session.save();
+    if (session.hasPendingChanges()) {
+      session.save();
+    }
   }
 
   public void close(Session session)

@@ -29,6 +29,11 @@
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>staging-extension-backup</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>staging-extension-service</artifactId>
 			<scope>provided</scope>
 		</dependency>

@@ -15,11 +15,11 @@ import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
 import org.exoplatform.management.service.api.Resource;
+import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
-import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.management.uiextension.comparison.NodeComparison;
 import org.exoplatform.management.uiextension.comparison.NodeComparisonState;
 import org.exoplatform.services.log.ExoLogger;
@@ -59,7 +59,7 @@ import org.exoplatform.webui.form.UIFormSelectBox;
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
 
-  protected static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
+  protected static ResourceHandler CONTENTS_HANDLER = ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
 
   public static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
 
@@ -254,7 +254,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
               exportOptions.put("filter/removeNodes", nodeComparison.getPath());
             } else {
 
-              boolean noVersion = false;
+              // boolean noVersion = false;
               String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
               if (!StringUtils.isEmpty(noVersionString)) {
                 cleanupPublication = nodeComparison.isPublished() && noVersionString.trim().equals("true");

@@ -348,10 +348,14 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       // Launch synchronization...
         $scope.setResultMessage("Proceeding...", "info");
 
-        $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions)
+	    var downloadOptions = {
+			preparingMessageHtml: "We are preparing your report, please wait...",
+			failMessageHtml: "No reports generated. No Survey data is available."
+        };
+        $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
           .done(function () {
             $scope.$apply(function(scope) {
-              scope.setResultMessage("Successfully exported.", "success");
+              scope.setResultMessage("Successfully proceeded.", "success");
               scope.button_clicked = false;
               scope.refreshController();
             });

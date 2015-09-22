@@ -12,6 +12,7 @@
 	<modules>
 		<module>common</module>
 		<module>content</module>
+		<module>backup</module>
 		<module>ecmadmin</module>
 		<module>gadget</module>
 		<module>organization</module>

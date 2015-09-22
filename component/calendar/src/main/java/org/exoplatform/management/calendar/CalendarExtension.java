@@ -22,6 +22,7 @@ import java.util.HashSet;
 import org.exoplatform.management.calendar.operations.CalendarDataExportResource;
 import org.exoplatform.management.calendar.operations.CalendarDataImportResource;
 import org.exoplatform.management.calendar.operations.CalendarDataReadResource;
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.gatein.management.api.ComponentRegistration;
 import org.gatein.management.api.ManagedDescription;
@@ -33,13 +34,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class CalendarExtension implements ManagementExtension {
+public class CalendarExtension extends AbstractManagementExtension {
 
   public static final String EVENT_LINK_KEY = "EventLink";
   public static final String EVENT_ID_KEY = "EventID";
@@ -70,33 +70,5 @@ public class CalendarExtension implements ManagementExtension {
     personal.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(false, false), description("Read personal calendars"));
     personal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(false, false), description("export personal calendar"));
     personal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(false, false), description("import personal calendar"));
-  }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static class ReadResource extends AbstractOperationHandler {
-    private String[] values;
-    private String description;
-
-    public ReadResource(String description, String... values) {
-      this.values = values;
-      this.description = description;
-    }
-
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel(description, values == null ? new HashSet<String>() : new HashSet<String>(Arrays.asList(values))));
-    }
-
   }
 }

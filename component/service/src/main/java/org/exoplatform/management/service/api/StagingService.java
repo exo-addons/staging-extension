@@ -50,6 +50,7 @@ public interface StagingService {
   public static final String USERS_PATH = "/organization/user";
   public static final String GROUPS_PATH = "/organization/group";
   public static final String ROLE_PATH = "/organization/role";
+  public static final String BACKUP_PATH = "/backup";
 
   /**
    * Export selected resources with selected options.
@@ -78,15 +79,17 @@ public interface StagingService {
   public Set<Resource> getResources(String path);
 
   /**
-   * Returns the list of sub resources of portal wikis computed from
-   * GateIN Management SPI
+   * Returns the list of sub resources of portal wikis computed from GateIN
+   * Management SPI
    * 
    * @return list of portal sites managed paths.
    */
   Set<Resource> getWikiPortalResources();
+
   Set<Resource> getWikiGroupResources();
+
   Set<Resource> getWikiUserResources();
-  
+
   /**
    * Execute an SQL JCR Query
    * 

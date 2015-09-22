@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import javax.inject.Singleton;
@@ -64,7 +65,6 @@ public class StagingServiceImpl implements StagingService {
    * @throws Exception
    */
   public File export(List<ResourceCategory> selectedResourceCategories) throws Exception {
-
     File file = null;
     ZipOutputStream exportFileOS = null;
     try {
@@ -87,6 +87,12 @@ public class StagingServiceImpl implements StagingService {
       exportFileOS.close();
     } catch (Exception ex) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while closing exported zip temp file." + file.getPath(), ex);
+    }
+    try (ZipFile zipFile = new ZipFile(file)) {
+      if (zipFile.size() == 0) {
+        file.delete();
+        return null;
+      }
     }
     return file;
   }

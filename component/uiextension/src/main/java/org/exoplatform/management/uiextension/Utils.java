@@ -18,10 +18,10 @@ import org.exoplatform.management.content.operations.site.contents.NodeMetadata;
 import org.exoplatform.management.content.operations.site.contents.SiteContentsImportResource;
 import org.exoplatform.management.content.operations.site.contents.SiteMetaData;
 import org.exoplatform.management.content.operations.site.contents.SiteMetaDataExportTask;
+import org.exoplatform.management.service.api.AbstractResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
-import org.exoplatform.management.service.handler.content.SiteContentsHandler;
 import org.exoplatform.management.uiextension.comparison.NodeComparison;
 import org.exoplatform.management.uiextension.comparison.NodeComparisonState;
 import org.exoplatform.services.security.ConversationState;
@@ -32,7 +32,7 @@ import org.gatein.management.api.operation.model.ExportTask;
 public class Utils {
   private static final SiteContentsImportResource SITE_CONTENTS_IMPORT_RESOURCE = new SiteContentsImportResource();
 
-  private static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);
+  private static AbstractResourceHandler CONTENTS_HANDLER = (AbstractResourceHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);
 
   public static boolean hasPushButtonPermission(String varName) {
     ConversationState state = ConversationState.getCurrent();

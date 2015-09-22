@@ -3,6 +3,7 @@ package org.exoplatform.management.organization;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.organization.group.GroupExportResource;
 import org.exoplatform.management.organization.group.GroupImportResource;
@@ -23,13 +24,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class OrganizationManagementExtension implements ManagementExtension {
+public class OrganizationManagementExtension extends AbstractManagementExtension {
 
   public final static String PATH_ORGANIZATION = "organization";
   public final static String PATH_ORGANIZATION_USER = "user";
@@ -76,26 +76,6 @@ public class OrganizationManagementExtension implements ManagementExtension {
     ManagedResource.Registration role = roles.registerSubResource("{role-name: .*}", description("Organization Role {role-name}."));
     role.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Nothing to read."));
     role.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new RoleExportResource(), description("Exports selected Organization Role."));
-  }
-
-  @Override
-  public void destroy() {
-  }
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static final class EmptyReadResource extends AbstractOperationHandler {
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
-    }
   }
 
   public static final class OrganizationReadResource extends AbstractOperationHandler {

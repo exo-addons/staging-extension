@@ -182,6 +182,12 @@ public class StagingExtensionController {
       resourceCategories.add(organization);
     }
 
+    if (activatedModules.isEmpty() || activatedModules.contains("/backup:activated")) {
+      ResourceCategory backup = new ResourceCategory("Backup", "/backup");
+      backup.getSubResourceCategories().add(new ResourceCategory("Repositories", "/backup"));
+      resourceCategories.add(backup);
+    }
+
     if (activatedModules.isEmpty() || activatedModules.contains("/application:activated")) {
       ResourceCategory applications = new ResourceCategory("Applications", "/application");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.REGISTRY_PATH + ":activated")) {
@@ -402,8 +408,13 @@ public class StagingExtensionController {
 
     try {
       File file = stagingService.export(selectedResourceCategoriesWithExceptions);
-      return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/")
-          .withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
+      if (file == null) {
+        return Response.ok("").withHeader("Set-Cookie", "fileDownload=true; path=/");
+
+      } else {
+        return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/")
+            .withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
+      }
     } catch (Exception e) {
       log.error("Error while exporting resources, ", e);
       return Response.content(500, "Error occured while exporting Managed Resources: " + e.getMessage());

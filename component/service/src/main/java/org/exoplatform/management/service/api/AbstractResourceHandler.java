@@ -34,6 +34,7 @@ import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.model.NoResultModel;
 
 public abstract class AbstractResourceHandler implements ResourceHandler {
 
@@ -226,24 +227,27 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     File tmpFile = null;
     try {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
-      tmpFile = File.createTempFile("staging", "-export.zip");
-      tmpFile.deleteOnExit();
 
-      outputStream = new FileOutputStream(tmpFile);
-      managedResponse.writeResult(outputStream, false);
+      if (managedResponse.getResult() instanceof NoResultModel) {
+        tmpFile = File.createTempFile("staging", "-export.zip");
+        tmpFile.deleteOnExit();
 
-      outputStream.flush();
-      outputStream.close();
-      outputStream = null;
+        outputStream = new FileOutputStream(tmpFile);
+        managedResponse.writeResult(outputStream, false);
 
-      getLogger().info("Export operation finished.");
+        outputStream.flush();
+        outputStream.close();
+        outputStream = null;
 
-      inputStream = new FileInputStream(tmpFile);
+        getLogger().info("Export operation finished.");
 
-      Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
+        inputStream = new FileInputStream(tmpFile);
 
-      inputStream.close();
-      inputStream = null;
+        Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
+
+        inputStream.close();
+        inputStream = null;
+      }
     } catch (Exception ex) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
     } finally {

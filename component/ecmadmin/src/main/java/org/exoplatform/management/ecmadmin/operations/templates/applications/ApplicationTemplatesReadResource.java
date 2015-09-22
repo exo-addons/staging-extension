@@ -12,7 +12,6 @@ import javax.jcr.Node;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cms.views.ApplicationTemplateManagerService;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
-import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;

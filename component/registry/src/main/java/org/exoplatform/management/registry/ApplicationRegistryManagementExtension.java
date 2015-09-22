@@ -2,6 +2,7 @@ package org.exoplatform.management.registry;
 
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.registry.operations.ApplicationExportResource;
 import org.exoplatform.management.registry.operations.CategoryExportResource;
@@ -18,13 +19,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class ApplicationRegistryManagementExtension implements ManagementExtension {
+public class ApplicationRegistryManagementExtension extends AbstractManagementExtension {
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("registry");
@@ -46,24 +46,4 @@ public class ApplicationRegistryManagementExtension implements ManagementExtensi
     application.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ApplicationExportResource(), description("Export Application declaration in Application Registry."));
   }
 
-  @Override
-  public void destroy() {
-  }
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static class EmptyReadResource extends AbstractOperationHandler {
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-        OperationException {
-      resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
-    }
-  }
 }

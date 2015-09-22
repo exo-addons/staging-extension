@@ -2,6 +2,7 @@ package org.exoplatform.management.gadget;
 
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.gadget.operations.GadgetExportResource;
 import org.exoplatform.management.gadget.operations.GadgetImportResource;
@@ -16,13 +17,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class GadgetManagementExtension implements ManagementExtension {
+public class GadgetManagementExtension extends AbstractManagementExtension {
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("gadget");
@@ -40,26 +40,6 @@ public class GadgetManagementExtension implements ManagementExtension {
     gadget.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty."));
     gadget
         .registerOperationHandler(OperationNames.EXPORT_RESOURCE, new GadgetExportResource(), description("Export gadget data"));
-  }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static class EmptyReadResource extends AbstractOperationHandler {
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-        OperationException {
-      resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
-    }
   }
 
 }

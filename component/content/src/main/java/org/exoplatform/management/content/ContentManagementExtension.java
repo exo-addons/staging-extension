@@ -1,5 +1,6 @@
 package org.exoplatform.management.content;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.content.operations.ContentReadResource;
 import org.exoplatform.management.content.operations.site.LiveSitesReadResource;
 import org.exoplatform.management.content.operations.site.SiteReadResource;
@@ -13,14 +14,13 @@ import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @version $Revision$
  */
-public class ContentManagementExtension implements ManagementExtension {
+public class ContentManagementExtension extends AbstractManagementExtension {
 
   public final static String PATH_CONTENT = "content";
   public final static String PATH_CONTENT_SITES = "sites";
@@ -54,17 +54,5 @@ public class ContentManagementExtension implements ManagementExtension {
     ManagedResource.Registration seo = site.registerSubResource(PATH_CONTENT_SITES_SEO, description("Management resource responsible for handling management operations on SEO of a specific site."));
     seo.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteSEOReadResource(), description("Read site SEO data"));
     seo.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteSEOExportResource(), description("Export site SEO data"));
-  }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
   }
 }

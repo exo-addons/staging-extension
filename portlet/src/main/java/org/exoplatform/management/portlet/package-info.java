@@ -9,6 +9,7 @@
     @Binding(value = ChromatticService.class)
 })
 @Scripts({
+    @Script(id = "jQueryUI", value = "js/lib/jquery-ui.js"),
     @Script(id = "jQueryFileDownload", value = "js/lib/jquery.fileDownload.js"),
     // AngularJS is still global, should be AMDified
     @Script(id = "angularjs", value = "js/lib/angular.min.js"),
@@ -19,7 +20,7 @@
     @Script(id = "staging", value = "js/staging.js", depends = {"controllers", "services"})
 })
 @Less("style/StagingSkin.less")
-@Stylesheets({ @Stylesheet(id = "stagingSkin", value = "style/staging.css") })
+@Stylesheets({ @Stylesheet(id = "stagingSkin", value = "style/staging.css"), @Stylesheet(id = "jQueryUISkin", value = "style/jquery-ui.css") })
 @Assets("*")
 
 package org.exoplatform.management.portlet;

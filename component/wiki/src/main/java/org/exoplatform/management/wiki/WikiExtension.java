@@ -18,6 +18,7 @@ package org.exoplatform.management.wiki;
 
 import java.util.HashSet;
 
+import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.wiki.operations.WikiDataExportResource;
 import org.exoplatform.management.wiki.operations.WikiDataImportResource;
@@ -34,13 +35,12 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
-import org.gatein.management.spi.ManagementExtension;
 
 /**
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
-public class WikiExtension implements ManagementExtension {
+public class WikiExtension extends AbstractManagementExtension {
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration wikiRegistration = context.registerManagedComponent("wiki");
@@ -63,26 +63,6 @@ public class WikiExtension implements ManagementExtension {
     user.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.USER), description("users wiki resources"));
     user.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.USER), description("export users wiki"));
     user.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.USER), description("import users wiki"));
-
-  }
-
-  @Override
-  public void destroy() {}
-
-  private static ManagedDescription description(final String description) {
-    return new ManagedDescription() {
-      @Override
-      public String getDescription() {
-        return description;
-      }
-    };
-  }
-
-  public static class EmptyReadResource extends AbstractOperationHandler {
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
-      resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
-    }
 
   }
 

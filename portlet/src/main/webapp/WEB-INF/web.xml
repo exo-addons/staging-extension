@@ -17,9 +17,9 @@
   <!-- ================================================================== -->
   <!--           LISTENER                                                 -->
   <!-- ================================================================== -->
-  <listener>
-    <listener-class>org.exoplatform.container.web.PortalContainerConfigOwner</listener-class>
-  </listener>
+<!--   <listener> -->
+<!--     <listener-class>org.exoplatform.container.web.PortalContainerConfigOwner</listener-class> -->
+<!--   </listener> -->
   <!-- ================================================================== -->
   <!-- = GateIn configuration                                           = -->
   <!-- ================================================================== -->
