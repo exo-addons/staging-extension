@@ -146,6 +146,7 @@ public class BackupExportResource extends AbstractJCRExportOperationHandler {
     }
   }
 
+  // FIXME JCR-2405
   private void fixWorkspacesConfiguration(final ManageableRepository repository) throws RepositoryConfigurationException {
     ArrayList<WorkspaceEntry> workspaceEntries = repository.getConfiguration().getWorkspaceEntries();
     for (WorkspaceEntry workspaceEntry : workspaceEntries) {

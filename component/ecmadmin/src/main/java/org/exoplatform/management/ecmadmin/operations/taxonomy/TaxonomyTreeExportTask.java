@@ -5,8 +5,8 @@ import java.io.OutputStream;
 
 import javax.jcr.Session;
 
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.management.api.operation.model.ExportTask;
 
 /**
@@ -32,9 +32,8 @@ public class TaxonomyTreeExportTask implements ExportTask {
 
   @Override
   public void export(OutputStream outputStream) throws IOException {
-    SessionProvider sessionProvider = SessionProvider.createSystemProvider();
     try {
-      Session session = sessionProvider.getSession(metaData.getTaxoTreeWorkspace(), repositoryService.getCurrentRepository());
+      Session session = AbstractOperationHandler.getSession(repositoryService, metaData.getTaxoTreeWorkspace());
 
       // Workaround: use docview instead of sysview
       session.exportDocumentView(metaData.getTaxoTreeHomePath(), outputStream, false, false);

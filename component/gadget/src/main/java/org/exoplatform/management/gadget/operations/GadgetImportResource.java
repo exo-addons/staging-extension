@@ -107,9 +107,7 @@ public class GadgetImportResource extends AbstractOperationHandler {
     ZipEntry entry;
     Session session = null;
     try {
-      ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
-      SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-      session = sessionProvider.getSession(workspaceName, manageableRepository);
+      session = AbstractOperationHandler.getSession(repositoryService, workspaceName);
       while ((entry = zis.getNextEntry()) != null) {
         String filePath = entry.getName();
 

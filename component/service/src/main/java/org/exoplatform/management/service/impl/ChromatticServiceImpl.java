@@ -15,8 +15,6 @@ import java.util.Properties;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -26,14 +24,13 @@ import org.chromattic.api.ChromatticSession;
 import org.chromattic.api.query.QueryResult;
 import org.exoplatform.commons.chromattic.ChromatticManager;
 import org.exoplatform.commons.utils.PropertyManager;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.service.api.ChromatticService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.api.model.TargetServerChromattic;
 import org.exoplatform.management.service.integration.CurrentRepositoryLifeCycle;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ExtendedNode;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.web.security.codec.AbstractCodec;
@@ -227,7 +224,7 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   public void setPermissions(String jcrPath, Map<String, String[]> permissions) {
     Session session = null;
     try {
-      session = getSession(repositoryService, workspaceName);
+      session = AbstractOperationHandler.getSession(repositoryService, workspaceName);
       if (!session.itemExists(jcrPath)) {
         return;
       }
@@ -244,12 +241,6 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
         session.logout();
       }
     }
-  }
-
-  public static final Session getSession(RepositoryService repositoryService, String workspace) throws RepositoryException, LoginException, NoSuchWorkspaceException {
-    SessionProvider provider = SessionProvider.createSystemProvider();
-    ManageableRepository repository = repositoryService.getCurrentRepository();
-    return provider.getSession(workspace, repository);
   }
 
   @Override

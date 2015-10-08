@@ -15,10 +15,10 @@ import javax.jcr.Node;
 import javax.jcr.Session;
 
 import org.apache.commons.io.IOUtils;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
 import org.exoplatform.services.cms.taxonomy.TaxonomyService;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.exceptions.OperationException;
@@ -110,8 +110,7 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
           }
         }
 
-        SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-        Session session = sessionProvider.getSession(metaData.getTaxoTreeWorkspace(), repositoryService.getCurrentRepository());
+        Session session = AbstractOperationHandler.getSession(repositoryService, metaData.getTaxoTreeWorkspace());
         if (session.itemExists(metaData.getTaxoTreeHomePath())) {
           // Delete the nodes defined here without testing on replaceExisting
           // because the nodes here aren't defind in a taxonomy tree

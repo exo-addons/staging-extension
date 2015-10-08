@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.exoplatform.management.common.DataTransformerService;
 import org.exoplatform.management.mop.operations.page.PageUtils;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.Page;
@@ -64,7 +65,9 @@ public class PageExportTask extends AbstractExportTask implements ExportTask {
         for (String pageName : pageNames) {
             try {
                 PageKey pageKey = new PageKey(siteKey, pageName);
-                pages.getPages().add(PageUtils.getPage(dataStorage, pageService, pageKey));
+                Page page = PageUtils.getPage(dataStorage, pageService, pageKey);
+                DataTransformerService.exportData("Page", page);
+                pages.getPages().add(page);
             } catch (Exception e) {
                 throw new IOException("Could not retrieve page name " + pageName + " for site " + siteKey, e);
             }

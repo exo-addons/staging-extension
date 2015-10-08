@@ -17,14 +17,13 @@ import javax.jcr.query.Query;
 
 import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.container.PortalContainer;
+import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.ResourceCategory;
 import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.core.ManageableRepository;
-import org.exoplatform.services.jcr.ext.common.SessionProvider;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.wcm.core.NodeLocation;
@@ -136,9 +135,7 @@ public class StagingServiceImpl implements StagingService {
         }
       }
 
-      SessionProvider provider = SessionProvider.createSystemProvider();
-      ManageableRepository repository = getRepositoryService().getCurrentRepository();
-      Session session = provider.getSession(sitesLocation.getWorkspace(), repository);
+      Session session = AbstractOperationHandler.getSession(getRepositoryService(), sitesLocation.getWorkspace());
 
       Query query = session.getWorkspace().getQueryManager().createQuery(realSQL, Query.SQL);
       NodeIterator nodeIterator = query.execute().getNodes();

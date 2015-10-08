@@ -38,7 +38,6 @@ import org.exoplatform.management.mop.operations.site.SiteLayoutReadResource;
 import org.exoplatform.management.mop.operations.site.SiteReadResource;
 import org.exoplatform.management.mop.operations.site.SiteTypeReadResource;
 import org.gatein.management.api.ComponentRegistration;
-import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.spi.ExtensionContext;

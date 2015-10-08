@@ -1,8 +1,12 @@
 package org.exoplatform.management.content;
 
 import org.exoplatform.management.common.AbstractManagementExtension;
+import org.exoplatform.management.common.DataTransformerService;
 import org.exoplatform.management.content.operations.ContentReadResource;
+import org.exoplatform.management.content.operations.site.JCRBinaryTransformer;
 import org.exoplatform.management.content.operations.site.LiveSitesReadResource;
+import org.exoplatform.management.content.operations.site.PageCLVTransformer;
+import org.exoplatform.management.content.operations.site.PageSCVTransformer;
 import org.exoplatform.management.content.operations.site.SiteReadResource;
 import org.exoplatform.management.content.operations.site.contents.SiteContentsExportResource;
 import org.exoplatform.management.content.operations.site.contents.SiteContentsImportResource;
@@ -10,7 +14,6 @@ import org.exoplatform.management.content.operations.site.contents.SiteContentsR
 import org.exoplatform.management.content.operations.site.seo.SiteSEOExportResource;
 import org.exoplatform.management.content.operations.site.seo.SiteSEOReadResource;
 import org.gatein.management.api.ComponentRegistration;
-import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.spi.ExtensionContext;
@@ -54,5 +57,9 @@ public class ContentManagementExtension extends AbstractManagementExtension {
     ManagedResource.Registration seo = site.registerSubResource(PATH_CONTENT_SITES_SEO, description("Management resource responsible for handling management operations on SEO of a specific site."));
     seo.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteSEOReadResource(), description("Read site SEO data"));
     seo.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteSEOExportResource(), description("Export site SEO data"));
+    
+    DataTransformerService.addTransformer("Page", new PageSCVTransformer());
+    DataTransformerService.addTransformer("Page", new PageCLVTransformer());
+    DataTransformerService.addTransformer("Content", new JCRBinaryTransformer());
   }
 }
