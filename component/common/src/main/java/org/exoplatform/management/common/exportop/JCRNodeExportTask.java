@@ -23,6 +23,8 @@ public class JCRNodeExportTask implements ExportTask {
 
   private static final Log log = ExoLogger.getLogger(JCRNodeExportTask.class);
 
+  private boolean exportBinary = true;
+
   private final RepositoryService repositoryService;
   private final String workspace;
   private final String absolutePath;
@@ -46,6 +48,10 @@ public class JCRNodeExportTask implements ExportTask {
     return entryPath;
   }
 
+  public void setExportBinary(boolean exportBinary) {
+    this.exportBinary = exportBinary;
+  }
+
   @Override
   public void export(OutputStream outputStream) throws IOException {
     Session session = null;
@@ -53,7 +59,7 @@ public class JCRNodeExportTask implements ExportTask {
       log.info("Export: " + workspace + ":" + absolutePath);
 
       session = AbstractJCRImportOperationHandler.getSession(repositoryService, workspace);
-      session.exportDocumentView(absolutePath, outputStream, false, !recurse);
+      session.exportDocumentView(absolutePath, outputStream, !exportBinary, !recurse);
     } catch (RepositoryException exception) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export content from : " + absolutePath, exception);
     } finally {

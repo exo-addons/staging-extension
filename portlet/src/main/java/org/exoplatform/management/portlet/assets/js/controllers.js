@@ -349,8 +349,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         $scope.setResultMessage("Proceeding...", "info");
 
 	    var downloadOptions = {
-			preparingMessageHtml: "We are preparing your report, please wait...",
-			failMessageHtml: "No reports generated. No Survey data is available."
+			preparingMessageHtml: "Operation in progress, please wait...",
+			failMessageHtml: "An error happened. See log file for more details about the error."
         };
         $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
           .done(function () {
@@ -372,6 +372,68 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	      $scope.refreshController();
         }
 	};
+
+	$scope.backup = function() {
+		var dirFolder = $scope.optionsModel["/backup/directory"];
+		if(dirFolder == null || dirFolder == "") {
+		  $scope.setResultMessage("Error : Empty backup folder", "error");
+		} else {
+		  $scope.button_clicked = true;
+		  $scope.refreshController();
+
+		  // Launch backup...
+	      $scope.setResultMessage("Proceeding...", "info");
+
+		  $http({
+		        method: 'POST',
+		        url: stagingContainer.jzURL('StagingExtensionController.backup'),
+		        data: 'backupDirectory=' + encodeURIComponent(dirFolder),
+		        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+		  	}).success(function (data) {
+				if(data.indexOf('<body') >= 0) {
+		          $scope.setResultMessage("Session timeout, please retry again.", "error");
+		      	} else {
+			      $scope.setResultMessage(data, "success");
+		      	}
+	      	    $scope.button_clicked = false;
+		        $scope.refreshController();
+		    }).error(function (data) {
+			      $scope.setResultMessage(data, "error");
+		      	  $scope.button_clicked = false;
+			      $scope.refreshController();
+		    });
+		}
+	};
+
+    $scope.restore = function() {
+	  var dirFolder = $scope.optionsModel["/backup/directory"];
+      if(dirFolder == null || dirFolder == "") {
+        $scope.setResultMessage("Error : Empty backup folder", "error");
+      } else {
+    	$scope.button_clicked = true;
+        $scope.refreshController();
+
+        // Launch restore...
+	    $scope.setResultMessage("Proceeding...", "info");
+
+        $http({
+			method: 'POST',
+			url: stagingContainer.jzURL('StagingExtensionController.restore'),
+			data: 'backupDirectory=' + encodeURIComponent(dirFolder),
+			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      	}).success(function (data) {
+  			if(data.indexOf('<body') >= 0) {
+  	          $scope.setResultMessage("Session timeout, please retry again.", "success");
+          	} else {
+    	      $scope.setResultMessage(data, "error");
+          	}
+  	        $scope.refreshController();
+        }).error(function (data) {
+			$scope.setResultMessage(data, "error");
+			$scope.refreshController();
+        });
+      }
+    };
 
     // synchronize action
     $scope.synchronizeResources = function() {

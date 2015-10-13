@@ -130,7 +130,7 @@ public class MetadataTemplatesImportResource extends ECMAdminImportResource {
         updateTemplateContent(templateType, nodeTypeName, templateName, new ByteArrayInputStream(templateContentEntry.getValue()));
       }
     } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing applications templates", e);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing metadata templates", e);
     }
 
     resultHandler.completed(NoResultModel.INSTANCE);

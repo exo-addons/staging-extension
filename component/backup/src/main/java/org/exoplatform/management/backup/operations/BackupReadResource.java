@@ -4,16 +4,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.RootContainer;
 import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.jcr.config.RepositoryEntry;
-import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
-import org.gatein.management.api.operation.model.NoResultModel;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
 /**
@@ -24,37 +22,18 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class BackupReadResource extends AbstractOperationHandler {
 
   @Override
-  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-      OperationException {
-    repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
+    Set<String> children = new LinkedHashSet<String>();
 
-    String repositoryName = operationContext.getAddress().resolvePathTemplate("repository");
-    String workspaceName = operationContext.getAddress().resolvePathTemplate("workspace");
-
-    if (repositoryName == null) {
-      Set<String> children = new LinkedHashSet<String>();
-
-      List<RepositoryEntry> repositories = repositoryService.getConfig().getRepositoryConfigurations();
-      for (RepositoryEntry repositoryEntry : repositories) {
-        children.add(repositoryEntry.getName());
+    String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
+    if (StringUtils.isEmpty(portalContainerName)) {
+      @SuppressWarnings("unchecked")
+      List<PortalContainer> portalContainers = RootContainer.getInstance().getComponentInstancesOfType(PortalContainer.class);
+      for (PortalContainer portalContainer : portalContainers) {
+        children.add(portalContainer.getName());
       }
-      resultHandler.completed(new ReadResourceModel("repositories", children));
-    } else if (workspaceName == null) {
-      Set<String> children = new LinkedHashSet<String>();
-
-      ManageableRepository repository = null;
-      try {
-        repository = repositoryService.getRepository(repositoryName);
-      } catch (Exception e) {
-        throw new OperationException(OperationNames.READ_RESOURCE, "error while retrieving repository object", e);
-      }
-      String[] wsNames = repository.getWorkspaceNames();
-      for (String wsName : wsNames) {
-        children.add(wsName);
-      }
-      resultHandler.completed(new ReadResourceModel("workspaces", children));
-    } else {
-      resultHandler.completed(NoResultModel.INSTANCE);
     }
+
+    resultHandler.completed(new ReadResourceModel("portals", children));
   }
 }

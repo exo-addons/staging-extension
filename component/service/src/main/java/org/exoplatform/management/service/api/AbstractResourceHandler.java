@@ -183,6 +183,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       // Call GateIN Management SPI
       return getManagementController().execute(request);
     } catch (Exception e) {
+      getLogger().error(e);
       throw new RuntimeException("Error while handling Response from GateIN Management, export operation", e);
     }
   }
@@ -228,7 +229,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     try {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
 
-      if (managedResponse.getResult() instanceof NoResultModel) {
+//      if (managedResponse.getResult() instanceof NoResultModel) {
         tmpFile = File.createTempFile("staging", "-export.zip");
         tmpFile.deleteOnExit();
 
@@ -247,7 +248,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
         inputStream.close();
         inputStream = null;
-      }
+//      }
     } catch (Exception ex) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
     } finally {

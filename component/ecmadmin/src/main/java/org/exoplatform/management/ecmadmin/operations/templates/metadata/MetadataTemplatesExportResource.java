@@ -77,7 +77,7 @@ public class MetadataTemplatesExportResource extends AbstractOperationHandler {
         exportTasks.add(new MetadataTemplatesMetaDataExportTask(metadata, EXPORT_BASE_PATH + "/" + metadataName));
       }
     } catch (Exception e) {
-      throw new OperationException(operationName, "Error while retrieving node types templates", e);
+      throw new OperationException(operationName, "Error while retrieving metadata templates", e);
     }
 
     resultHandler.completed(new ExportResourceModel(exportTasks));

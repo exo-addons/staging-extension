@@ -78,7 +78,7 @@ public class SiteSEOExportResource extends AbstractExportOperationHandler {
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites.", e);
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export SEO.", e);
     }
   }
 

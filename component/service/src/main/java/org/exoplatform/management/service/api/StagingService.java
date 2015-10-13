@@ -2,11 +2,10 @@ package org.exoplatform.management.service.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.apache.commons.fileupload.FileItem;
 
 public interface StagingService {
 
@@ -66,10 +65,11 @@ public interface StagingService {
    * Import resources
    * 
    * @param selectedResourcePath
-   * @param file
+   * @param inputStream
    * @throws IOException
    */
-  void importResource(String selectedResourcePath, FileItem file, Map<String, List<String>> attributes) throws IOException;
+  void importResource(String selectedResourcePath, InputStream inputStream, Map<String, List<String>> attributes) throws IOException;
+
 
   /**
    * Returns the list of sub resources of the given path

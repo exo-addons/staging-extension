@@ -98,7 +98,7 @@ public class RegistryImportResource extends AbstractOperationHandler {
       }
       zin.close();
     } catch (Exception e) {
-      throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
+      throw new OperationException(operationContext.getOperationName(), "Error while importing application registry", e);
     } finally {
       if (session != null && session.isLive()) {
         session.logout();

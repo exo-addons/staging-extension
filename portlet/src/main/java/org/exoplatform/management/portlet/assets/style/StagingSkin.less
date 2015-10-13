@@ -15,9 +15,19 @@
 		cursor: default;
 	}
 
-  /* Mode panel */
-
 	.mode-options {
+	}
+
+	.mode-backup-options {
+		margin: 0 auto;
+		width: 700px;
+		.backup-buttons {
+			text-align: center;
+			padding: 20px;
+			.backup-button {
+				width: 150px;
+			}
+		}
 	}
 
 	.mode-import-options {
@@ -65,8 +75,6 @@
 		}
 	}
 
-  /* Main button */
-
 	.buttons {
 		padding-bottom: 10px;
 		clear: both;
@@ -90,8 +98,6 @@
 		width: 300px;
 	}
 
-  /* Result Message */
-
 	.result-message {
 		margin: 0 auto 10px;
 		text-align: center;
@@ -102,13 +108,9 @@
 		display: none;
 	}
 
-  /* Resources Panel */
-
 	.resources-panel {
 		padding: 0 10px;
 	}
-
-  /* Left Panel */
 
 	.left-column {
 		width: 25%;
@@ -201,16 +203,15 @@
 				overflow-y: auto;
 				max-height: 200px;
 				margin-bottom: 10px;
-
 				.search-resources {
 					margin-left: 20px;
 					width: 50%;
 				}
 
-                .no-resource-available {
-                    font-style: italic;
-                    text-align: center;
-                }
+				.no-resource-available {
+					font-style: italic;
+					text-align: center;
+				}
 
 				table {
 					margin: 0;
@@ -221,8 +222,6 @@
 			}
 		}
 	}
-
-  /* Right Panel */
 
 	.right-column {
 		width: 72%;
@@ -277,12 +276,11 @@
 				max-height: 200px;
 				margin-top: 10px;
 				margin-bottom: 10px;
-
-                .no-element-selected {
-                    font-style: italic;
-                    text-align: center;
-                    background-color: #f7b5b5;
-                }
+				.no-element-selected {
+					font-style: italic;
+					text-align: center;
+					background-color: #f7b5b5;
+				}
 			}
 
 			.selected-resource-details {
@@ -401,8 +399,6 @@
 		text-align: center;
 	}
 
-  /** Modes **/
-
 	.modes {
 		padding: 10px;
 		margin: 10px;
@@ -415,7 +411,7 @@
 	}
 
 	.mode-items > span {
-		margin-left: 20%;
+		margin-left: 14%;
 		margin-right: 5px;
 	}
 
@@ -439,3 +435,4 @@
 		margin-left: 28px;
 	}
 }
+

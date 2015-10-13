@@ -14,6 +14,7 @@ import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.DataTransformerService;
 import org.exoplatform.management.common.exportop.AbstractJCRExportOperationHandler;
 import org.exoplatform.management.common.exportop.ActivitiesExportTask;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
@@ -123,7 +124,7 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
 
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage(), e);
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export site contents, cause : " + e.getMessage(), e);
     }
   }
 
@@ -309,6 +310,12 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
         String prefix = SiteUtil.getSiteContentsBasePath(metaData.getOptions().get(SiteMetaData.SITE_NAME));
         JCRNodeExportTask siteContentExportTask = new JCRNodeExportTask(repositoryService, workspace, path, prefix, recursive, true);
         subNodesExportTask.add(siteContentExportTask);
+        String parentPathName = siteContentExportTask.getEntry().substring(0, siteContentExportTask.getEntry().lastIndexOf('/'));
+        int initialSize = subNodesExportTask.size();
+        DataTransformerService.exportData("Content", subNodesExportTask, childNode, parentPathName);
+        if (initialSize < subNodesExportTask.size()) {
+          siteContentExportTask.setExportBinary(false);
+        }
         if (exportVersionHistory && childNode.isNodeType(org.exoplatform.ecm.webui.utils.Utils.MIX_VERSIONABLE) && childNode.getVersionHistory().hasNodes()) {
           SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
               path, recursive);

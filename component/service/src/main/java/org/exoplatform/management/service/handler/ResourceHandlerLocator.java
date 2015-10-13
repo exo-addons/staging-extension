@@ -23,6 +23,12 @@ public class ResourceHandlerLocator {
   static {
     registry = new ResourceHandlerRegistry();
 
+    // Backup
+    registry.register(new SimpleHandler(StagingService.BACKUP_PATH));
+
+    // Social
+    registry.register(new SimpleHandler(StagingService.SOCIAL_SPACE_PATH));
+
     // Wiki
     registry.register(new ResourcesInFilterHandler(StagingService.PORTAL_WIKIS_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.GROUP_WIKIS_PATH));
@@ -51,8 +57,25 @@ public class ResourceHandlerLocator {
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_QUERY_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_TEMPLATES_METADATA_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+    registry.register(new SimpleHandler(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
+    registry.register(new SimpleHandler(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+    registry.register(new SimpleHandler(StagingService.ECM_TAXONOMY_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_VIEW_TEMPLATES_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_VIEW_CONFIGURATION_PATH));
+
+    // Organization Handlers
+    registry.register(new SimpleHandler(StagingService.USERS_PATH));
+    registry.register(new SimpleHandler(StagingService.GROUPS_PATH));
+    registry.register(new SimpleHandler(StagingService.ROLE_PATH));
+
+    // Gadget Handler
+    registry.register(new SimpleHandler(StagingService.GADGET_PATH));
+
+    // Aplication Registry Handler
+    registry.register(new SimpleHandler(StagingService.REGISTRY_PATH));
+
+    // Sites JCR Content Handler
+    registry.register(new SimpleHandler(StagingService.CONTENT_SITES_PATH));
 
     // MOP Handlers
     registry.register(new MOPSiteHandler(SiteType.PORTAL));
@@ -61,12 +84,7 @@ public class ResourceHandlerLocator {
   }
 
   public static ResourceHandler getResourceHandler(String path) {
-    ResourceHandler handler = registry.get(path);
-    if (handler == null) {
-      handler = new SimpleHandler(path);
-      registry.register(handler);
-    }
-    return handler;
+    return registry.get(path);
   }
 
   public static ResourceHandler findResourceByPath(String path) {

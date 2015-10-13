@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipInputStream;
 
@@ -14,6 +15,8 @@ import javax.jcr.Session;
 import javax.transaction.SystemException;
 
 import org.apache.commons.io.FileUtils;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.RootContainer;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -55,8 +58,17 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   // This is used to test on duplicated activities
   protected Set<Long> activitiesByPostTime = new HashSet<Long>();
 
-  protected void increaseCurrentTransactionTimeOut(OperationContext operationContext) {
+  public static void increaseCurrentTransactionTimeOut(OperationContext operationContext) {
     TransactionService transactionService = operationContext.getRuntimeContext().getRuntimeComponent(TransactionService.class);
+    increaseCurrentTransactionTimeOut(transactionService);
+  }
+
+  public static void increaseCurrentTransactionTimeOut(PortalContainer portalContainer) {
+    TransactionService transactionService = (TransactionService) portalContainer.getComponentInstanceOfType(TransactionService.class);
+    increaseCurrentTransactionTimeOut(transactionService);
+  }
+
+  public static void increaseCurrentTransactionTimeOut(TransactionService transactionService) {
     try {
       transactionService.setTransactionTimeout(86400);
     } catch (SystemException e1) {
@@ -117,6 +129,21 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       }
     } catch (Exception e) {
       log.error("Error while retrieving identity: ", e);
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
+  protected static List<PortalContainer> getPortalContainers() {
+    return (List<PortalContainer>) RootContainer.getInstance().getComponentInstancesOfType(PortalContainer.class);
+  }
+
+  protected static PortalContainer getPortalContainer(String name) {
+    List<PortalContainer> portalContainers = getPortalContainers();
+    for (PortalContainer portalContainer : portalContainers) {
+      if (name.equals(portalContainer.getName())) {
+        return portalContainer;
+      }
     }
     return null;
   }

@@ -1,0 +1,16 @@
+<div class="mode-backup-options" ng-show="mode=='backup'">
+  <div>
+    <form id="form-backup" class="form-horizontal">
+      <div id="backupFolderResult" class="alert {{resultMessageClass}}" ng-bind-html="resultMessage" ng-show="resultMessage.length"></div>
+
+      Backup directory folder :
+
+	  <input  class="row-fluid" type="text" name="/backup/directory" ng-model="optionsModel['/backup/directory']" placeholder="Choose backup parent directory"/>
+      <div class="buttons backup-buttons">
+        <button type="button" class="btn btn-primary backup-button" ng-disabled="button_clicked" ng-click="backup()">Backup</button>
+        <button type="button" class="btn btn-primary backup-button" ng-disabled="button_clicked" ng-click="restore()">Restore</button>
+	  </div>
+    </form>
+  </div>
+</div>
+

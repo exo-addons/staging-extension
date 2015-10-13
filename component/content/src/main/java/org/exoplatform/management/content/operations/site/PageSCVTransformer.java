@@ -25,10 +25,10 @@ public class PageSCVTransformer implements DataTransformerPlugin {
   private static final Log LOG = ExoLogger.getLogger(PageSCVTransformer.class);
 
   @Override
-  public Object exportData(Object... objects) {
+  public void exportData(Object... objects) {
     if (objects == null || objects.length == 0) {
       LOG.warn("Can't transform data of empty pages.");
-      return null;
+      return;
     }
     for (Object object : objects) {
       if (object != null && object instanceof Page) {
@@ -38,13 +38,10 @@ public class PageSCVTransformer implements DataTransformerPlugin {
         LOG.warn("Can't convert object of type " + object.getClass());
       }
     }
-    return objects;
   }
 
   @Override
-  public Object importData(Object... objects) {
-    return null;
-  }
+  public void importData(Object... objects) {}
 
   private static void convert(List<?> children) {
     if ((children == null) || (children.size() == 0)) {

@@ -210,12 +210,12 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
         for (Calendar calendar : userCalendars) {
           List<CalendarEvent> events = calendarService.getUserEventByCalendar(username, Collections.list(calendar.getId()));
           exportTasks.add(new CalendarExportTask(type, calendar, events));
-          String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + events.get(0).getCalendarId() + "/";
+          String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + calendar.getId() + "/";
           exportActivities(exportTasks, username, prefix, CALENDAR_ACTIVITY_TYPE);
         }
       }
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error occured while exporting Group Calendar data");
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error occured while exporting Group Calendar data", e);
     }
   }
 

@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.mop.exportimport.NavigationExportTask;
 import org.exoplatform.management.mop.exportimport.NavigationImportTask;
@@ -39,6 +42,7 @@ import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
 public class MopImportResource extends AbstractOperationHandler {
+  private static final Pattern RESOURCE_PATH_PATTERN = Pattern.compile("^(portal|group|user)/(.*)/(pages\\.xml|navigation\\.xml|portal\\.xml|user\\.xml|group\\.xml)");
   private static final Logger log = LoggerFactory.getLogger(MopImportResource.class);
 
   // TODO: Would like to see the step operations be handled by mgmt core.
@@ -116,8 +120,7 @@ public class MopImportResource extends AbstractOperationHandler {
           continue;
         // Skip empty entries (this allows empty zip files to not cause
         // exceptions).
-        empty = entry.getName().equals("");
-        if (empty)
+        if (StringUtils.isEmpty(entry.getName()))
           continue;
 
         // Parse zip entry
@@ -285,24 +288,16 @@ public class MopImportResource extends AbstractOperationHandler {
 
   private static String[] parseEntry(ZipEntry entry) throws IOException {
     String name = entry.getName();
-    if (isSiteLayoutEntry(name) || name.endsWith(PageExportTask.FILE) || name.endsWith(NavigationExportTask.FILE)) {
+    Matcher matcher = RESOURCE_PATH_PATTERN.matcher(name);
+    if (matcher.matches()) {
       String[] parts = new String[3];
-      parts[0] = name.substring(0, name.indexOf("/"));
-      parts[1] = name.substring(parts[0].length() + 1, name.lastIndexOf("/"));
-      parts[2] = name.substring(name.lastIndexOf("/") + 1);
+      parts[0] = matcher.group(1);
+      parts[1] = matcher.group(2);
+      parts[2] = matcher.group(3);
       return parts;
     } else {
       return null;
     }
-  }
-
-  private static boolean isSiteLayoutEntry(String zipEntryName) {
-    for (String file : SiteLayoutExportTask.FILES) {
-      if (zipEntryName.endsWith(file))
-        return true;
-    }
-
-    return false;
   }
 
   private static class MopImport {

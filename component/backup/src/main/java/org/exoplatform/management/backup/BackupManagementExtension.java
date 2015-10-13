@@ -1,6 +1,7 @@
 package org.exoplatform.management.backup;
 
 import org.exoplatform.management.backup.operations.BackupExportResource;
+import org.exoplatform.management.backup.operations.BackupImportResource;
 import org.exoplatform.management.backup.operations.BackupReadResource;
 import org.exoplatform.management.common.AbstractManagementExtension;
 import org.gatein.management.api.ComponentRegistration;
@@ -25,8 +26,8 @@ public class BackupManagementExtension extends AbstractManagementExtension {
     ManagedResource.Registration backupRegistration = backup.registerManagedResource(description("Backup JCR Content"));
     backupRegistration.registerOperationHandler(OperationNames.READ_RESOURCE, new BackupReadResource(), description("Backup JCR Content - Get list of repositories and workspaces"), true);
 
-    ManagedResource.Registration repositoryBackup = backupRegistration.registerSubResource("{repository: [^/]*}", description("repository export"));
-    repositoryBackup.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new BackupExportResource(), description("Backup JCR Content"), true);
-    repositoryBackup.registerSubResource("{workspace: [^/]*}", description("repository export"));
+    ManagedResource.Registration repositoryBackup = backupRegistration.registerSubResource("{portal: [^/]*}", description("PortalContainer Datasources export"));
+    repositoryBackup.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new BackupExportResource(), description("Backup JCR & IDM"), true);
+    repositoryBackup.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new BackupImportResource(), description("Restore JCR & IDM"), true);
   }
 }

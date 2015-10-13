@@ -3,6 +3,7 @@ package org.exoplatform.management.service.impl;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +16,6 @@ import javax.jcr.NodeIterator;
 import javax.jcr.Session;
 import javax.jcr.query.Query;
 
-import org.apache.commons.fileupload.FileItem;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.service.api.Resource;
@@ -100,8 +100,13 @@ public class StagingServiceImpl implements StagingService {
    * {@inheritDoc}
    */
   @Override
-  public void importResource(String selectedResourcePath, FileItem file, Map<String, List<String>> attributes) throws IOException {
-    ManagedRequest request = ManagedRequest.Factory.create(OperationNames.IMPORT_RESOURCE, PathAddress.pathAddress(selectedResourcePath), attributes, file.getInputStream(), ContentType.ZIP);
+  public void importResource(String selectedResourcePath, InputStream inputStream, Map<String, List<String>> attributes) throws IOException {
+    ManagedRequest request = null;
+    if (inputStream != null) {
+      request = ManagedRequest.Factory.create(OperationNames.IMPORT_RESOURCE, PathAddress.pathAddress(selectedResourcePath), attributes, inputStream, ContentType.ZIP);
+    } else {
+      request = ManagedRequest.Factory.create(OperationNames.IMPORT_RESOURCE, PathAddress.pathAddress(selectedResourcePath), attributes, ContentType.ZIP);
+    }
 
     ManagedResponse response = managementController.execute(request);
     if (!response.getOutcome().isSuccess()) {

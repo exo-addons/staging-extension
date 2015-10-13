@@ -23,8 +23,15 @@
 					<span>Synchronize</span>
 				</label>
 			</span>
+			<span class="uiRadio">
+				<label class="radio">
+					<input type="radio" name="mode" value="backup" ng-model="mode" ng-click="changeMode('backup')"/>
+					<span>Backup</span>
+				</label>
+			</span>
       </div>
       <div class="mode-options clearfix">
+        #{include path=modeBackupOptions.gtmpl}#{/include}
         #{include path=modeImportOptions.gtmpl}#{/include}
         #{include path=modeSyncOptions.gtmpl}#{/include}
       </div>
@@ -36,9 +43,9 @@
       <button type="button" class="btn btn-primary button-synchronize" ng-disabled="button_clicked" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
     </div>
 
-    <div id="resultMessage" class="result-message alert {{resultMessageClass}}">{{resultMessage}}</div>
+    <div id="resultMessage" ng-show="mode == 'export' || mode == 'synchronize' || mode == 'import'" class="result-message alert {{resultMessageClass}}">{{resultMessage}}</div>
 
-    <div class="resources-panel" ng-show="mode != 'import' || readyToImport">
+    <div class="resources-panel" ng-show="mode == 'export' || mode == 'synchronize' || readyToImport">
       <div class="uiBox left-column">
         <h5 class="title">Resources Types</h5>
         <div class="uiTreeExplorer treeview">

@@ -80,7 +80,7 @@ public class NodeTypesTemplatesExportResource extends AbstractOperationHandler {
         throw new Exception("Unable to retrieve templates root node");
       }
     } catch (Exception e) {
-      throw new OperationException(operationName, "Error while retrieving node types templates", e);
+      throw new OperationException(operationName, "Error while retrieving nodetype templates", e);
     }
 
     resultHandler.completed(new ExportResourceModel(exportTasks));

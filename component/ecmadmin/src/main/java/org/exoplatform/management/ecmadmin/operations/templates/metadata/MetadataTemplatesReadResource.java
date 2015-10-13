@@ -26,7 +26,7 @@ public class MetadataTemplatesReadResource extends AbstractOperationHandler {
     try {
       nodeTypesTemplates.addAll(metadataService.getMetadataList());
     } catch (Exception e) {
-      throw new OperationException(OperationNames.READ_RESOURCE, "Error while retrieving node types templates", e);
+      throw new OperationException(OperationNames.READ_RESOURCE, "Error while retrieving metadata templates", e);
     }
 
     resultHandler.completed(new ReadResourceModel("Available node types templates", nodeTypesTemplates));

@@ -51,7 +51,7 @@ public abstract class ECMAdminImportResource extends AbstractOperationHandler {
         attachmentInputStream = new FileInputStream(filePath);
       }
     } catch (Throwable exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while proceeding taxonomy import.", exception);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing data.", exception);
     }
     if (attachmentInputStream == null) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for taxonomy import.");

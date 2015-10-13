@@ -182,12 +182,6 @@ public class StagingExtensionController {
       resourceCategories.add(organization);
     }
 
-    if (activatedModules.isEmpty() || activatedModules.contains("/backup:activated")) {
-      ResourceCategory backup = new ResourceCategory("Backup", "/backup");
-      backup.getSubResourceCategories().add(new ResourceCategory("Repositories", "/backup"));
-      resourceCategories.add(backup);
-    }
-
     if (activatedModules.isEmpty() || activatedModules.contains("/application:activated")) {
       ResourceCategory applications = new ResourceCategory("Applications", "/application");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.REGISTRY_PATH + ":activated")) {
@@ -304,8 +298,7 @@ public class StagingExtensionController {
     jsonResources.append("{\"resources\":[");
 
     for (Resource resource : resources) {
-      jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText())
-          .append("\"},");
+      jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText()).append("\"},");
     }
     if (!resources.isEmpty()) {
       jsonResources.deleteCharAt(jsonResources.length() - 1);
@@ -353,6 +346,41 @@ public class StagingExtensionController {
       return Response.ok(toString(foundResources));
     } else {
       return Response.content(500, "Zip file does not contain known resources to import");
+    }
+  }
+
+  @Ajax
+  @juzu.Resource
+  public Response backup(String backupDirectory) throws IOException {
+    try {
+      ResourceCategory category = new ResourceCategory("/backup");
+      String resourcePath = "/backup/" + PortalContainer.getCurrentPortalContainerName();
+      category.getResources().add(new Resource(resourcePath, resourcePath, ""));
+      category.getExportOptions().put("directory", backupDirectory);
+      List<ResourceCategory> resourceCategories = Collections.singletonList(category);
+      stagingService.export(resourceCategories);
+      return Response.ok("Backup operation finished successfully.");
+    } catch (Exception e) {
+      log.error("Error while backup", e);
+      return Response.content(500, "Error while backup: " + e.getMessage());
+    }
+
+  }
+
+  @Ajax
+  @juzu.Resource
+  public Response restore(String backupDirectory) throws IOException {
+
+    try {
+      Map<String, List<String>> attributes = new HashMap<String, List<String>>();
+      attributes.put("directory", Collections.singletonList(backupDirectory));
+
+      stagingService.importResource("/backup/portal", null, attributes);
+
+      return Response.ok("Restore operation finished successfully.");
+    } catch (Exception e) {
+      log.error("Error occured while restoring databases", e);
+      return Response.content(500, "Error occured while restoring databases.");
     }
   }
 
@@ -412,8 +440,7 @@ public class StagingExtensionController {
         return Response.ok("").withHeader("Set-Cookie", "fileDownload=true; path=/");
 
       } else {
-        return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/")
-            .withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
+        return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/").withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
       }
     } catch (Exception e) {
       log.error("Error while exporting resources, ", e);
@@ -484,7 +511,7 @@ public class StagingExtensionController {
           selectedResourcesCategory = exceptionPathCategory;
         }
 
-        stagingService.importResource(selectedResourcesCategory, file, attributes);
+        stagingService.importResource(selectedResourcesCategory, file.getInputStream(), attributes);
       }
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
@@ -508,9 +535,7 @@ public class StagingExtensionController {
     StringBuilder jsonServers = new StringBuilder(50);
     jsonServers.append("{\"synchronizationServers\":[");
     for (TargetServer targetServer : synchronizationServers) {
-      jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost())
-          .append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword())
-          .append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
+      jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost()).append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword()).append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
     }
     if (!synchronizationServers.isEmpty()) {
       jsonServers.deleteCharAt(jsonServers.length() - 1);

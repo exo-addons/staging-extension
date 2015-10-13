@@ -119,7 +119,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
           }
           log.info("Content import has been finished");
         } catch (Exception e) {
-          log.error("Error while importing site: " + site, e);
+          log.error("Error while importing site content: " + site, e);
         }
 
         // Delete

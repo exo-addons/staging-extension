@@ -93,7 +93,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
 
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading View Templates from Stream.", e);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing users.", e);
     } finally {
       if (tempFile != null && tempFile.exists()) {
         try {
@@ -120,7 +120,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
           log.info("Content import is done.");
         }
       } catch (Exception e) {
-        log.error("Error while importing site: " + site, e);
+        log.error("Error while importing users: " + site, e);
       }
     }
   }
