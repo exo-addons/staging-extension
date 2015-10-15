@@ -99,6 +99,7 @@ public class IDMRestore {
       restorer.restore();
       restorer.applyConstraints();
       restorer.commit();
+      LOG.info("IDM restored");
     } catch (Exception e) {
       restorer.rollback();
       throw e;
@@ -106,7 +107,7 @@ public class IDMRestore {
   }
 
   public void clean() throws Exception {
-    LOG.info("Start to clean IDM tables");
+    LOG.info("Clean IDM tables");
 
     String sql = null;
 
@@ -138,7 +139,7 @@ public class IDMRestore {
   }
 
   public void applyConstraints() throws Exception {
-    LOG.info("Add IDM tables constraints");
+    LOG.info("Apply constraints on IDM tables");
 
     String sql = null;
 
@@ -167,10 +168,10 @@ public class IDMRestore {
    * {@inheritDoc}
    */
   public void restore() throws Exception {
+    LOG.info("Restore IDM tables");
     for (String tableName : IDMBackup.TABLE_NAMES) {
       restoreTable(storageDir, jdbcConn, tableName);
     }
-
   }
 
   /**

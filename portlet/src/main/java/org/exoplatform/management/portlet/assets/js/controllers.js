@@ -390,7 +390,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		        data: 'backupDirectory=' + encodeURIComponent(dirFolder),
 		        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 		  	}).success(function (data) {
-				if(data.indexOf('<body') >= 0) {
+		  		if(!data) {
+				  $scope.setResultMessage("Successfully proceeded.", "success");
+		  		} else if(data.indexOf('<body') >= 0) {
 		          $scope.setResultMessage("Session timeout, please retry again.", "error");
 		      	} else {
 			      $scope.setResultMessage(data, "success");
@@ -422,12 +424,15 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 			data: 'backupDirectory=' + encodeURIComponent(dirFolder),
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       	}).success(function (data) {
-  			if(data.indexOf('<body') >= 0) {
-  	          $scope.setResultMessage("Session timeout, please retry again.", "success");
+      		if(!data) {
+			  $scope.setResultMessage("Successfully proceeded.", "success");
+		  	} else if(data.indexOf('<body') >= 0) {
+  	          $scope.setResultMessage("Session timeout, please retry again.", "error");
           	} else {
-    	      $scope.setResultMessage(data, "error");
+    	      $scope.setResultMessage(data, "success");
           	}
-  	        $scope.refreshController();
+      	    $scope.button_clicked = false;
+	        $scope.refreshController();
         }).error(function (data) {
 			$scope.setResultMessage(data, "error");
 			$scope.refreshController();

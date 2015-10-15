@@ -55,6 +55,8 @@ public class BackupExportResource extends AbstractOperationHandler {
       log.info("Start full backup of IDM to directory: " + backupDirFile);
       IDMBackup.backup(portalContainer, backupDirFile);
 
+      log.info("Backup operation finished successfully. Files under {} ", backupDirFile);
+
       // Nothing to return here
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {

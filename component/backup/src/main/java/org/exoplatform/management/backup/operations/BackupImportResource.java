@@ -10,6 +10,7 @@ import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.cache.ExoCache;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.idm.PicketLinkIDMCacheService;
 import org.exoplatform.services.scheduler.JobSchedulerService;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
@@ -35,28 +36,34 @@ public class BackupImportResource extends AbstractOperationHandler {
       PortalContainer portalContainer = getPortalContainer(portalContainerName);
 
       JobSchedulerService jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
+      PicketLinkIDMCacheService idmCacheService = (PicketLinkIDMCacheService) portalContainer.getComponentInstanceOfType(PicketLinkIDMCacheService.class);
       CacheService cacheService = (CacheService) portalContainer.getComponentInstanceOfType(CacheService.class);
 
       increaseCurrentTransactionTimeOut(portalContainer);
 
-      // Suspend Thread Schedulers
-      jobSchedulerService.suspend();
-
       File backupDirFile = BackupExportResource.getBackupDirectoryFile(attributes);
+
+      // Suspend Thread Schedulers
+      log.info("Suspend Jobs Scheduler Service");
+      jobSchedulerService.suspend();
 
       // Restore JCR data
       log.info("Restore JCR Data");
       JCRRestore.restore(portalContainer, backupDirFile);
 
       // Restore IDM db
-      log.info("Start IDM restore.");
+      log.info("Restore IDM Data");
       IDMRestore.restore(portalContainer, backupDirFile);
 
       // Clear all caches based on eXo CacheService
-      clearCaches(cacheService);
+      log.info("Clear Services caches");
+      clearCaches(cacheService, idmCacheService);
 
-      // Resume cron jobs only if Restore operation is suscessfully proceeded
+      // Resume cron jobs only if Restore operation is successfully proceeded
+      log.info("Resume Jobs Scheduler Service");
       jobSchedulerService.resume();
+
+      log.info("Restore operation finished successfully. Recoved from {}", backupDirFile);
 
       // Nothing to return here
       resultHandler.completed(NoResultModel.INSTANCE);
@@ -65,7 +72,7 @@ public class BackupImportResource extends AbstractOperationHandler {
     }
   }
 
-  public void clearCaches(CacheService cacheService) {
+  public void clearCaches(CacheService cacheService, PicketLinkIDMCacheService idmCacheService) {
     for (Object o : cacheService.getAllCacheInstances()) {
       try {
         ((ExoCache<?, ?>) o).clearCache();
@@ -75,6 +82,7 @@ public class BackupImportResource extends AbstractOperationHandler {
         }
       }
     }
+    idmCacheService.invalidateAll();
   }
 
 }
