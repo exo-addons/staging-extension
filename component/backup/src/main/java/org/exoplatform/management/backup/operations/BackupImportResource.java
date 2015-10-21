@@ -1,8 +1,10 @@
 package org.exoplatform.management.backup.operations;
 
 import java.io.File;
+import java.util.Map;
 
 import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.backup.service.IDMRestore;
 import org.exoplatform.management.backup.service.JCRRestore;
 import org.exoplatform.management.common.AbstractOperationHandler;
@@ -28,13 +30,18 @@ public class BackupImportResource extends AbstractOperationHandler {
 
   private static final Log log = ExoLogger.getLogger(BackupImportResource.class);
 
+  public static boolean restoreInProgress = false;
+
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
-    try {
-      OperationAttributes attributes = operationContext.getAttributes();
-      String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
-      PortalContainer portalContainer = getPortalContainer(portalContainerName);
+    restoreInProgress = true;
+    Map<Object, Throwable> endedServicesLifecycle = null;
 
+    OperationAttributes attributes = operationContext.getAttributes();
+    String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
+    PortalContainer portalContainer = getPortalContainer(portalContainerName);
+
+    try {
       JobSchedulerService jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
       PicketLinkIDMCacheService idmCacheService = (PicketLinkIDMCacheService) portalContainer.getComponentInstanceOfType(PicketLinkIDMCacheService.class);
       CacheService cacheService = (CacheService) portalContainer.getComponentInstanceOfType(CacheService.class);
@@ -47,13 +54,18 @@ public class BackupImportResource extends AbstractOperationHandler {
       log.info("Suspend Jobs Scheduler Service");
       jobSchedulerService.suspend();
 
-      // Restore JCR data
-      log.info("Restore JCR Data");
-      JCRRestore.restore(portalContainer, backupDirFile);
+      // Close transactions of current Thread
+      endedServicesLifecycle = RequestLifeCycle.end();
+
+      IDMRestore.verifyDSConnections(portalContainer);
 
       // Restore IDM db
       log.info("Restore IDM Data");
       IDMRestore.restore(portalContainer, backupDirFile);
+
+      // Restore JCR data
+      log.info("Restore JCR Data");
+      JCRRestore.restore(portalContainer, backupDirFile);
 
       // Clear all caches based on eXo CacheService
       log.info("Clear Services caches");
@@ -69,6 +81,12 @@ public class BackupImportResource extends AbstractOperationHandler {
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to restore Data : " + e.getMessage(), e);
+    } finally {
+      // Reopen transactions for current Thread
+      if (endedServicesLifecycle != null && !endedServicesLifecycle.isEmpty()) {
+        RequestLifeCycle.begin(portalContainer);
+      }
+      restoreInProgress = false;
     }
   }
 

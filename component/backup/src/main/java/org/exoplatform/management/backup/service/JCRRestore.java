@@ -1,11 +1,13 @@
 package org.exoplatform.management.backup.service;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
 
 import org.apache.commons.collections.map.HashedMap;
+import org.apache.commons.io.FileUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.backup.operations.BackupImportResource;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -27,7 +29,8 @@ public class JCRRestore {
 
     File logFile = getLogFile(backupDirFile);
     if (logFile == null) {
-      throw new IllegalStateException("backup log file was not found under directory " + backupDirFile);
+      log.info("JCR backup files was not found. JCR restore ignored");
+      return;
     }
 
     String repositoryName = null;
@@ -55,18 +58,11 @@ public class JCRRestore {
     }
   }
 
-  private static File getLogFile(File backupDirFile) {
+  private static File getLogFile(File backupDirFile) throws IOException {
     File[] files = backupDirFile.listFiles();
     for (File file : files) {
-      if (file.isDirectory()) {
-        File logFile = getLogFile(file);
-        if (logFile != null) {
-          return logFile;
-        }
-      } else {
-        if (file.getName().endsWith(".xml") && file.getName().startsWith("repository-backup-")) {
-          return file;
-        }
+      if (!file.isDirectory() && file.getName().endsWith(".xml") && file.getName().startsWith("repository-backup-") && FileUtils.readFileToString(file).contains("<repository-backup-chain-log")) {
+        return file;
       }
     }
     return null;

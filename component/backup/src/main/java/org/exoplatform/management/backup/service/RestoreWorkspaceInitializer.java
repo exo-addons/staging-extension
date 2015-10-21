@@ -20,11 +20,11 @@ import org.exoplatform.services.jcr.impl.dataflow.persistent.CacheableWorkspaceD
  *         Khanfir</a>
  * @version $Revision$
  */
-public class CustomWorkspaceInitializer extends RdbmsWorkspaceInitializer {
+public class RestoreWorkspaceInitializer extends RdbmsWorkspaceInitializer {
 
   public static ThreadLocal<Boolean> RESTORE_IN_PROGRESS = new ThreadLocal<Boolean>();
 
-  public CustomWorkspaceInitializer(WorkspaceEntry config, RepositoryEntry repConfig, CacheableWorkspaceDataManager dataManager, NamespaceRegistryImpl namespaceRegistry,
+  public RestoreWorkspaceInitializer(WorkspaceEntry config, RepositoryEntry repConfig, CacheableWorkspaceDataManager dataManager, NamespaceRegistryImpl namespaceRegistry,
       LocationFactory locationFactory, NodeTypeManagerImpl nodeTypeManager, ValueFactoryImpl valueFactory, AccessManager accessManager, RepositoryService repositoryService)
       throws RepositoryConfigurationException, PathNotFoundException, RepositoryException {
     super(config, repConfig, dataManager, namespaceRegistry, locationFactory, nodeTypeManager, valueFactory, accessManager, repositoryService);
@@ -36,7 +36,7 @@ public class CustomWorkspaceInitializer extends RdbmsWorkspaceInitializer {
   }
 
   public static void setRestoreInProgress(boolean restoreInProgress) {
-    CustomWorkspaceInitializer.RESTORE_IN_PROGRESS.set(restoreInProgress);
+    RestoreWorkspaceInitializer.RESTORE_IN_PROGRESS.set(restoreInProgress);
   }
 
   public static boolean isRestoreInProgress() {

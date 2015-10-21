@@ -348,7 +348,7 @@ public class JobRepositoryRestore extends Thread {
     WorkspaceInitializerEntry wiEntry = new WorkspaceInitializerEntry();
     if ((ClassLoading.forName(fBackupType, this).equals(FullBackupJob.class))) {
       // set the initializer RdbmsWorkspaceInitializer
-      wiEntry.setType(CustomWorkspaceInitializer.class.getCanonicalName());
+      wiEntry.setType(RestoreWorkspaceInitializer.class.getCanonicalName());
 
       List<SimpleParameterEntry> wieParams = new ArrayList<SimpleParameterEntry>();
       wieParams.add(new SimpleParameterEntry(RdbmsWorkspaceInitializer.RESTORE_PATH_PARAMETER, new File(pathBackupFile).getParent()));
@@ -366,12 +366,12 @@ public class JobRepositoryRestore extends Thread {
     workspaceEntry.setInitializer(wiEntry);
     // Restore Workspace
     defRep.configWorkspace(workspaceEntry);
-    CustomWorkspaceInitializer.setRestoreInProgress(true); // Force initialized
+    RestoreWorkspaceInitializer.setRestoreInProgress(true); // Force initialized
                                                            // flag on
                                                            // WorkspaceInitializer
                                                            // to be false
     defRep.createWorkspace(wsName);
-    CustomWorkspaceInitializer.setRestoreInProgress(false); // Resume
+    RestoreWorkspaceInitializer.setRestoreInProgress(false); // Resume
                                                             // initialized flag
                                                             // to its original
                                                             // value

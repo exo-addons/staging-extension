@@ -15,6 +15,8 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.IOUtil;
 import org.exoplatform.commons.utils.PrivilegedFileHelper;
@@ -30,6 +32,7 @@ import org.exoplatform.services.jcr.impl.storage.jdbc.DBConstants;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
 /**
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -81,61 +84,106 @@ public class IDMRestore {
 
   protected boolean dbCleanerInAutoCommit;
 
+  protected File contentFile = null;
+
+  protected File contentLenFile = null;
+
   public IDMRestore(File storageDir, Connection jdbcConn) throws Exception {
     this.jdbcConn = jdbcConn;
     this.storageDir = storageDir;
     this.dialect = DialectDetecter.detect(jdbcConn.getMetaData());
     this.dbCleanerInAutoCommit = dialect.startsWith(DialectConstants.DB_DIALECT_SYBASE);
+
+    contentFile = new File(storageDir, IDMBackup.CONTENT_ZIP_FILE);
+    contentLenFile = new File(storageDir, IDMBackup.CONTENT_LEN_ZIP_FILE);
+    if (!contentFile.exists() || !contentLenFile.exists()) {
+      throw new IllegalStateException("IDM Backup wasn't found in backup folder " + storageDir);
+    }
+  }
+
+  public static void verifyDSConnections(PortalContainer portalContainer) throws Exception {
+    try {
+      // Wait for 10 seconds until all HTTP request finishes. The Web Filter
+      // will avoid to have new requests and the scheduled jobs are already
+      // suspended
+      Thread.sleep(10000);
+    } catch (Exception e1) {
+      // Nothing to do
+    }
+
+    try {
+      // using existing DataSource to get a JDBC Connection.
+      SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
+      DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
+      DataSource dataSource = connectionProvider.getDataSource();
+
+      int numberOfOpenConnections = (int) connectionProvider.getDataSource().getClass().getMethod("getNumActive", new Class[0]).invoke(dataSource);
+      if (numberOfOpenConnections > 0) {
+        throw new IllegalStateException("There are some unclosed connections on IDM datasource, please verify you don't have a session leak.");
+      }
+    } catch (NoSuchMethodException e) {
+      // In case this is JBoss, this is normal
+    }
   }
 
   public static void restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
-    // using existing DataSource to get a JDBC Connection.
-    SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
-    Connection jdbcConn = sessionFactoryImpl.getConnectionProvider().getConnection();
+    if (new File(backupDirFile, IDMBackup.CONTENT_ZIP_FILE).exists()) {
+      // using existing DataSource to get a JDBC Connection.
+      SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
+      DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
+      Connection jdbcConn = connectionProvider.getConnection();
 
-    IDMRestore restorer = new IDMRestore(backupDirFile, jdbcConn);
-    try {
-      restorer.clean();
-      restorer.restore();
-      restorer.applyConstraints();
-      restorer.commit();
-      LOG.info("IDM restored");
-    } catch (Exception e) {
-      restorer.rollback();
-      throw e;
+      // Disable autocommit to be able to rollback all script if there is an
+      // error
+      jdbcConn.setAutoCommit(false);
+
+      IDMRestore restorer = new IDMRestore(backupDirFile, jdbcConn);
+      try {
+        restorer.clean();
+        restorer.restore();
+        restorer.applyConstraints();
+        restorer.commit();
+        LOG.info("IDM restored");
+      } catch (Exception e) {
+        restorer.rollback();
+        throw e;
+      }
+      restorer.close();
+    } else {
+      LOG.info("IDM Backup files was not found. IDM restore ignored.");
     }
   }
 
   public void clean() throws Exception {
     LOG.info("Clean IDM tables");
 
-    String sql = null;
+    String sqlDrop = null;
+    String sqlCreate = null;
 
     Statement stmt = jdbcConn.createStatement();
     if (dialect.startsWith(DBConstants.DB_DIALECT_HSQLDB)) {
-      sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.hsqldb.drop.sql");
-      sql += IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.hsqldb.create.sql");
+      sqlDrop = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.hsqldb.drop.sql");
+      sqlCreate = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.hsqldb.create.sql");
     } else if (dialect.startsWith(DBConstants.DB_DIALECT_MSSQL)) {
-      sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mssql.drop.sql");
-      sql += IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mssql.create.sql");
+      sqlDrop = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mssql.drop.sql");
+      sqlCreate = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mssql.create.sql");
     } else if (dialect.startsWith(DBConstants.DB_DIALECT_MYSQL)) {
-      sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mysql.drop.sql");
-      sql += IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mysql.create.sql");
+      sqlDrop = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mysql.drop.sql");
+      sqlCreate = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.mysql.create.sql");
     } else if (dialect.startsWith(DBConstants.DB_DIALECT_ORACLE)) {
-      sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.oracle.drop.sql");
-      sql += IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.oracle.create.sql");
+      sqlDrop = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.oracle.drop.sql");
+      sqlCreate = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.oracle.create.sql");
     } else if (dialect.startsWith(DBConstants.DB_DIALECT_PGSQL)) {
-      sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.postgresql.drop.sql");
-      sql += IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.postgresql.create.sql");
+      sqlDrop = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.postgresql.drop.sql");
+      sqlCreate = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.postgresql.create.sql");
     } else if (dialect.startsWith(DBConstants.DB_DIALECT_SYBASE)) {
-      sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.sybase.drop.sql");
-      sql += IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.sybase.create.sql");
-    }
-    if (!StringUtils.isEmpty(sql)) {
-      stmt.execute(sql);
+      sqlDrop = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.sybase.drop.sql");
+      sqlCreate = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.sybase.create.sql");
     } else {
-      throw new IllegalStateException("SQL to clean database was not found");
+      throw new IllegalStateException("Unknown dialect " + dialect);
     }
+    executeSQLFile(sqlDrop, stmt, false);
+    executeSQLFile(sqlCreate, stmt, true);
   }
 
   public void applyConstraints() throws Exception {
@@ -158,7 +206,7 @@ public class IDMRestore {
       sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.sybase.constraints.sql");
     }
     if (!StringUtils.isEmpty(sql)) {
-      stmt.execute(sql);
+      executeSQLFile(sql, stmt, true);
     } else {
       throw new IllegalStateException("SQL to clean database was not found");
     }
@@ -186,9 +234,8 @@ public class IDMRestore {
    */
   public void rollback() throws RuntimeException {
     try {
+      LOG.warn("Rollback IDM changes.");
       jdbcConn.rollback();
-
-      jdbcConn.commit();
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
@@ -224,13 +271,11 @@ public class IDMRestore {
     }
 
     try {
-      File contentFile = new File(storageDir, IDMBackup.CONTENT_ZIP_FILE);
       contentReader = new ObjectZipReaderImpl(PrivilegedFileHelper.zipInputStream(contentFile));
 
       while (!contentReader.getNextEntry().getName().equals(tableName))
         ;
 
-      File contentLenFile = new File(storageDir, IDMBackup.CONTENT_LEN_ZIP_FILE);
       contentLenReader = new ObjectZipReaderImpl(PrivilegedFileHelper.zipInputStream(contentLenFile));
 
       while (!contentLenReader.getNextEntry().getName().equals(tableName))
@@ -429,6 +474,24 @@ public class IDMRestore {
 
       if (sf != null) {
         spoolFileList.add(sf);
+      }
+    }
+  }
+
+  private void executeSQLFile(String sql, Statement stmt, boolean throwIfError) throws Exception {
+    String[] sqlDropStatements = sql.split(";");
+    for (String sqlDropStatement : sqlDropStatements) {
+      sqlDropStatement = sqlDropStatement.trim();
+      if (sqlDropStatement.isEmpty()) {
+        continue;
+      }
+      try {
+        stmt.executeUpdate(sqlDropStatement);
+      } catch (Exception e) {
+        if (throwIfError) {
+          throw e;
+        }
+        LOG.warn("Can't execute SQL '{}'. This can be minor in case the object doesn't exist. Original cause: {} ", sqlDropStatement, e.getMessage());
       }
     }
   }

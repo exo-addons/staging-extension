@@ -1,0 +1,71 @@
+<html>
+<head>
+<style type="text/css">
+body {
+	text-align: center;
+}
+
+.color-box {
+	margin-top: 20px;
+	padding-left: 17px;
+	width: 500px;
+	position: absolute;
+	display: inline-flex;
+	margin-left: -250px;
+}
+
+.color-box .shadow {
+	margin: 0;
+	background: #F7F8F9;
+	padding: 3px;
+	margin: 10px 0;
+	width: 100%;
+}
+
+.tip-icon {
+	background-position: 0 -120px;
+}
+
+.info-tab {
+	width: 36px;
+	height: 50px;
+	float: left;
+	margin-left: -21px;
+	position: relative;
+	top: 6px;
+	/* background-size: 26px; */
+	background:
+		url("/eXoResources/skin/images/Icons/skinIcons/16x16/Warning.gif")
+		no-repeat transparent;
+	background-size: 26px;
+}
+
+.note-box, .warning-box, .tip-box {
+	padding: 10px;
+}
+
+.tip-box {
+	color: #2e5014;
+	background: #d5efc2;
+}
+
+p {
+	padding-top: 12px;
+}
+</style>
+<script>
+	window.setTimeout("window.location.reload()", 10000);
+</script>
+</head>
+<body>
+	<div class="color-box">
+		<div class="shadow">
+			<div class="info-tab tip-icon" title="Useful Tips">&nbsp;</div>
+			<div class="tip-box">
+				<p><b>Backup in progress. Please wait...</b></p>
+				<p>The page will be automatically refresh each 10 seconds.</p>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

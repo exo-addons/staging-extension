@@ -58,16 +58,22 @@ public class JCRBackup {
     backupConfig.setBackupDir(backupDirFile);
     backupConfig.setRepository(repository.getConfiguration().getName());
 
-    // Full JCR repository backup
-    RepositoryBackupChain currentBackupChain = backupManager.startBackup((RepositoryBackupConfig) backupConfig);
+    try {
+      repository.setState(ManageableRepository.SUSPENDED);
 
-    while (!currentBackupChain.isFinished()) {
-      try {
-        // Block Thread until backup is finished
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        throw new IllegalStateException("Error while resuming the SearchIndex services on workspaces", e);
+      // Full JCR repository backup
+      RepositoryBackupChain currentBackupChain = backupManager.startBackup((RepositoryBackupConfig) backupConfig);
+
+      while (!currentBackupChain.isFinished()) {
+        try {
+          // Block Thread until backup is finished
+          Thread.sleep(1000);
+        } catch (InterruptedException e) {
+          throw new IllegalStateException("Error while resuming the SearchIndex services on workspaces", e);
+        }
       }
+    } finally {
+      repository.setState(ManageableRepository.ONLINE);
     }
   }
 

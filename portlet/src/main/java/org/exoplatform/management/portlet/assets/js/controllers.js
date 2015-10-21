@@ -348,10 +348,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       // Launch synchronization...
         $scope.setResultMessage("Proceeding...", "info");
 
-	    var downloadOptions = {
-			preparingMessageHtml: "Operation in progress, please wait...",
-			failMessageHtml: "An error happened. See log file for more details about the error."
-        };
+	    var downloadOptions = {};
         $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
           .done(function () {
             $scope.$apply(function(scope) {
@@ -375,6 +372,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
 	$scope.backup = function() {
 		var dirFolder = $scope.optionsModel["/backup/directory"];
+		var exportJCR = $scope.optionsModel["/backup/export-jcr"];
+		var exportIDM = $scope.optionsModel["/backup/export-idm"];
 		if(dirFolder == null || dirFolder == "") {
 		  $scope.setResultMessage("Error : Empty backup folder", "error");
 		} else {
@@ -387,12 +386,12 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		  $http({
 		        method: 'POST',
 		        url: stagingContainer.jzURL('StagingExtensionController.backup'),
-		        data: 'backupDirectory=' + encodeURIComponent(dirFolder),
+		        data: 'backupDirectory=' + encodeURIComponent(dirFolder) + "&exportJCR=" + exportJCR + "&exportIDM=" + exportIDM,
 		        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 		  	}).success(function (data) {
 		  		if(!data) {
 				  $scope.setResultMessage("Successfully proceeded.", "success");
-		  		} else if(data.indexOf('<body') >= 0) {
+		  		} else if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
 		          $scope.setResultMessage("Session timeout, please retry again.", "error");
 		      	} else {
 			      $scope.setResultMessage(data, "success");
@@ -400,7 +399,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	      	    $scope.button_clicked = false;
 		        $scope.refreshController();
 		    }).error(function (data) {
-			      $scope.setResultMessage(data, "error");
+			      $scope.setResultMessage("An error occured:" + data, "error");
 		      	  $scope.button_clicked = false;
 			      $scope.refreshController();
 		    });
@@ -408,7 +407,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	};
 
     $scope.restore = function() {
-	  var dirFolder = $scope.optionsModel["/backup/directory"];
+	  var dirFolder = $scope.optionsModel["/restore/directory"];
       if(dirFolder == null || dirFolder == "") {
         $scope.setResultMessage("Error : Empty backup folder", "error");
       } else {
@@ -424,9 +423,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 			data: 'backupDirectory=' + encodeURIComponent(dirFolder),
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       	}).success(function (data) {
-      		if(!data) {
-			  $scope.setResultMessage("Successfully proceeded.", "success");
-		  	} else if(data.indexOf('<body') >= 0) {
+      		if(!data || data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
   	          $scope.setResultMessage("Session timeout, please retry again.", "error");
           	} else {
     	      $scope.setResultMessage(data, "success");
@@ -434,7 +431,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       	    $scope.button_clicked = false;
 	        $scope.refreshController();
         }).error(function (data) {
-			$scope.setResultMessage(data, "error");
+			$scope.setResultMessage("An error occured:" + data, "error");
+      	    $scope.button_clicked = false;
 			$scope.refreshController();
         });
       }
@@ -508,7 +506,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	          data: paramsTargetServer + paramsResourceCategories + paramsResources + paramsOptions,
 	          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 	        }).success(function (data) {
-				if(data.indexOf('<body') >= 0) {
+				if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
 		            $scope.setResultMessage("Session timeout, please retry again.", "error");
 		            $scope.button_clicked = false;
 		            $scope.refreshController();
@@ -548,7 +546,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           data: 'sql=' + encodeURIComponent(sql) + paramsSites,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (data) {
-			if(data.indexOf('<body') >= 0) {
+			if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
 	            $scope.validateQueryResultMessage = "Session timeout, please retry again.";
 	            $scope.validateQueryResultMessageClass = "alert-error";
         	} else {

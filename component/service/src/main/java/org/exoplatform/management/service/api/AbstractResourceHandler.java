@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.model.NoResultModel;
 
 public abstract class AbstractResourceHandler implements ResourceHandler {
 
@@ -179,13 +177,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), ContentType.ZIP);
     }
 
-    try {
-      // Call GateIN Management SPI
-      return getManagementController().execute(request);
-    } catch (Exception e) {
-      getLogger().error(e);
-      throw new RuntimeException("Error while handling Response from GateIN Management, export operation", e);
-    }
+    return getManagementController().execute(request);
   }
 
   /**
@@ -222,35 +214,33 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     deleteTempFilesStartingWith("data(.*)\\.xml");
   }
 
-  private void export(Resource resource, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws IOException {
+  private void export(Resource resource, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
     FileOutputStream outputStream = null;
     FileInputStream inputStream = null;
     File tmpFile = null;
     try {
       ManagedResponse managedResponse = getExportedResourceFromOperation(resource.getPath(), exportOptions);
 
-//      if (managedResponse.getResult() instanceof NoResultModel) {
-        tmpFile = File.createTempFile("staging", "-export.zip");
-        tmpFile.deleteOnExit();
+      // if (managedResponse.getResult() instanceof NoResultModel) {
+      tmpFile = File.createTempFile("staging", "-export.zip");
+      tmpFile.deleteOnExit();
 
-        outputStream = new FileOutputStream(tmpFile);
-        managedResponse.writeResult(outputStream, false);
+      outputStream = new FileOutputStream(tmpFile);
+      managedResponse.writeResult(outputStream, false);
 
-        outputStream.flush();
-        outputStream.close();
-        outputStream = null;
+      outputStream.flush();
+      outputStream.close();
+      outputStream = null;
 
-        getLogger().info("Export operation finished.");
+      getLogger().info("Export operation finished.");
 
-        inputStream = new FileInputStream(tmpFile);
+      inputStream = new FileInputStream(tmpFile);
 
-        Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
+      Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
 
-        inputStream.close();
-        inputStream = null;
-//      }
-    } catch (Exception ex) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
+      inputStream.close();
+      inputStream = null;
+      // }
     } finally {
       if (outputStream != null) {
         outputStream.close();
@@ -265,7 +255,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     }
   }
 
-  private void synchronize(Resource resource, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws IOException {
+  private void synchronize(Resource resource, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
     FileOutputStream fileOutputStream = null;
     File tmpFile = null;
     try {

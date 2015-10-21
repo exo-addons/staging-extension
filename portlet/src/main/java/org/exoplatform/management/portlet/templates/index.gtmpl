@@ -88,6 +88,8 @@
         </div>
       </div>
     </div>
+	
+	<div class="staging-mask" ng-show="button_clicked==true"></div>
 
     <div class="buttons">
       <button type="button" class="btn btn-primary button-export" ng-disabled="button_clicked" ng-click="exportResources()" ng-show="mode=='export'">Export</button>

@@ -64,7 +64,6 @@ public class IDMBackup {
 
     try {
       contentWriter = new ObjectZipWriterImpl(PrivilegedFileHelper.zipOutputStream(new File(storageDir, CONTENT_ZIP_FILE)));
-
       contentLenWriter = new ObjectZipWriterImpl(PrivilegedFileHelper.zipOutputStream(new File(storageDir, CONTENT_LEN_ZIP_FILE)));
 
       for (Entry<String, String> entry : scripts.entrySet()) {

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.backup.service.IDMBackup;
 import org.exoplatform.management.backup.service.JCRBackup;
@@ -38,6 +39,16 @@ public class BackupExportResource extends AbstractOperationHandler {
       String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
       PortalContainer portalContainer = getPortalContainer(portalContainerName);
 
+      String exportJCRString = attributes.getValue("export-jcr");
+      String exportIDMString = attributes.getValue("export-idm");
+
+      boolean exportJCR = StringUtils.isEmpty(exportJCRString) ? true : exportJCRString.trim().equalsIgnoreCase("true");
+      boolean exportIDM = StringUtils.isEmpty(exportIDMString) ? true : exportIDMString.trim().equalsIgnoreCase("true");
+
+      if (!exportIDM && !exportJCR) {
+        throw new OperationException(OperationNames.EXPORT_RESOURCE, "You have to choose IDM, JCR or both datas to backup.");
+      }
+
       increaseCurrentTransactionTimeOut(portalContainer);
 
       jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
@@ -47,13 +58,17 @@ public class BackupExportResource extends AbstractOperationHandler {
 
       File backupDirFile = getBackupDirectoryFile(attributes);
 
-      // Backup JCR
-      log.info("Start full backup of repository to directory: " + backupDirFile);
-      JCRBackup.backup(portalContainer, backupDirFile);
+      if (exportJCR) {
+        // Backup JCR
+        log.info("Start full backup of repository to directory: " + backupDirFile);
+        JCRBackup.backup(portalContainer, backupDirFile);
+      }
 
-      // Backup IDM
-      log.info("Start full backup of IDM to directory: " + backupDirFile);
-      IDMBackup.backup(portalContainer, backupDirFile);
+      if (exportIDM) {
+        // Backup IDM
+        log.info("Start full backup of IDM to directory: " + backupDirFile);
+        IDMBackup.backup(portalContainer, backupDirFile);
+      }
 
       log.info("Backup operation finished successfully. Files under {} ", backupDirFile);
 
