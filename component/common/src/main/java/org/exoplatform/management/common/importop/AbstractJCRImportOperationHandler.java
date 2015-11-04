@@ -23,15 +23,15 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
 
   protected TemplateService templateService = null;
 
-  protected final void importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
+  protected final boolean importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
     File xmlFile = fileEntry.getFile();
     if (xmlFile == null || !xmlFile.exists()) {
       log.warn("Cannot import file" + xmlFile);
-      return;
+      return false;
     }
     FileInputStream fis = new FileInputStream(xmlFile);
     try {
-      importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication);
+      return importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication);
     } finally {
       if (fis != null) {
         fis.close();
@@ -42,7 +42,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
-  protected final void importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
+  protected final boolean importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
     String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
     parentNodePath = parentNodePath.replaceAll("//", "/");
 
@@ -64,7 +64,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
       }
     } catch (Exception e) {
       log.error("Error when trying to find and delete the node: '" + nodePath + "'. Ignore this node and continue.", e);
-      return;
+      return false;
     } finally {
       if (session != null) {
         session.logout();
@@ -98,10 +98,12 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
         historyFis2 = new FileInputStream(historyFile);
         org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, historyFis2, mapHistoryValue);
       }
+      return true;
     } catch (Exception e) {
       log.error("Error when trying to import node: " + nodePath, e);
       // Revert changes
       session.refresh(false);
+      return false;
     } finally {
       if (session != null) {
         session.logout();

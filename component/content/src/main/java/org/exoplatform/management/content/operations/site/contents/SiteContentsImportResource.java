@@ -83,6 +83,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     List<String> filters = operationContext.getAttributes().getValues("filter");
     boolean isCleanPublication = filters.contains("cleanPublication:true");
 
+    boolean errors = false;
     InputStream attachmentInputStream = null;
     try {
       if (filePath != null) {
@@ -110,7 +111,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
         try {
           if(fileEntries != null) {
             for (FileEntry fileEntry : fileEntries) {
-              importNode(fileEntry, workspace, isCleanPublication);
+              errors |= !importNode(fileEntry, workspace, isCleanPublication);
             }
           }
           log.info("Content import has been finished");
@@ -157,7 +158,11 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
         }
       }
     }
-    resultHandler.completed(NoResultModel.INSTANCE);
+    if (errors) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Some errors occured while importing contents.");
+    } else {
+      resultHandler.completed(NoResultModel.INSTANCE);
+    }
   }
 
   private void removeNodes(String workspace, String[] removeNodePaths) throws Exception {
