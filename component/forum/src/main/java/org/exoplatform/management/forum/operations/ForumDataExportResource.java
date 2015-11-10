@@ -164,12 +164,14 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
         categoryId = forumService.getCategoryIncludedSpace().getId();
         Forum forum = forumService.getForum(categoryId, forumId);
         formIdThreadLocal.set(forum.getId());
-        exportActivities(exportTasks, StringUtils.isEmpty(spacePrettyName) ? forum.getModerators()[0] : spacePrettyName, prefix, FORUM_ACTIVITY_TYPE, POLL_ACTIVITY_TYPE);
+        exportActivities(exportTasks, StringUtils.isEmpty(spacePrettyName) ? ((forum.getModerators() != null && forum.getModerators().length > 0) ? forum.getModerators()[0] : forum.getOwner())
+            : spacePrettyName, prefix, FORUM_ACTIVITY_TYPE, POLL_ACTIVITY_TYPE);
       } else {
         @SuppressWarnings("deprecation")
         List<Forum> forums = forumService.getForums(categoryId, null);
         for (Forum forum : forums) {
-          exportActivities(exportTasks, StringUtils.isEmpty(spacePrettyName) ? forum.getModerators()[0] : spacePrettyName, prefix, FORUM_ACTIVITY_TYPE, POLL_ACTIVITY_TYPE);
+          exportActivities(exportTasks, StringUtils.isEmpty(spacePrettyName) ? ((forum.getModerators() != null && forum.getModerators().length > 0) ? forum.getModerators()[0] : forum.getOwner())
+              : spacePrettyName, prefix, FORUM_ACTIVITY_TYPE, POLL_ACTIVITY_TYPE);
         }
       }
 
