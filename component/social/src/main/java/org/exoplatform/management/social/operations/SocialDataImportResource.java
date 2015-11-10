@@ -479,7 +479,20 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     // deleted=false
     RequestLifeCycle.begin(PortalContainer.getInstance());
     try {
-      Identity identity = getIdentity(spaceMetaData.getPrettyName());
+      Identity identity = null;
+      int countIerations = 0;
+      // Wait until the identity of the space is committed
+      do {
+        identity = getIdentity(spaceMetaData.getPrettyName());
+        if (identity == null) {
+          log.warn("Identity of space '" + spaceMetaData.getPrettyName() + "' not found, retry getting it.");
+          Thread.sleep(2000);
+          countIerations++;
+        }
+      } while (identity == null && countIerations < 5);
+      if (identity == null) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Identity of space with pretty name '" + spaceMetaData.getPrettyName() + "' was not found. Cannot continue importing the space.");
+      }
       if (identity.isDeleted()) {
         log.info("Set space identity not deleted, it was deleted=" + spaceMetaData.getPrettyName() + "'.");
         identity.setDeleted(false);
