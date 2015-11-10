@@ -310,8 +310,7 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     UserPortal userPortal = null;
     if (prc == null) {
       // Get User navigation nodes defined for {siteName}
-      userPortal = portalConfigService.getUserPortalConfig(
-          portalConfigService.getDefaultPortal(), "root", NULL_CONTEXT).getUserPortal();
+      userPortal = portalConfigService.getUserPortalConfig(portalConfigService.getDefaultPortal(), "root", NULL_CONTEXT).getUserPortal();
     } else {
       userPortal = prc.getUserPortal();
     }
@@ -339,8 +338,8 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     originalRequestContext = WebuiRequestContext.getCurrentInstance();
     if (originalRequestContext == null) {
       final ControllerContext controllerContext = new ControllerContext(null, null, new MockHttpServletRequest(), new MockHttpServletResponse(), null);
-      PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(),
-          portalConfigService.getDefaultPortal(), "/portal/" + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
+      PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(), portalConfigService.getDefaultPortal(), "/portal/"
+          + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
         @Override
         public <R, U extends PortalURL<R, U>> U newURL(ResourceType<R, U> resourceType, URLFactory urlFactory) {
           if (resourceType.equals(NodeURL.TYPE)) {
@@ -387,6 +386,9 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
   public String extractIdFromPath(String path) {
     String[] paths = path.split(CalendarExportTask.CALENDAR_SEPARATOR);
     path = paths[1];
+    if (path.contains(".metadata")) {
+      path = path.substring(0, path.indexOf(".metadata"));
+    }
     String id = path.substring(0, path.contains(".") ? path.indexOf(".") : path.contains("/") ? path.indexOf("/") : path.length());
     return id;
   }
