@@ -60,6 +60,6 @@ public class ContentManagementExtension extends AbstractManagementExtension {
     
     DataTransformerService.addTransformer("Page", new PageSCVTransformer());
     DataTransformerService.addTransformer("Page", new PageCLVTransformer());
-    DataTransformerService.addTransformer("Content", new JCRBinaryTransformer());
+//    DataTransformerService.addTransformer("Content", new JCRBinaryTransformer());
   }
 }
