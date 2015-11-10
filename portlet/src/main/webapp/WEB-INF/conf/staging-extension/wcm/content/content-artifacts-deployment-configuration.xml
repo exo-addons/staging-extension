@@ -2,24 +2,26 @@
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd http://www.exoplatform.org/xml/ns/kernel_1_2.xsd"
 	xmlns="http://www.exoplatform.org/xml/ns/kernel_1_2.xsd">
-	<component><!-- Loaded from 'null' -->
-		<key>org.exoplatform.services.deployment.WCMContentInitializerService</key>
+	<component>
 		<type>org.exoplatform.services.deployment.WCMContentInitializerService</type>
 	</component>
 	<external-component-plugins>
 		<target-component>org.exoplatform.services.deployment.WCMContentInitializerService</target-component>
-		<component-plugin><!-- Loaded from 'null' -->
-			<name>shared Content Initializer Service</name>
+		<component-plugin>
+			<name>Content Initializer Service</name>
 			<set-method>addPlugin</set-method>
-			<type>org.exoplatform.services.deployment.plugins.XMLDeploymentPlugin</type>
+			<type>org.exoplatform.services.wcm.extensions.deployment.WCMPublicationDeploymentPlugin</type>
+			<description>XML Deployment Plugin</description>
 			<init-params>
 				<value-param>
 					<name>override</name>
+					<description>indicates if this plugin will override data over legacy data, default value:false</description>
 					<value>true</value>
 				</value-param>
 				<object-param>
 					<name>/sites/shared/js/stagingmessage.xml</name>
-					<object type="org.exoplatform.services.deployment.DeploymentDescriptor">
+					<object
+						type="org.exoplatform.services.wcm.extensions.deployment.WCMPublicationDeploymentDescriptor">
 						<field name="target">
 							<object
 								type="org.exoplatform.services.deployment.DeploymentDescriptor$Target">
@@ -41,7 +43,8 @@
 				</object-param>
 				<object-param>
 					<name>/sites/shared/css/StagingStylesheet.xml</name>
-					<object type="org.exoplatform.services.deployment.DeploymentDescriptor">
+					<object
+						type="org.exoplatform.services.wcm.extensions.deployment.WCMPublicationDeploymentDescriptor">
 						<field name="target">
 							<object
 								type="org.exoplatform.services.deployment.DeploymentDescriptor$Target">
