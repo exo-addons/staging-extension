@@ -3,6 +3,7 @@ package org.exoplatform.management.common.importop;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.jcr.ImportUUIDBehavior;
@@ -11,6 +12,8 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
@@ -25,15 +28,17 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
   protected PublicationService publicationService;
   protected WCMPublicationService wcmPublicationService;
 
-  protected final void importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
+  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
+
+  protected final boolean importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
     File xmlFile = fileEntry.getFile();
     if (xmlFile == null || !xmlFile.exists()) {
       log.warn("Cannot import file" + xmlFile);
-      return;
+      return false;
     }
     FileInputStream fis = new FileInputStream(xmlFile);
     try {
-      importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication);
+      return importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication);
     } finally {
       if (fis != null) {
         fis.close();
@@ -44,7 +49,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
-  protected final void importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
+  protected final boolean importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
     String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
     parentNodePath = parentNodePath.replaceAll("//", "/");
 
@@ -60,13 +65,13 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
           deleteActivity(activityId);
         }
 
-        oldNode.remove();
+        remove(oldNode, session);
         session.save();
         session.refresh(false);
       }
     } catch (Exception e) {
       log.error("Error when trying to find and delete the node: '" + nodePath + "'. Ignore this node and continue.", e);
-      return;
+      return false;
     } finally {
       if (session != null) {
         session.logout();
@@ -100,10 +105,12 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
         historyFis2 = new FileInputStream(historyFile);
         org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, historyFis2, mapHistoryValue);
       }
+      return true;
     } catch (Exception e) {
       log.error("Error when trying to import node: " + nodePath, e);
       // Revert changes
       session.refresh(false);
+      return false;
     } finally {
       if (session != null) {
         session.logout();
@@ -115,6 +122,60 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
         historyFis2.close();
       }
     }
+  }
+
+  private void remove(Node node, Session session) throws Exception {
+    if (node.hasNodes() && !isRecursiveDelete(node)) {
+      NodeIterator subnodes = node.getNodes();
+      while (subnodes.hasNext()) {
+        Node subNode = subnodes.nextNode();
+        remove(subNode, session);
+      }
+    }
+    log.info("Delete sub node" + node.getPath());
+    node.remove();
+    session.save();
+  }
+
+  protected final boolean isRecursiveDelete(Node node) throws Exception {
+    // FIXME: eXo ECMS bug, items with exo:actionnable don't define manatory
+    // field exo:actions. Still use this workaround. ECMS-5998
+    if (node.isNodeType("exo:actionable") && !node.hasProperty("exo:actions")) {
+      node.setProperty("exo:actions", "");
+      node.save();
+      node.getSession().refresh(true);
+    }
+    NodeType nodeType = node.getPrimaryNodeType();
+    NodeType[] nodeTypes = node.getMixinNodeTypes();
+    boolean recursive = isRecursiveNT(nodeType);
+    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
+      int i = 0;
+      while (!recursive && i < nodeTypes.length) {
+        recursive = isRecursiveNT(nodeTypes[i]);
+        i++;
+      }
+    }
+    return recursive;
+  }
+
+  protected final boolean isRecursiveNT(NodeType nodeType) throws Exception {
+    if (nodeType.getName().equals("exo:actionStorage")) {
+      return true;
+    }
+    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
+      boolean hasMandatoryChild = false;
+      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
+      if (nodeDefinitions != null) {
+        int i = 0;
+        while (!hasMandatoryChild && i < nodeDefinitions.length) {
+          hasMandatoryChild = nodeDefinitions[i].isMandatory();
+          i++;
+        }
+      }
+      boolean recursive = hasMandatoryChild;
+      isNTRecursiveMap.put(nodeType.getName(), recursive);
+    }
+    return isNTRecursiveMap.get(nodeType.getName());
   }
 
   protected final void cleanPublication(String parentPath, Session session) throws Exception {

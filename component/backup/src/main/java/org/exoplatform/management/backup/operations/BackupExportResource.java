@@ -83,7 +83,7 @@ public class BackupExportResource extends AbstractOperationHandler {
 
   public static File getBackupDirectoryFile(OperationAttributes attributes) {
     String backupDir = attributes.getValue("directory");
-    if (backupDir != null) {
+    if (backupDir == null) {
       List<String> filters = attributes.getValues("filter");
       if (filters != null && !filters.isEmpty()) {
         for (String filter : filters) {
@@ -96,7 +96,7 @@ public class BackupExportResource extends AbstractOperationHandler {
       }
     }
     if (backupDir == null || !new File(backupDir).exists()) {
-      throw new IllegalArgumentException("backup directory was not found" + backupDir);
+      throw new IllegalArgumentException("backup directory was not found: " + backupDir);
     }
     return new File(backupDir);
   }
