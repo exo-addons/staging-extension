@@ -390,8 +390,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 		  	}).success(function (data) {
 		  		if(!data) {
-				  $scope.setResultMessage("Successfully proceeded.", "success");
-		  		} else if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
+		    	  $scope.setResultMessage("An error occured. Please see log files to get more information.", "error");
+		        }  else if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
 		          $scope.setResultMessage("Session timeout, please retry again.", "error");
 		      	} else {
 			      $scope.setResultMessage(data, "success");
@@ -423,7 +423,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 			data: 'backupDirectory=' + encodeURIComponent(dirFolder),
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       	}).success(function (data) {
-      		if(!data || data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
+      		if(!data) {
+    	      $scope.setResultMessage("An error occured. Please see log files to get more information.", "error");
+            } else if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
   	          $scope.setResultMessage("Session timeout, please retry again.", "error");
           	} else {
     	      $scope.setResultMessage(data, "success");
