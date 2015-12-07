@@ -182,8 +182,8 @@ public class IDMRestore {
     } else {
       throw new IllegalStateException("Unknown dialect " + dialect);
     }
-    executeSQLFile(sqlDrop, stmt, false);
-    executeSQLFile(sqlCreate, stmt, true);
+    executeUpdateSQL(sqlDrop, stmt, false);
+    executeUpdateSQL(sqlCreate, stmt, true);
   }
 
   public void applyConstraints() throws Exception {
@@ -206,7 +206,7 @@ public class IDMRestore {
       sql = IOUtil.getResourceAsString("idm-db-ddl/picketlink.idm.sybase.constraints.sql");
     }
     if (!StringUtils.isEmpty(sql)) {
-      executeSQLFile(sql, stmt, true);
+      executeUpdateSQL(sql, stmt, true);
     } else {
       throw new IllegalStateException("SQL to clean database was not found");
     }
@@ -217,8 +217,20 @@ public class IDMRestore {
    */
   public void restore() throws Exception {
     LOG.info("Restore IDM tables");
+    long maxId = 1;
     for (String tableName : IDMBackup.TABLE_NAMES) {
-      restoreTable(storageDir, jdbcConn, tableName);
+      long maxIdTmp = restoreTable(storageDir, jdbcConn, tableName);
+      if (maxIdTmp > maxId) {
+        maxId = maxIdTmp;
+      }
+    }
+    if (dialect.startsWith(DBConstants.DB_DIALECT_ORACLE) || dialect.startsWith(DBConstants.DB_DIALECT_PGSQL)) {
+      Statement stmt = jdbcConn.createStatement();
+      try {
+        stmt.executeUpdate("alter sequence hibernate_sequence increment by " + maxId);
+      } catch (Exception e) {
+        throw e;
+      }
     }
   }
 
@@ -257,8 +269,10 @@ public class IDMRestore {
 
   /**
    * Restore table.
+   * 
+   * @return
    */
-  private void restoreTable(File storageDir, Connection jdbcConn, String tableName) throws IOException, SQLException {
+  private long restoreTable(File storageDir, Connection jdbcConn, String tableName) throws IOException, SQLException {
     ObjectZipReaderImpl contentReader = null;
     ObjectZipReaderImpl contentLenReader = null;
 
@@ -385,6 +399,13 @@ public class IDMRestore {
 
         commitBatch();
       }
+      String idColumnName = columnName.get(0);
+      String query = "select max(" + idColumnName + ") as maxID from " + tableName;
+
+      Statement stmt = jdbcConn.createStatement();
+      ResultSet resultSet = stmt.executeQuery(query);
+      long maxId = resultSet.getLong("maxID");
+      return maxId;
     } finally {
       if (contentReader != null) {
         contentReader.close();
@@ -478,7 +499,7 @@ public class IDMRestore {
     }
   }
 
-  private void executeSQLFile(String sql, Statement stmt, boolean throwIfError) throws Exception {
+  private void executeUpdateSQL(String sql, Statement stmt, boolean throwIfError) throws Exception {
     String[] sqlDropStatements = sql.split(";");
     for (String sqlDropStatement : sqlDropStatements) {
       sqlDropStatement = sqlDropStatement.trim();

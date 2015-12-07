@@ -34,7 +34,6 @@ public class BackupImportResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
-    restoreInProgress = true;
     Map<Object, Throwable> endedServicesLifecycle = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -49,6 +48,8 @@ public class BackupImportResource extends AbstractOperationHandler {
       increaseCurrentTransactionTimeOut(portalContainer);
 
       File backupDirFile = BackupExportResource.getBackupDirectoryFile(attributes);
+
+      restoreInProgress = true;
 
       // Suspend Thread Schedulers
       log.info("Suspend Jobs Scheduler Service");
@@ -82,11 +83,11 @@ public class BackupImportResource extends AbstractOperationHandler {
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to restore Data : " + e.getMessage(), e);
     } finally {
+      restoreInProgress = false;
       // Reopen transactions for current Thread
       if (endedServicesLifecycle != null && !endedServicesLifecycle.isEmpty()) {
         RequestLifeCycle.begin(portalContainer);
       }
-      restoreInProgress = false;
     }
   }
 
