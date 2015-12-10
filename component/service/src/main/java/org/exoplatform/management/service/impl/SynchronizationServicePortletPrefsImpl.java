@@ -38,8 +38,7 @@ public class SynchronizationServicePortletPrefsImpl implements SynchronizationSe
         log.warn("Synchronization server " + prefSynchronizationServer + " is not valid (should be id|name|host|port|username|password|ssl)");
         continue;
       }
-      TargetServer targetServer = new TargetServer(prefSynchronizationServerParts[0], prefSynchronizationServerParts[1], prefSynchronizationServerParts[2], prefSynchronizationServerParts[3],
-          prefSynchronizationServerParts[4], prefSynchronizationServerParts[5], "true".equals(prefSynchronizationServerParts[6]));
+      TargetServer targetServer = new TargetServer(prefSynchronizationServerParts[0], prefSynchronizationServerParts[1], prefSynchronizationServerParts[2], prefSynchronizationServerParts[3], prefSynchronizationServerParts[4], prefSynchronizationServerParts[5], "true".equals(prefSynchronizationServerParts[6]));
 
       synchronizationServers.add(targetServer);
     }
@@ -53,9 +52,7 @@ public class SynchronizationServicePortletPrefsImpl implements SynchronizationSe
 
     String[] currentServers = preferences.getValues("synchronizationServers", new String[] {});
 
-    String newServerAsString = new StringBuilder(40).append(UUID.randomUUID()).append("|").append(targetServer.getName()).append("|").append(targetServer.getHost()).append("|")
-        .append(targetServer.getPort()).append("|").append(targetServer.getUsername()).append("|").append(targetServer.getPassword()).append("|").append(String.valueOf(targetServer.isSsl()))
-        .toString();
+    String newServerAsString = new StringBuilder(40).append(UUID.randomUUID()).append("|").append(targetServer.getName()).append("|").append(targetServer.getHost()).append("|").append(targetServer.getPort()).append("|").append(targetServer.getUsername()).append("|").append(targetServer.getPassword()).append("|").append(String.valueOf(targetServer.isSsl())).toString();
     List<String> newServers = new ArrayList<String>(Arrays.asList(currentServers));
     newServers.add(newServerAsString);
 

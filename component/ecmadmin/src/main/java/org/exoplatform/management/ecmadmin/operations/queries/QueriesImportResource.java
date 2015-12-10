@@ -94,7 +94,8 @@ public class QueriesImportResource extends ECMAdminImportResource {
 
           List<Query> queries = queryService.getQueries(username, WCMCoreUtils.getSystemSessionProvider());
 
-          // Can't create user's queries via configuration (only shared),
+          // Can't create user's queries via configuration (only
+          // shared),
           // so they are directly created
           // via the queryService.addQuery method
           for (ComponentPlugin componentPlugin : componentPlugins) {
@@ -136,12 +137,13 @@ public class QueriesImportResource extends ECMAdminImportResource {
               Object object = objectParam.getObject();
               if (object instanceof QueryData) {
                 QueryData queryData = (QueryData) object;
-                // if the shared query already exists, remove it from the
+                // if the shared query already exists, remove it
+                // from the
                 // init-params of the plugin
                 Node sharedQuery = queryService.getSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
                 boolean alreadyExists = (sharedQuery != null);
                 if (alreadyExists) {
-                  if(replaceExisting) {
+                  if (replaceExisting) {
                     log.info("Overwrite shared query '" + queryData.getName() + "'.");
                     queryService.removeSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
                   } else {
@@ -149,7 +151,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
                   }
                 }
 
-                if(!alreadyExists || replaceExisting) {
+                if (!alreadyExists || replaceExisting) {
                   String[] permissions = new String[queryData.getPermissions().size()];
                   queryService.addSharedQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), queryData.getPermissions().toArray(permissions), queryData.getCacheResult(), WCMCoreUtils.getSystemSessionProvider());
                 }

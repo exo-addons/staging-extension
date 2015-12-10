@@ -45,8 +45,7 @@ public class ContentManagementExtension implements ManagementExtension {
     site.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new SiteContentsImportResource(), description("Import site data"));
 
     // /content/sites/<site_name>/contents
-    ManagedResource.Registration siteContents = site.registerSubResource(PATH_CONTENT_SITES_CONTENTS,
-        description("Management resource responsible for handling management operations on contents of a specific site."));
+    ManagedResource.Registration siteContents = site.registerSubResource(PATH_CONTENT_SITES_CONTENTS, description("Management resource responsible for handling management operations on contents of a specific site."));
     siteContents.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteContentsReadResource(), description("Read site contents"));
     siteContents.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteContentsExportResource(), description("Export site contents"));
 

@@ -80,29 +80,32 @@ public class WikiDataExportResource extends AbstractJCRExportOperationHandler im
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
+    try {
+      String wikiOwner = operationContext.getAttributes().getValue("filter");
 
-    String wikiOwner = operationContext.getAttributes().getValue("filter");
+      String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
+      boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
 
-    String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
-    boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
-
-    List<ExportTask> exportTasks = new ArrayList<ExportTask>();
-    if (wikiOwner == null || wikiOwner.isEmpty()) {
-      log.info("Exporting all WIKI of type: " + wikiType);
-      for (Wiki wiki : mowService.getModel().getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
+      List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+      if (wikiOwner == null || wikiOwner.isEmpty()) {
+        log.info("Exporting all WIKI of type: " + wikiType);
+        for (Wiki wiki : mowService.getModel().getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
+          exportWiki(exportTasks, wiki, exportSpaceMetadata);
+        }
+      } else {
+        if (wikiType.equals(WikiType.GROUP)) {
+          Space space = spaceService.getSpaceByDisplayName(wikiOwner);
+          if (space != null) {
+            wikiOwner = space.getGroupId();
+          }
+        }
+        Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
         exportWiki(exportTasks, wiki, exportSpaceMetadata);
       }
-    } else {
-      if (wikiType.equals(WikiType.GROUP)) {
-        Space space = spaceService.getSpaceByDisplayName(wikiOwner);
-        if (space != null) {
-          wikiOwner = space.getGroupId();
-        }
-      }
-      Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
-      exportWiki(exportTasks, wiki, exportSpaceMetadata);
+      resultHandler.completed(new ExportResourceModel(exportTasks));
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
-    resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
   @Override

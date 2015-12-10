@@ -43,34 +43,34 @@ import org.gatein.mop.api.workspace.Workspace;
  * @version $Revision$
  */
 public class SiteTypeReadResource extends AbstractMopOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Workspace workspace,
-            ObjectType<Site> siteType) throws ResourceNotFoundException, OperationException {
-        Collection<Site> sites = workspace.getSites(siteType);
-        Set<String> children = new LinkedHashSet<String>(sites.size());
-        for (Site site : sites) {
-            // TODO: Until invalid site entries without a leading slash is corrected, this is needed to ignore them.
-            if (siteType == ObjectType.GROUP_SITE) {
-                // This is needed because parent group sites show up in list of sites available
-                boolean pageOrNav = false;
-                Page pages = site.getRootPage().getChild("pages");
-                if (pages != null && !pages.getChildren().isEmpty()) {
-                    pageOrNav = true;
-                }
-                Navigation defaultNav = site.getRootNavigation().getChild("default");
-                if (defaultNav != null && !defaultNav.getChildren().isEmpty()) {
-                    pageOrNav = true;
-                }
-
-                String name = site.getName();
-                if (name.charAt(0) == '/' && pageOrNav) {
-                    children.add(site.getName());
-                }
-            } else {
-                children.add(site.getName());
-            }
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Workspace workspace, ObjectType<Site> siteType) throws ResourceNotFoundException, OperationException {
+    Collection<Site> sites = workspace.getSites(siteType);
+    Set<String> children = new LinkedHashSet<String>(sites.size());
+    for (Site site : sites) {
+      // TODO: Until invalid site entries without a leading slash is
+      // corrected, this is needed to ignore them.
+      if (siteType == ObjectType.GROUP_SITE) {
+        // This is needed because parent group sites show up in list of
+        // sites available
+        boolean pageOrNav = false;
+        Page pages = site.getRootPage().getChild("pages");
+        if (pages != null && !pages.getChildren().isEmpty()) {
+          pageOrNav = true;
         }
-        resultHandler.completed(new ReadResourceModel(
-                "Available sites for site type '" + getSiteType(siteType).getName() + "'", children));
+        Navigation defaultNav = site.getRootNavigation().getChild("default");
+        if (defaultNav != null && !defaultNav.getChildren().isEmpty()) {
+          pageOrNav = true;
+        }
+
+        String name = site.getName();
+        if (name.charAt(0) == '/' && pageOrNav) {
+          children.add(site.getName());
+        }
+      } else {
+        children.add(site.getName());
+      }
     }
+    resultHandler.completed(new ReadResourceModel("Available sites for site type '" + getSiteType(siteType).getName() + "'", children));
+  }
 }

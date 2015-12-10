@@ -20,7 +20,8 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
 /**
- * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas Delhoménie</a>
+ * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
+ *         Delhoménie</a>
  * @version $Revision$
  */
 public class QueriesReadResource extends AbstractOperationHandler {
@@ -34,7 +35,7 @@ public class QueriesReadResource extends AbstractOperationHandler {
     try {
       // shared queries
       List<Node> sharedQueries = queryService.getSharedQueries(WCMCoreUtils.getSystemSessionProvider());
-      for(Node sharedQuery: sharedQueries) {
+      for (Node sharedQuery : sharedQueries) {
         allQueries.add(sharedQuery.getName());
       }
 
@@ -43,7 +44,7 @@ public class QueriesReadResource extends AbstractOperationHandler {
       User[] users = usersListAccess.load(0, usersListAccess.getSize());
       for (User user : users) {
         List<Query> userQueries = queryService.getQueries(user.getUserName(), WCMCoreUtils.getSystemSessionProvider());
-        for(Query userQuery: userQueries) {
+        for (Query userQuery : userQueries) {
           String queryPath = userQuery.getStoredQueryPath();
           String queryName = queryPath.substring(queryPath.lastIndexOf("/") + 1);
 

@@ -94,6 +94,8 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export User : " + e.getMessage());
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

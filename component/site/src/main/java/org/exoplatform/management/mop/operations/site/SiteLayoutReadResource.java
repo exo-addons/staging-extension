@@ -36,12 +36,10 @@ import org.gatein.mop.api.workspace.Site;
  * @version $Revision$
  */
 public class SiteLayoutReadResource extends AbstractSiteOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site)
-            throws ResourceNotFoundException, OperationException {
-        ReadResourceModel readResource = new ReadResourceModel("The site layout for site " + site.getName(),
-                Collections.<String> emptySet());
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException {
+    ReadResourceModel readResource = new ReadResourceModel("The site layout for site " + site.getName(), Collections.<String> emptySet());
 
-        resultHandler.completed(readResource);
-    }
+    resultHandler.completed(readResource);
+  }
 }

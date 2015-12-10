@@ -53,14 +53,12 @@ public class MopManagementExtension implements ManagementExtension {
     ComponentRegistration registration = context.registerManagedComponent("site");
     registration.registerBindingProvider(MopBindingProvider.INSTANCE);
 
-    ManagedResource.Registration mop = registration
-        .registerManagedResource(description("MOP (Model Object for Portal) Managed Resource, responsible for handling management operations on navigation, pages, and sites."));
+    ManagedResource.Registration mop = registration.registerManagedResource(description("MOP (Model Object for Portal) Managed Resource, responsible for handling management operations on navigation, pages, and sites."));
     mop.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new MopImportResource(), description("Imports mop data from an exported zip file."));
 
     mop.registerOperationHandler(OperationNames.READ_RESOURCE, new MopReadResource(), description("Lists available site types for a portal"));
 
-    ManagedResource.Registration sitetypes = mop.registerSubResource("{site-type}sites",
-        description("Management resource responsible for handling management operations on a specific site type for a portal."));
+    ManagedResource.Registration sitetypes = mop.registerSubResource("{site-type}sites", description("Management resource responsible for handling management operations on a specific site type for a portal."));
     sitetypes.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteTypeReadResource(), description("Lists available sites for a given site type."));
 
     ManagedResource.Registration sites = sitetypes.registerSubResource("{site-name: .*}", description("Management resource responsible for handling management operations on a specific site."));
@@ -79,8 +77,7 @@ public class MopManagementExtension implements ManagementExtension {
   @SuppressWarnings("deprecation")
   private void siteLayoutManagementRegistration(ManagedResource.Registration sites) {
     // This allows us to filter based on path template site-layout.
-    ManagedResource.Registration siteLayout = sites.registerSubResource("{site-layout: portal|group|user}",
-        description("Management resource responsible for handling management operations for a site's layout."));
+    ManagedResource.Registration siteLayout = sites.registerSubResource("{site-layout: portal|group|user}", description("Management resource responsible for handling management operations for a site's layout."));
     siteLayout.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteLayoutReadResource(), description("The site layout resource."));
     siteLayout.registerOperationHandler(OperationNames.READ_CONFIG_AS_XML, new SiteLayoutReadConfigAsXml(), description("Reads site layout data for a specific site as configuration xml."));
     siteLayout.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteLayoutExportResource(), description("Exports site layout configuration xml as a zip file."));

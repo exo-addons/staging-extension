@@ -116,7 +116,8 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
       // extract data from zip
       Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
 
-      // FIXME: INTEG-333. Add this to not have a null pointer exception while
+      // FIXME: INTEG-333. Add this to not have a null pointer exception
+      // while
       // importing
       if (!contentsByOwner.isEmpty()) {
         originalRequestContext = fixPortalRequest();
@@ -319,8 +320,8 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     originalRequestContext = WebuiRequestContext.getCurrentInstance();
     if (originalRequestContext == null) {
       final ControllerContext controllerContext = new ControllerContext(null, null, new MockHttpServletRequest(), new MockHttpServletResponse(), null);
-      PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(),
-          portalConfigService.getDefaultPortal(), "/portal/" + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
+      PortalRequestContext portalRequestContext = new PortalRequestContext((WebuiApplication) null, controllerContext, groupCalendar ? SiteType.GROUP.getName() : SiteType.PORTAL.getName(), portalConfigService.getDefaultPortal(), "/portal/"
+          + portalConfigService.getDefaultPortal() + "/calendar", (Locale) null) {
         @Override
         public <R, U extends PortalURL<R, U>> U newURL(ResourceType<R, U> resourceType, URLFactory urlFactory) {
           if (resourceType.equals(NodeURL.TYPE)) {

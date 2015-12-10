@@ -75,93 +75,97 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     seoService = operationContext.getRuntimeContext().getRuntimeComponent(SEOService.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    if (importedSiteName == null) {
-      importedSiteName = operationContext.getAddress().resolvePathTemplate("site-name");
-    }
-
-    List<String> filters = operationContext.getAttributes().getValues("filter");
-    boolean isCleanPublication = filters.contains("cleanPublication:true");
-
-    boolean errors = false;
-    InputStream attachmentInputStream = null;
     try {
-      if (filePath != null) {
-        attachmentInputStream = new FileInputStream(filePath);
-      } else {
-        attachmentInputStream = getAttachementInputStream(operationContext);
+
+      if (importedSiteName == null) {
+        importedSiteName = operationContext.getAddress().resolvePathTemplate("site-name");
       }
 
-      // extract data from zip
-      Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
+      List<String> filters = operationContext.getAttributes().getValues("filter");
+      boolean isCleanPublication = filters.contains("cleanPublication:true");
 
-      for (String site : contentsByOwner.keySet()) {
-        List<FileEntry> fileEntries = contentsByOwner.get(site);
+      boolean errors = false;
+      InputStream attachmentInputStream = null;
+      try {
+        if (filePath != null) {
+          attachmentInputStream = new FileInputStream(filePath);
+        } else {
+          attachmentInputStream = getAttachementInputStream(operationContext);
+        }
 
-        FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
-        List<FileEntry> seoFiles = getAndRemoveFilesStartsWith(fileEntries, SiteSEOExportTask.FILENAME);
+        // extract data from zip
+        Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
 
-        SiteMetaData siteMetaData = getSiteMetadata(fileEntries);
+        for (String site : contentsByOwner.keySet()) {
+          List<FileEntry> fileEntries = contentsByOwner.get(site);
 
-        Map<String, String> metaDataOptions = siteMetaData.getOptions();
+          FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
+          List<FileEntry> seoFiles = getAndRemoveFilesStartsWith(fileEntries, SiteSEOExportTask.FILENAME);
 
-        String workspace = metaDataOptions.get("site-workspace");
-        log.info("Reading metadata options for import: workspace: " + workspace);
+          SiteMetaData siteMetaData = getSiteMetadata(fileEntries);
 
-        try {
-          if(fileEntries != null) {
-            for (FileEntry fileEntry : fileEntries) {
-              errors |= !importNode(fileEntry, workspace, isCleanPublication);
+          Map<String, String> metaDataOptions = siteMetaData.getOptions();
+
+          String workspace = metaDataOptions.get("site-workspace");
+          log.info("Reading metadata options for import: workspace: " + workspace);
+
+          try {
+            if (fileEntries != null) {
+              for (FileEntry fileEntry : fileEntries) {
+                errors |= !importNode(fileEntry, workspace, isCleanPublication);
+              }
             }
+            log.info("Content import has been finished");
+          } catch (Exception e) {
+            log.error("Error while importing site: " + site, e);
           }
-          log.info("Content import has been finished");
-        } catch (Exception e) {
-          log.error("Error while importing site: " + site, e);
-        }
 
-        // Delete
-        String removeNodes = metaDataOptions.get("removeNodes");
-        if (!StringUtils.isEmpty(removeNodes)) {
-          String[] removeNodePaths = removeNodes.split(";");
-          removeNodes(workspace, removeNodePaths);
-        }
+          // Delete
+          String removeNodes = metaDataOptions.get("removeNodes");
+          if (!StringUtils.isEmpty(removeNodes)) {
+            String[] removeNodePaths = removeNodes.split(";");
+            removeNodes(workspace, removeNodePaths);
+          }
 
-        // Import activities
-        if (activitiesFile != null && activitiesFile.getFile().exists() && activityManager != null) {
-          log.info("Importing Site Content activities");
-          importActivities(activitiesFile.getFile(), null, true);
-        }
+          // Import activities
+          if (activitiesFile != null && activitiesFile.getFile().exists() && activityManager != null) {
+            log.info("Importing Site Content activities");
+            importActivities(activitiesFile.getFile(), null, true);
+          }
 
-        if (seoFiles != null && !seoFiles.isEmpty()) {
-          for (FileEntry fileEntry : seoFiles) {
-            String lang = fileEntry.getNodePath().replace(SiteSEOExportTask.FILENAME, "");
+          if (seoFiles != null && !seoFiles.isEmpty()) {
+            for (FileEntry fileEntry : seoFiles) {
+              String lang = fileEntry.getNodePath().replace(SiteSEOExportTask.FILENAME, "");
 
-            File seoFile = fileEntry.getFile();
-            @SuppressWarnings("unchecked")
-            List<PageMetadataModel> models = deserializeObject(seoFile, List.class, "seo");
-            if (models != null && !models.isEmpty()) {
-              for (PageMetadataModel pageMetadataModel : models) {
-                seoService.storeMetadata(pageMetadataModel, site, false, lang);
+              File seoFile = fileEntry.getFile();
+              @SuppressWarnings("unchecked")
+              List<PageMetadataModel> models = deserializeObject(seoFile, List.class, "seo");
+              if (models != null && !models.isEmpty()) {
+                for (PageMetadataModel pageMetadataModel : models) {
+                  seoService.storeMetadata(pageMetadataModel, site, false, lang);
+                }
               }
             }
           }
         }
-      }
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import Site contents.", e);
-    } finally {
-      if (attachmentInputStream != null) {
-        try {
-          attachmentInputStream.close();
-        } catch (IOException e) {
-          // Nothing to do
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import Site contents.", e);
+      } finally {
+        if (attachmentInputStream != null) {
+          try {
+            attachmentInputStream.close();
+          } catch (IOException e) {
+            // Nothing to do
+          }
         }
       }
-    }
-    if (errors) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Some errors occured while importing contents.");
-    } else {
-      resultHandler.completed(NoResultModel.INSTANCE);
+      if (errors) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Some errors occured while importing contents.");
+      } else {
+        resultHandler.completed(NoResultModel.INSTANCE);
+      }
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

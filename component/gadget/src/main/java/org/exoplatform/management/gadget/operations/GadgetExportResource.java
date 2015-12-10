@@ -45,39 +45,41 @@ public class GadgetExportResource extends AbstractOperationHandler {
     }
 
     increaseCurrentTransactionTimeOut(operationContext);
+    try {
+      PathAddress address = operationContext.getAddress();
+      String gadgetName = address.resolvePathTemplate("gadget-name");
+      OperationAttributes attributes = operationContext.getAttributes();
 
-    PathAddress address = operationContext.getAddress();
-    String gadgetName = address.resolvePathTemplate("gadget-name");
-    OperationAttributes attributes = operationContext.getAttributes();
-
-    String jcrPath = null;
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filters = attributes.getValues("filter").iterator();
-      while (filters.hasNext() && jcrPath == null) {
-        String filter = filters.next();
-        if (filter.startsWith("jcrpath:")) {
-          jcrPath = filter.substring("jcrpath:".length());
-          if (!jcrPath.endsWith("/")) {
-            jcrPath += "/";
+      String jcrPath = null;
+      if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
+        Iterator<String> filters = attributes.getValues("filter").iterator();
+        while (filters.hasNext() && jcrPath == null) {
+          String filter = filters.next();
+          if (filter.startsWith("jcrpath:")) {
+            jcrPath = filter.substring("jcrpath:".length());
+            if (!jcrPath.endsWith("/")) {
+              jcrPath += "/";
+            }
           }
         }
       }
-    }
-    if (jcrPath == null) {
-      jcrPath = DEFAULT_JCR_PATH;
-    }
+      if (jcrPath == null) {
+        jcrPath = DEFAULT_JCR_PATH;
+      }
 
-    ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager
-        .getLifeCycle("app");
-    String workspaceName = lifeCycle.getWorkspaceName();
+      ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager.getLifeCycle("app");
+      String workspaceName = lifeCycle.getWorkspaceName();
 
-    try {
-      ManageableRepository manageableRepository = repositoryService.getDefaultRepository();
-      List<ExportTask> exportTasks = new ArrayList<ExportTask>();
-      exportTasks.add(new GadgetExportTask(gadgetName, manageableRepository, workspaceName, jcrPath));
-      resultHandler.completed(new ExportResourceModel(exportTasks));
-    } catch (Exception e) {
-      throw new OperationException(operationContext.getOperationName(), "Error while exporting Gadget" + gadgetName, e);
+      try {
+        ManageableRepository manageableRepository = repositoryService.getDefaultRepository();
+        List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+        exportTasks.add(new GadgetExportTask(gadgetName, manageableRepository, workspaceName, jcrPath));
+        resultHandler.completed(new ExportResourceModel(exportTasks));
+      } catch (Exception e) {
+        throw new OperationException(operationContext.getOperationName(), "Error while exporting Gadget" + gadgetName, e);
+      }
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

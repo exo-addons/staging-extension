@@ -114,7 +114,8 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
         }
       } else {
-        // Calendar groupId in case of space or Calendar name in case of simple
+        // Calendar groupId in case of space or Calendar name in case of
+        // simple
         // Group calendar
         exportGroupCalendar(exportTasks, spaceCalendar ? filterText : null, spaceCalendar ? null : filterText, exportSpaceMetadata);
       }

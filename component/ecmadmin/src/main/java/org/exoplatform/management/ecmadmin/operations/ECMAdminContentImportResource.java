@@ -31,8 +31,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
 public class ECMAdminContentImportResource extends AbstractOperationHandler {
 
   @Override
-  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-      OperationException {
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
 
     InputStream inputStream = operationContext.getAttachment(false).getStream();
     FileOutputStream outputStream = null;
@@ -83,15 +82,14 @@ public class ECMAdminContentImportResource extends AbstractOperationHandler {
           throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while closing input stream", exception);
         }
       }
-      if(tmpFile != null) {
+      if (tmpFile != null) {
         tmpFile.delete();
       }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
-  private void importData(Class<? extends OperationHandler> operationHandlerClass, OperationContext operationContext,
-      ResultHandler resultHandler, Object... constructorArguments) throws Exception {
+  private void importData(Class<? extends OperationHandler> operationHandlerClass, OperationContext operationContext, ResultHandler resultHandler, Object... constructorArguments) throws Exception {
     Class<?>[] argumentClasses = new Class<?>[constructorArguments.length];
     for (int i = 0; i < constructorArguments.length; i++) {
       Object object = constructorArguments[i];

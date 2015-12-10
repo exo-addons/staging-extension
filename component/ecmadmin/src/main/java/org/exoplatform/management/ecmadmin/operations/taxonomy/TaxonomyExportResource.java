@@ -46,10 +46,8 @@ public class TaxonomyExportResource extends AbstractOperationHandler {
     try {
       Node taxonomyNode = taxonomyService.getTaxonomyTree(taxonomyName, true);
       TaxonomyMetaData taxonomyMetaData = setData(taxonomyNode);
-      exportTasks.add(new TaxonomyMetaDataExportTask(taxonomyMetaData, EXPORT_BASE_PATH + "/"
-          + taxonomyMetaData.getTaxoTreeName()));
-      exportTasks.add(new TaxonomyTreeExportTask(repositoryService, taxonomyMetaData, EXPORT_BASE_PATH + "/"
-          + taxonomyMetaData.getTaxoTreeName()));
+      exportTasks.add(new TaxonomyMetaDataExportTask(taxonomyMetaData, EXPORT_BASE_PATH + "/" + taxonomyMetaData.getTaxoTreeName()));
+      exportTasks.add(new TaxonomyTreeExportTask(repositoryService, taxonomyMetaData, EXPORT_BASE_PATH + "/" + taxonomyMetaData.getTaxoTreeName()));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while retrieving taxonomy" + taxonomyName, e);
     }

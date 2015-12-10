@@ -55,43 +55,46 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     }
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> filters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean replaceExisting = filters.contains("replace-existing:true");
-
-    // get attachement input stream
-    OperationAttachment attachment = operationContext.getAttachment(false);
-    InputStream attachmentInputStream = attachment.getStream();
-    File tempFile = null;
     try {
-      tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
-      OutputStream fos = new FileOutputStream(tempFile);
-      IOUtils.copy(attachmentInputStream, fos);
-      fos.close();
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
-      // Start by importing all groups
-      Set<String> newlyCreatedGroups = importGroups(tempFile, replaceExisting);
+      // "replace-existing" attribute. Defaults to false.
+      boolean replaceExisting = filters.contains("replace-existing:true");
 
-      // Importing memberships
-      importMemberships(tempFile);
+      // get attachement input stream
+      OperationAttachment attachment = operationContext.getAttachment(false);
+      InputStream attachmentInputStream = attachment.getStream();
+      File tempFile = null;
+      try {
+        tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
+        OutputStream fos = new FileOutputStream(tempFile);
+        IOUtils.copy(attachmentInputStream, fos);
+        fos.close();
 
-      // Importing group JCR contents
-      importGroupJCRNodes(tempFile, newlyCreatedGroups, replaceExisting);
+        // Start by importing all groups
+        Set<String> newlyCreatedGroups = importGroups(tempFile, replaceExisting);
 
-      resultHandler.completed(NoResultModel.INSTANCE);
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading group from Stream.", e);
-    } finally {
-      if (tempFile != null && tempFile.exists()) {
-        try {
-          tempFile.delete();
-        } catch (Exception e) {
-          tempFile.deleteOnExit();
+        // Importing memberships
+        importMemberships(tempFile);
+
+        // Importing group JCR contents
+        importGroupJCRNodes(tempFile, newlyCreatedGroups, replaceExisting);
+
+        resultHandler.completed(NoResultModel.INSTANCE);
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading group from Stream.", e);
+      } finally {
+        if (tempFile != null && tempFile.exists()) {
+          try {
+            tempFile.delete();
+          } catch (Exception e) {
+            tempFile.deleteOnExit();
+          }
         }
       }
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

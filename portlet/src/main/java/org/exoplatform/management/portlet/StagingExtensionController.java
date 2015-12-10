@@ -312,8 +312,7 @@ public class StagingExtensionController {
     jsonResources.append("{\"resources\":[");
 
     for (Resource resource : resources) {
-      jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText())
-          .append("\"},");
+      jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText()).append("\"},");
     }
     if (!resources.isEmpty()) {
       jsonResources.deleteCharAt(jsonResources.length() - 1);
@@ -341,7 +340,8 @@ public class StagingExtensionController {
       }
       fileName = fileName.startsWith("/") ? "" : "/" + fileName;
       String resourcePath = transformSpecialPath(fileName);
-      // If resource path transformed and treated with Exceptions Resource Paths
+      // If resource path transformed and treated with Exceptions Resource
+      // Paths
       if (!resourcePath.equals(fileName)) {
         // Got it !
         foundResources.add(resourcePath);
@@ -416,8 +416,7 @@ public class StagingExtensionController {
 
     try {
       File file = stagingService.export(selectedResourceCategoriesWithExceptions);
-      return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/")
-          .withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
+      return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/").withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
     } catch (Exception e) {
       log.error("Error while exporting resources, ", e);
       return Response.content(500, "Error occured while exporting Managed Resources: " + e.getMessage());
@@ -510,9 +509,7 @@ public class StagingExtensionController {
     StringBuilder jsonServers = new StringBuilder(50);
     jsonServers.append("{\"synchronizationServers\":[");
     for (TargetServer targetServer : synchronizationServers) {
-      jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost())
-          .append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword())
-          .append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
+      jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost()).append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword()).append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
     }
     if (!synchronizationServers.isEmpty()) {
       jsonServers.deleteCharAt(jsonServers.length() - 1);

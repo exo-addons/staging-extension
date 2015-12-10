@@ -36,18 +36,16 @@ import org.gatein.mop.api.workspace.Site;
  * @version $Revision$
  */
 public class SiteLayoutReadConfigAsXml extends AbstractSiteOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site)
-            throws ResourceNotFoundException, OperationException {
-        DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-        SiteKey siteKey = getSiteKey(site);
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException {
+    DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
+    SiteKey siteKey = getSiteKey(site);
 
-        try {
-            PortalConfig portalConfig = dataStorage.getPortalConfig(siteKey.getTypeName(), siteKey.getName());
-            resultHandler.completed(portalConfig);
-        } catch (Exception e) {
-            throw new OperationException(operationContext.getOperationName(),
-                    "Could not retrieve site layout for site " + site, e);
-        }
+    try {
+      PortalConfig portalConfig = dataStorage.getPortalConfig(siteKey.getTypeName(), siteKey.getName());
+      resultHandler.completed(portalConfig);
+    } catch (Exception e) {
+      throw new OperationException(operationContext.getOperationName(), "Could not retrieve site layout for site " + site, e);
     }
+  }
 }

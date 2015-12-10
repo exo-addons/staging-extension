@@ -58,50 +58,53 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
     }
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    InputStream attachmentInputStream = null;
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> filters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean replaceExisting = filters.contains("replace-existing:true");
-
-    Set<String> newUsers = new HashSet<String>();
-
-    // get attachement input stream
-    OperationAttachment attachment = operationContext.getAttachment(false);
-    attachmentInputStream = attachment.getStream();
-    File tempFile = null;
     try {
-      tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
-      OutputStream fos = new FileOutputStream(tempFile);
-      IOUtils.copy(attachmentInputStream, fos);
-      fos.close();
+      InputStream attachmentInputStream = null;
 
-      // User
-      importUsers(tempFile, newUsers, replaceExisting);
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
-      // UserProfile
-      importUserProfiles(tempFile, newUsers, replaceExisting);
+      // "replace-existing" attribute. Defaults to false.
+      boolean replaceExisting = filters.contains("replace-existing:true");
 
-      // Memberships
-      importMemberships(tempFile, newUsers, replaceExisting);
+      Set<String> newUsers = new HashSet<String>();
 
-      // Content
-      importUserJCRNodes(tempFile, newUsers, replaceExisting);
+      // get attachement input stream
+      OperationAttachment attachment = operationContext.getAttachment(false);
+      attachmentInputStream = attachment.getStream();
+      File tempFile = null;
+      try {
+        tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
+        OutputStream fos = new FileOutputStream(tempFile);
+        IOUtils.copy(attachmentInputStream, fos);
+        fos.close();
 
-      resultHandler.completed(NoResultModel.INSTANCE);
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading View Templates from Stream.", e);
-    } finally {
-      if (tempFile != null && tempFile.exists()) {
-        try {
-          tempFile.delete();
-        } catch (Exception e) {
-          tempFile.deleteOnExit();
+        // User
+        importUsers(tempFile, newUsers, replaceExisting);
+
+        // UserProfile
+        importUserProfiles(tempFile, newUsers, replaceExisting);
+
+        // Memberships
+        importMemberships(tempFile, newUsers, replaceExisting);
+
+        // Content
+        importUserJCRNodes(tempFile, newUsers, replaceExisting);
+
+        resultHandler.completed(NoResultModel.INSTANCE);
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading View Templates from Stream.", e);
+      } finally {
+        if (tempFile != null && tempFile.exists()) {
+          try {
+            tempFile.delete();
+          } catch (Exception e) {
+            tempFile.deleteOnExit();
+          }
         }
       }
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

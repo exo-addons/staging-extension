@@ -124,6 +124,8 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to retrieve the list of the contents sites : " + e.getMessage(), e);
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 
@@ -249,15 +251,13 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getVideoFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Multimedia Folder
-    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory, metaData, activitiesId,
-        exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getMultimediaFolder(portalNode), Arrays.asList("images", "audio", "videos"), exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Link Folder
     exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getLinkFolder(portalNode), null, exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // WebContent Folder
-    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory, metaData, activitiesId,
-        exportOnlyMetadata));
+    exportTasks.addAll(exportSubNodes(workspace, portalFolderSchemaHandler.getWebContentStorage(portalNode), Arrays.asList("site artifacts"), exportVersionHistory, metaData, activitiesId, exportOnlyMetadata));
 
     // Site Artifacts Folder
     Node webContentNode = portalFolderSchemaHandler.getWebContentStorage(portalNode);
@@ -310,8 +310,7 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
         JCRNodeExportTask siteContentExportTask = new JCRNodeExportTask(repositoryService, workspace, path, prefix, recursive, true);
         subNodesExportTask.add(siteContentExportTask);
         if (exportVersionHistory && childNode.isNodeType(org.exoplatform.ecm.webui.utils.Utils.MIX_VERSIONABLE) && childNode.getVersionHistory().hasNodes()) {
-          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME),
-              path, recursive);
+          SiteContentsVersionHistoryExportTask versionHistoryExportTask = new SiteContentsVersionHistoryExportTask(repositoryService, workspace, metaData.getOptions().get(SiteMetaData.SITE_NAME), path, recursive);
           subNodesExportTask.add(versionHistoryExportTask);
         }
       } else {

@@ -98,113 +98,116 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     activitiesByPostTime.clear();
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> filters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean replaceExisting = filters.contains("replace-existing:true");
-
-    // "create-users" attribute. Defaults to false.
-    boolean createAbsentUsers = filters.contains("create-users:true");
-
-    // space-name = spaceDisplayName || spacePrettyName ||
-    // spaceOriginalPrettyName (before renaming)
-    String spaceName = operationContext.getAddress().resolvePathTemplate("space-name");
-    if (spaceName != null) {
-      Space space = spaceService.getSpaceByDisplayName(spaceName);
-      if (space == null) {
-        space = spaceService.getSpaceByPrettyName(spaceName);
-        if (space == null) {
-          space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spaceName);
-        }
-      }
-      if (space != null) {
-        if (!replaceExisting) {
-          log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space '" + spaceName + "' import.");
-          resultHandler.completed(NoResultModel.INSTANCE);
-          return;
-        }
-        spaceName = space.getPrettyName();
-      }
-    }
-
-    File tmpZipFile = null;
     try {
-      // Copy attachement to local temporary File
-      tmpZipFile = File.createTempFile("staging-social", ".zip");
-      Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZipAndCreateSpaces(operationContext.getAttachment(false), spaceName, replaceExisting, createAbsentUsers, tmpZipFile);
-      Set<String> spacePrettyNames = fileToImportByOwner.keySet();
-      for (String extractedSpacePrettyName : spacePrettyNames) {
-        log.info("Importing applications data for space: " + extractedSpacePrettyName + " ...");
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
-        Space space = spaceService.getSpaceByPrettyName(extractedSpacePrettyName);
+      // "replace-existing" attribute. Defaults to false.
+      boolean replaceExisting = filters.contains("replace-existing:true");
+
+      // "create-users" attribute. Defaults to false.
+      boolean createAbsentUsers = filters.contains("create-users:true");
+
+      // space-name = spaceDisplayName || spacePrettyName ||
+      // spaceOriginalPrettyName (before renaming)
+      String spaceName = operationContext.getAddress().resolvePathTemplate("space-name");
+      if (spaceName != null) {
+        Space space = spaceService.getSpaceByDisplayName(spaceName);
         if (space == null) {
-          continue;
-        }
-
-        Map<String, File> spaceFiles = fileToImportByOwner.get(extractedSpacePrettyName);
-        Set<String> filesKeys = spaceFiles.keySet();
-        List<String> filesKeysList = new ArrayList<String>(filesKeys);
-        Collections.sort(filesKeysList, new Comparator<String>() {
-          @Override
-          public int compare(String o1, String o2) {
-            if (o1.contains(SocialDashboardExportTask.FILENAME)) {
-              return 1;
-            }
-            if (o2.contains(SocialDashboardExportTask.FILENAME)) {
-              return -1;
-            }
-            return o1.compareTo(o2);
+          space = spaceService.getSpaceByPrettyName(spaceName);
+          if (space == null) {
+            space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + spaceName);
           }
-        });
+        }
+        if (space != null) {
+          if (!replaceExisting) {
+            log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space '" + spaceName + "' import.");
+            resultHandler.completed(NoResultModel.INSTANCE);
+            return;
+          }
+          spaceName = space.getPrettyName();
+        }
+      }
 
-        List<File> activitiesFileList = new ArrayList<File>();
+      File tmpZipFile = null;
+      try {
+        // Copy attachement to local temporary File
+        tmpZipFile = File.createTempFile("staging-social", ".zip");
+        Map<String, Map<String, File>> fileToImportByOwner = extractDataFromZipAndCreateSpaces(operationContext.getAttachment(false), spaceName, replaceExisting, createAbsentUsers, tmpZipFile);
+        Set<String> spacePrettyNames = fileToImportByOwner.keySet();
+        for (String extractedSpacePrettyName : spacePrettyNames) {
+          log.info("Importing applications data for space: " + extractedSpacePrettyName + " ...");
 
-        for (String fileKey : filesKeysList) {
-          File fileToImport = spaceFiles.get(fileKey);
-          if (fileKey.equals(SocialExtension.ANSWER_RESOURCE_PATH) || fileKey.equals(SocialExtension.CALENDAR_RESOURCE_PATH) || fileKey.equals(SocialExtension.CONTENT_RESOURCE_PATH)
-              || fileKey.equals(SocialExtension.FAQ_RESOURCE_PATH) || fileKey.equals(SocialExtension.FORUM_RESOURCE_PATH) || fileKey.equals(SocialExtension.WIKI_RESOURCE_PATH)
-              || fileKey.equals(SocialExtension.SITES_IMPORT_RESOURCE_PATH)) {
-            importSubResource(fileToImport, fileKey);
-            deleteTempFile(fileToImport);
-          } else {
-            if (fileKey.contains(ActivitiesExportTask.FILENAME)) {
-              activitiesFileList.add(fileToImport);
-            } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
-              updateDashboard(space.getGroupId(), fileToImport);
-              deleteTempFile(fileToImport);
-            } else if (fileToImport.getAbsolutePath().contains(SpaceAvatarExportTask.FILENAME)) {
-              updateAvatar(space, fileToImport);
+          Space space = spaceService.getSpaceByPrettyName(extractedSpacePrettyName);
+          if (space == null) {
+            continue;
+          }
+
+          Map<String, File> spaceFiles = fileToImportByOwner.get(extractedSpacePrettyName);
+          Set<String> filesKeys = spaceFiles.keySet();
+          List<String> filesKeysList = new ArrayList<String>(filesKeys);
+          Collections.sort(filesKeysList, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+              if (o1.contains(SocialDashboardExportTask.FILENAME)) {
+                return 1;
+              }
+              if (o2.contains(SocialDashboardExportTask.FILENAME)) {
+                return -1;
+              }
+              return o1.compareTo(o2);
+            }
+          });
+
+          List<File> activitiesFileList = new ArrayList<File>();
+
+          for (String fileKey : filesKeysList) {
+            File fileToImport = spaceFiles.get(fileKey);
+            if (fileKey.equals(SocialExtension.ANSWER_RESOURCE_PATH) || fileKey.equals(SocialExtension.CALENDAR_RESOURCE_PATH) || fileKey.equals(SocialExtension.CONTENT_RESOURCE_PATH)
+                || fileKey.equals(SocialExtension.FAQ_RESOURCE_PATH) || fileKey.equals(SocialExtension.FORUM_RESOURCE_PATH) || fileKey.equals(SocialExtension.WIKI_RESOURCE_PATH)
+                || fileKey.equals(SocialExtension.SITES_IMPORT_RESOURCE_PATH)) {
+              importSubResource(fileToImport, fileKey);
               deleteTempFile(fileToImport);
             } else {
-              log.warn("Cannot handle file: " + fileToImport.getAbsolutePath() + ". Ignore it.");
-              deleteTempFile(fileToImport);
+              if (fileKey.contains(ActivitiesExportTask.FILENAME)) {
+                activitiesFileList.add(fileToImport);
+              } else if (fileToImport.getAbsolutePath().contains(SocialDashboardExportTask.FILENAME)) {
+                updateDashboard(space.getGroupId(), fileToImport);
+                deleteTempFile(fileToImport);
+              } else if (fileToImport.getAbsolutePath().contains(SpaceAvatarExportTask.FILENAME)) {
+                updateAvatar(space, fileToImport);
+                deleteTempFile(fileToImport);
+              } else {
+                log.warn("Cannot handle file: " + fileToImport.getAbsolutePath() + ". Ignore it.");
+                deleteTempFile(fileToImport);
+              }
             }
           }
-        }
 
-        log.info("Importing space '" + extractedSpacePrettyName + "' activities.");
-        activitiesByPostTime.clear();
-        for (File file : activitiesFileList) {
-          importActivities(file, extractedSpacePrettyName, false);
-        }
+          log.info("Importing space '" + extractedSpacePrettyName + "' activities.");
+          activitiesByPostTime.clear();
+          for (File file : activitiesFileList) {
+            importActivities(file, extractedSpacePrettyName, false);
+          }
 
-        log.info("Import operation finished successfully for space: " + extractedSpacePrettyName);
+          log.info("Import operation finished successfully for space: " + extractedSpacePrettyName);
+        }
+        log.info("Import operation finished successfully for all space.");
+      } catch (IOException e) {
+        log.warn("Cannot create temporary file.", e);
+      } finally {
+        if (tmpZipFile != null) {
+          String tempFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "");
+          File tempFolderFile = new File(tempFolderPath);
+          deleteTempFile(tempFolderFile);
+          deleteTempFile(tmpZipFile);
+        }
       }
-      log.info("Import operation finished successfully for all space.");
-    } catch (IOException e) {
-      log.warn("Cannot create temporary file.", e);
+
+      resultHandler.completed(NoResultModel.INSTANCE);
     } finally {
-      if (tmpZipFile != null) {
-        String tempFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "");
-        File tempFolderFile = new File(tempFolderPath);
-        deleteTempFile(tempFolderFile);
-        deleteTempFile(tmpZipFile);
-      }
+      restoreDefaultTransactionTimeOut(operationContext);
     }
-
-    resultHandler.completed(NoResultModel.INSTANCE);
   }
 
   private void deleteSpaceActivities(String extractedSpacePrettyName) {
@@ -364,7 +367,8 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
           RequestLifeCycle.end();
         }
 
-        // FIXME Workaround: deleting a space don't delete the corresponding
+        // FIXME Workaround: deleting a space don't delete the
+        // corresponding
         // group
         RequestLifeCycle.begin(PortalContainer.getInstance());
         try {
@@ -376,7 +380,8 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
           RequestLifeCycle.end();
         }
 
-        // FIXME Answer Bug: deleting a space don't delete answers category, but
+        // FIXME Answer Bug: deleting a space don't delete answers
+        // category, but
         // it will be deleted if answer data is imported
 
       } else {
@@ -664,7 +669,8 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
         } else {
           String localFilePath = targetFolderPath + replaceSpecialChars(zipEntryPath);
           if (localFilePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-            // Create space here to be sure that it's created before importing
+            // Create space here to be sure that it's created before
+            // importing
             // other application resources
             boolean toIgnore = createOrReplaceSpace(spacePrettyName, targetSpaceName, replaceExisting, createAbsentUsers, zis);
             if (toIgnore) {

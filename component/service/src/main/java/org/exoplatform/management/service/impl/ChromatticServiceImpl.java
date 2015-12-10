@@ -260,7 +260,8 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     Map<String, String> config = new HashMap<String, String>();
 
     if (builderType != null) {
-      // If there is config for codec in configuration.properties, we read the
+      // If there is config for codec in configuration.properties, we read
+      // the
       // config parameters from config file
       // referenced in configuration.properties
       String configFile = PropertyManager.getProperty("gatein.codec.config");

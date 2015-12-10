@@ -14,6 +14,9 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
+import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
@@ -46,18 +49,17 @@ import org.exoplatform.webui.form.UIFormSelectBox;
  * @version $Revision$
  */
 
-@ComponentConfigs({ @ComponentConfig(
-  type = UIGrid.class,
-  id = "selectedNodesGrid",
-  template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"), @ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
-  events = { @EventConfig(
-    listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(
-    listeners = PushContentPopupComponent.PushActionListener.class), @EventConfig(
-    listeners = PushContentPopupComponent.SelectActionListener.class) }) })
+@ComponentConfigs({
+    @ComponentConfig(type = UIGrid.class, id = "selectedNodesGrid", template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"),
+    @ComponentConfig(lifecycle = UIFormLifecycle.class, template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl", events = {
+        @EventConfig(listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(listeners = PushContentPopupComponent.PushActionListener.class),
+        @EventConfig(listeners = PushContentPopupComponent.SelectActionListener.class) }) })
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
+
+  private static boolean synchronizationStarted = false;
+  private static boolean synchronizationFinished = true;
+  private static Throwable synchronizationError = null;
 
   protected static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
 
@@ -127,6 +129,10 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     selectedNodes.add(nodeComparison);
   }
 
+  public static boolean isSynchronizationStarted() {
+    return synchronizationStarted;
+  }
+
   public boolean isDefaultEntry(String path) {
     for (NodeComparison comparison : defaultSelection) {
       if (path.equals(comparison.getPath())) {
@@ -186,7 +192,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   static public class PushActionListener extends EventListener<PushContentPopupComponent> {
     public void execute(Event<PushContentPopupComponent> event) throws Exception {
-      PushContentPopupComponent pushContentPopupComponent = event.getSource();
+      final PushContentPopupComponent pushContentPopupComponent = event.getSource();
       pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
 
       UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
@@ -195,7 +201,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         // get cleanupPublication checkbox value
         // boolean cleanupPublication =
         // pushContentPopupComponent.getUICheckBoxInput(PUBLISH_FIELD_NAME).getValue();
-        boolean cleanupPublication = false;
+        final boolean cleanupPublication = false;
 
         // get target server
         TargetServer targetServer = null;
@@ -207,6 +213,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
             targetServer = itTargetServer;
           }
         }
+        final TargetServer selectedServer = targetServer;
         if (targetServer == null) {
           ApplicationMessage message = new ApplicationMessage("PushContent.msg.targetServerMandatory", null, ApplicationMessage.ERROR);
           message.setResourceBundle(getResourceBundle());
@@ -215,77 +222,118 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           return;
         }
 
-        List<NodeComparison> selectedComparisons = (List<NodeComparison>) pushContentPopupComponent.getSelectedNodes();
-        // If default selection
-        if (selectedComparisons.isEmpty()) {
-          List<Resource> resources = new ArrayList<Resource>();
-          resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
+        ResourceBundle resourceBundle = PushContentPopupComponent.getResourceBundle();
+        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"));
+        if (synchronizationFinished && !synchronizationStarted) {
+          synchronizationStarted = true;
+          synchronizationFinished = false;
 
-          Map<String, String> exportOptions = new HashMap<String, String>();
-          Map<String, String> importOptions = new HashMap<String, String>();
+          Thread synchronizeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+              // Make sure that current container is of type
+              // "PortalContainer"
+              ExoContainerContext.setCurrentContainer(PortalContainer.getInstance());
 
-          String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
-          exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
-          exportOptions.put("filter/taxonomy", "false");
-          exportOptions.put("filter/no-history", "" + cleanupPublication);
-          exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
+              // Use "PortalContainer" in current transaction
+              RequestLifeCycle.begin(ExoContainerContext.getCurrentContainer());
+              try {
+                List<NodeComparison> selectedComparisons = (List<NodeComparison>) pushContentPopupComponent.getSelectedNodes();
+                // If default selection
+                if (selectedComparisons.isEmpty()) {
+                  List<Resource> resources = new ArrayList<Resource>();
+                  resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
 
-          boolean noVersion = false;
-          String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
-          if (!StringUtils.isEmpty(noVersionString)) {
-            noVersion = noVersionString.trim().equals("true");
-          }
+                  Map<String, String> exportOptions = new HashMap<String, String>();
+                  Map<String, String> importOptions = new HashMap<String, String>();
 
-          if (noVersion) {
-            exportOptions.put("filter/no-history", "true");
-            importOptions.put("filter/cleanPublication", "true");
-          }
+                  String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
+                  exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
+                  exportOptions.put("filter/taxonomy", "false");
+                  exportOptions.put("filter/no-history", "" + cleanupPublication);
+                  exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
 
-          // importOptions.put("filter/cleanPublication", "" +
-          // cleanupPublication);
+                  boolean noVersion = false;
+                  String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
+                  if (!StringUtils.isEmpty(noVersionString)) {
+                    noVersion = noVersionString.trim().equals("true");
+                  }
 
-          CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
-          uiPopupContainer.deActivate();
-          uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
-        } else {
-          // Multiple contents was selected, synchronize one by one
+                  if (noVersion) {
+                    exportOptions.put("filter/no-history", "true");
+                    importOptions.put("filter/cleanPublication", "true");
+                  }
 
-          for (NodeComparison nodeComparison : selectedComparisons) {
-            List<Resource> resources = new ArrayList<Resource>();
-            resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared/contents", "shared", "shared"));
+                  // importOptions.put("filter/cleanPublication",
+                  // "" +
+                  // cleanupPublication);
 
-            Map<String, String> exportOptions = new HashMap<String, String>();
-            Map<String, String> importOptions = new HashMap<String, String>();
+                  CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, selectedServer);
+                } else {
+                  // Multiple contents was selected,
+                  // synchronize one by one
 
-            if (nodeComparison.getState().equals(NodeComparisonState.NOT_FOUND_ON_SOURCE)) {
-              exportOptions.put("filter/removeNodes", nodeComparison.getPath());
-            } else {
+                  for (NodeComparison nodeComparison : selectedComparisons) {
+                    List<Resource> resources = new ArrayList<Resource>();
+                    resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared/contents", "shared", "shared"));
 
-              boolean noVersion = false;
-              String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
-              if (!StringUtils.isEmpty(noVersionString)) {
-                noVersion = noVersionString.trim().equals("true");
+                    Map<String, String> exportOptions = new HashMap<String, String>();
+                    Map<String, String> importOptions = new HashMap<String, String>();
+
+                    if (nodeComparison.getState().equals(NodeComparisonState.NOT_FOUND_ON_SOURCE)) {
+                      exportOptions.put("filter/removeNodes", nodeComparison.getPath());
+                    } else {
+
+                      boolean noVersion = false;
+                      String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
+                      if (!StringUtils.isEmpty(noVersionString)) {
+                        noVersion = noVersionString.trim().equals("true");
+                      }
+
+                      if (noVersion && nodeComparison.isPublished()) {
+                        exportOptions.put("filter/no-history", "true");
+                        importOptions.put("filter/cleanPublication", "true");
+                      }
+
+                      String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparison.getPath() + "'";
+                      exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
+                      exportOptions.put("filter/taxonomy", "false");
+                      exportOptions.put("filter/no-history", "" + cleanupPublication);
+                      exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
+                    }
+                    CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, selectedServer);
+                  }
+                }
+                LOG.info("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' done.");
+
+              } catch (Exception e) {
+                synchronizationError = e;
+              } finally {
+                synchronizationFinished = true;
+                RequestLifeCycle.end();
               }
-
-              if (noVersion && nodeComparison.isPublished()) {
-                exportOptions.put("filter/no-history", "true");
-                importOptions.put("filter/cleanPublication", "true");
-              }
-
-              String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparison.getPath() + "'";
-              exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
-              exportOptions.put("filter/taxonomy", "false");
-              exportOptions.put("filter/no-history", "" + cleanupPublication);
-              exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
             }
-            CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
+          });
+          synchronizeThread.start();
+        } else {
+          if (synchronizationStarted) {
+            if (synchronizationFinished) {
+              if (synchronizationError == null) {
+                synchronizationStarted = false;
+                // Update UI
+                uiPopupContainer.deActivate();
+                uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
+              } else {
+                Throwable tempException = synchronizationError;
+                synchronizationStarted = false;
+                synchronizationError = null;
+                throw tempException;
+              }
+            }
           }
-
-          uiPopupContainer.deActivate();
-          uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
         }
-        LOG.info("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' done.");
-      } catch (Exception ex) {
+
+      } catch (Throwable ex) {
         ApplicationMessage message;
         if (isConnectionException(ex)) {
           message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
@@ -295,8 +343,8 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         message.setResourceBundle(getResourceBundle());
         pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
         LOG.error("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' failed:", ex);
+        event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
       }
-      event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
     }
   }
 
@@ -306,7 +354,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
    * @param ex
    * @return
    */
-  private static boolean isConnectionException(Exception ex) {
+  private static boolean isConnectionException(Throwable ex) {
     boolean connectionException = false;
     Throwable throwable = ex;
     do {

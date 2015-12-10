@@ -93,6 +93,8 @@ public class GroupExportResource extends AbstractJCRExportOperationHandler {
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export Group : ", e);
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

@@ -23,8 +23,7 @@ public abstract class ECMAdminImportResource extends AbstractOperationHandler {
   private String filePath = null;
 
   /**
-   * Used for ECMAdminContentImportResource to invoke import on a selected
-   * file
+   * Used for ECMAdminContentImportResource to invoke import on a selected file
    * 
    * @param filePath
    *          attachement file path

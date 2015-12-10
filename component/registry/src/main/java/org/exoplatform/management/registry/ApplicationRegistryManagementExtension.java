@@ -29,8 +29,7 @@ public class ApplicationRegistryManagementExtension implements ManagementExtensi
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("registry");
 
-    ManagedResource.Registration registry = registration
-        .registerManagedResource(description("Application Registry Managed Resource"));
+    ManagedResource.Registration registry = registration.registerManagedResource(description("Application Registry Managed Resource"));
     registry.registerOperationHandler(OperationNames.READ_RESOURCE, new RegistryReadResource(), description("Application Registry Managed Resource."));
     registry.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new RegistryImportResource(), description("Import Application Registry data."));
 
@@ -40,15 +39,13 @@ public class ApplicationRegistryManagementExtension implements ManagementExtensi
     applicationCategory.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CategoryExportResource(), description("Export Category declaration in Application Registry."));
 
     // /registry/<category_name>/<application_name>
-    ManagedResource.Registration application = applicationCategory.registerSubResource("{application-name: .*}",
-        description("Management resource responsible for handling management operations on a specific gadget."));
+    ManagedResource.Registration application = applicationCategory.registerSubResource("{application-name: .*}", description("Management resource responsible for handling management operations on a specific gadget."));
     application.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty list."));
     application.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ApplicationExportResource(), description("Export Application declaration in Application Registry."));
   }
 
   @Override
-  public void destroy() {
-  }
+  public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {
@@ -61,8 +58,7 @@ public class ApplicationRegistryManagementExtension implements ManagementExtensi
 
   public static class EmptyReadResource extends AbstractOperationHandler {
     @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-        OperationException {
+    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
       resultHandler.completed(new ReadResourceModel("Empty", new HashSet<String>()));
     }
   }

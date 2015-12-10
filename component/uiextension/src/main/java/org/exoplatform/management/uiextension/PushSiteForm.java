@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
@@ -37,14 +40,14 @@ import org.exoplatform.webui.form.UIFormSelectBox;
  * @version $Revision$
  */
 
-@ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/staging/site/PushSite.gtmpl",
-  events = { @EventConfig(
-    listeners = PushSiteForm.CloseActionListener.class), @EventConfig(
-    listeners = PushSiteForm.PushActionListener.class) })
+@ComponentConfig(lifecycle = UIFormLifecycle.class, template = "classpath:groovy/webui/component/staging/site/PushSite.gtmpl", events = {
+    @EventConfig(listeners = PushSiteForm.CloseActionListener.class), @EventConfig(listeners = PushSiteForm.PushActionListener.class) })
 public class PushSiteForm extends UIForm {
   private static final Log LOG = ExoLogger.getLogger(PushSiteForm.class.getName());
+
+  private static boolean synchronizationStarted = false;
+  private static boolean synchronizationFinished = true;
+  private static Throwable synchronizationError = null;
 
   protected static MOPSiteHandler SITE_HANDLER = (MOPSiteHandler) ResourceHandlerLocator.getResourceHandler(StagingService.SITES_PARENT_PATH);;
 
@@ -94,17 +97,20 @@ public class PushSiteForm extends UIForm {
     this.synchronizationService = synchronizationService;
   }
 
-  private static void closePopup(Event<PushSiteForm> event) {
-    PushSiteForm pushSiteForm = event.getSource();
+  public static boolean isSynchronizationStarted() {
+    return synchronizationStarted;
+  }
+
+  private static void closePopup(PushSiteForm pushSiteForm, WebuiRequestContext context) {
     UIPopupContainer popupContainer = pushSiteForm.getAncestorOfType(UIPopupContainer.class);
     if (popupContainer != null)
       popupContainer.removeChildById(POPUP_WINDOW);
-    event.getRequestContext().addUIComponentToUpdateByAjax(popupContainer);
+    context.addUIComponentToUpdateByAjax(popupContainer);
   }
 
   static public class CloseActionListener extends EventListener<PushSiteForm> {
     public void execute(Event<PushSiteForm> event) throws Exception {
-      closePopup(event);
+      closePopup(event.getSource(), event.getRequestContext());
     }
   }
 
@@ -116,31 +122,70 @@ public class PushSiteForm extends UIForm {
       pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
       try {
         // get target server
-        TargetServer targetServer = getTargetServer(pushSiteForm);
+        final TargetServer targetServer = getTargetServer(pushSiteForm);
         if (targetServer == null) {
           pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.targetServerMandatory"));
           return;
         }
 
-        // Synchronize Site
-        synchronizeSite(targetServer);
-        LOG.info("Synchronization of site '" + Util.getUIPortal().getLabel() + "' is done.");
+        pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.synchronizationInProgress"));
 
-        // Update UI
-        Utils.createPopupMessage(pushSiteForm, "PushSite.msg.synchronizationDone", null, ApplicationMessage.INFO);
-        closePopup(event);
-      } catch (Exception ex) {
-        if (isConnectionException(ex)) {
-          pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.unableToConnect"));
+        if (synchronizationFinished && !synchronizationStarted) {
+          synchronizationStarted = true;
+          synchronizationFinished = false;
+
+          final UserNode userNode = Util.getUIPortal().getSelectedUserNode();
+          Thread synchronizeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+              // Make sure that current container is of type
+              // "PortalContainer"
+              ExoContainerContext.setCurrentContainer(PortalContainer.getInstance());
+
+              // Use "PortalContainer" in current transaction
+              RequestLifeCycle.begin(ExoContainerContext.getCurrentContainer());
+              try {
+                // Synchronize Site
+                synchronizeSite(userNode, targetServer);
+                LOG.info("Synchronization of site '" + userNode.getPageRef().getSite().getName() + "' is done.");
+              } catch (Exception e) {
+                synchronizationError = e;
+              } finally {
+                synchronizationFinished = true;
+                RequestLifeCycle.end();
+              }
+            }
+          });
+          synchronizeThread.start();
         } else {
-          pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.synchronizationError"));
+          if (synchronizationStarted) {
+            if (synchronizationFinished) {
+              if (synchronizationError == null) {
+                synchronizationStarted = false;
+                // Update UI
+                Utils.createPopupMessage(pushSiteForm, "PushSite.msg.synchronizationDone", null, ApplicationMessage.INFO);
+                closePopup(event.getSource(), event.getRequestContext());
+              } else {
+                Throwable tempException = synchronizationError;
+                synchronizationError = null;
+                synchronizationStarted = false;
+                throw tempException;
+              }
+            }
+          }
         }
+      } catch (Throwable ex) {
+        if (isConnectionException(ex)) {
+          Utils.createPopupMessage(pushSiteForm, "PushSite.msg.unableToConnect", null, ApplicationMessage.ERROR);
+        } else {
+          Utils.createPopupMessage(pushSiteForm, "PushSite.msg.synchronizationError", null, ApplicationMessage.ERROR);
+        }
+        closePopup(event.getSource(), event.getRequestContext());
         LOG.error("Synchronization of site '" + Util.getUIPortal().getLabel() + "' failed:", ex);
       }
     }
 
-    private void synchronizeSite(TargetServer targetServer) throws Exception {
-      UserNode userNode = Util.getUIPortal().getSelectedUserNode();
+    private void synchronizeSite(UserNode userNode, TargetServer targetServer) throws Exception {
       String siteType = userNode.getPageRef().getSite().getType().getName();
       String siteName = userNode.getPageRef().getSite().getName();
 
@@ -172,7 +217,7 @@ public class PushSiteForm extends UIForm {
      * @param ex
      * @return
      */
-    private static boolean isConnectionException(Exception ex) {
+    private static boolean isConnectionException(Throwable ex) {
       boolean connectionException = false;
       Throwable throwable = ex;
       do {

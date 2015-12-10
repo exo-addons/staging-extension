@@ -26,10 +26,11 @@ import org.exoplatform.portal.mop.SiteKey;
 import org.gatein.mop.api.workspace.Site;
 
 /**
- * Interface to obtain a site from a site key. This makes it easier for unit tests to mock when a MOP site is needed.
+ * Interface to obtain a site from a site key. This makes it easier for unit
+ * tests to mock when a MOP site is needed.
  *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  */
 public interface MOPSiteProvider {
-    Site getSite(SiteKey siteKey);
+  Site getSite(SiteKey siteKey);
 }

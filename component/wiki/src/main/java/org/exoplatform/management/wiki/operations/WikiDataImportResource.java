@@ -67,80 +67,83 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> filters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean replaceExisting = filters.contains("replace-existing:true");
-
-    // "create-space" attribute. Defaults to false.
-    boolean createSpace = filters.contains("create-space:true");
-
-    InputStream attachmentInputStream = getAttachementInputStream(operationContext);
-
     try {
-      // extract data from zip
-      Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
-      for (String wikiOwner : contentsByOwner.keySet()) {
-        List<FileEntry> fileEntries = contentsByOwner.get(wikiOwner);
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
-        if (WikiType.GROUP.equals(wikiType)) {
-          FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
-          if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
-            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
-            if (!spaceCreatedOrAlreadyExists) {
-              log.warn("Import of wiki '" + wikiOwner + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
-              continue;
+      // "replace-existing" attribute. Defaults to false.
+      boolean replaceExisting = filters.contains("replace-existing:true");
+
+      // "create-space" attribute. Defaults to false.
+      boolean createSpace = filters.contains("create-space:true");
+
+      InputStream attachmentInputStream = getAttachementInputStream(operationContext);
+
+      try {
+        // extract data from zip
+        Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
+        for (String wikiOwner : contentsByOwner.keySet()) {
+          List<FileEntry> fileEntries = contentsByOwner.get(wikiOwner);
+
+          if (WikiType.GROUP.equals(wikiType)) {
+            FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
+            if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
+              boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
+              if (!spaceCreatedOrAlreadyExists) {
+                log.warn("Import of wiki '" + wikiOwner + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
+                continue;
+              }
             }
           }
-        }
 
-        FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
+          FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
 
-        Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
-        if (wiki != null) {
-          if (replaceExisting) {
-            log.info("Overwrite existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=true). Delete: " + wiki.getWikiHome().getJCRPageNode().getPath());
-            deleteActivities(wiki.getType(), wiki.getOwner());
+          Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
+          if (wiki != null) {
+            if (replaceExisting) {
+              log.info("Overwrite existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=true). Delete: " + wiki.getWikiHome().getJCRPageNode().getPath());
+              deleteActivities(wiki.getType(), wiki.getOwner());
+            } else {
+              log.info("Ignore existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=false).");
+              continue;
+            }
           } else {
-            log.info("Ignore existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=false).");
-            continue;
+            wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
           }
-        } else {
-          wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
-        }
 
-        String workspace = mowService.getSession().getJCRSession().getWorkspace().getName();
+          String workspace = mowService.getSession().getJCRSession().getWorkspace().getName();
 
-        Collections.sort(fileEntries);
-        for (FileEntry fileEntry : fileEntries) {
-          importNode(fileEntry, workspace, false);
-        }
-
-        // Import activities
-        if (activitiesFile != null && activitiesFile.getFile().exists()) {
-          String spacePrettyName = null;
-          if (WikiType.GROUP.equals(wikiType)) {
-            Space space = spaceService.getSpaceByGroupId(wikiOwner);
-            spacePrettyName = space.getPrettyName();
+          Collections.sort(fileEntries);
+          for (FileEntry fileEntry : fileEntries) {
+            importNode(fileEntry, workspace, false);
           }
-          log.info("Importing Wiki activities");
-          importActivities(activitiesFile.getFile(), spacePrettyName, true);
+
+          // Import activities
+          if (activitiesFile != null && activitiesFile.getFile().exists()) {
+            String spacePrettyName = null;
+            if (WikiType.GROUP.equals(wikiType)) {
+              Space space = spaceService.getSpaceByGroupId(wikiOwner);
+              spacePrettyName = space.getPrettyName();
+            }
+            log.info("Importing Wiki activities");
+            importActivities(activitiesFile.getFile(), spacePrettyName, true);
+          }
+        }
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import wiki content of type: " + wikiType, e);
+      } finally {
+        if (attachmentInputStream != null) {
+          try {
+            attachmentInputStream.close();
+          } catch (IOException e) {
+            // Nothing to do
+          }
         }
       }
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import wiki content of type: " + wikiType, e);
+      resultHandler.completed(NoResultModel.INSTANCE);
     } finally {
-      if (attachmentInputStream != null) {
-        try {
-          attachmentInputStream.close();
-        } catch (IOException e) {
-          // Nothing to do
-        }
-      }
+      restoreDefaultTransactionTimeOut(operationContext);
     }
-    resultHandler.completed(NoResultModel.INSTANCE);
   }
 
   public String getManagedFilesPrefix() {

@@ -24,9 +24,7 @@ import org.exoplatform.webui.ext.filter.UIExtensionFilters;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-@ComponentConfig(
-  events = { @EventConfig(
-    listeners = PushContentActionComponent.PushContentActionListener.class) })
+@ComponentConfig(events = { @EventConfig(listeners = PushContentActionComponent.PushContentActionListener.class) })
 public class PushContentActionComponent extends UIComponent {
 
   private static SynchronizationService SYNCHRONIZATION_SERVICE;

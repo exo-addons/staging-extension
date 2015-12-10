@@ -51,6 +51,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   protected RepositoryService repositoryService = null;
   protected IdentityStorage identityStorage = null;
   protected SpaceService spaceService = null;
+  protected Long defaultJCRSessionTimeout = null;
 
   // This is used to test on duplicated activities
   protected Set<Long> activitiesByPostTime = new HashSet<Long>();
@@ -61,6 +62,32 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       transactionService.setTransactionTimeout(86400);
     } catch (SystemException e1) {
       log.warn("Cannot Change Transaction timeout");
+    }
+
+    RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    ManageableRepository repo;
+    try {
+      repo = repositoryService.getCurrentRepository();
+      if (defaultJCRSessionTimeout == null) {
+        defaultJCRSessionTimeout = repo.getConfiguration().getSessionTimeOut();
+      }
+      repo.getConfiguration().setSessionTimeOut(ONE_DAY_IN_MS);
+    } catch (Exception e) {
+      log.warn("Cannot Change JCR Session timeout", e);
+    }
+  }
+
+  protected void restoreDefaultTransactionTimeOut(OperationContext operationContext) {
+    if (defaultJCRSessionTimeout == null) {
+      return;
+    }
+    RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    ManageableRepository repo;
+    try {
+      repo = repositoryService.getCurrentRepository();
+      repo.getConfiguration().setSessionTimeOut(defaultJCRSessionTimeout);
+    } catch (Exception e) {
+      log.warn("Cannot Change JCR Session timeout", e);
     }
   }
 

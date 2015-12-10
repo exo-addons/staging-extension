@@ -39,8 +39,7 @@ public class ActionExportResource extends AbstractOperationHandler {
     }
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
     try {
-      Collection<NodeType> nodeTypes = actionsServiceContainer.getCreatedActionTypes(repositoryService.getCurrentRepository()
-          .getConfiguration().getName());
+      Collection<NodeType> nodeTypes = actionsServiceContainer.getCreatedActionTypes(repositoryService.getCurrentRepository().getConfiguration().getName());
       for (NodeType nodeType : nodeTypes) {
         if (filters.isEmpty() || filters.contains(nodeType.getName())) {
           exportTasks.add(new NodeTypeExportTask(nodeType, "action"));

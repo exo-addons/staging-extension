@@ -27,21 +27,18 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
 /**
- * Created by The eXo Platform SAS
- * Author : eXoPlatform
- *          exo@exoplatform.com
- * Mar 5, 2014  
+ * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
+ * 5, 2014
  */
 public class WikiReadResource extends AbstractOperationHandler {
-  
+
   @Override
-  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-      OperationException {
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>();
     children.add("portal");
     children.add("group");
     children.add("user");
-    
+
     resultHandler.completed(new ReadResourceModel("All wikis:", children));
   }
 

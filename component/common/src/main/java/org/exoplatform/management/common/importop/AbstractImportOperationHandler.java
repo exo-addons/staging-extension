@@ -172,7 +172,9 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
             // log.warn("Attempt to add a comment activity with null parent id.");
             // continue;
             // }
-            // if (!activity.getParentId().equals(originialParentActivityId)) {
+            // if
+            // (!activity.getParentId().equals(originialParentActivityId))
+            // {
             // log.warn("Attempt to add a comment activity with different parent id from previous saved Activity.");
             // continue;
             // }
@@ -451,8 +453,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
       return file;
     if (file.isDirectory() || folder)
       file.mkdir();
-    else
-      file.createNewFile();
+    else file.createNewFile();
     return file;
   }
 
@@ -494,7 +495,8 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     try {
       tmpZipFile = copyAttachementToLocalFolder(attachmentInputStream);
 
-      // Organize File paths by wikiOwner and extract files from zip to a temp
+      // Organize File paths by wikiOwner and extract files from zip to a
+      // temp
       // folder
       extractFilesByOwner(tmpZipFile, contentsByOwner);
     } finally {
@@ -554,7 +556,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         }
 
         String nodePath = ((FileImportOperationInterface) this).getNodePath(filePath);
-        if(nodePath == null) {
+        if (nodePath == null) {
           continue;
         }
         fileEntries.add(new FileEntry(nodePath, file));

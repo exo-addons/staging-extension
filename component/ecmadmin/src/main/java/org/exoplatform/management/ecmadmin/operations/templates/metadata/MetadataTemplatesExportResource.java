@@ -71,8 +71,7 @@ public class MetadataTemplatesExportResource extends AbstractOperationHandler {
 
           exportTasks.add(new StringExportTask(metadataTemplate, EXPORT_BASE_PATH + templatePath + ".gtmpl"));
 
-          metadata.addTemplate(isDialog ? MetadataServiceImpl.DIALOGS : MetadataServiceImpl.VIEWS, new NodeTemplate(templatePath
-              + ".gtmpl", metadataRoles));
+          metadata.addTemplate(isDialog ? MetadataServiceImpl.DIALOGS : MetadataServiceImpl.VIEWS, new NodeTemplate(templatePath + ".gtmpl", metadataRoles));
         }
         exportTasks.add(new MetadataTemplatesMetaDataExportTask(metadata, EXPORT_BASE_PATH + "/" + metadataName));
       }

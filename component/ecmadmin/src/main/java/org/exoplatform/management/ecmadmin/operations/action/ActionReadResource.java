@@ -33,8 +33,7 @@ public class ActionReadResource extends AbstractOperationHandler {
     }
     Set<String> actionNames = new HashSet<String>();
     try {
-      Collection<NodeType> nodeTypes = actionsServiceContainer.getCreatedActionTypes(repositoryService.getCurrentRepository()
-          .getConfiguration().getName());
+      Collection<NodeType> nodeTypes = actionsServiceContainer.getCreatedActionTypes(repositoryService.getCurrentRepository().getConfiguration().getName());
       for (NodeType nodeType : nodeTypes) {
         actionNames.add(nodeType.getName());
       }

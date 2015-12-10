@@ -79,8 +79,7 @@ public class OrganizationManagementExtension implements ManagementExtension {
   }
 
   @Override
-  public void destroy() {
-  }
+  public void destroy() {}
 
   private static ManagedDescription description(final String description) {
     return new ManagedDescription() {

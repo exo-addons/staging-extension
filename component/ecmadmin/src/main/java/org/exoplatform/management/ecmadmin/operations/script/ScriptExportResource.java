@@ -49,8 +49,7 @@ public class ScriptExportResource extends AbstractOperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void generateScriptsConfiguration(List<ExportTask> exportTasks, List<Node> nodes, List<String> filters)
-      throws Exception {
+  private void generateScriptsConfiguration(List<ExportTask> exportTasks, List<Node> nodes, List<String> filters) throws Exception {
     for (Node node : nodes) {
       String scriptPath = node.getPath().replace("/exo:ecm/scripts/", "");
       if (filters.isEmpty() || contains(filters, scriptPath)) {

@@ -25,7 +25,7 @@ public class ApplicationTemplatesMetadata {
   public void addTitle(String path, String title) {
     titleMap.put(path, title);
   }
-  
+
   public String getTitle(String path) {
     return titleMap.get(path);
   }

@@ -72,117 +72,120 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     pollService = operationContext.getRuntimeContext().getRuntimeComponent(PollService.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> filters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean replaceExisting = filters.contains("replace-existing:true");
-
-    // "create-space" attribute. Defaults to false.
-    boolean createSpace = filters.contains("create-space:true");
-
-    log.info("Importing Forums Data");
-    InputStream attachmentInputStream = getAttachementInputStream(operationContext);
     try {
-      // extract data from zip
-      Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
-      String workspace = dataLocation.getWorkspace();
+      // "replace-existing" attribute. Defaults to false.
+      boolean replaceExisting = filters.contains("replace-existing:true");
 
-      for (String categoryId : contentsByOwner.keySet()) {
-        List<FileEntry> fileEntries = contentsByOwner.get(categoryId);
+      // "create-space" attribute. Defaults to false.
+      boolean createSpace = filters.contains("create-space:true");
 
-        boolean isSpaceForum = categoryId.contains(Utils.FORUM_SPACE_ID_PREFIX);
-        if (isSpaceForum) {
-          String forumId = categoryId;
-          FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
-          if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
-            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
-            if (!spaceCreatedOrAlreadyExists) {
-              log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
-              continue;
-            }
-          }
+      log.info("Importing Forums Data");
+      InputStream attachmentInputStream = getAttachementInputStream(operationContext);
+      try {
+        // extract data from zip
+        Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
 
-          Category spaceCategory = forumService.getCategoryIncludedSpace();
-          Forum forum = forumService.getForum(spaceCategory.getId(), forumId);
+        String workspace = dataLocation.getWorkspace();
 
-          if (forum != null) {
-            if (replaceExisting) {
-              log.info("Overwrite existing Space Forum: '" + forum.getForumName() + "'  (replace-existing=true)");
-              deleteActivities(spaceCategory.getId(), forumId);
-            } else {
-              log.info("Ignore existing Space Forum: '" + forum.getForumName() + "'  (replace-existing=false)");
-              continue;
-            }
-          }
+        for (String categoryId : contentsByOwner.keySet()) {
+          List<FileEntry> fileEntries = contentsByOwner.get(categoryId);
 
-          FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
-
-          Collections.sort(fileEntries);
-          for (FileEntry fileEntry : fileEntries) {
-            importNode(fileEntry, workspace, false);
-          }
-
-          // Refresh caches
-          forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
-
-          // Import activities
-          if (activitiesFile != null && activitiesFile.getFile().exists()) {
-            String spaceGroupName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-            String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + spaceGroupName;
-            Space space = spaceService.getSpaceByGroupId(spaceGroupId);
-
-            log.info("Importing Forum activities");
-            importActivities(activitiesFile.getFile(), space.getPrettyName(), true);
-          }
-        } else {
-          Category category = forumService.getCategory(categoryId);
-
-          if (category != null) {
-            if (replaceExisting) {
-              log.info("Overwrite existing Forum Category: '" + category.getCategoryName() + "'  (replace-existing=true)");
-              @SuppressWarnings("deprecation")
-              List<Forum> forums = forumService.getForums(categoryId, null);
-              for (Forum forum : forums) {
-                deleteActivities(categoryId, forum.getId());
+          boolean isSpaceForum = categoryId.contains(Utils.FORUM_SPACE_ID_PREFIX);
+          if (isSpaceForum) {
+            String forumId = categoryId;
+            FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
+            if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
+              boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
+              if (!spaceCreatedOrAlreadyExists) {
+                log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
+                continue;
               }
-            } else {
-              log.info("Ignore existing Forum Category: '" + category.getCategoryName() + "'  (replace-existing=false)");
-              continue;
+            }
+
+            Category spaceCategory = forumService.getCategoryIncludedSpace();
+            Forum forum = forumService.getForum(spaceCategory.getId(), forumId);
+
+            if (forum != null) {
+              if (replaceExisting) {
+                log.info("Overwrite existing Space Forum: '" + forum.getForumName() + "'  (replace-existing=true)");
+                deleteActivities(spaceCategory.getId(), forumId);
+              } else {
+                log.info("Ignore existing Space Forum: '" + forum.getForumName() + "'  (replace-existing=false)");
+                continue;
+              }
+            }
+
+            FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
+
+            Collections.sort(fileEntries);
+            for (FileEntry fileEntry : fileEntries) {
+              importNode(fileEntry, workspace, false);
+            }
+
+            // Refresh caches
+            forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
+
+            // Import activities
+            if (activitiesFile != null && activitiesFile.getFile().exists()) {
+              String spaceGroupName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+              String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + spaceGroupName;
+              Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+
+              log.info("Importing Forum activities");
+              importActivities(activitiesFile.getFile(), space.getPrettyName(), true);
+            }
+          } else {
+            Category category = forumService.getCategory(categoryId);
+
+            if (category != null) {
+              if (replaceExisting) {
+                log.info("Overwrite existing Forum Category: '" + category.getCategoryName() + "'  (replace-existing=true)");
+                @SuppressWarnings("deprecation")
+                List<Forum> forums = forumService.getForums(categoryId, null);
+                for (Forum forum : forums) {
+                  deleteActivities(categoryId, forum.getId());
+                }
+              } else {
+                log.info("Ignore existing Forum Category: '" + category.getCategoryName() + "'  (replace-existing=false)");
+                continue;
+              }
+            }
+
+            FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
+
+            Collections.sort(fileEntries);
+            for (FileEntry fileEntry : fileEntries) {
+              importNode(fileEntry, workspace, false);
+            }
+
+            // Refresh caches
+            forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
+            // Import activities
+            if (activitiesFile != null && activitiesFile.getFile().exists()) {
+              log.info("Importing Forum activities");
+              importActivities(activitiesFile.getFile(), null, true);
             }
           }
-
-          FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
-
-          Collections.sort(fileEntries);
-          for (FileEntry fileEntry : fileEntries) {
-            importNode(fileEntry, workspace, false);
-          }
-
-          // Refresh caches
-          forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
-          // Import activities
-          if (activitiesFile != null && activitiesFile.getFile().exists()) {
-            log.info("Importing Forum activities");
-            importActivities(activitiesFile.getFile(), null, true);
+        }
+        forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import forum contents", e);
+      } finally {
+        if (attachmentInputStream != null) {
+          try {
+            attachmentInputStream.close();
+          } catch (IOException e) {
+            // Nothing to do
           }
         }
       }
-      forumService.calculateDeletedUser("fakeUser" + Utils.DELETED);
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import forum contents", e);
+      resultHandler.completed(NoResultModel.INSTANCE);
     } finally {
-      if (attachmentInputStream != null) {
-        try {
-          attachmentInputStream.close();
-        } catch (IOException e) {
-          // Nothing to do
-        }
-      }
+      restoreDefaultTransactionTimeOut(operationContext);
     }
-    resultHandler.completed(NoResultModel.INSTANCE);
   }
 
   @Override

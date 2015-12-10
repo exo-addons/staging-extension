@@ -25,19 +25,17 @@ import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.TargetServer;
 
 /**
- * Created by The eXo Platform SAS
- * Author : eXoPlatform
- *          exo@exoplatform.com
- * Mar 5, 2014  
+ * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
+ * 5, 2014
  */
 public class WikiHandler extends AbstractResourceHandler {
 
   private String wikiPath;
-  
+
   public WikiHandler(String path) {
     this.wikiPath = path;
   }
-  
+
   @Override
   public String getPath() {
     return wikiPath;

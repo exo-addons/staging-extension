@@ -17,8 +17,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class ECMAdminContentReadResource extends AbstractOperationHandler {
 
   @Override
-  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-      OperationException {
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>(1);
     children.add("templates");
     children.add("taxonomy");

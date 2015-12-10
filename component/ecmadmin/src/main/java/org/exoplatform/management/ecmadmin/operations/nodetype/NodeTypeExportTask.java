@@ -102,8 +102,7 @@ public class NodeTypeExportTask implements ExportTask {
       String requiredValue = null;
       if (proDef[j].getRequiredType() == 100)
         requiredValue = "Permission";
-      else
-        requiredValue = requireType[proDef[j].getRequiredType()];
+      else requiredValue = requireType[proDef[j].getRequiredType()];
       propertyXML.append("requiredType=").append("\"").append(requiredValue).append("\" ");
       String autoCreate = String.valueOf(proDef[j].isAutoCreated());
       propertyXML.append("autoCreated=").append("\"").append(autoCreate).append("\" ");

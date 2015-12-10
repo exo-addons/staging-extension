@@ -82,8 +82,8 @@ public class ViewImportResource extends ECMAdminImportResource {
             // template does not exist, ignore the error
           }
 
-          if(template != null) {
-            if(replaceExisting) {
+          if (template != null) {
+            if (replaceExisting) {
               log.info("Overwrite existing view template: " + templateName);
               viewService.updateTemplate(templateName, content, templatesHomePath, sessionProvider);
             } else {
@@ -107,7 +107,7 @@ public class ViewImportResource extends ECMAdminImportResource {
             }
             ViewConfig config = (ViewConfig) objectParameter.getObject();
             if (viewService.hasView(config.getName())) {
-              if(replaceExisting) {
+              if (replaceExisting) {
                 log.info("Overwrite existing view: " + config.getName());
                 viewService.removeView(config.getName());
                 viewService.addView(config.getName(), config.getPermissions(), config.isHideExplorerPanel(), config.getTemplate(), config.getTabList());

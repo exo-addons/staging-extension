@@ -64,7 +64,7 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
   public void setActionLocalized(String fake) {
     // nothing to do here
   }
-  
+
   public NodeComparisonState getState() {
     return state;
   }

@@ -16,10 +16,8 @@ public class CurrentRepositoryLifeCycle implements SessionLifeCycle {
   /** . */
   private final String containerName = "portal";
 
-  private Repository getCurrentRepository() throws RepositoryException
-  {
-    try
-    {
+  private Repository getCurrentRepository() throws RepositoryException {
+    try {
       ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
       // Get top container
@@ -28,8 +26,7 @@ public class CurrentRepositoryLifeCycle implements SessionLifeCycle {
       Object topContainer = getTopContainerMethod.invoke(null);
 
       //
-      if (topContainer == null)
-      {
+      if (topContainer == null) {
         throw new RepositoryException("Could not locate the top container");
       }
 
@@ -38,8 +35,7 @@ public class CurrentRepositoryLifeCycle implements SessionLifeCycle {
       Object container = getPortalContainerMethod.invoke(topContainer, containerName);
 
       //
-      if (container == null)
-      {
+      if (container == null) {
         throw new RepositoryException("Could not obtain the " + containerName + " portal container");
       }
 
@@ -49,52 +45,43 @@ public class CurrentRepositoryLifeCycle implements SessionLifeCycle {
       Object repositoryService = getComponentInstanceOfTypeMethod.invoke(container, repositoryServiceClass);
 
       //
-      if (repositoryService == null)
-      {
+      if (repositoryService == null) {
         throw new RepositoryException("Could not obtain the repository service");
       }
 
       //
       Method getDefaultRepositoryMethod = repositoryService.getClass().getMethod("getCurrentRepository");
-      return (Repository)getDefaultRepositoryMethod.invoke(repositoryService);
-    }
-    catch (Exception e)
-    {
+      return (Repository) getDefaultRepositoryMethod.invoke(repositoryService);
+    } catch (Exception e) {
       throw new RepositoryException("Could not obtain repository", e);
     }
   }
 
-  public Session login() throws RepositoryException
-  {
+  public Session login() throws RepositoryException {
     Repository repo = getCurrentRepository();
     return repo.login();
   }
 
-  public Session login(String workspace) throws RepositoryException
-  {
+  public Session login(String workspace) throws RepositoryException {
     Repository repo = getCurrentRepository();
     return repo.login(workspace);
   }
 
-  public Session login(Credentials credentials, String workspace) throws RepositoryException
-  {
+  public Session login(Credentials credentials, String workspace) throws RepositoryException {
     Repository repo = getCurrentRepository();
     return repo.login(credentials, workspace);
   }
 
-  public Session login(Credentials credentials) throws RepositoryException
-  {
+  public Session login(Credentials credentials) throws RepositoryException {
     Repository repo = getCurrentRepository();
     return repo.login(credentials);
   }
 
-  public void save(Session session) throws RepositoryException
-  {
+  public void save(Session session) throws RepositoryException {
     session.save();
   }
 
-  public void close(Session session)
-  {
+  public void close(Session session) {
     session.logout();
   }
 }

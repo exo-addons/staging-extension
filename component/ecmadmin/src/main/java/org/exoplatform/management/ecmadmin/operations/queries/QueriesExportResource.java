@@ -63,7 +63,8 @@ public class QueriesExportResource extends AbstractOperationHandler {
         queriesComponentPlugin.setInitParams(queriesPluginInitParams);
         componentPluginsList.add(queriesComponentPlugin);
 
-        // Queries API returns Node object instead of QueryData, so we need
+        // Queries API returns Node object instead of QueryData, so we
+        // need
         // to convert them...
         for (Node sharedQueryNode : sharedQueries) {
           String queryName = null;

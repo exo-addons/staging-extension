@@ -69,9 +69,10 @@ public class DriveImportResource extends ECMAdminImportResource {
             List<DriveData> drives = componentPlugin.getInitParams().getObjectParamValues(DriveData.class);
 
             for (DriveData drive : drives) {
-              if(replaceExisting || driveService.getDriveByName(drive.getName()) == null) {
+              if (replaceExisting || driveService.getDriveByName(drive.getName()) == null) {
                 log.info("Overwrite existing drive : " + drive.getName());
-                // The addDrive method add the drive if it does not exist or updates it if it exists
+                // The addDrive method add the drive if it does
+                // not exist or updates it if it exists
                 driveService.addDrive(drive.getName(), drive.getWorkspace(), drive.getPermissions(), drive.getHomePath(), drive.getViews(), drive.getIcon(), drive.getViewPreferences(), drive.getViewNonDocument(), drive.getViewSideBar(), drive.getShowHiddenNode(), drive.getAllowCreateFolders(), drive.getAllowNodeTypesOnTree());
               } else {
                 log.info("Ignore existing drive : " + drive.getName());

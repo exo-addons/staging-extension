@@ -93,7 +93,8 @@ public class SiteSEOExportResource extends AbstractExportOperationHandler {
     for (Navigation navigation : navigations) {
       PageMetadataModel pageMetadataModel = null;
       // FIXME use this once ECMS-4030 get fixed
-      // pageMetadataModel = seoService.getPageMetadata(page.getPageId(), lang);
+      // pageMetadataModel = seoService.getPageMetadata(page.getPageId(),
+      // lang);
       // System.out.println(page.getStorageId());
       pageMetadataModel = getPageMetadata(navigation.getObjectId(), lang);
 

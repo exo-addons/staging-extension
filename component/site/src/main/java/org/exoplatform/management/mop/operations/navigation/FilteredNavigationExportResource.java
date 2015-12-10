@@ -51,148 +51,143 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class FilteredNavigationExportResource {
-    @SuppressWarnings("deprecation")
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, PathTemplateFilter filter) {
-        BindingProvider bindingProvider = operationContext.getBindingProvider();
-        Marshaller<PageNavigation> marshaller = bindingProvider.getMarshaller(PageNavigation.class, ContentType.XML);
+  @SuppressWarnings("deprecation")
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, PathTemplateFilter filter) {
+    BindingProvider bindingProvider = operationContext.getBindingProvider();
+    Marshaller<PageNavigation> marshaller = bindingProvider.getMarshaller(PageNavigation.class, ContentType.XML);
 
-        final ManagedResource resource = operationContext.getManagedResource();
-        final PathAddress address = operationContext.getAddress();
-        final String operationName = operationContext.getOperationName();
+    final ManagedResource resource = operationContext.getManagedResource();
+    final PathAddress address = operationContext.getAddress();
+    final String operationName = operationContext.getOperationName();
 
-        StepResultHandler<PageNavigation> stepResultHandler = new StepResultHandler<PageNavigation>(address) {
-            @Override
-            public void failed(String failureDescription) {
-                if (address.equals(getCurrentAddress())) {
-                    throw new OperationException(operationName, "Navigation export failed. Reason: " + failureDescription);
-                } else {
-                    throw new OperationException(operationName, "Navigation export failed. Reason: " + failureDescription
-                            + " [Step Address: " + getCurrentAddress() + "]");
-                }
-            }
+    StepResultHandler<PageNavigation> stepResultHandler = new StepResultHandler<PageNavigation>(address) {
+      @Override
+      public void failed(String failureDescription) {
+        if (address.equals(getCurrentAddress())) {
+          throw new OperationException(operationName, "Navigation export failed. Reason: " + failureDescription);
+        } else {
+          throw new OperationException(operationName, "Navigation export failed. Reason: " + failureDescription + " [Step Address: " + getCurrentAddress() + "]");
+        }
+      }
 
-            @Override
-            protected void doCompleted(PageNavigation result) {
-                if (getResults().isEmpty()) {
-                    super.doCompleted(result);
-                } else {
-                    PageNavigation navigation = getResults().get(0);
-                    merge(navigation, result);
-                }
-            }
+      @Override
+      protected void doCompleted(PageNavigation result) {
+        if (getResults().isEmpty()) {
+          super.doCompleted(result);
+        } else {
+          PageNavigation navigation = getResults().get(0);
+          merge(navigation, result);
+        }
+      }
+    };
+
+    try {
+      executeHandlers(resource, operationContext, address, OperationNames.READ_CONFIG_AS_XML, stepResultHandler, filter, true);
+      List<PageNavigation> results = stepResultHandler.getResults();
+      if (results.isEmpty()) {
+        resultHandler.completed(new ExportResourceModel(Collections.<ExportTask> emptyList()));
+      } else {
+        NavigationExportTask task = new NavigationExportTask(stepResultHandler.getResults().get(0), marshaller);
+        resultHandler.completed(new ExportResourceModel(task));
+      }
+    } catch (ResourceNotFoundException e) {
+      throw e;
+    } catch (OperationException e) {
+      throw new OperationException(e.getOperationName(), getStepMessage(e, address, stepResultHandler), e);
+    } catch (Throwable t) {
+      throw new OperationException(operationName, getStepMessage(t, address, stepResultHandler), t);
+    }
+  }
+
+  private void executeHandlers(ManagedResource resource, final OperationContext operationContext, PathAddress address, String operationName, StepResultHandler<PageNavigation> stepResultHandler,
+      PathTemplateFilter filter, boolean root) {
+    OperationHandler handler = resource.getOperationHandler(address, operationName);
+    if (handler != null && !root && address.accepts(filter)) {
+      handler.execute(operationContext, stepResultHandler);
+    } else {
+      OperationHandler readResource = resource.getOperationHandler(address, OperationNames.READ_RESOURCE);
+      BasicResultHandler readResourceResult = new BasicResultHandler();
+      readResource.execute(new OperationContextDelegate(operationContext) {
+        @Override
+        public String getOperationName() {
+          return OperationNames.READ_RESOURCE;
+        }
+      }, readResourceResult);
+      if (readResourceResult.getFailureDescription() != null) {
+        throw new OperationException(operationName, "Failure '" + readResourceResult.getFailureDescription() + "' encountered executing " + OperationNames.READ_RESOURCE);
+      }
+
+      Object model = readResourceResult.getResult();
+      if (!(model instanceof ReadResourceModel)) {
+        throw new RuntimeException("Was expecting " + ReadResourceModel.class + " to be returned for operation " + OperationNames.READ_RESOURCE + " at address " + address);
+      }
+
+      for (String child : ((ReadResourceModel) model).getChildren()) {
+        final PathAddress childAddress = address.append(child);
+        OperationContext childContext = new OperationContextDelegate(operationContext) {
+          @Override
+          public PathAddress getAddress() {
+            return childAddress;
+          }
         };
-
-        try {
-            executeHandlers(resource, operationContext, address, OperationNames.READ_CONFIG_AS_XML, stepResultHandler, filter,
-                    true);
-            List<PageNavigation> results = stepResultHandler.getResults();
-            if (results.isEmpty()) {
-                resultHandler.completed(new ExportResourceModel(Collections.<ExportTask> emptyList()));
-            } else {
-                NavigationExportTask task = new NavigationExportTask(stepResultHandler.getResults().get(0), marshaller);
-                resultHandler.completed(new ExportResourceModel(task));
-            }
-        } catch (ResourceNotFoundException e) {
-            throw e;
-        } catch (OperationException e) {
-            throw new OperationException(e.getOperationName(), getStepMessage(e, address, stepResultHandler), e);
-        } catch (Throwable t) {
-            throw new OperationException(operationName, getStepMessage(t, address, stepResultHandler), t);
-        }
+        executeHandlers(resource, childContext, childAddress, operationName, stepResultHandler.next(childAddress), filter, false);
+      }
     }
+  }
 
-    private void executeHandlers(ManagedResource resource, final OperationContext operationContext, PathAddress address,
-            String operationName, StepResultHandler<PageNavigation> stepResultHandler, PathTemplateFilter filter, boolean root) {
-        OperationHandler handler = resource.getOperationHandler(address, operationName);
-        if (handler != null && !root && address.accepts(filter)) {
-            handler.execute(operationContext, stepResultHandler);
+  private String getStepMessage(Throwable t, PathAddress originalAddress, StepResultHandler<PageNavigation> stepResultHandler) {
+    String message = (t.getMessage() == null) ? "Step operation failure" : t.getMessage();
+    if (originalAddress.equals(stepResultHandler.getCurrentAddress())) {
+      return message;
+    } else {
+      return message + " [Step Address: " + stepResultHandler.getCurrentAddress() + "]";
+    }
+  }
+
+  private void merge(PageNavigation navigation, PageNavigation result) {
+    for (NavigationFragment fragment : result.getFragments()) {
+      if (fragment.getParentURI() != null) {
+        NavigationFragment found = findFragment(navigation, fragment.getParentURI());
+        if (found == null) {
+          navigation.addFragment(fragment);
         } else {
-            OperationHandler readResource = resource.getOperationHandler(address, OperationNames.READ_RESOURCE);
-            BasicResultHandler readResourceResult = new BasicResultHandler();
-            readResource.execute(new OperationContextDelegate(operationContext) {
-                @Override
-                public String getOperationName() {
-                    return OperationNames.READ_RESOURCE;
-                }
-            }, readResourceResult);
-            if (readResourceResult.getFailureDescription() != null) {
-                throw new OperationException(operationName, "Failure '" + readResourceResult.getFailureDescription()
-                        + "' encountered executing " + OperationNames.READ_RESOURCE);
-            }
-
-            Object model = readResourceResult.getResult();
-            if (!(model instanceof ReadResourceModel)) {
-                throw new RuntimeException("Was expecting " + ReadResourceModel.class + " to be returned for operation "
-                        + OperationNames.READ_RESOURCE + " at address " + address);
-            }
-
-            for (String child : ((ReadResourceModel) model).getChildren()) {
-                final PathAddress childAddress = address.append(child);
-                OperationContext childContext = new OperationContextDelegate(operationContext) {
-                    @Override
-                    public PathAddress getAddress() {
-                        return childAddress;
-                    }
-                };
-                executeHandlers(resource, childContext, childAddress, operationName, stepResultHandler.next(childAddress),
-                        filter, false);
-            }
+          found.getNodes().addAll(fragment.getNodes());
         }
+      } else {
+        navigation.addFragment(fragment);
+      }
+    }
+  }
+
+  private NavigationFragment findFragment(PageNavigation navigation, String parentUri) {
+    for (NavigationFragment fragment : navigation.getFragments()) {
+      if (fragment.getParentURI().equals(parentUri))
+        return fragment;
     }
 
-    private String getStepMessage(Throwable t, PathAddress originalAddress, StepResultHandler<PageNavigation> stepResultHandler) {
-        String message = (t.getMessage() == null) ? "Step operation failure" : t.getMessage();
-        if (originalAddress.equals(stepResultHandler.getCurrentAddress())) {
-            return message;
-        } else {
-            return message + " [Step Address: " + stepResultHandler.getCurrentAddress() + "]";
-        }
+    return null;
+  }
+
+  private static class BasicResultHandler implements ResultHandler {
+    private Object result;
+    private String failureDescription;
+
+    @Override
+    public void completed(Object result) {
+      this.result = result;
     }
 
-    private void merge(PageNavigation navigation, PageNavigation result) {
-        for (NavigationFragment fragment : result.getFragments()) {
-            if (fragment.getParentURI() != null) {
-                NavigationFragment found = findFragment(navigation, fragment.getParentURI());
-                if (found == null) {
-                    navigation.addFragment(fragment);
-                } else {
-                    found.getNodes().addAll(fragment.getNodes());
-                }
-            } else {
-                navigation.addFragment(fragment);
-            }
-        }
+    @Override
+    public void failed(String failureDescription) {
+      this.failureDescription = failureDescription;
     }
 
-    private NavigationFragment findFragment(PageNavigation navigation, String parentUri) {
-        for (NavigationFragment fragment : navigation.getFragments()) {
-            if (fragment.getParentURI().equals(parentUri))
-                return fragment;
-        }
-
-        return null;
+    public Object getResult() {
+      return result;
     }
 
-    private static class BasicResultHandler implements ResultHandler {
-        private Object result;
-        private String failureDescription;
-
-        @Override
-        public void completed(Object result) {
-            this.result = result;
-        }
-
-        @Override
-        public void failed(String failureDescription) {
-            this.failureDescription = failureDescription;
-        }
-
-        public Object getResult() {
-            return result;
-        }
-
-        public String getFailureDescription() {
-            return failureDescription;
-        }
+    public String getFailureDescription() {
+      return failureDescription;
     }
+  }
 }

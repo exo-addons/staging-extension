@@ -69,90 +69,93 @@ public class GadgetImportResource extends AbstractOperationHandler {
     }
 
     increaseCurrentTransactionTimeOut(operationContext);
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> filters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean replaceExisting = filters.contains("replace-existing:true");
-
-    // "jcrpath" attribute.
-    String jcrPath = null;
-    if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
-      Iterator<String> filtersIterator = attributes.getValues("filter").iterator();
-      while (filtersIterator.hasNext()) {
-        String filter = filtersIterator.next();
-        if (filter.startsWith("jcrpath:")) {
-          jcrPath = filter.substring("jcrpath:".length());
-          if (!jcrPath.endsWith("/")) {
-            jcrPath += "/";
-          }
-        }
-      }
-    }
-    if (jcrPath == null) {
-      jcrPath = DEFAULT_JCR_PATH;
-    }
-
-    ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager
-        .getLifeCycle("app");
-    String workspaceName = lifeCycle.getWorkspaceName();
-
-    OperationAttachment attachment = operationContext.getAttachment(false);
-    InputStream attachmentInputStream = attachment.getStream();
-    if (attachmentInputStream == null) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for Gadget import");
-    }
-    final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
-    ZipEntry entry;
-    Session session = null;
     try {
-      ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
-      SessionProvider sessionProvider = SessionProvider.createSystemProvider();
-      session = sessionProvider.getSession(workspaceName, manageableRepository);
-      while ((entry = zis.getNextEntry()) != null) {
-        String filePath = entry.getName();
 
-        // Skip directories
-        // & Skip empty entries
-        // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.equals("") || !filePath.startsWith("gadget/") || !filePath.endsWith(".xml")) {
-          continue;
-        }
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> filters = attributes.getValues("filter");
 
-        String gadgetName = filePath.substring("gadget/".length(), filePath.length() - 4);
-        Gadget gadget = gadgetRegistryService.getGadget(gadgetName);
+      // "replace-existing" attribute. Defaults to false.
+      boolean replaceExisting = filters.contains("replace-existing:true");
 
-        if (gadget != null) {
-          if (replaceExisting) {
-            log.info(gadgetName + " already exists. Replace it.");
-            gadgetRegistryService.removeGadget(gadgetName);
-
-            // commit changes
-            RequestLifeCycle.end();
-            // keep an active transaction
-            RequestLifeCycle.begin(PortalContainer.getInstance());
-
-            doImportGadget(jcrPath, zis, session);
-          } else {
-            log.info(gadgetName + " already exists. Ignore gadget (add the attribute replace-existing:true if you want to replace existing gadgets).");
+      // "jcrpath" attribute.
+      String jcrPath = null;
+      if (attributes != null && attributes.getValues("filter") != null && !attributes.getValues("filter").isEmpty()) {
+        Iterator<String> filtersIterator = attributes.getValues("filter").iterator();
+        while (filtersIterator.hasNext()) {
+          String filter = filtersIterator.next();
+          if (filter.startsWith("jcrpath:")) {
+            jcrPath = filter.substring("jcrpath:".length());
+            if (!jcrPath.endsWith("/")) {
+              jcrPath += "/";
+            }
           }
-        } else {
-          log.info("Import gadget " + gadgetName);
-          doImportGadget(jcrPath, zis, session);
         }
-        zis.closeEntry();
       }
-      zis.close();
-    } catch (Exception e) {
-      throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
-    } finally {
-      if (session != null && session.isLive()) {
-        session.logout();
+      if (jcrPath == null) {
+        jcrPath = DEFAULT_JCR_PATH;
       }
-    }
 
-    resultHandler.completed(NoResultModel.INSTANCE);
+      ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager.getLifeCycle("app");
+      String workspaceName = lifeCycle.getWorkspaceName();
+
+      OperationAttachment attachment = operationContext.getAttachment(false);
+      InputStream attachmentInputStream = attachment.getStream();
+      if (attachmentInputStream == null) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "No data stream available for Gadget import");
+      }
+      final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
+      ZipEntry entry;
+      Session session = null;
+      try {
+        ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
+        SessionProvider sessionProvider = SessionProvider.createSystemProvider();
+        session = sessionProvider.getSession(workspaceName, manageableRepository);
+        while ((entry = zis.getNextEntry()) != null) {
+          String filePath = entry.getName();
+
+          // Skip directories
+          // & Skip empty entries
+          // & Skip entries not in sites/zip
+          if (entry.isDirectory() || filePath.equals("") || !filePath.startsWith("gadget/") || !filePath.endsWith(".xml")) {
+            continue;
+          }
+
+          String gadgetName = filePath.substring("gadget/".length(), filePath.length() - 4);
+          Gadget gadget = gadgetRegistryService.getGadget(gadgetName);
+
+          if (gadget != null) {
+            if (replaceExisting) {
+              log.info(gadgetName + " already exists. Replace it.");
+              gadgetRegistryService.removeGadget(gadgetName);
+
+              // commit changes
+              RequestLifeCycle.end();
+              // keep an active transaction
+              RequestLifeCycle.begin(PortalContainer.getInstance());
+
+              doImportGadget(jcrPath, zis, session);
+            } else {
+              log.info(gadgetName + " already exists. Ignore gadget (add the attribute replace-existing:true if you want to replace existing gadgets).");
+            }
+          } else {
+            log.info("Import gadget " + gadgetName);
+            doImportGadget(jcrPath, zis, session);
+          }
+          zis.closeEntry();
+        }
+        zis.close();
+      } catch (Exception e) {
+        throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
+      } finally {
+        if (session != null && session.isLive()) {
+          session.logout();
+        }
+      }
+
+      resultHandler.completed(NoResultModel.INSTANCE);
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
+    }
   }
 
   private void doImportGadget(String jcrPath, ZipInputStream zis, Session session) throws IOException, RepositoryException {

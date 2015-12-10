@@ -102,90 +102,96 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
 
     // Increase current transaction timeout
     increaseCurrentTransactionTimeOut(operationContext);
-
-    // TODO For Space Dashboard export/import
-    // dataStorage =
-    // operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-
-    OperationAttributes attributes = operationContext.getAttributes();
-    List<String> operationFilters = attributes.getValues("filter");
-
-    // "replace-existing" attribute. Defaults to false.
-    boolean exportWiki = false, exportAnswer = false, exportCalendar = false, exportForum = false;
-    if (operationFilters != null) {
-      exportWiki = operationFilters.contains("export-wiki:true");
-      exportAnswer = operationFilters.contains("export-answer:true");
-      exportForum = operationFilters.contains("export-forum:true");
-      exportCalendar = operationFilters.contains("export-calendar:true");
-    }
-
-    String spaceDisplayName = operationContext.getAddress().resolvePathTemplate("space-name");
-
-    List<ExportTask> exportTasks = new ArrayList<ExportTask>();
-
     try {
-      Space space = spaceService.getSpaceByDisplayName(spaceDisplayName);
-      String[] apps = space.getApp().split(",");
-      Set<String> appsSet = new HashSet<String>(Arrays.asList(apps));
-      Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
-      attributesMap.put("exclude-space-metadata", Collections.singletonList("true"));
-      List<String> filters = new ArrayList<String>();
-      filters.add(spaceDisplayName);
-      attributesMap.put("filter", filters);
+      // TODO For Space Dashboard export/import
+      // dataStorage =
+      // operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
 
-      Set<String> alreadyExportedPaths = new HashSet<String>();
+      OperationAttributes attributes = operationContext.getAttributes();
+      List<String> operationFilters = attributes.getValues("filter");
 
-      for (String application : appsSet) {
-        String path = getEntryResourcePath(application);
-        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.WIKI_RESOURCE_PATH) && !exportWiki)
-            || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer)
-            || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
-          continue;
-        }
-
-        if (!alreadyExportedPaths.contains(path)) {
-          addResourceExportTasks(exportTasks, attributesMap, path, space.getPrettyName());
-          alreadyExportedPaths.add(path);
-        }
-        // TODO Export/import Dashboard gadgets
-        // else if (application.contains(SocialExtension.DASHBOARD_PORTLET)) {
-        // Dashboard dashboard =
-        // SocialDashboardExportTask.getDashboard(dataStorage,
-        // space.getGroupId());
-        // if (dashboard == null) {
-        // continue;
-        // }
-        // UIContainer uiContainer = new UIContainer();
-        // PortalDataMapper.toUIContainer(uiContainer, dashboard);
-        // cleanupUIComponentFields(uiContainer);
-        // exportTasks.add(new SocialDashboardExportTask(uiContainer,
-        // space.getPrettyName()));
-        // }
+      // "replace-existing" attribute. Defaults to false.
+      boolean exportWiki = false, exportAnswer = false, exportCalendar = false, exportForum = false;
+      if (operationFilters != null) {
+        exportWiki = operationFilters.contains("export-wiki:true");
+        exportAnswer = operationFilters.contains("export-answer:true");
+        exportForum = operationFilters.contains("export-forum:true");
+        exportCalendar = operationFilters.contains("export-calendar:true");
       }
 
-      log.info("export space JCR private data");
-      computeContentFilters(space, attributesMap);
-      addResourceExportTasks(exportTasks, attributesMap, SocialExtension.CONTENT_RESOURCE_PATH, space.getPrettyName());
+      String spaceDisplayName = operationContext.getAddress().resolvePathTemplate("space-name");
 
-      log.info("export space MOP data (layout & Pages & navigation)");
-      attributesMap.clear();
-      addResourceExportTasks(exportTasks, attributesMap, SocialExtension.SITES_RESOURCE_PATH + space.getGroupId(), space.getPrettyName());
+      List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-      log.info("export space metadata");
-      String prefix = "social/space/" + space.getPrettyName() + "/";
-      exportTasks.add(new SpaceMetadataExportTask(space, prefix));
+      try {
+        Space space = spaceService.getSpaceByDisplayName(spaceDisplayName);
+        String[] apps = space.getApp().split(",");
+        Set<String> appsSet = new HashSet<String>(Arrays.asList(apps));
+        Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
+        attributesMap.put("exclude-space-metadata", Collections.singletonList("true"));
+        List<String> filters = new ArrayList<String>();
+        filters.add(spaceDisplayName);
+        attributesMap.put("filter", filters);
 
-      Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), false);
+        Set<String> alreadyExportedPaths = new HashSet<String>();
 
-      log.info("export space avatar");
-      exportSpaceAvatar(exportTasks, space, spaceIdentity);
+        for (String application : appsSet) {
+          String path = getEntryResourcePath(application);
+          if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.WIKI_RESOURCE_PATH) && !exportWiki)
+              || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer)
+              || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
+            continue;
+          }
 
-      log.info("export space activities");
-      exportSpaceActivities(exportTasks, space, spaceIdentity, exportWiki);
-    } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't export Space", e);
+          if (!alreadyExportedPaths.contains(path)) {
+            addResourceExportTasks(exportTasks, attributesMap, path, space.getPrettyName());
+            alreadyExportedPaths.add(path);
+          }
+          // TODO Export/import Dashboard gadgets
+          // else if
+          // (application.contains(SocialExtension.DASHBOARD_PORTLET))
+          // {
+          // Dashboard dashboard =
+          // SocialDashboardExportTask.getDashboard(dataStorage,
+          // space.getGroupId());
+          // if (dashboard == null) {
+          // continue;
+          // }
+          // UIContainer uiContainer = new UIContainer();
+          // PortalDataMapper.toUIContainer(uiContainer, dashboard);
+          // cleanupUIComponentFields(uiContainer);
+          // exportTasks.add(new
+          // SocialDashboardExportTask(uiContainer,
+          // space.getPrettyName()));
+          // }
+        }
+
+        log.info("export space JCR private data");
+        computeContentFilters(space, attributesMap);
+        addResourceExportTasks(exportTasks, attributesMap, SocialExtension.CONTENT_RESOURCE_PATH, space.getPrettyName());
+
+        log.info("export space MOP data (layout & Pages & navigation)");
+        attributesMap.clear();
+        addResourceExportTasks(exportTasks, attributesMap, SocialExtension.SITES_RESOURCE_PATH + space.getGroupId(), space.getPrettyName());
+
+        log.info("export space metadata");
+        String prefix = "social/space/" + space.getPrettyName() + "/";
+        exportTasks.add(new SpaceMetadataExportTask(space, prefix));
+
+        Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, space.getPrettyName(), false);
+
+        log.info("export space avatar");
+        exportSpaceAvatar(exportTasks, space, spaceIdentity);
+
+        log.info("export space activities");
+        exportSpaceActivities(exportTasks, space, spaceIdentity, exportWiki);
+      } catch (Exception e) {
+        throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't export Space", e);
+      }
+      resultHandler.completed(new ExportResourceModel(exportTasks));
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
-    resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
   private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity, boolean exportWiki) {

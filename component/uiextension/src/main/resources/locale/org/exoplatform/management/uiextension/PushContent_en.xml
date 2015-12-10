@@ -18,6 +18,7 @@
 			<userNameMandatory>Login is mandatory</userNameMandatory>
 			<passwordMandatory>Password is mandatory</passwordMandatory>
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>
+			<synchronizationInProgress>Synchronization in progress ...</synchronizationInProgress>
 		</msg>
 		<state>
 			<not_found_source>New (on target)</not_found_source>

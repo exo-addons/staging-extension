@@ -6,10 +6,11 @@
 	import org.exoplatform.platform.webui.NavigationURLUtils;
 	import org.exoplatform.wcm.webui.seo.UISEOToolbarForm;
 	import org.exoplatform.management.uiextension.PushPageActionComponent;
+	import org.exoplatform.management.uiextension.PushNavigationActionComponent;
 	import org.exoplatform.management.uiextension.PushSiteActionComponent;
 
 	def rcontext = _ctx.getRequestContext();
-	 
+
     JavascriptManager jsmanager = rcontext.getJavascriptManager();
 	String addPageLabel = _ctx.appRes("UIAdminToolbarPortlet.action.AddPage");	
 	String editPageLabel = _ctx.appRes("UIAdminToolbarPortlet.action.Layout");
@@ -18,7 +19,7 @@
 	String quickEditLabel = _ctx.appRes("UIAdminToolbarPortlet.action.Content");
 	String editorLabel = _ctx.appRes("UIAdminToolbarPortlet.action.Editor");
 	String seoLabel = _ctx.appRes("UIAdminToolbarPortlet.action.Properties");
-  String siteLabel = _ctx.appRes("UIAdminToolbarPortlet.action.Site");
+    String siteLabel = _ctx.appRes("UIAdminToolbarPortlet.action.Site");
 	String addSiteLabel = _ctx.appRes("UIAdminToolbarPortlet.action.AddSite");
 
 	String quiEditClass = "quickEditUnchecked";
@@ -31,14 +32,13 @@
 	boolean userCouldEditNavigation = uicomponent.hasEditPermissionOnNavigation() && !uicomponent.isUserNavigation();
 	boolean userCouldEditPage = uicomponent.hasEditPermissionOnPage();
 	boolean userCouldEditPortal = uicomponent.hasEditPermissionOnPortal();
-	
 %>
 
 <div class="uiAdminToolbarPortlet uiDropdownWithIcon dropdown pull-left" id="$uicomponent.id">
 	<a class="dropdown-toggle" data-toggle="dropdown">
 		<i class="uiIconPLF24x24Edit"></i>$editorLabel
 	</a>
-	
+
 		<ul class="dropdown-menu">
       <% if(uicomponent.isSpaceManager()) { %>
 			<li>
@@ -117,6 +117,14 @@
 							<li>
 								<%
 									PushSiteActionComponent.addButtonToComponent(uicomponent);
+								%>
+							</li>
+						<% } %>
+						<% if(PushNavigationActionComponent.isShowButton()){ %>
+							<li class="divider">&nbsp;</li>
+							<li>
+								<%
+									PushNavigationActionComponent.addButtonToComponent(uicomponent);
 								%>
 							</li>
 						<% } %>
