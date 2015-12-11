@@ -35,9 +35,9 @@ import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
 import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.exoplatform.wiki.mow.api.Page;
-import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
+import org.exoplatform.wiki.mow.core.api.wiki.WikiImpl;
 import org.exoplatform.wiki.service.WikiService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
@@ -89,7 +89,7 @@ public class WikiDataExportResource extends AbstractJCRExportOperationHandler im
     try {
       if (wikiOwner == null || wikiOwner.isEmpty()) {
         log.info("Exporting all WIKI of type: " + wikiType);
-        for (Wiki wiki : mowService.getModel().getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
+        for (WikiImpl wiki : mowService.getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
           exportWiki(exportTasks, wiki, exportSpaceMetadata);
         }
       } else {
@@ -99,7 +99,7 @@ public class WikiDataExportResource extends AbstractJCRExportOperationHandler im
             wikiOwner = space.getGroupId();
           }
         }
-        Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
+        WikiImpl wiki = mowService.getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
         exportWiki(exportTasks, wiki, exportSpaceMetadata);
       }
       resultHandler.completed(new ExportResourceModel(exportTasks));
@@ -120,7 +120,7 @@ public class WikiDataExportResource extends AbstractJCRExportOperationHandler im
     subNodesExportTask.add(wikiExportTask);
   }
 
-  private void exportWiki(List<ExportTask> exportTasks, Wiki wiki, boolean exportSpaceMetadata) {
+  private void exportWiki(List<ExportTask> exportTasks, WikiImpl wiki, boolean exportSpaceMetadata) {
     if (wiki == null) {
       log.warn("Cannot export Resource: Wiki wasn't found.");
       return;
@@ -156,13 +156,13 @@ public class WikiDataExportResource extends AbstractJCRExportOperationHandler im
       String pageType = activity.getTemplateParams().get("page_type");
       Page page = null;
       if (pageId != null && pageOwner != null && pageType != null) {
-        page = wikiService.getPageById(pageType, pageOwner, pageId);
+        page = wikiService.getPageOfWikiByName(pageType, pageOwner, pageId);
       }
       if (page == null) {
         log.warn("Wiki page not found. Cannot import activity '" + activity.getTitle() + "'.");
         return false;
       }
-      return page.getWiki().getOwner().equals(wikiOwnerThreadLocal.get());
+      return page.getWikiOwner().equals(wikiOwnerThreadLocal.get());
     }
   }
 }

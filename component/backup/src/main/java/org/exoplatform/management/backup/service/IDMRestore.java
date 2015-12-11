@@ -27,7 +27,7 @@ import org.exoplatform.services.database.utils.DialectConstants;
 import org.exoplatform.services.database.utils.DialectDetecter;
 import org.exoplatform.services.jcr.dataflow.serialization.ObjectReader;
 import org.exoplatform.services.jcr.impl.Constants;
-import org.exoplatform.services.jcr.impl.dataflow.serialization.ObjectZipReaderImpl;
+import org.exoplatform.services.jcr.impl.dataflow.serialization.ZipObjectReader;
 import org.exoplatform.services.jcr.impl.storage.jdbc.DBConstants;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -259,8 +259,8 @@ public class IDMRestore {
    * Restore table.
    */
   private void restoreTable(File storageDir, Connection jdbcConn, String tableName) throws IOException, SQLException {
-    ObjectZipReaderImpl contentReader = null;
-    ObjectZipReaderImpl contentLenReader = null;
+    ZipObjectReader contentReader = null;
+    ZipObjectReader contentLenReader = null;
 
     PreparedStatement insertNode = null;
     ResultSet tableMetaData = null;
@@ -271,12 +271,12 @@ public class IDMRestore {
     }
 
     try {
-      contentReader = new ObjectZipReaderImpl(PrivilegedFileHelper.zipInputStream(contentFile));
+      contentReader = new ZipObjectReader(PrivilegedFileHelper.zipInputStream(contentFile));
 
       while (!contentReader.getNextEntry().getName().equals(tableName))
         ;
 
-      contentLenReader = new ObjectZipReaderImpl(PrivilegedFileHelper.zipInputStream(contentLenFile));
+      contentLenReader = new ZipObjectReader(PrivilegedFileHelper.zipInputStream(contentLenFile));
 
       while (!contentLenReader.getNextEntry().getName().equals(tableName))
         ;

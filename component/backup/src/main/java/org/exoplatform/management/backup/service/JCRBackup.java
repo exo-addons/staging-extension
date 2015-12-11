@@ -1,8 +1,8 @@
 package org.exoplatform.management.backup.service;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.jcr.RepositoryException;
 
@@ -79,9 +79,9 @@ public class JCRBackup {
 
   // FIXME JCR-2405
   public static void fixWorkspacesConfiguration(final ManageableRepository repository) throws RepositoryConfigurationException {
-    ArrayList<WorkspaceEntry> workspaceEntries = repository.getConfiguration().getWorkspaceEntries();
+    List<WorkspaceEntry> workspaceEntries = repository.getConfiguration().getWorkspaceEntries();
     for (WorkspaceEntry workspaceEntry : workspaceEntries) {
-      ArrayList<ValueStorageEntry> storageEntries = workspaceEntry.getContainer().getValueStorages();
+      List<ValueStorageEntry> storageEntries = workspaceEntry.getContainer().getValueStorages();
       if (storageEntries != null) {
         Iterator<ValueStorageEntry> storageIterator = storageEntries.iterator();
         while (storageIterator.hasNext()) {

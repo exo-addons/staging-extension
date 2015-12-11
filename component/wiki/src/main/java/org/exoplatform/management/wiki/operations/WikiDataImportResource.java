@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.ActivitiesExportTask;
 import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
@@ -28,7 +26,7 @@ import org.exoplatform.wiki.mow.api.Page;
 import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
-import org.exoplatform.wiki.mow.core.api.wiki.PageImpl;
+import org.exoplatform.wiki.mow.core.api.wiki.WikiImpl;
 import org.exoplatform.wiki.service.WikiService;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
@@ -97,7 +95,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
 
         FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
 
-        Wiki wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
+        WikiImpl wiki = mowService.getWikiStore().getWikiContainer(wikiType).contains(wikiOwner);
         if (wiki != null) {
           if (replaceExisting) {
             log.info("Overwrite existing wiki for owner : '" + wikiType + ":" + wikiOwner + "' (replace-existing=true). Delete: " + wiki.getWikiHome().getJCRPageNode().getPath());
@@ -107,7 +105,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
             continue;
           }
         } else {
-          wiki = mowService.getModel().getWikiStore().getWikiContainer(wikiType).addWiki(wikiOwner);
+          wiki = mowService.getWikiStore().addWiki(wikiType, wikiOwner);
         }
 
         String workspace = mowService.getSession().getJCRSession().getWorkspace().getName();
@@ -175,9 +173,10 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     String pageId = activity.getTemplateParams().get("page_id");
     String pageOwner = activity.getTemplateParams().get("page_owner");
     String pageType = activity.getTemplateParams().get("page_type");
-    Page page = wikiService.getPageById(pageType, pageOwner, pageId);
-    ActivityTypeUtils.attachActivityId(page.getJCRPageNode(), activity.getId());
-    page.getJCRPageNode().getSession().save();
+
+    Page page = wikiService.getPageOfWikiByName(pageType, pageOwner, pageId);
+    page.setActivityId(activity.getId());
+    wikiService.updatePage(page, null);
   }
 
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
@@ -187,7 +186,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
       String pageType = activity.getTemplateParams().get("page_type");
       Page page = null;
       if (pageId != null && pageOwner != null && pageType != null) {
-        page = wikiService.getPageById(pageType, pageOwner, pageId);
+        page = wikiService.getPageOfWikiByName(pageType, pageOwner, pageId);
       }
       if (page == null) {
         log.warn("Wiki page not found. Cannot import activity '" + activity.getTitle() + "'.");
@@ -201,28 +200,27 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
 
   private void deleteActivities(String wikiType, String wikiOwner) throws Exception {
     // Delete Forum activity stream
-    Wiki wiki = wikiService.getWiki(wikiType, wikiOwner);
+    Wiki wiki = wikiService.getWikiByTypeAndOwner(wikiType, wikiOwner);
     if (wiki == null) {
       return;
     }
-    PageImpl homePage = (PageImpl) wiki.getWikiHome();
+
+    Page homePage = wiki.getWikiHome();
     List<Page> pages = new ArrayList<Page>();
-    pages.add(homePage);
     computeChildPages(pages, homePage);
 
     List<String> activityIds = new ArrayList<String>();
     for (Page page : pages) {
-      String activityId = ActivityTypeUtils.getActivityId(page.getJCRPageNode());
-      activityIds.add(activityId);
+      activityIds.add(page.getActivityId());
     }
     deleteActivitiesById(activityIds);
   }
 
-  private void computeChildPages(List<Page> pages, PageImpl homePage) throws Exception {
-    Collection<PageImpl> chilPages = homePage.getChildPages().values();
-    for (PageImpl childPageImpl : chilPages) {
-      pages.add(childPageImpl);
-      computeChildPages(pages, childPageImpl);
+  private void computeChildPages(List<Page> pages, Page parentPage) throws Exception {
+    pages.add(parentPage);
+    List<Page> chilPages = wikiService.getChildrenPageOf(parentPage);
+    for (Page childPage : chilPages) {
+      computeChildPages(pages, childPage);
     }
   }
 

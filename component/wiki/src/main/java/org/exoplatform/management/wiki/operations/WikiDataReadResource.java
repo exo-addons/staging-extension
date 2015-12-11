@@ -22,9 +22,9 @@ import java.util.Set;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.social.core.space.model.Space;
 import org.exoplatform.social.core.space.spi.SpaceService;
-import org.exoplatform.wiki.mow.api.Wiki;
 import org.exoplatform.wiki.mow.api.WikiType;
 import org.exoplatform.wiki.mow.core.api.MOWService;
+import org.exoplatform.wiki.mow.core.api.wiki.WikiImpl;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;
 import org.gatein.management.api.operation.OperationContext;
@@ -49,7 +49,7 @@ public class WikiDataReadResource extends AbstractOperationHandler {
 
     Set<String> children = new LinkedHashSet<String>();
     MOWService mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
-    for (Wiki wiki : mowService.getModel().getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
+    for (WikiImpl wiki : mowService.getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
       String wikiOwner = wiki.getOwner();
       if (wikiType.equals(WikiType.GROUP)) {
         Space space = spaceService.getSpaceByGroupId(wikiOwner);

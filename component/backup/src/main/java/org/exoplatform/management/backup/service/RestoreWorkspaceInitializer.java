@@ -31,7 +31,7 @@ public class RestoreWorkspaceInitializer extends RdbmsWorkspaceInitializer {
   }
 
   @Override
-  public boolean isWorkspaceInitialized() {
+  public boolean isWorkspaceInitialized() throws RepositoryException {
     return super.isWorkspaceInitialized() && !isRestoreInProgress();
   }
 

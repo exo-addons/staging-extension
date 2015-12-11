@@ -293,7 +293,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         parameters.add(new BasicNameValuePair(parameterName, parameterValue));
       }
     }
-    return URLEncodedUtils.format(parameters, null);
+    return URLEncodedUtils.format(parameters, (String)null);
   }
 
   /**
