@@ -153,7 +153,12 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       if (userIdentity != null) {
         return userIdentity;
       } else {
-        Identity spaceIdentity = null;
+        Identity spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, id);
+
+        if (spaceIdentity != null) {
+          return spaceIdentity;
+        }
+
         // Try to see if space was renamed
         Space space = spaceService.getSpaceByGroupId(id);
         if (space == null) {
@@ -164,6 +169,8 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         }
         if (space != null) {
           spaceIdentity = identityStorage.findIdentity(SpaceIdentityProvider.NAME, space.getPrettyName());
+        } else {
+          log.warn("Space '" + id + "'was not found");
         }
         return spaceIdentity;
       }

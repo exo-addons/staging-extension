@@ -471,6 +471,9 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
         spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
         space = spaceService.getSpaceByDisplayName(spaceMetaData.getDisplayName());
       }
+      if (space == null) {
+        throw new IllegalStateException("Space '" + spaceMetaData.getDisplayName() + "' was not found after creating it.");
+      }
     } finally {
       RequestLifeCycle.end();
     }
@@ -483,7 +486,7 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
       int countIerations = 0;
       // Wait until the identity of the space is committed
       do {
-        identity = getIdentity(spaceMetaData.getPrettyName());
+        identity = getIdentity(space.getPrettyName());
         if (identity == null) {
           log.warn("Identity of space '" + spaceMetaData.getPrettyName() + "' not found, retry getting it.");
           Thread.sleep(2000);
