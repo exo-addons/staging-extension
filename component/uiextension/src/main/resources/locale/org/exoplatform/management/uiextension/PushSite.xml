@@ -6,6 +6,7 @@
 			<synchronizationError>An error occurred while synchronizing content</synchronizationError>
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>
+			<synchronizationInProgress>Synchronization in progress ...</synchronizationInProgress>
 		</msg>
 		<action>Push</action>
 	</PushSite>
@@ -18,9 +19,9 @@
 			<Close>Close</Close>
 		</action>
 	</PushSiteForm>
-	<StagingPushSiteWindow>
+	<PushSitePopupWindow>
 		<title>
 			<PushSiteForm>Push current site</PushSiteForm>
 		</title>
-	</StagingPushSiteWindow>
+	</PushSitePopupWindow>
 </bundle>

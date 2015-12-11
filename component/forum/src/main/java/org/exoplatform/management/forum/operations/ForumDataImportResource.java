@@ -71,8 +71,6 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     pollService = operationContext.getRuntimeContext().getRuntimeComponent(PollService.class);
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 
@@ -84,6 +82,8 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
 
     log.info("Importing Forums Data");
     InputStream attachmentInputStream = getAttachementInputStream(operationContext);
+
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       // extract data from zip
       Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
@@ -174,6 +174,7 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import forum contents", e);
     } finally {
+      restoreDefaultTransactionTimeOut(repositoryService);
       if (attachmentInputStream != null) {
         try {
           attachmentInputStream.close();

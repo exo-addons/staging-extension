@@ -57,8 +57,6 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     }
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     InputStream attachmentInputStream = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -73,6 +71,8 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
     OperationAttachment attachment = operationContext.getAttachment(false);
     attachmentInputStream = attachment.getStream();
     File tempFile = null;
+
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
       OutputStream fos = new FileOutputStream(tempFile);
@@ -95,6 +95,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing users.", e);
     } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
       if (tempFile != null && tempFile.exists()) {
         try {
           tempFile.delete();

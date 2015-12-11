@@ -41,18 +41,18 @@ public class BackupImportResource extends AbstractOperationHandler {
     String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
     PortalContainer portalContainer = getPortalContainer(portalContainerName);
 
-    try {
-      JobSchedulerService jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
-      PicketLinkIDMCacheService idmCacheService = (PicketLinkIDMCacheService) portalContainer.getComponentInstanceOfType(PicketLinkIDMCacheService.class);
-      CacheService cacheService = (CacheService) portalContainer.getComponentInstanceOfType(CacheService.class);
+    JobSchedulerService jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
+    PicketLinkIDMCacheService idmCacheService = (PicketLinkIDMCacheService) portalContainer.getComponentInstanceOfType(PicketLinkIDMCacheService.class);
+    CacheService cacheService = (CacheService) portalContainer.getComponentInstanceOfType(CacheService.class);
 
-      increaseCurrentTransactionTimeOut(portalContainer);
+    // Suspend Thread Schedulers
+    log.info("Suspend Jobs Scheduler Service");
+    jobSchedulerService.suspend();
+
+    increaseCurrentTransactionTimeOut(portalContainer);
+    try {
 
       File backupDirFile = BackupExportResource.getBackupDirectoryFile(attributes);
-
-      // Suspend Thread Schedulers
-      log.info("Suspend Jobs Scheduler Service");
-      jobSchedulerService.suspend();
 
       // Close transactions of current Thread
       endedServicesLifecycle = RequestLifeCycle.end();
@@ -82,11 +82,14 @@ public class BackupImportResource extends AbstractOperationHandler {
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to restore Data : " + e.getMessage(), e);
     } finally {
+      restoreInProgress = false;
+
+      restoreDefaultTransactionTimeOut(portalContainer);
+
       // Reopen transactions for current Thread
       if (endedServicesLifecycle != null && !endedServicesLifecycle.isEmpty()) {
         RequestLifeCycle.begin(portalContainer);
       }
-      restoreInProgress = false;
     }
   }
 
@@ -100,7 +103,9 @@ public class BackupImportResource extends AbstractOperationHandler {
         }
       }
     }
-    idmCacheService.invalidateAll();
+    if (idmCacheService != null) {
+      idmCacheService.invalidateAll();
+    }
   }
 
 }

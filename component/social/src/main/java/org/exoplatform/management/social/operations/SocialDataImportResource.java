@@ -97,8 +97,6 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     activitiesByPostTime.clear();
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 
@@ -130,6 +128,7 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
 
     File tmpZipFile = null;
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       // Copy attachement to local temporary File
       tmpZipFile = File.createTempFile("staging-social", ".zip");
@@ -196,6 +195,7 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     } catch (IOException e) {
       log.warn("Cannot create temporary file.", e);
     } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
       if (tmpZipFile != null) {
         String tempFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "");
         File tempFolderFile = new File(tempFolderPath);

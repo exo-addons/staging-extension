@@ -87,45 +87,48 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     String name = operationContext.getAttributes().getValue("filter");
 
-    String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
-    boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
+    increaseCurrentTransactionTimeOut(operationContext);
+    try {
+      String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
+      boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
 
-    List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+      List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
-    Category spaceCategory = forumService.getCategoryIncludedSpace();
-    String workspace = dataLocation.getWorkspace();
-    String categoryHomePath = dataLocation.getForumCategoriesLocation();
+      Category spaceCategory = forumService.getCategoryIncludedSpace();
+      String workspace = dataLocation.getWorkspace();
+      String categoryHomePath = dataLocation.getForumCategoriesLocation();
 
-    if (name == null || name.isEmpty()) {
-      log.info("Exporting all Forums of type: " + (isSpaceForumType ? "Spaces" : "Non Spaces"));
-      List<Category> categories = forumService.getCategories();
-      for (Category category : categories) {
-        if (spaceCategory != null && category.getId().equals(spaceCategory.getId())) {
-          continue;
-        }
-        exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
-      }
-    } else {
-      if (isSpaceForumType) {
-        if (spaceCategory != null) {
-          Space space = spaceService.getSpaceByDisplayName(name);
-          exportForum(exportTasks, workspace, categoryHomePath, spaceCategory.getId(), space.getPrettyName(), exportSpaceMetadata);
-        }
-      } else {
+      if (name == null || name.isEmpty()) {
+        log.info("Exporting all Forums of type: " + (isSpaceForumType ? "Spaces" : "Non Spaces"));
         List<Category> categories = forumService.getCategories();
         for (Category category : categories) {
-          if (!category.getCategoryName().equals(name)) {
+          if (spaceCategory != null && category.getId().equals(spaceCategory.getId())) {
             continue;
           }
           exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
         }
+      } else {
+        if (isSpaceForumType) {
+          if (spaceCategory != null) {
+            Space space = spaceService.getSpaceByDisplayName(name);
+            exportForum(exportTasks, workspace, categoryHomePath, spaceCategory.getId(), space.getPrettyName(), exportSpaceMetadata);
+          }
+        } else {
+          List<Category> categories = forumService.getCategories();
+          for (Category category : categories) {
+            if (!category.getCategoryName().equals(name)) {
+              continue;
+            }
+            exportForum(exportTasks, workspace, categoryHomePath, category.getId(), null, exportSpaceMetadata);
+          }
+        }
       }
+      resultHandler.completed(new ExportResourceModel(exportTasks));
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
-    resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
   @Override

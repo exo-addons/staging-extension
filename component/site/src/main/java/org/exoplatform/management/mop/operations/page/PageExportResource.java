@@ -50,52 +50,54 @@ import org.gatein.mop.api.workspace.Page;
  * @version $Revision$
  */
 public class PageExportResource extends AbstractPageOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Page pages)
-            throws ResourceNotFoundException, OperationException {
-        SiteKey siteKey = getSiteKey(pages.getSite());
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Page pages) throws ResourceNotFoundException, OperationException {
+    SiteKey siteKey = getSiteKey(pages.getSite());
 
-        increaseCurrentTransactionTimeOut(operationContext);
+    increaseCurrentTransactionTimeOut(operationContext);
+    try {
+      DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
+      PageService pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
+      BindingProvider bindingProvider = operationContext.getBindingProvider();
 
-        DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-        PageService pageService = operationContext.getRuntimeContext().getRuntimeComponent(PageService.class);
-        BindingProvider bindingProvider = operationContext.getBindingProvider();
+      Collection<Page> pagesList = pages.getChildren();
+      List<ExportTask> tasks = new ArrayList<ExportTask>(pagesList.size());
 
-        Collection<Page> pagesList = pages.getChildren();
-        List<ExportTask> tasks = new ArrayList<ExportTask>(pagesList.size());
+      PageExportTask pageExportTask = new PageExportTask(siteKey, dataStorage, pageService, bindingProvider.getMarshaller(org.exoplatform.portal.config.model.Page.PageSet.class, ContentType.XML));
 
-        PageExportTask pageExportTask = new PageExportTask(siteKey, dataStorage, pageService, bindingProvider.getMarshaller(
-                org.exoplatform.portal.config.model.Page.PageSet.class, ContentType.XML));
+      String pageName = operationContext.getAddress().resolvePathTemplate("page-name");
+      for (Page page : pagesList) {
+        if (pageName == null) {
+          PathAddress pageAddress = operationContext.getAddress().append(page.getName());
+          // We need to look up the subresource because this sets the
+          // path template resolver to be used by the filter.
+          operationContext.getManagedResource().getSubResource(pageAddress);
 
-        String pageName = operationContext.getAddress().resolvePathTemplate("page-name");
-        for (Page page : pagesList) {
-            if (pageName == null) {
-                PathAddress pageAddress = operationContext.getAddress().append(page.getName());
-                // We need to look up the subresource because this sets the path template resolver to be used by the filter.
-                operationContext.getManagedResource().getSubResource(pageAddress);
+          PathTemplateFilter filter;
+          try {
+            filter = PathTemplateFilter.parse(operationContext.getAttributes().getValues("filter"));
+          } catch (ParseException e) {
+            throw new OperationException(operationContext.getOperationName(), "Could not parse filter attributes.", e);
+          }
 
-                PathTemplateFilter filter;
-                try {
-                    filter = PathTemplateFilter.parse(operationContext.getAttributes().getValues("filter"));
-                } catch (ParseException e) {
-                    throw new OperationException(operationContext.getOperationName(), "Could not parse filter attributes.", e);
-                }
-
-                if (pageAddress.accepts(filter)) {
-                    pageExportTask.addPageName(page.getName());
-                }
-            } else if (pageName.equals(page.getName())) {
-                pageExportTask.addPageName(page.getName());
-            }
+          if (pageAddress.accepts(filter)) {
+            pageExportTask.addPageName(page.getName());
+          }
+        } else if (pageName.equals(page.getName())) {
+          pageExportTask.addPageName(page.getName());
         }
+      }
 
-        if (pageExportTask.getPageNames().isEmpty() && pageName != null) {
-            throw new ResourceNotFoundException("No page found for " + new PageKey(siteKey, pageName));
-        } else if (pageExportTask.getPageNames().isEmpty()) {
-            resultHandler.completed(new ExportResourceModel(Collections.<ExportTask> emptyList()));
-        } else {
-            tasks.add(pageExportTask);
-            resultHandler.completed(new ExportResourceModel(tasks));
-        }
+      if (pageExportTask.getPageNames().isEmpty() && pageName != null) {
+        throw new ResourceNotFoundException("No page found for " + new PageKey(siteKey, pageName));
+      } else if (pageExportTask.getPageNames().isEmpty()) {
+        resultHandler.completed(new ExportResourceModel(Collections.<ExportTask> emptyList()));
+      } else {
+        tasks.add(pageExportTask);
+        resultHandler.completed(new ExportResourceModel(tasks));
+      }
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
+  }
 }

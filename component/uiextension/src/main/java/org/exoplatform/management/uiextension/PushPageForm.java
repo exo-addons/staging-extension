@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 
+import org.exoplatform.container.ExoContainerContext;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.container.component.RequestLifeCycle;
 import org.exoplatform.management.service.api.Resource;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
@@ -45,6 +48,10 @@ import org.exoplatform.webui.form.UIFormSelectBox;
     listeners = PushPageForm.PushActionListener.class) })
 public class PushPageForm extends UIForm {
   private static final Log LOG = ExoLogger.getLogger(PushPageForm.class.getName());
+
+  protected boolean synchronizationStarted = false;
+  protected boolean synchronizationFinished = true;
+  protected Throwable synchronizationError = null;
 
   protected static MOPSiteHandler SITE_HANDLER = (MOPSiteHandler) ResourceHandlerLocator.getResourceHandler(StagingService.SITES_PARENT_PATH);;
 
@@ -94,6 +101,10 @@ public class PushPageForm extends UIForm {
     this.synchronizationService = synchronizationService;
   }
 
+  public boolean isSynchronizationStarted() {
+    return synchronizationStarted;
+  }
+
   private static void closePopup(Event<PushPageForm> event) {
     PushPageForm pushPageForm = event.getSource();
     UIPopupContainer popupContainer = pushPageForm.getAncestorOfType(UIPopupContainer.class);
@@ -110,37 +121,76 @@ public class PushPageForm extends UIForm {
 
   static public class PushActionListener extends EventListener<PushPageForm> {
     public void execute(Event<PushPageForm> event) throws Exception {
-      PushPageForm pushPageForm = event.getSource();
+      final PushPageForm pushPageForm = event.getSource();
       ResourceBundle resourceBundle = pushPageForm.getResourceBundle();
 
       pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
       try {
         // get target server
-        TargetServer targetServer = getTargetServer(pushPageForm);
+        final TargetServer targetServer = getTargetServer(pushPageForm);
         if (targetServer == null) {
           pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushPage.msg.targetServerMandatory"));
           return;
         }
+        pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushPage.msg.synchronizationInProgress"));
 
-        // Synchronize Page
-        synchronizePage(targetServer);
-        LOG.info("Synchronization of page '" + Util.getUIPortal().getSelectedUserNode().getResolvedLabel() + "' is done.");
+        if (pushPageForm.synchronizationFinished && !pushPageForm.synchronizationStarted) {
+          pushPageForm.synchronizationStarted = true;
+          pushPageForm.synchronizationFinished = false;
 
-        // Update UI
-        Utils.createPopupMessage(pushPageForm, "PushPage.msg.synchronizationDone", null, ApplicationMessage.INFO);
-        closePopup(event);
-      } catch (Exception ex) {
-        if (isConnectionException(ex)) {
-          pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushPage.msg.unableToConnect"));
+          final UserNode userNode = Util.getUIPortal().getSelectedUserNode();
+          Thread synchronizeThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+              // Make sure that current container is of type
+              // "PortalContainer"
+              ExoContainerContext.setCurrentContainer(PortalContainer.getInstance());
+
+              // Use "PortalContainer" in current transaction
+              RequestLifeCycle.begin(ExoContainerContext.getCurrentContainer());
+              try {
+                // Synchronize Page
+                synchronizePage(userNode, targetServer);
+                LOG.info("Synchronization of page '" + userNode.getLabel() + "' is done.");
+
+              } catch (Exception e) {
+                pushPageForm.synchronizationError = e;
+              } finally {
+                pushPageForm.synchronizationFinished = true;
+                RequestLifeCycle.end();
+              }
+            }
+          });
+          synchronizeThread.start();
         } else {
-          pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushPage.msg.synchronizationError"));
+          if (pushPageForm.synchronizationStarted) {
+            if (pushPageForm.synchronizationFinished) {
+              if (pushPageForm.synchronizationError == null) {
+                pushPageForm.synchronizationStarted = false;
+                // Update UI
+                Utils.createPopupMessage(pushPageForm, "PushNavigation.msg.synchronizationDone", null, ApplicationMessage.INFO);
+                closePopup(event);
+              } else {
+                Throwable tempException = pushPageForm.synchronizationError;
+                pushPageForm.synchronizationStarted = false;
+                pushPageForm.synchronizationError = null;
+                throw tempException;
+              }
+            }
+          }
         }
+      } catch (Throwable ex) {
+        if (isConnectionException(ex)) {
+          Utils.createPopupMessage(pushPageForm, "PushPage.msg.unableToConnect", null, ApplicationMessage.ERROR);
+        } else {
+          Utils.createPopupMessage(pushPageForm, "PushPage.msg.synchronizationError", null, ApplicationMessage.ERROR);
+        }
+        closePopup(event);
         LOG.error("Synchronization of page '" + Util.getUIPortal().getSelectedUserNode().getResolvedLabel() + "' failed:", ex);
       }
     }
 
-    private void synchronizePage(TargetServer targetServer) throws Exception {
-      UserNode userNode = Util.getUIPortal().getSelectedUserNode();
+    private void synchronizePage(UserNode userNode, TargetServer targetServer) throws Exception {
       String navuri = userNode.getURI();
       String pageName = userNode.getPageRef().getName();
       String siteType = userNode.getPageRef().getSite().getType().getName();
@@ -179,7 +229,7 @@ public class PushPageForm extends UIForm {
      * @param ex
      * @return
      */
-    private static boolean isConnectionException(Exception ex) {
+    private static boolean isConnectionException(Throwable ex) {
       boolean connectionException = false;
       Throwable throwable = ex;
       do {

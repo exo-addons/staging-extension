@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundle>
-	<PushPage>
+	<PushNavigation>
 		<msg>
 			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
 			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
 			<synchronizationInProgress>Synchronisation en cours ...</synchronizationInProgress>
+			<groupSiteSynchronization>Attention: le site courant est un site de groupe. Veuillez vérifier que c'est bien le site que vous voulez synchroniser.</groupSiteSynchronization>
 		</msg>
-		<action>Synchroniser</action>
-	</PushPage>
-	<PushPageForm>
+		<action>Synchroniser la navigation</action>
+	</PushNavigation>
+	<PushNavigationForm>
 		<label>
 			<targetServer>Serveur</targetServer>
+			<siteName>Site</siteName>
 		</label>
 		<action>
 			<Push>Synchroniser</Push>
 			<Close>Fermer</Close>
 		</action>
-	</PushPageForm>
-	<PushPagePopupWindow>
+	</PushNavigationForm>
+	<PushNavigationPopupWindow>
 		<title>
-			<PushPageForm>Synchroniser la page courante</PushPageForm>
+			<PushNavigationForm>Synchroniser la Navigation du site courant</PushNavigationForm>
 		</title>
-	</PushPagePopupWindow>
+	</PushNavigationPopupWindow>
 </bundle>

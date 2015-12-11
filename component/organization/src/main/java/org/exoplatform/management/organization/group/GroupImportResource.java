@@ -54,8 +54,6 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     }
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 
@@ -66,6 +64,8 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     OperationAttachment attachment = operationContext.getAttachment(false);
     InputStream attachmentInputStream = attachment.getStream();
     File tempFile = null;
+
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       tempFile = File.createTempFile("ImportOperationAttachment", ".zip");
       OutputStream fos = new FileOutputStream(tempFile);
@@ -85,6 +85,7 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading group from Stream.", e);
     } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
       if (tempFile != null && tempFile.exists()) {
         try {
           tempFile.delete();

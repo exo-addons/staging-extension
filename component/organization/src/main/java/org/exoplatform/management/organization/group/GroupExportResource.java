@@ -46,6 +46,7 @@ public class GroupExportResource extends AbstractJCRExportOperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       if (organizationService == null) {
         organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
@@ -55,8 +56,6 @@ public class GroupExportResource extends AbstractJCRExportOperationHandler {
         dataDistributionType = dataDistributionManager.getDataDistributionType(DataDistributionMode.NONE);
         groupsPath = hierarchyCreator.getJcrPath(OrganizationManagementExtension.GROUPS_PATH);
       }
-
-      increaseCurrentTransactionTimeOut(operationContext);
 
       PathAddress address = operationContext.getAddress();
       String groupId = address.resolvePathTemplate("group-name");
@@ -93,6 +92,8 @@ public class GroupExportResource extends AbstractJCRExportOperationHandler {
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export Group : ", e);
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

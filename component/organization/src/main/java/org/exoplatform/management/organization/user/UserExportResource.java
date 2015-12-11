@@ -38,14 +38,14 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       if (organizationService == null) {
         organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
         repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
         hierarchyCreator = operationContext.getRuntimeContext().getRuntimeComponent(NodeHierarchyCreator.class);
       }
-
-      increaseCurrentTransactionTimeOut(operationContext);
 
       PathAddress address = operationContext.getAddress();
       String userName = address.resolvePathTemplate("user-name");
@@ -94,6 +94,8 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export User : " + e.getMessage());
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

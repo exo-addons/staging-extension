@@ -34,11 +34,18 @@ public class BackupExportResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
-    try {
-      OperationAttributes attributes = operationContext.getAttributes();
-      String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
-      PortalContainer portalContainer = getPortalContainer(portalContainerName);
+    String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
+    PortalContainer portalContainer = getPortalContainer(portalContainerName);
 
+    increaseCurrentTransactionTimeOut(portalContainer);
+
+    // Suspend Thread Schedulers
+    jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
+    jobSchedulerService.suspend();
+    
+    OperationAttributes attributes = operationContext.getAttributes();
+
+    try {
       String exportJCRString = attributes.getValue("export-jcr");
       String exportIDMString = attributes.getValue("export-idm");
 
@@ -48,13 +55,6 @@ public class BackupExportResource extends AbstractOperationHandler {
       if (!exportIDM && !exportJCR) {
         throw new OperationException(OperationNames.EXPORT_RESOURCE, "You have to choose IDM, JCR or both datas to backup.");
       }
-
-      increaseCurrentTransactionTimeOut(portalContainer);
-
-      jobSchedulerService = (JobSchedulerService) portalContainer.getComponentInstanceOfType(JobSchedulerService.class);
-
-      // Suspend Thread Schedulers
-      jobSchedulerService.suspend();
 
       File backupDirFile = getBackupDirectoryFile(attributes);
 
@@ -78,6 +78,7 @@ public class BackupExportResource extends AbstractOperationHandler {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to backup Data : " + e.getMessage(), e);
     } finally {
       jobSchedulerService.resume();
+      restoreDefaultTransactionTimeOut(portalContainer);
     }
   }
 

@@ -100,9 +100,6 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
 
-    // Increase current transaction timeout
-    increaseCurrentTransactionTimeOut(operationContext);
-
     // TODO For Space Dashboard export/import
     // dataStorage =
     // operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
@@ -121,6 +118,9 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     String spaceDisplayName = operationContext.getAddress().resolvePathTemplate("space-name");
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
+
+    // Increase current transaction timeout
+    increaseCurrentTransactionTimeOut(operationContext);
 
     try {
       Space space = spaceService.getSpaceByDisplayName(spaceDisplayName);
@@ -183,6 +183,8 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
       exportSpaceActivities(exportTasks, space, spaceIdentity);
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Can't export Space", e);
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }

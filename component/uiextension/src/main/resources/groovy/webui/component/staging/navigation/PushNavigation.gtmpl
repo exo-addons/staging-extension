@@ -1,25 +1,25 @@
-<% import org.exoplatform.management.uiextension.PushSiteForm;%>
+<% import org.exoplatform.management.uiextension.PushNavigationForm;%>
 <script>
 	<% for(action in uicomponent.getActions()) {
 		 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action)
 		 String link = uicomponent.event(action);
 		 link = link.substring(link.indexOf(":") + 1);
 	%>
-		 function execute<%=action%>Site() {
+		 function execute<%=action%>Nav() {
 		 		if(typeof eXo.webui.UIForm  != 'undefined') {
 					$link;
 		 		}
 				<% if(action.equals("Push")) {%>
-					window.setTimeout(execute<%=action%>Site, 2000);
+					window.setTimeout(execute<%=action%>Nav, 2000);
 				<% } %>
 		 }
 	<% } %>
 	<% if(uicomponent.isSynchronizationStarted()) { %>
-		if(typeof executePushSiteStarted == 'undefined') {
-	 		executePushSite();
+		if(typeof executePushNavStarted == 'undefined') {
+	 		executePushNav();
 		}
 	<% } %>
-	executePushSiteStarted = "started";
+	executePushNavStarted = "started";
 </script>
 <div class="uiForm $uicomponent.id">
 	<% uiform.begin() %>
@@ -29,7 +29,7 @@
 					if(field.isRendered()) {
 			%>
             <div class="control-group">
-              <% if(PushSiteForm.INFO_FIELD_NAME.equals(field.getName())) {
+              <% if(PushNavigationForm.INFO_FIELD_NAME.equals(field.getName())) {
                    if(field.getValue() != null && !field.getValue().isEmpty()) { %>
                     <div class="alert alert-info"><%=field.getValue()%></div>
               <% }
@@ -51,7 +51,7 @@
 			<% for(action in uicomponent.getActions()) {
 				 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action);
 			%>   
-				 <button type="button" onclick="execute<%=action%>Site()" class="btn"  href="javascript:void(0);">$actionLabel</button>
+				 <button type="button" onclick="execute<%=action%>Nav()" class="btn"  href="javascript:void(0);">$actionLabel</button>
 			<% } %>
 		</div>
 	<%uiform.end()%>

@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundle>
-	<PushPage>
+	<PushNavigation>
 		<msg>
 			<unableToConnect>Unable to connect to server</unableToConnect>
 			<synchronizationError>An error occurred while synchronizing content</synchronizationError>
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>
 			<synchronizationInProgress>Synchronization in progress ...</synchronizationInProgress>
+			<groupSiteSynchronization>Warning: you are about to synchronize a group site.</groupSiteSynchronization>
 		</msg>
-		<action>Push</action>
-	</PushPage>
-	<PushPageForm>
+		<action>Push navigation</action>
+	</PushNavigation>
+	<PushNavigationForm>
 		<label>
 			<targetServer>Target Server</targetServer>
+			<siteName>Site name</siteName>
 		</label>
 		<action>
 			<Push>Push</Push>
 			<Close>Close</Close>
 		</action>
-	</PushPageForm>
-	<PushPagePopupWindow>
+	</PushNavigationForm>
+	<PushNavigationPopupWindow>
 		<title>
-			<PushPageForm>Push current page</PushPageForm>
+			<PushNavigationForm>Push Navigation of current site</PushNavigationForm>
 		</title>
-	</PushPagePopupWindow>
+	</PushNavigationPopupWindow>
 </bundle>

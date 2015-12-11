@@ -18,6 +18,7 @@
 			<userNameMandatory>Le nom de l'utilisateur est obligatoire</userNameMandatory>
 			<passwordMandatory>Le mot de passe est obligatoire</passwordMandatory>
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
+			<synchronizationInProgress>Synchronisation en cours ...</synchronizationInProgress>
 		</msg>
 		<state>
 			<not_found_source>Créé (sur la cible)</not_found_source>

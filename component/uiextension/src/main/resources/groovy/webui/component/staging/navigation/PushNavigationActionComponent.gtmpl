@@ -1,0 +1,12 @@
+<script type="text/javascript">
+  require(["SHARED/uiForm"]);
+  function openPushNavigationForm(event) {
+    var evt = event || window.event;
+    var mouse_cordinate = evt.clientY + "," + evt.clientX;
+    var command = "<%=uicomponent.event("PushNavigation","str")%>";
+    command.replace('str', mouse_cordinate);
+    eval(command);
+  }
+</script>
+<% def onclickURL = "openPushNavigationForm(event)"; %>
+<a href="javascript:void(0);" onclick="<%=onclickURL%>"><%=_ctx.appRes("PushNavigation.action")%></a>

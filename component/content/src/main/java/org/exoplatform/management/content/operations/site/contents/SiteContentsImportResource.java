@@ -78,7 +78,6 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     publicationService = operationContext.getRuntimeContext().getRuntimeComponent(PublicationService.class);
     wcmPublicationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMPublicationService.class);
 
-    increaseCurrentTransactionTimeOut(operationContext);
 
     if (importedSiteName == null) {
       importedSiteName = operationContext.getAddress().resolvePathTemplate("site-name");
@@ -89,6 +88,8 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
 
     boolean errors = false;
     InputStream attachmentInputStream = null;
+
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       if (filePath != null) {
         attachmentInputStream = new FileInputStream(filePath);
@@ -154,6 +155,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import Site contents.", e);
     } finally {
+      restoreDefaultTransactionTimeOut(repositoryService);
       if (attachmentInputStream != null) {
         try {
           attachmentInputStream.close();

@@ -68,8 +68,6 @@ public class GadgetImportResource extends AbstractOperationHandler {
       }
     }
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 
@@ -106,6 +104,7 @@ public class GadgetImportResource extends AbstractOperationHandler {
     final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
     ZipEntry entry;
     Session session = null;
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       session = AbstractOperationHandler.getSession(repositoryService, workspaceName);
       while ((entry = zis.getNextEntry()) != null) {
@@ -145,6 +144,7 @@ public class GadgetImportResource extends AbstractOperationHandler {
     } catch (Exception e) {
       throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
     } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
       if (session != null && session.isLive()) {
         session.logout();
       }

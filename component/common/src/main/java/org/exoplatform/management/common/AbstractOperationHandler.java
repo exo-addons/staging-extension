@@ -51,6 +51,8 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   protected static final int ONE_DAY_IN_SECONDS = 86400;
   protected static final long ONE_DAY_IN_MS = 86400000L;
 
+  protected static Long defaultJCRSessionTimeout = null;
+
   protected RepositoryService repositoryService = null;
   protected IdentityStorage identityStorage = null;
   protected SpaceService spaceService = null;
@@ -61,11 +63,25 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   public static void increaseCurrentTransactionTimeOut(OperationContext operationContext) {
     TransactionService transactionService = operationContext.getRuntimeContext().getRuntimeComponent(TransactionService.class);
     increaseCurrentTransactionTimeOut(transactionService);
+    RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    increaseCurrentTransactionTimeOut(repositoryService);
   }
 
   public static void increaseCurrentTransactionTimeOut(PortalContainer portalContainer) {
     TransactionService transactionService = (TransactionService) portalContainer.getComponentInstanceOfType(TransactionService.class);
     increaseCurrentTransactionTimeOut(transactionService);
+    RepositoryService repositoryService = (RepositoryService) portalContainer.getComponentInstanceOfType(RepositoryService.class);
+    increaseCurrentTransactionTimeOut(repositoryService);
+  }
+
+  public void restoreDefaultTransactionTimeOut(OperationContext operationContext) {
+    RepositoryService repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    restoreDefaultTransactionTimeOut(repositoryService);
+  }
+
+  public void restoreDefaultTransactionTimeOut(PortalContainer portalContainer) {
+    RepositoryService repositoryService = (RepositoryService) portalContainer.getComponentInstanceOfType(RepositoryService.class);
+    restoreDefaultTransactionTimeOut(repositoryService);
   }
 
   public static void increaseCurrentTransactionTimeOut(TransactionService transactionService) {
@@ -73,6 +89,30 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       transactionService.setTransactionTimeout(86400);
     } catch (SystemException e1) {
       log.warn("Cannot Change Transaction timeout");
+    }
+  }
+
+  public static void increaseCurrentTransactionTimeOut(RepositoryService repositoryService) {
+    try {
+      ManageableRepository repo = repositoryService.getCurrentRepository();
+      if (defaultJCRSessionTimeout == null) {
+        defaultJCRSessionTimeout = repo.getConfiguration().getSessionTimeOut();
+      }
+      repo.getConfiguration().setSessionTimeOut(ONE_DAY_IN_MS);
+    } catch (Exception e) {
+      log.warn("Cannot Change JCR Session timeout", e);
+    }
+  }
+
+  public void restoreDefaultTransactionTimeOut(RepositoryService repositoryService) {
+    if (defaultJCRSessionTimeout == null) {
+      return;
+    }
+    try {
+      ManageableRepository repo = repositoryService.getCurrentRepository();
+      repo.getConfiguration().setSessionTimeOut(defaultJCRSessionTimeout);
+    } catch (Exception e) {
+      log.warn("Cannot Change JCR Session timeout", e);
     }
   }
 

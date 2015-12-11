@@ -66,8 +66,6 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
 
@@ -79,6 +77,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
 
     InputStream attachmentInputStream = getAttachementInputStream(operationContext);
 
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       // extract data from zip
       Map<String, List<FileEntry>> contentsByOwner = extractDataFromZip(attachmentInputStream);
@@ -132,6 +131,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Unable to import wiki content of type: " + wikiType, e);
     } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
       if (attachmentInputStream != null) {
         try {
           attachmentInputStream.close();

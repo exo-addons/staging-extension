@@ -17,6 +17,8 @@ import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
 import org.exoplatform.management.service.handler.mop.MOPSiteHandler;
+import org.exoplatform.portal.mop.SiteType;
+import org.exoplatform.portal.mop.importer.ImportMode;
 import org.exoplatform.portal.mop.user.UserNode;
 import org.exoplatform.portal.webui.util.Util;
 import org.exoplatform.services.log.ExoLogger;
@@ -34,42 +36,45 @@ import org.exoplatform.webui.event.EventListener;
 import org.exoplatform.webui.form.UIForm;
 import org.exoplatform.webui.form.UIFormInputInfo;
 import org.exoplatform.webui.form.UIFormSelectBox;
+import org.exoplatform.webui.form.UIFormStringInput;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 
-@ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/staging/site/PushSite.gtmpl",
-  events = { @EventConfig(
-    listeners = PushSiteForm.CloseActionListener.class), @EventConfig(
-    listeners = PushSiteForm.PushActionListener.class) })
-public class PushSiteForm extends UIForm {
-  private static final Log LOG = ExoLogger.getLogger(PushSiteForm.class.getName());
+@ComponentConfig(lifecycle = UIFormLifecycle.class, template = "classpath:groovy/webui/component/staging/navigation/PushNavigation.gtmpl", events = {
+    @EventConfig(listeners = PushNavigationForm.CloseActionListener.class), @EventConfig(listeners = PushNavigationForm.PushActionListener.class) })
+public class PushNavigationForm extends UIForm {
+  private static final Log LOG = ExoLogger.getLogger(PushNavigationForm.class.getName());
+
+  protected static MOPSiteHandler SITE_HANDLER = (MOPSiteHandler) ResourceHandlerLocator.getResourceHandler(StagingService.SITES_PARENT_PATH);;
 
   protected boolean synchronizationStarted = false;
   protected boolean synchronizationFinished = true;
   protected Throwable synchronizationError = null;
 
-  protected static MOPSiteHandler SITE_HANDLER = (MOPSiteHandler) ResourceHandlerLocator.getResourceHandler(StagingService.SITES_PARENT_PATH);;
-
-  public static final String POPUP_WINDOW = "PushSitePopupWindow";
+  public static final String POPUP_WINDOW = "PushNavigationPopupWindow";
 
   private static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
 
   private static final String INFO_FIELD_NAME = "info";
 
+  private static final String SITE_FIELD_NAME = "siteName";
+
   private SynchronizationService synchronizationService;
 
   private List<TargetServer> targetServers;
 
-  public PushSiteForm() throws Exception {
+  public PushNavigationForm() throws Exception {
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
+    UIFormStringInput siteNameInput = new UIFormStringInput(SITE_FIELD_NAME, SITE_FIELD_NAME, "");
+    siteNameInput.setDisabled(true);
+    addUIFormInput(siteNameInput);
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
   }
 
+  @SuppressWarnings("unchecked")
   public void init() throws Exception {
     List<SelectItemOption<String>> itemOptions = getChild(UIFormSelectBox.class).getOptions();
     itemOptions.clear();
@@ -82,6 +87,21 @@ public class PushSiteForm extends UIForm {
     for (TargetServer targetServer : targetServers) {
       SelectItemOption<String> selectItemOption = new SelectItemOption<String>(targetServer.getName(), targetServer.getId());
       itemOptions.add(selectItemOption);
+    }
+    String siteName = Util.getUIPortal().getSiteKey().getName();
+    getUIInput(SITE_FIELD_NAME).setValue(siteName);
+    if (Util.getUIPortal().getSiteKey().getType().equals(SiteType.GROUP)) {
+      getUIFormInputInfo(INFO_FIELD_NAME).setValue(resolveLabel("PushNavigation.msg.groupSiteSynchronization"));
+    }
+  }
+
+  public String resolveLabel(String label) throws Exception {
+    WebuiRequestContext context = WebuiRequestContext.getCurrentInstance();
+    ResourceBundle res = context.getApplicationResourceBundle();
+    try {
+      return res.getString(label);
+    } catch (Exception e) {
+      return label;
     }
   }
 
@@ -105,38 +125,38 @@ public class PushSiteForm extends UIForm {
     return synchronizationStarted;
   }
 
-  private static void closePopup(PushSiteForm pushSiteForm, WebuiRequestContext context) {
-    UIPopupContainer popupContainer = pushSiteForm.getAncestorOfType(UIPopupContainer.class);
+  private static void closePopup(Event<PushNavigationForm> event) {
+    PushNavigationForm pushNavigationForm = event.getSource();
+    UIPopupContainer popupContainer = pushNavigationForm.getAncestorOfType(UIPopupContainer.class);
     if (popupContainer != null)
       popupContainer.removeChildById(POPUP_WINDOW);
-    context.addUIComponentToUpdateByAjax(popupContainer);
+    event.getRequestContext().addUIComponentToUpdateByAjax(popupContainer);
   }
 
-  static public class CloseActionListener extends EventListener<PushSiteForm> {
-    public void execute(Event<PushSiteForm> event) throws Exception {
-      closePopup(event.getSource(), event.getRequestContext());
+  static public class CloseActionListener extends EventListener<PushNavigationForm> {
+    public void execute(Event<PushNavigationForm> event) throws Exception {
+      closePopup(event);
     }
   }
 
-  static public class PushActionListener extends EventListener<PushSiteForm> {
-    public void execute(Event<PushSiteForm> event) throws Exception {
-      final PushSiteForm pushSiteForm = event.getSource();
-      ResourceBundle resourceBundle = pushSiteForm.getResourceBundle();
+  static public class PushActionListener extends EventListener<PushNavigationForm> {
+    public void execute(Event<PushNavigationForm> event) throws Exception {
+      final PushNavigationForm pushNavigationForm = event.getSource();
+      ResourceBundle resourceBundle = pushNavigationForm.getResourceBundle();
 
-      pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+      pushNavigationForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
       try {
         // get target server
-        final TargetServer targetServer = getTargetServer(pushSiteForm);
+        final TargetServer targetServer = getTargetServer(pushNavigationForm);
         if (targetServer == null) {
-          pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.targetServerMandatory"));
+          pushNavigationForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.targetServerMandatory"));
           return;
         }
+        pushNavigationForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"));
 
-        pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.synchronizationInProgress"));
-
-        if (pushSiteForm.synchronizationFinished && !pushSiteForm.synchronizationStarted) {
-          pushSiteForm.synchronizationStarted = true;
-          pushSiteForm.synchronizationFinished = false;
+        if (pushNavigationForm.synchronizationFinished && !pushNavigationForm.synchronizationStarted) {
+          pushNavigationForm.synchronizationStarted = true;
+          pushNavigationForm.synchronizationFinished = false;
 
           final UserNode userNode = Util.getUIPortal().getSelectedUserNode();
           Thread synchronizeThread = new Thread(new Runnable() {
@@ -149,30 +169,30 @@ public class PushSiteForm extends UIForm {
               // Use "PortalContainer" in current transaction
               RequestLifeCycle.begin(ExoContainerContext.getCurrentContainer());
               try {
-                // Synchronize Site
-                synchronizeSite(userNode, targetServer);
-                LOG.info("Synchronization of site '" + userNode.getPageRef().getSite().getName() + "' is done.");
+                // Synchronize Navigation
+                synchronizeNavigation(userNode, targetServer);
+                LOG.info("Synchronization of Navigation done.");
               } catch (Exception e) {
-                pushSiteForm.synchronizationError = e;
+                pushNavigationForm.synchronizationError = e;
               } finally {
-                pushSiteForm.synchronizationFinished = true;
+                pushNavigationForm.synchronizationFinished = true;
                 RequestLifeCycle.end();
               }
             }
           });
           synchronizeThread.start();
         } else {
-          if (pushSiteForm.synchronizationStarted) {
-            if (pushSiteForm.synchronizationFinished) {
-              if (pushSiteForm.synchronizationError == null) {
-                pushSiteForm.synchronizationStarted = false;
+          if (pushNavigationForm.synchronizationStarted) {
+            if (pushNavigationForm.synchronizationFinished) {
+              if (pushNavigationForm.synchronizationError == null) {
+                pushNavigationForm.synchronizationStarted = false;
                 // Update UI
-                Utils.createPopupMessage(pushSiteForm, "PushSite.msg.synchronizationDone", null, ApplicationMessage.INFO);
-                closePopup(event.getSource(), event.getRequestContext());
+                Utils.createPopupMessage(pushNavigationForm, "PushNavigation.msg.synchronizationDone", null, ApplicationMessage.INFO);
+                closePopup(event);
               } else {
-                Throwable tempException = pushSiteForm.synchronizationError;
-                pushSiteForm.synchronizationError = null;
-                pushSiteForm.synchronizationStarted = false;
+                Throwable tempException = pushNavigationForm.synchronizationError;
+                pushNavigationForm.synchronizationStarted = false;
+                pushNavigationForm.synchronizationError = null;
                 throw tempException;
               }
             }
@@ -180,32 +200,34 @@ public class PushSiteForm extends UIForm {
         }
       } catch (Throwable ex) {
         if (isConnectionException(ex)) {
-          Utils.createPopupMessage(pushSiteForm, "PushSite.msg.unableToConnect", null, ApplicationMessage.ERROR);
+          Utils.createPopupMessage(pushNavigationForm, "PushNavigation.msg.unableToConnect", null, ApplicationMessage.ERROR);
         } else {
-          Utils.createPopupMessage(pushSiteForm, "PushSite.msg.synchronizationError", null, ApplicationMessage.ERROR);
+          Utils.createPopupMessage(pushNavigationForm, "PushNavigation.msg.synchronizationError", null, ApplicationMessage.ERROR);
         }
-        closePopup(event.getSource(), event.getRequestContext());
-        LOG.error("Synchronization of site '" + Util.getUIPortal().getLabel() + "' failed:", ex);
+        closePopup(event);
+        LOG.error("Synchronization of Navigation '" + Util.getUIPortal().getSelectedUserNode().getResolvedLabel() + "' failed:", ex);
       }
     }
 
-    private void synchronizeSite(UserNode userNode, TargetServer targetServer) throws Exception {
+    private void synchronizeNavigation(UserNode userNode, TargetServer targetServer) throws Exception {
       String siteType = userNode.getPageRef().getSite().getType().getName();
       String siteName = userNode.getPageRef().getSite().getName();
 
       List<Resource> resources = new ArrayList<Resource>();
       Map<String, String> exportOptions = new HashMap<String, String>();
       Map<String, String> importOptions = new HashMap<String, String>();
+      importOptions.put("importMode", ImportMode.OVERWRITE.name());
 
-      // Synchronize site
-      resources.add(new Resource("/site/" + siteType + "sites/" + siteName, "Site", "Site"));
+      // Synchronize navigation
+      resources.clear();
+      resources.add(new Resource("/site/" + siteType + "sites/" + siteName + "/navigation", "Navigation", "Navigation"));
       SITE_HANDLER.synchronize(resources, exportOptions, importOptions, targetServer);
     }
 
-    private TargetServer getTargetServer(PushSiteForm pushSiteForm) {
+    private TargetServer getTargetServer(PushNavigationForm pushNavigationForm) {
       TargetServer targetServer = null;
-      String targetServerId = pushSiteForm.getUIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME).getValue();
-      Iterator<TargetServer> iterator = pushSiteForm.getTargetServers().iterator();
+      String targetServerId = pushNavigationForm.getUIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME).getValue();
+      Iterator<TargetServer> iterator = pushNavigationForm.getTargetServers().iterator();
       while (iterator.hasNext() && targetServer == null) {
         TargetServer itTargetServer = iterator.next();
         if (itTargetServer.getId().equals(targetServerId)) {

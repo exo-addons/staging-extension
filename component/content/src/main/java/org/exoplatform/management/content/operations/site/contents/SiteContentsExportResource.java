@@ -54,6 +54,7 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       String operationName = operationContext.getOperationName();
       PathAddress address = operationContext.getAddress();
@@ -69,8 +70,6 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
       activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
-
-      increaseCurrentTransactionTimeOut(operationContext);
 
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
       List<String> excludePaths = attributes.getValues("excludePaths");
@@ -125,6 +124,8 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to export site contents, cause : " + e.getMessage(), e);
+    } finally {
+      restoreDefaultTransactionTimeOut(operationContext);
     }
   }
 

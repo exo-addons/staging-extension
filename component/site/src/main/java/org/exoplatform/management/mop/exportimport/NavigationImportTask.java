@@ -34,7 +34,6 @@ import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.description.DescriptionService;
 import org.exoplatform.portal.mop.importer.ImportMode;
-import org.exoplatform.portal.mop.importer.NavigationImporter;
 import org.exoplatform.portal.mop.navigation.NavigationContext;
 import org.exoplatform.portal.mop.navigation.NavigationService;
 import org.exoplatform.portal.mop.navigation.NodeChangeListener;

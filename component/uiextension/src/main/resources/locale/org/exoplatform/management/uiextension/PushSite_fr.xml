@@ -6,6 +6,7 @@
 			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
+			<synchronizationInProgress>Synchronisation en cours ...</synchronizationInProgress>
 		</msg>
 		<action>Synchroniser</action>
 	</PushSite>
@@ -18,9 +19,9 @@
 			<Close>Fermer</Close>
 		</action>
 	</PushSiteForm>
-	<StagingPushSiteWindow>
+	<PushSitePopupWindow>
 		<title>
 			<PushSiteForm>Synchroniser le site courant</PushSiteForm>
 		</title>
-	</StagingPushSiteWindow>
+	</PushSitePopupWindow>
 </bundle>

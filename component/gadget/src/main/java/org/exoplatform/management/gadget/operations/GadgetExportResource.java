@@ -44,8 +44,6 @@ public class GadgetExportResource extends AbstractOperationHandler {
       }
     }
 
-    increaseCurrentTransactionTimeOut(operationContext);
-
     PathAddress address = operationContext.getAddress();
     String gadgetName = address.resolvePathTemplate("gadget-name");
     OperationAttributes attributes = operationContext.getAttributes();
@@ -71,6 +69,7 @@ public class GadgetExportResource extends AbstractOperationHandler {
         .getLifeCycle("app");
     String workspaceName = lifeCycle.getWorkspaceName();
 
+    increaseCurrentTransactionTimeOut(operationContext);
     try {
       ManageableRepository manageableRepository = repositoryService.getDefaultRepository();
       List<ExportTask> exportTasks = new ArrayList<ExportTask>();
@@ -78,6 +77,8 @@ public class GadgetExportResource extends AbstractOperationHandler {
       resultHandler.completed(new ExportResourceModel(exportTasks));
     } catch (Exception e) {
       throw new OperationException(operationContext.getOperationName(), "Error while exporting Gadget" + gadgetName, e);
+    } finally {
+      restoreDefaultTransactionTimeOut(repositoryService);
     }
   }
 
