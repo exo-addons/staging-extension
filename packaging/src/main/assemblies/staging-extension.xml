@@ -42,7 +42,7 @@
 				<include>org.gatein.management:gatein-management-*:jar</include>
 			</includes>
 			<scope>provided</scope>
-			<outputFileNameMapping>${artifact.artifactId}-1.1.0.Final.${artifact.extension}</outputFileNameMapping>
+			<outputFileNameMapping>${artifact.artifactId}-${artifact.version}.${artifact.extension}</outputFileNameMapping>
 		</dependencySet>
 	</dependencySets>
 </assembly>
