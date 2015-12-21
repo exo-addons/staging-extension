@@ -384,6 +384,15 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
         return true;
       }
     }
+    Group spaceGroup = organizationService.getGroupHandler().findGroupById(spaceMetaData.getGroupId());
+    if (spaceGroup != null) {
+      RequestLifeCycle.begin(PortalContainer.getInstance());
+      try {
+        organizationService.getGroupHandler().removeGroup(spaceGroup, true);
+      } finally {
+        RequestLifeCycle.end();
+      }
+    }
 
     if (createAbsentUsers) {
       log.info("Create not found users of space: '" + spaceMetaData.getPrettyName() + "'.");
@@ -465,7 +474,7 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
 
     RequestLifeCycle.begin(PortalContainer.getInstance());
     try {
-      space = spaceService.createSpace(space, space.getEditor());
+      space = spaceService.createSpace(space, space.getEditor() == null ? space.getManagers()[0] : space.getEditor());
       if (isRenamed) {
         log.info("Rename space from '" + oldSpacePrettyName + "' to '" + newSpacePrettyName + "'.");
         spaceService.renameSpace(space, spaceMetaData.getDisplayName().trim());
