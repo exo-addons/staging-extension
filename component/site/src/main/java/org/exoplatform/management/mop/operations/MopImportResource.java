@@ -309,8 +309,12 @@ public class MopImportResource extends AbstractOperationHandler {
     ChromatticManager manager = operationContext.getRuntimeContext().getRuntimeComponent(ChromatticManager.class);
     ChromatticLifeCycle chromatticLifeCycle = manager.getLifeCycle("mop");
     try {
-      log.info("Change Chromattic MOP Timeout");
-      Session session = chromatticLifeCycle.openContext().getSession().getJCRSession();
+      Session session = null;
+      if (chromatticLifeCycle.getContext() == null) {
+        session = chromatticLifeCycle.openContext().getSession().getJCRSession();
+      } else {
+        session = chromatticLifeCycle.getContext().getSession().getJCRSession();
+      }
       ((SessionImpl) session).setTimeout(ONE_DAY_IN_MS);
     } catch (Exception e) {
       log.error("Error while increasing Chromattic MOP Session Timeout", e);
