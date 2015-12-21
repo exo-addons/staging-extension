@@ -28,14 +28,14 @@ public class StagingMessageREST implements ResourceContainer, Startable {
   public String getMessageTodisplayInUI() {
     try {
       if (diplayMessageForAll() || Utils.isAdministratorUser() || userACL.isUserInGroup("/platform/web-contributors")) {
-         String message = System.getProperty("exo.staging.ui.message", "").trim();
-		 if(StringUtils.isNotEmpty(message)) {
-			String position = System.getProperty("exo.staging.ui.message.position", "bottom-left");
-			if(StringUtils.isNotEmpty(position)) {
-				message += "@" + position;
-			}
-		 }
-		 return message;
+        String message = System.getProperty("exo.staging.ui.message", "").trim();
+        if (StringUtils.isNotEmpty(message)) {
+          String position = System.getProperty("exo.staging.ui.message.position", "bottom-left");
+          if (StringUtils.isNotEmpty(position)) {
+            message += "@" + position;
+          }
+        }
+        return message;
       }
     } catch (Exception e) {
       log.error(e);
