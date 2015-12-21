@@ -16,8 +16,8 @@ import org.exoplatform.services.jcr.config.RepositoryEntry;
 import org.exoplatform.services.jcr.config.WorkspaceEntry;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.backup.BackupChainLog;
-import org.exoplatform.services.jcr.ext.backup.BackupConfigurationException;
 import org.exoplatform.services.jcr.ext.backup.RepositoryBackupChainLog;
+import org.exoplatform.services.jcr.impl.backup.BackupException;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -107,8 +107,10 @@ public class JCRRestore {
 
     // Checking repository exists.
     try {
-      repositoryService.getRepository(repositoryEntry.getName());
-      throw new BackupConfigurationException("Repository \"" + repositoryEntry.getName() + "\" is already exists.");
+      ManageableRepository repository = repositoryService.getRepository(repositoryEntry.getName());
+      if(repository != null) {
+        throw new BackupException("Repository \"" + repositoryEntry.getName() + "\" already exists.");
+      }
     } catch (RepositoryException e) {
       // OK. Repository with "repositoryEntry.getName" is not exists.
     }
