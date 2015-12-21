@@ -123,4 +123,4 @@
         unique (NAME)
     );
 
-    create sequence hibernate_sequence;
+    -- create sequence hibernate_sequence;

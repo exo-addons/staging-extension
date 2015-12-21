@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -40,6 +41,8 @@ import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProvi
  * @version $Revision$
  */
 public class IDMRestore {
+  public static final List<String> ID_COLUMNS_NAME = Arrays.asList(new String[] { "ID", "ATTRIBUTE_ID", "BIN_VALUE_ID" });
+
   protected static final Log LOG = ExoLogger.getLogger(IDMRestore.class);
 
   /**
@@ -103,21 +106,29 @@ public class IDMRestore {
 
   public static void verifyDSConnections(PortalContainer portalContainer) throws Exception {
     try {
-      // Wait for 10 seconds until all HTTP request finishes. The Web Filter
-      // will avoid to have new requests and the scheduled jobs are already
-      // suspended
-      Thread.sleep(10000);
-    } catch (Exception e1) {
-      // Nothing to do
-    }
+      int numberOfOpenConnections = 0;
+      int i = 0;
+      do {
+        if (numberOfOpenConnections > 0) {
+          try {
+            LOG.warn("Some IDM datasource connections aren't closed yet, wait 5 seconds before retrying.");
+            // Wait for 10 seconds until all HTTP request finishes. The Web
+            // Filter will avoid to have new requests and the scheduled jobs are
+            // already suspended
+            Thread.sleep(5000);
+          } catch (Exception e1) {
+            // Nothing to do
+          }
+        }
 
-    try {
-      // using existing DataSource to get a JDBC Connection.
-      SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
-      DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
-      DataSource dataSource = connectionProvider.getDataSource();
+        // using existing DataSource to get a JDBC Connection.
+        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
+        DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
+        DataSource dataSource = connectionProvider.getDataSource();
 
-      int numberOfOpenConnections = (int) connectionProvider.getDataSource().getClass().getMethod("getNumActive", new Class[0]).invoke(dataSource);
+        numberOfOpenConnections = (int) connectionProvider.getDataSource().getClass().getMethod("getNumActive", new Class[0]).invoke(dataSource);
+      } while (numberOfOpenConnections > 0 && i++ < 3);
+
       if (numberOfOpenConnections > 0) {
         throw new IllegalStateException("There are some unclosed connections on IDM datasource, please verify you don't have a session leak.");
       }
@@ -147,8 +158,9 @@ public class IDMRestore {
       } catch (Exception e) {
         restorer.rollback();
         throw e;
+      } finally {
+        restorer.close();
       }
-      restorer.close();
     } else {
       LOG.info("IDM Backup files was not found. IDM restore ignored.");
     }
@@ -217,8 +229,15 @@ public class IDMRestore {
    */
   public void restore() throws Exception {
     LOG.info("Restore IDM tables");
+    int maxId = 0;
     for (String tableName : IDMBackup.TABLE_NAMES) {
-      restoreTable(storageDir, jdbcConn, tableName);
+      maxId = restoreTable(storageDir, jdbcConn, tableName, maxId);
+    }
+
+    // Update sequence
+    if (dialect.startsWith(DBConstants.DB_DIALECT_PGSQL) || dialect.startsWith(DBConstants.DB_DIALECT_ORACLE)) {
+      Statement statement = jdbcConn.createStatement();
+      statement.executeUpdate("create sequence hibernate_sequence START WITH " + (++maxId));
     }
   }
 
@@ -257,8 +276,9 @@ public class IDMRestore {
 
   /**
    * Restore table.
+   * @return 
    */
-  private void restoreTable(File storageDir, Connection jdbcConn, String tableName) throws IOException, SQLException {
+  private int restoreTable(File storageDir, Connection jdbcConn, String tableName, int maxId) throws IOException, SQLException {
     ZipObjectReader contentReader = null;
     ZipObjectReader contentLenReader = null;
 
@@ -335,7 +355,11 @@ public class IDMRestore {
               ba.read(readBuffer);
 
               String value = new String(readBuffer, Constants.DEFAULT_ENCODING);
-              insertNode.setLong(targetIndex + 1, Integer.parseInt(value));
+              int intValue = Integer.parseInt(value);
+              insertNode.setLong(targetIndex + 1, intValue);
+              if ((dialect.startsWith(DBConstants.DB_DIALECT_ORACLE) || dialect.startsWith(DBConstants.DB_DIALECT_PGSQL)) && ID_COLUMNS_NAME.contains(columnName.get(i).toUpperCase())) {
+                maxId = Math.max(intValue, maxId);
+              }
             } else if (columnType.get(i) == Types.BIT) {
               ByteArrayInputStream ba = (ByteArrayInputStream) stream;
               byte[] readBuffer = new byte[ba.available()];
@@ -385,6 +409,9 @@ public class IDMRestore {
 
         commitBatch();
       }
+      
+      return maxId;
+
     } finally {
       if (contentReader != null) {
         contentReader.close();
@@ -488,10 +515,12 @@ public class IDMRestore {
       try {
         stmt.executeUpdate(sqlDropStatement);
       } catch (Exception e) {
+        LOG.warn("Can't execute SQL '{}'. This can be minor in case the object doesn't exist. Original cause: {} ", sqlDropStatement, e.getMessage());
         if (throwIfError) {
           throw e;
+        } else {
+          rollback();
         }
-        LOG.warn("Can't execute SQL '{}'. This can be minor in case the object doesn't exist. Original cause: {} ", sqlDropStatement, e.getMessage());
       }
     }
   }
