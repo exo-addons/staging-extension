@@ -50,7 +50,7 @@ public class JCRRestore {
 
       // Restore repository from backup directory
       log.info("Restore repository '{}'", repositoryName);
-      restoreRepository(repositoryService, backupChainLog);
+      restoreRepository(repositoryService, portalContainer, backupChainLog);
       log.info("Repository '{}' restore completed.", repositoryName);
 
     } finally {
@@ -102,7 +102,7 @@ public class JCRRestore {
   }
 
   @SuppressWarnings("unchecked")
-  private static void restoreRepository(RepositoryService repositoryService, RepositoryBackupChainLog rblog) throws Exception {
+  private static void restoreRepository(RepositoryService repositoryService, PortalContainer portalContainer, RepositoryBackupChainLog rblog) throws Exception {
     RepositoryEntry repositoryEntry = rblog.getOriginalRepositoryEntry();
 
     // Checking repository exists.

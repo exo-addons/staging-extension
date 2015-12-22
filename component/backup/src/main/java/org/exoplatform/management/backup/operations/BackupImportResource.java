@@ -10,6 +10,7 @@ import org.exoplatform.management.backup.service.JCRRestore;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.cache.ExoCache;
+import org.exoplatform.services.cms.folksonomy.impl.NewFolksonomyServiceImpl;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.idm.PicketLinkIDMCacheService;
@@ -59,6 +60,10 @@ public class BackupImportResource extends AbstractOperationHandler {
 
       IDMRestore.verifyDSConnections(portalContainer);
 
+      // Clear all caches based on eXo CacheService
+      log.info("Clear Services caches");
+      clearCaches(cacheService, idmCacheService);
+
       // Restore IDM db
       log.info("Restore IDM Data");
       IDMRestore.restore(portalContainer, backupDirFile);
@@ -96,16 +101,17 @@ public class BackupImportResource extends AbstractOperationHandler {
   public void clearCaches(CacheService cacheService, PicketLinkIDMCacheService idmCacheService) {
     for (Object o : cacheService.getAllCacheInstances()) {
       try {
-        ((ExoCache<?, ?>) o).clearCache();
-      } catch (Exception wtf) {
-        if (log.isTraceEnabled()) {
-          log.trace("An exception occurred: " + wtf.getMessage());
+        // FIXME PLF-6526
+        // Workaround : Avoid clear Folksonomy cache, it's not computed again
+        if (!NewFolksonomyServiceImpl.class.getName().equals(((ExoCache<?, ?>) o).getName())) {
+          ((ExoCache<?, ?>) o).clearCache();
         }
+      } catch (Exception e) {
+        log.warn("An exception occurred: " + e.getMessage());
       }
     }
     if (idmCacheService != null) {
       idmCacheService.invalidateAll();
     }
   }
-
 }

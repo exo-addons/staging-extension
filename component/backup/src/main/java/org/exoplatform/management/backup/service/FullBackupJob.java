@@ -34,7 +34,6 @@ public class FullBackupJob extends org.exoplatform.services.jcr.ext.backup.impl.
         }
       }
 
-      @SuppressWarnings("unchecked")
       List<Backupable> backupableComponents = repository.getWorkspaceContainer(workspaceName).getComponentInstancesOfType(Backupable.class);
       // backup all components
       for (Backupable component : backupableComponents) {

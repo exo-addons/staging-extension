@@ -39,11 +39,12 @@ public class IDMBackup {
   protected static final String[] TABLE_NAMES = { "jbid_attr_bin_value", "jbid_creden_bin_value", "jbid_io", "jbid_io_attr", "jbid_io_attr_text_values", "jbid_io_creden", "jbid_io_creden_props",
       "jbid_io_creden_type", "jbid_io_props", "jbid_io_rel", "jbid_io_rel_name", "jbid_io_rel_name_props", "jbid_io_rel_props", "jbid_io_rel_type", "jbid_io_type", "jbid_real_props", "jbid_realm" };
 
-  public static void backup(PortalContainer portalContainer, final File storageDir) throws BackupException {
+  public static void backup(PortalContainer portalContainer, final File storageDir) throws Exception {
+    Connection jdbcConn = null;
     try {
       // using existing DataSource to get a JDBC Connection.
       SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
-      Connection jdbcConn = sessionFactoryImpl.getConnectionProvider().getConnection();
+      jdbcConn = sessionFactoryImpl.getConnectionProvider().getConnection();
 
       Map<String, String> scripts = new HashMap<String, String>();
       for (String tableName : TABLE_NAMES) {
@@ -52,7 +53,21 @@ public class IDMBackup {
 
       backup(storageDir, jdbcConn, scripts);
     } catch (Exception e) {
+      LOG.error("Error while backup", e);
       throw new BackupException(e);
+    } finally {
+      if (jdbcConn != null && !jdbcConn.isClosed()) {
+        try {
+          jdbcConn.commit();
+        } catch (Exception e) {
+          LOG.error("Error while committing transaction", e);
+        }
+        try {
+          jdbcConn.close();
+        } catch (Exception e) {
+          LOG.error("Error while closing DS connection", e);
+        }
+      }
     }
   }
 

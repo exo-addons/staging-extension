@@ -29,6 +29,7 @@ import org.exoplatform.services.jcr.ext.backup.impl.rdbms.RdbmsBackupWorkspaceIn
 import org.exoplatform.services.jcr.ext.backup.impl.rdbms.RdbmsWorkspaceInitializer;
 import org.exoplatform.services.jcr.impl.core.RepositoryImpl;
 import org.exoplatform.services.jcr.impl.core.SessionRegistry;
+import org.exoplatform.services.jcr.impl.core.WorkspaceInitializer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -116,34 +117,7 @@ public class JobRepositoryRestore extends Thread {
   protected void restoreRepository() throws Exception {
     List<WorkspaceEntry> originalWorkspaceEntrys = repositoryEntry.getWorkspaceEntries();
 
-    // Getting system workspace entry
-    WorkspaceEntry systemWorkspaceEntry = null;
-
-    for (WorkspaceEntry wsEntry : originalWorkspaceEntrys) {
-      if (wsEntry.getName().equals(repositoryEntry.getSystemWorkspaceName())) {
-        systemWorkspaceEntry = wsEntry;
-        break;
-      }
-    }
-
-    if (systemWorkspaceEntry == null) {
-      throw new RepositoryRestoreExeption("Can not restore workspace \"" + repositoryEntry.getSystemWorkspaceName() + " in repository \"" + repositoryEntry.getName() + "\"."
-          + " The related configuration cannot be found.");
-    }
-    WorkspaceInitializerEntry wieOriginal = systemWorkspaceEntry.getInitializer();
-
-    // getting backup chail log to system workspace.
-    BackupChainLog systemBackupChainLog = new BackupChainLog(workspacesMapping.get(systemWorkspaceEntry.getName()));
-
-    WorkspaceInitializerEntry wiEntry = getWorkspaceInitializerEntry(systemBackupChainLog);
-
-    // set initializer
-    systemWorkspaceEntry.setInitializer(wiEntry);
-
-    ArrayList<WorkspaceEntry> newEntries = new ArrayList<WorkspaceEntry>();
-    newEntries.add(systemWorkspaceEntry);
-
-    repositoryEntry.setWorkspaceEntries(newEntries);
+    WorkspaceInitializerEntry originalInitializer = initRepositoryParams(originalWorkspaceEntrys);
 
     String currennWorkspaceName = repositoryEntry.getSystemWorkspaceName();
 
@@ -152,11 +126,7 @@ public class JobRepositoryRestore extends Thread {
       LOG.info("Trying to create the repository '" + repositoryEntry.getName() + "'");
       repositoryService.createRepository(repositoryEntry);
 
-      // set original initializer to created workspace.
-      RepositoryImpl defRep = (RepositoryImpl) repositoryService.getRepository(repositoryEntry.getName());
-      WorkspaceContainerFacade wcf = defRep.getWorkspaceContainer(systemWorkspaceEntry.getName());
-      WorkspaceEntry createdWorkspaceEntry = (WorkspaceEntry) wcf.getComponent(WorkspaceEntry.class);
-      createdWorkspaceEntry.setInitializer(wieOriginal);
+      restoreSystemWorkspace(originalInitializer, currennWorkspaceName);
 
       for (WorkspaceEntry wsEntry : originalWorkspaceEntrys) {
         if (!(wsEntry.getName().equals(repositoryEntry.getSystemWorkspaceName()))) {
@@ -178,6 +148,64 @@ public class JobRepositoryRestore extends Thread {
         }
       }
     }
+  }
+
+  private void restoreSystemWorkspace(WorkspaceInitializerEntry originalInitializer, String currennWorkspaceName) throws RepositoryException, RepositoryConfigurationException {
+    // set original initializer to created workspace.
+    RepositoryImpl defRep = (RepositoryImpl) repositoryService.getRepository(repositoryEntry.getName());
+    WorkspaceContainerFacade wcf = defRep.getWorkspaceContainer(currennWorkspaceName);
+
+    final WorkspaceInitializer workspaceInitializer = (WorkspaceInitializer) wcf.getComponent(WorkspaceInitializer.class);
+
+    RestoreWorkspaceInitializer.setRestoreInProgress(true); // Force
+                                                            // initialized
+                                                            // flag on
+                                                            // WorkspaceInitializer
+                                                            // to be false
+    wcf.setState(ManageableRepository.OFFLINE);
+    try {
+      workspaceInitializer.initWorkspace();
+    } finally {
+      wcf.setState(ManageableRepository.ONLINE);
+    }
+
+    RestoreWorkspaceInitializer.setRestoreInProgress(true); // Force
+                                                            // initialized
+                                                            // flag on
+                                                            // WorkspaceInitializer
+                                                            // to be false
+    WorkspaceEntry createdWorkspaceEntry = (WorkspaceEntry) wcf.getComponent(WorkspaceEntry.class);
+    createdWorkspaceEntry.setInitializer(originalInitializer);
+  }
+
+  private WorkspaceInitializerEntry initRepositoryParams(List<WorkspaceEntry> originalWorkspaceEntrys) throws RepositoryRestoreExeption, BackupOperationException, ClassNotFoundException {
+    // Getting system workspace entry
+    WorkspaceEntry systemWorkspaceEntry = null;
+
+    for (WorkspaceEntry wsEntry : originalWorkspaceEntrys) {
+      if (wsEntry.getName().equals(repositoryEntry.getSystemWorkspaceName())) {
+        systemWorkspaceEntry = wsEntry;
+        break;
+      }
+    }
+
+    if (systemWorkspaceEntry == null) {
+      throw new RepositoryRestoreExeption("Can not restore workspace \"" + repositoryEntry.getSystemWorkspaceName() + " in repository \"" + repositoryEntry.getName() + "\"."
+          + " The related configuration cannot be found.");
+    }
+    WorkspaceInitializerEntry wieOriginal = systemWorkspaceEntry.getInitializer();
+    // getting backup chail log to system workspace.
+    BackupChainLog systemBackupChainLog = new BackupChainLog(workspacesMapping.get(systemWorkspaceEntry.getName()));
+    WorkspaceInitializerEntry wiEntry = getWorkspaceInitializerEntry(systemBackupChainLog);
+
+    // set initializer
+    systemWorkspaceEntry.setInitializer(wiEntry);
+
+    ArrayList<WorkspaceEntry> newEntries = new ArrayList<WorkspaceEntry>();
+    newEntries.add(systemWorkspaceEntry);
+
+    repositoryEntry.setWorkspaceEntries(newEntries);
+    return wieOriginal;
   }
 
   protected void removeRepository(RepositoryService repositoryService, String repositoryName) throws RepositoryException, RepositoryConfigurationException {
@@ -208,7 +236,7 @@ public class JobRepositoryRestore extends Thread {
     WorkspaceInitializerEntry wiEntry = new WorkspaceInitializerEntry();
     if ((ClassLoading.forName(fullbackupType, this).equals(FullBackupJob.class))) {
       // set the initializer RdbmsBackupWorkspaceInitializer
-      wiEntry.setType(RdbmsBackupWorkspaceInitializer.class.getCanonicalName());
+      wiEntry.setType(RestoreWorkspaceInitializer.class.getCanonicalName());
 
       List<SimpleParameterEntry> wieParams = new ArrayList<SimpleParameterEntry>();
       wieParams.add(new SimpleParameterEntry(RdbmsBackupWorkspaceInitializer.RESTORE_PATH_PARAMETER, (new File(fullBackupPath).getParent())));
@@ -367,14 +395,14 @@ public class JobRepositoryRestore extends Thread {
     // Restore Workspace
     defRep.configWorkspace(workspaceEntry);
     RestoreWorkspaceInitializer.setRestoreInProgress(true); // Force initialized
-                                                           // flag on
-                                                           // WorkspaceInitializer
-                                                           // to be false
+                                                            // flag on
+                                                            // WorkspaceInitializer
+                                                            // to be false
     defRep.createWorkspace(wsName);
     RestoreWorkspaceInitializer.setRestoreInProgress(false); // Resume
-                                                            // initialized flag
-                                                            // to its original
-                                                            // value
+                                                             // initialized flag
+                                                             // to its original
+                                                             // value
     // set original workspace initializer
     WorkspaceContainerFacade wcf = defRep.getWorkspaceContainer(wsName);
     WorkspaceEntry createdWorkspaceEntry = (WorkspaceEntry) wcf.getComponent(WorkspaceEntry.class);

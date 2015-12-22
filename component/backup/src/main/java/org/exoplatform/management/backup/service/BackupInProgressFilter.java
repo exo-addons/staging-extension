@@ -25,6 +25,8 @@ public class BackupInProgressFilter implements Filter {
     } catch (Throwable e) {
       if (checkException(e)) {
         response.getWriter().append("Backup or a restore is in progress. No write operation is allowed.");
+      } else {
+        throw e;
       }
     }
   }

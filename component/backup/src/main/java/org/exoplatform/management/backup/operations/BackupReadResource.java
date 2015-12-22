@@ -27,7 +27,6 @@ public class BackupReadResource extends AbstractOperationHandler {
 
     String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
     if (StringUtils.isEmpty(portalContainerName)) {
-      @SuppressWarnings("unchecked")
       List<PortalContainer> portalContainers = RootContainer.getInstance().getComponentInstancesOfType(PortalContainer.class);
       for (PortalContainer portalContainer : portalContainers) {
         children.add(portalContainer.getName());
