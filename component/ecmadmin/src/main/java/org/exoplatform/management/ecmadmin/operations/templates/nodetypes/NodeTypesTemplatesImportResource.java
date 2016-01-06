@@ -73,48 +73,54 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
 
     try {
       final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
-      ZipEntry entry;
-      while ((entry = zis.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        if (!filePath.startsWith("ecmadmin/templates/nodetypes/")) {
-          continue;
-        }
-        // Skip directories
-        // & Skip empty entries
-        // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.equals("") || !(filePath.endsWith(".gtmpl") || filePath.endsWith(".xml"))) {
-          continue;
-        }
-        Matcher matcher = metadataEntryPattern.matcher(filePath);
-        if (matcher.find()) {
-          // read NT Templates Metadata
-          String nodeTypeName = matcher.group(1);
+      try {
+        ZipEntry entry;
+        while ((entry = zis.getNextEntry()) != null) {
+          try {
+            String filePath = entry.getName();
+            if (!filePath.startsWith("ecmadmin/templates/nodetypes/")) {
+              continue;
+            }
+            // Skip directories
+            // & Skip empty entries
+            // & Skip entries not in sites/zip
+            if (entry.isDirectory() || filePath.equals("") || !(filePath.endsWith(".gtmpl") || filePath.endsWith(".xml"))) {
+              continue;
+            }
+            Matcher matcher = metadataEntryPattern.matcher(filePath);
+            if (matcher.find()) {
+              // read NT Templates Metadata
+              String nodeTypeName = matcher.group(1);
 
-          XStream xStream = new XStream();
-          xStream.alias("metadata", NodeTypeTemplatesMetaData.class);
-          xStream.alias("template", NodeTemplate.class);
-          NodeTypeTemplatesMetaData metadata = (NodeTypeTemplatesMetaData) xStream.fromXML(new InputStreamReader(zis));
+              XStream xStream = new XStream();
+              xStream.alias("metadata", NodeTypeTemplatesMetaData.class);
+              xStream.alias("template", NodeTemplate.class);
+              NodeTypeTemplatesMetaData metadata = (NodeTypeTemplatesMetaData) xStream.fromXML(new InputStreamReader(zis));
 
-          metadatas.put(nodeTypeName, metadata);
-          continue;
-        }
+              metadatas.put(nodeTypeName, metadata);
+              continue;
+            }
 
-        matcher = templateEntryPattern.matcher(filePath);
-        if (!matcher.find()) {
-          continue;
-        }
+            matcher = templateEntryPattern.matcher(filePath);
+            if (!matcher.find()) {
+              continue;
+            }
 
-        String nodeTypeName = matcher.group(1);
-        String templateType = matcher.group(2);
-        String templateName = matcher.group(3);
-        if (!metadatas.containsKey(nodeTypeName)) {
-          putData(nodeTypeName, templateType, templateName + ".gtmpl", zis);
-          continue;
+            String nodeTypeName = matcher.group(1);
+            String templateType = matcher.group(2);
+            String templateName = matcher.group(3);
+            if (!metadatas.containsKey(nodeTypeName)) {
+              putData(nodeTypeName, templateType, templateName + ".gtmpl", zis);
+              continue;
+            }
+            updateTemplateContent(templateType, nodeTypeName, templateName, replaceExisting, zis);
+          } finally {
+            zis.closeEntry();
+          }
         }
-        updateTemplateContent(templateType, nodeTypeName, templateName, replaceExisting, zis);
-        zis.closeEntry();
+      } finally {
+        zis.close();
       }
-      zis.close();
 
       Iterator<Map.Entry<String, byte[]>> templatesContentIterator = templatesContent.entrySet().iterator();
       while (templatesContentIterator.hasNext()) {
@@ -128,6 +134,9 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
         String nodeTypeName = matcher.group(1);
         String templateType = matcher.group(2);
         String templateName = matcher.group(3);
+        if (!metadatas.containsKey(nodeTypeName)) {
+          continue;
+        }
         updateTemplateContent(templateType, nodeTypeName, templateName, replaceExisting, new ByteArrayInputStream(templateContentEntry.getValue()));
       }
     } catch (Exception e) {
