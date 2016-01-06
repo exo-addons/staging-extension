@@ -31,6 +31,7 @@ import org.exoplatform.management.common.InputStreamWrapper;
 import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
 import org.exoplatform.management.common.exportop.ActivityExportOperationInterface;
 import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
+import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
@@ -57,6 +58,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
   final private static Logger log = LoggerFactory.getLogger(AnswerDataExportResource.class);
 
   private FAQService faqService;
+  private UserACL userACL;
 
   private boolean isSpaceType;
   private String type;
@@ -72,6 +74,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
     faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
+    userACL = operationContext.getRuntimeContext().getRuntimeComponent(UserACL.class);
     activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
@@ -146,7 +149,8 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
 
     categoryThreadLocal.set(category);
     String prefix = "answer/" + type + "/" + category.getId() + "/";
-    exportActivities(exportTasks, space == null ? category.getModerators()[0] : space.getPrettyName(), prefix, ANSWER_ACTIVITY_TYPE);
+    exportActivities(exportTasks, space == null ? ((category.getModerators() == null || category.getModerators().length == 0) ? userACL.getSuperUser() : category.getModerators()[0])
+        : space.getPrettyName(), prefix, ANSWER_ACTIVITY_TYPE);
 
     if (exportSpaceMetadata && isSpaceType) {
       if (space == null) {

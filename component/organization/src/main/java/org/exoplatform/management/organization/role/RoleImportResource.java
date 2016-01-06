@@ -49,27 +49,33 @@ public class RoleImportResource extends AbstractOperationHandler {
     attachmentInputStream = attachment.getStream();
 
     final ZipInputStream zin = new ZipInputStream(attachmentInputStream);
-    ZipEntry entry;
     try {
-      while ((entry = zin.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        if (!filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_ROLE + "/")) {
-          continue;
+      ZipEntry entry;
+      try {
+        while ((entry = zin.getNextEntry()) != null) {
+          try {
+            String filePath = entry.getName();
+            if (!filePath.startsWith(OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_ROLE + "/")) {
+              continue;
+            }
+            if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
+              continue;
+            }
+            if (filePath.endsWith("_role.xml")) {
+              log.debug("Parsing : " + filePath);
+              createRole(zin, replaceExisting);
+            }
+          } finally {
+            try {
+              zin.closeEntry();
+            } catch (Exception e) {
+              // Already closed, expected
+            }
+          }
         }
-        if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
-          continue;
-        }
-        if (filePath.endsWith("_role.xml")) {
-          log.debug("Parsing : " + filePath);
-          createRole(zin, replaceExisting);
-        }
-        try {
-          zin.closeEntry();
-        } catch (Exception e) {
-          // Already closed, expected
-        }
+      } finally {
+        zin.close();
       }
-      zin.close();
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading group from Stream.", e);

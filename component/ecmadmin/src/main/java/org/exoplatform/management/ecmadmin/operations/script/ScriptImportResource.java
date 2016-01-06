@@ -1,5 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.script;
 
+import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -41,36 +42,44 @@ public class ScriptImportResource extends ECMAdminImportResource {
     }
 
     SessionProvider systemSessionProvider = SessionProvider.createSystemProvider();
+    ZipInputStream zin = new ZipInputStream(attachmentInputStream);
     try {
-      ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
       while ((ze = zin.getNextEntry()) != null) {
-        if (!ze.getName().startsWith("ecmadmin/script/")) {
-          continue;
-        }
-        String path = ze.getName().substring("ecmadmin/script/".length());
-        CmsScript script = null;
         try {
-          script = scriptService.getScript(path);
-        } catch (ClassNotFoundException exception) {
-          // Script doesn't exist
-        }
-        if (script != null) {
-          if (replaceExisting) {
-            log.info("Overwrite existing script '" + path + "'.");
-          } else {
-            log.info("Ignore existing script'" + path + "'.");
+          if (!ze.getName().startsWith("ecmadmin/script/")) {
             continue;
           }
+          String path = ze.getName().substring("ecmadmin/script/".length());
+          CmsScript script = null;
+          try {
+            script = scriptService.getScript(path);
+          } catch (ClassNotFoundException exception) {
+            // Script doesn't exist
+          }
+          if (script != null) {
+            if (replaceExisting) {
+              log.info("Overwrite existing script '" + path + "'.");
+            } else {
+              log.info("Ignore existing script'" + path + "'.");
+              continue;
+            }
+          }
+          String data = IOUtils.toString(zin, "UTF-8");
+          scriptService.addScript(path, data, systemSessionProvider);
+        } finally {
+          zin.closeEntry();
         }
-        String data = IOUtils.toString(zin, "UTF-8");
-        scriptService.addScript(path, data, systemSessionProvider);
-        zin.closeEntry();
       }
-      zin.close();
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception exception) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS scripts.", exception);
+    } finally {
+      try {
+        zin.close();
+      } catch (IOException e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while closing stream.", e);
+      }
     }
   }
 }

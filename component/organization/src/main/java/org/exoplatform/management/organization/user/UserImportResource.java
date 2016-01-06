@@ -114,96 +114,119 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
 
     ZipEntry entry = null;
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
+    try {
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
 
-      if (!filePath.startsWith(USERS_BASE_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
-        continue;
-      }
-      if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
-        continue;
-      }
+          if (!filePath.startsWith(USERS_BASE_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
+            continue;
+          }
+          if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
+            continue;
+          }
 
-      log.info("Parsing : " + filePath);
-      String username = extractUserName(filePath);
-      String nodePath = extractParam(filePath, 2);
-      boolean replaceExistingContent = replaceExisting || newlyCreatedUsers.contains(username);
-      if (replaceExistingContent) {
-        importNode(nodePath, defaultWorkspace, zin, null, false);
+          log.info("Parsing : " + filePath);
+          String username = extractUserName(filePath);
+          String nodePath = extractParam(filePath, 2);
+          boolean replaceExistingContent = replaceExisting || newlyCreatedUsers.contains(username);
+          if (replaceExistingContent) {
+            importNode(nodePath, defaultWorkspace, zin, null, false);
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
+        }
       }
-
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
   }
 
   private void importMemberships(File tempFile, Set<String> newUsers, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
-    ZipEntry entry;
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("_membership.xml")) {
-        log.debug("Parsing : " + filePath);
-        String userName = extractUserName(filePath);
-        if (replaceExisting || newUsers.contains(userName)) {
-          createMembership(zin);
+    try {
+      ZipEntry entry;
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
+          if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("_membership.xml")) {
+            log.debug("Parsing : " + filePath);
+            String userName = extractUserName(filePath);
+            if (replaceExisting || newUsers.contains(userName)) {
+              createMembership(zin);
+            }
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
         }
       }
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
   }
 
   private void importUsers(File tempFile, Set<String> newUsers, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
-    ZipEntry entry;
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("user.xml")) {
-        log.debug("Parsing : " + filePath);
-        String userName = extractUserName(filePath);
-        User existingUser = organizationService.getUserHandler().findUserByName(userName);
-        if (existingUser == null) {
-          newUsers.add(userName);
+    try {
+      ZipEntry entry;
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
+          if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("user.xml")) {
+            log.debug("Parsing : " + filePath);
+            String userName = extractUserName(filePath);
+            User existingUser = organizationService.getUserHandler().findUserByName(userName);
+            if (existingUser == null) {
+              newUsers.add(userName);
+            }
+            createUser(userName, zin, existingUser, replaceExisting);
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
         }
-        createUser(userName, zin, existingUser, replaceExisting);
       }
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
   }
 
   private void importUserProfiles(File tempFile, Set<String> newUsers, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
-    ZipEntry entry;
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("profile.xml")) {
-        log.debug("Parsing : " + filePath);
-        String userName = extractUserName(filePath);
-        if (replaceExisting || newUsers.contains(userName)) {
-          createUserProfile(userName, zin);
+    try {
+      ZipEntry entry;
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
+          if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith("profile.xml")) {
+            log.debug("Parsing : " + filePath);
+            String userName = extractUserName(filePath);
+            if (replaceExisting || newUsers.contains(userName)) {
+              createUserProfile(userName, zin);
+            }
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
         }
       }
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
   }
 
   /**

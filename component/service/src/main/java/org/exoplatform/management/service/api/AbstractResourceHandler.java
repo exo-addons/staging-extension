@@ -139,7 +139,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       conn.setDoOutput(true);
 
       IOUtils.copy(fileInputStream, conn.getOutputStream());
-      fileInputStream.close();
 
       getLogger().info("Content sent to target server: " + targetServer.getHost());
       getLogger().info("Importing content in target server, please wait ...");
@@ -242,8 +241,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
       Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
 
-      inputStream.close();
-      inputStream = null;
     } catch (Exception ex) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
     } finally {
@@ -271,7 +268,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
       fileOutputStream = new FileOutputStream(tmpFile);
       managedResponse.writeResult(fileOutputStream, false);
-      fileOutputStream.close();
 
       getLogger().info("Export operation finished.");
 
@@ -282,6 +278,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     } finally {
       if (tmpFile != null) {
         tmpFile.delete();
+      }
+      if (fileOutputStream != null) {
+        fileOutputStream.close();
       }
     }
   }

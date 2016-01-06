@@ -71,97 +71,103 @@ public class QueriesImportResource extends ECMAdminImportResource {
 
     try {
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
-      ZipEntry ze = null;
+      try {
+        ZipEntry ze = null;
 
-      IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
-      IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+        IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
+        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
 
-      while ((ze = zin.getNextEntry()) != null) {
-        String zipEntryName = ze.getName();
-        if (!zipEntryName.startsWith("ecmadmin/queries/")) {
-          continue;
-        }
-        String content = IOUtils.toString(zin);
-        content = content.replace(QueriesExportTask.CONFIGURATION_FILE_XSD, "<configuration>");
-        Configuration configuration = (Configuration) uctx.unmarshalDocument(new StringReader(content), "UTF-8");
-        ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(QueryService.class.getName());
-        List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
+        while ((ze = zin.getNextEntry()) != null) {
+          try {
+            String zipEntryName = ze.getName();
+            if (!zipEntryName.startsWith("ecmadmin/queries/")) {
+              continue;
+            }
+            String content = IOUtils.toString(zin);
+            content = content.replace(QueriesExportTask.CONFIGURATION_FILE_XSD, "<configuration>");
+            Configuration configuration = (Configuration) uctx.unmarshalDocument(new StringReader(content), "UTF-8");
+            ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(QueryService.class.getName());
+            List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
 
-        // Users' queries
-        if (zipEntryName.startsWith("ecmadmin/queries/users/") && zipEntryName.endsWith("-queries-configuration.xml")) {
-          // extract username from filename
-          String username = zipEntryName.substring(zipEntryName.lastIndexOf("/") + 1, zipEntryName.indexOf("-queries-configuration.xml"));
+            // Users' queries
+            if (zipEntryName.startsWith("ecmadmin/queries/users/") && zipEntryName.endsWith("-queries-configuration.xml")) {
+              // extract username from filename
+              String username = zipEntryName.substring(zipEntryName.lastIndexOf("/") + 1, zipEntryName.indexOf("-queries-configuration.xml"));
 
-          List<Query> queries = queryService.getQueries(username, WCMCoreUtils.getSystemSessionProvider());
+              List<Query> queries = queryService.getQueries(username, WCMCoreUtils.getSystemSessionProvider());
 
-          // Can't create user's queries via configuration (only
-          // shared),
-          // so they are directly created
-          // via the queryService.addQuery method
-          for (ComponentPlugin componentPlugin : componentPlugins) {
-            @SuppressWarnings("rawtypes")
-            Iterator objectParamIterator = componentPlugin.getInitParams().getObjectParamIterator();
-            while (objectParamIterator.hasNext()) {
-              ObjectParameter objectParam = (ObjectParameter) objectParamIterator.next();
-              Object object = objectParam.getObject();
-              if (object instanceof QueryData) {
-                QueryData queryData = (QueryData) object;
-                boolean alreadyExists = false;
-                for (Query query : queries) {
-                  if (queryData.getName().equals(query.getStoredQueryPath().substring(query.getStoredQueryPath().lastIndexOf("/") + 1))) {
-                    if (replaceExisting) {
-                      log.info("Overwrite query '" + queryData.getName() + "' already existing for user '" + username + "'.");
-                      Node queriesNode = nodeHierarchyCreator.getUserNode(WCMCoreUtils.getSystemSessionProvider(), username).getNode(queryService.getRelativePath());
-                      Node queryNode = queriesNode.getNode(queryData.getName());
-                      queryNode.remove();
-                      queriesNode.getSession().save();
-                    } else {
-                      log.info("Ignore existing query '" + queryData.getName() + "' for user '" + username + "'.");
-                      alreadyExists = true;
-                      break;
+              // Can't create user's queries via configuration (only
+              // shared),
+              // so they are directly created
+              // via the queryService.addQuery method
+              for (ComponentPlugin componentPlugin : componentPlugins) {
+                @SuppressWarnings("rawtypes")
+                Iterator objectParamIterator = componentPlugin.getInitParams().getObjectParamIterator();
+                while (objectParamIterator.hasNext()) {
+                  ObjectParameter objectParam = (ObjectParameter) objectParamIterator.next();
+                  Object object = objectParam.getObject();
+                  if (object instanceof QueryData) {
+                    QueryData queryData = (QueryData) object;
+                    boolean alreadyExists = false;
+                    for (Query query : queries) {
+                      if (queryData.getName().equals(query.getStoredQueryPath().substring(query.getStoredQueryPath().lastIndexOf("/") + 1))) {
+                        if (replaceExisting) {
+                          log.info("Overwrite query '" + queryData.getName() + "' already existing for user '" + username + "'.");
+                          Node queriesNode = nodeHierarchyCreator.getUserNode(WCMCoreUtils.getSystemSessionProvider(), username).getNode(queryService.getRelativePath());
+                          Node queryNode = queriesNode.getNode(queryData.getName());
+                          queryNode.remove();
+                          queriesNode.getSession().save();
+                        } else {
+                          log.info("Ignore existing query '" + queryData.getName() + "' for user '" + username + "'.");
+                          alreadyExists = true;
+                          break;
+                        }
+                      }
+                    }
+                    if (!alreadyExists || replaceExisting) {
+                      queryService.addQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), username);
                     }
                   }
                 }
-                if (!alreadyExists || replaceExisting) {
-                  queryService.addQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), username);
-                }
               }
-            }
-          }
-        } else if (zipEntryName.endsWith("shared-queries-configuration.xml")) {
-          for (ComponentPlugin componentPlugin : componentPlugins) {
-            @SuppressWarnings("rawtypes")
-            Iterator objectParamIterator = componentPlugin.getInitParams().getObjectParamIterator();
-            while (objectParamIterator.hasNext()) {
-              ObjectParameter objectParam = (ObjectParameter) objectParamIterator.next();
-              Object object = objectParam.getObject();
-              if (object instanceof QueryData) {
-                QueryData queryData = (QueryData) object;
-                // if the shared query already exists, remove it
-                // from the
-                // init-params of the plugin
-                Node sharedQuery = queryService.getSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
-                boolean alreadyExists = (sharedQuery != null);
-                if (alreadyExists) {
-                  if (replaceExisting) {
-                    log.info("Overwrite shared query '" + queryData.getName() + "'.");
-                    queryService.removeSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
-                  } else {
-                    log.info("Ignore existing shared query '" + queryData.getName() + "'.");
+            } else if (zipEntryName.endsWith("shared-queries-configuration.xml")) {
+              for (ComponentPlugin componentPlugin : componentPlugins) {
+                @SuppressWarnings("rawtypes")
+                Iterator objectParamIterator = componentPlugin.getInitParams().getObjectParamIterator();
+                while (objectParamIterator.hasNext()) {
+                  ObjectParameter objectParam = (ObjectParameter) objectParamIterator.next();
+                  Object object = objectParam.getObject();
+                  if (object instanceof QueryData) {
+                    QueryData queryData = (QueryData) object;
+                    // if the shared query already exists, remove it
+                    // from the
+                    // init-params of the plugin
+                    Node sharedQuery = queryService.getSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
+                    boolean alreadyExists = (sharedQuery != null);
+                    if (alreadyExists) {
+                      if (replaceExisting) {
+                        log.info("Overwrite shared query '" + queryData.getName() + "'.");
+                        queryService.removeSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
+                      } else {
+                        log.info("Ignore existing shared query '" + queryData.getName() + "'.");
+                      }
+                    }
+
+                    if (!alreadyExists || replaceExisting) {
+                      String[] permissions = new String[queryData.getPermissions().size()];
+                      queryService.addSharedQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), queryData.getPermissions().toArray(permissions), queryData.getCacheResult(), WCMCoreUtils.getSystemSessionProvider());
+                    }
                   }
                 }
-
-                if (!alreadyExists || replaceExisting) {
-                  String[] permissions = new String[queryData.getPermissions().size()];
-                  queryService.addSharedQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), queryData.getPermissions().toArray(permissions), queryData.getCacheResult(), WCMCoreUtils.getSystemSessionProvider());
-                }
               }
             }
+          } finally {
+            zin.closeEntry();
           }
         }
-        zin.closeEntry();
+      } finally {
+        zin.close();
       }
-      zin.close();
 
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception exception) {

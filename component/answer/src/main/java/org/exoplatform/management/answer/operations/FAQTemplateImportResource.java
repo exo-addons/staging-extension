@@ -39,24 +39,27 @@ public class FAQTemplateImportResource extends AbstractOperationHandler {
     ZipEntry entry;
     try {
       while ((entry = zis.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        // Skip entries not managed by this extension
-        if (filePath.equals("") || !filePath.equals(FAQTemplateExportResource.TEMPLATE_PATH_ENTRY)) {
-          continue;
+        try {
+          String filePath = entry.getName();
+          // Skip entries not managed by this extension
+          if (filePath.equals("") || !filePath.equals(FAQTemplateExportResource.TEMPLATE_PATH_ENTRY)) {
+            continue;
+          }
+
+          // Skip directories
+          if (entry.isDirectory()) {
+            continue;
+          }
+
+          ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+          IOUtils.copy(zis, bytes);
+
+          DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
+          dataStorage.saveTemplate(bytes.toString());
+          break;
+        } finally {
+          zis.closeEntry();
         }
-
-        // Skip directories
-        if (entry.isDirectory()) {
-          continue;
-        }
-
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        IOUtils.copy(zis, bytes);
-        zis.closeEntry();
-
-        DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);
-        dataStorage.saveTemplate(bytes.toString());
-        break;
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing FAQ template", e);

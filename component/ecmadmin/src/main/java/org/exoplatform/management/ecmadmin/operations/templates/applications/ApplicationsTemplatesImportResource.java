@@ -62,61 +62,67 @@ public class ApplicationsTemplatesImportResource extends ECMAdminImportResource 
     try {
       ApplicationTemplatesMetadata metadata = null;
       final ZipInputStream zis = new ZipInputStream(attachmentInputStream);
-      ZipEntry entry;
-      while ((entry = zis.getNextEntry()) != null) {
-        String filePath = entry.getName();
-        if (!filePath.startsWith("ecmadmin/templates/applications/")) {
-          continue;
-        }
-        if (filePath.endsWith("metadata.xml")) {
-          // read NT Templates Metadata
-          XStream xStream = new XStream();
-          xStream.alias("metadata", ApplicationTemplatesMetadata.class);
-          if (metadata == null) {
-            metadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
-          } else {
-            ApplicationTemplatesMetadata tmpMetadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
-            metadata.getTitleMap().putAll(tmpMetadata.getTitleMap());
+      try {
+        ZipEntry entry;
+        while ((entry = zis.getNextEntry()) != null) {
+          try {
+            String filePath = entry.getName();
+            if (!filePath.startsWith("ecmadmin/templates/applications/")) {
+              continue;
+            }
+            if (filePath.endsWith("metadata.xml")) {
+              // read NT Templates Metadata
+              XStream xStream = new XStream();
+              xStream.alias("metadata", ApplicationTemplatesMetadata.class);
+              if (metadata == null) {
+                metadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
+              } else {
+                ApplicationTemplatesMetadata tmpMetadata = (ApplicationTemplatesMetadata) xStream.fromXML(new InputStreamReader(zis));
+                metadata.getTitleMap().putAll(tmpMetadata.getTitleMap());
+              }
+              continue;
+            }
+
+            // Skip directories
+            // & Skip empty entries
+            // & Skip entries not in sites/zip
+            if (entry.isDirectory() || filePath.equals("") || !filePath.endsWith(".gtmpl")) {
+              continue;
+            }
+
+            Matcher matcher = templateEntryPattern.matcher(filePath);
+            if (!matcher.find()) {
+              continue;
+            }
+
+            String applicationName = matcher.group(1);
+            String categoryName = matcher.group(2);
+            String templateName = matcher.group(3) + ".gtmpl";
+
+            Node category = applicationTemplateManagerService.getApplicationTemplateHome(applicationName, SessionProvider.createSystemProvider()).getNode(categoryName);
+            if (category.hasNode(templateName)) {
+              if (replaceExisting) {
+                log.info("Overwrite existing application template '" + applicationName + "/" + categoryName + "/" + templateName + "'.");
+                Node templateNode = category.getNode(templateName);
+                templateNode.remove();
+                category.getSession().save();
+              } else {
+                log.info("Ignore existing application template '" + applicationName + "/" + categoryName + "/" + templateName + "'.");
+                continue;
+              }
+            }
+            String templateTitle = templateName;
+            if (metadata != null) {
+              templateTitle = metadata.getTitle(filePath);
+            }
+            templateService.createTemplate(category, templateTitle, templateName, zis, new String[] { "*" });
+          } finally {
+            zis.closeEntry();
           }
-          continue;
         }
-
-        // Skip directories
-        // & Skip empty entries
-        // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.equals("") || !filePath.endsWith(".gtmpl")) {
-          continue;
-        }
-
-        Matcher matcher = templateEntryPattern.matcher(filePath);
-        if (!matcher.find()) {
-          continue;
-        }
-
-        String applicationName = matcher.group(1);
-        String categoryName = matcher.group(2);
-        String templateName = matcher.group(3) + ".gtmpl";
-
-        Node category = applicationTemplateManagerService.getApplicationTemplateHome(applicationName, SessionProvider.createSystemProvider()).getNode(categoryName);
-        if (category.hasNode(templateName)) {
-          if (replaceExisting) {
-            log.info("Overwrite existing application template '" + applicationName + "/" + categoryName + "/" + templateName + "'.");
-            Node templateNode = category.getNode(templateName);
-            templateNode.remove();
-            category.getSession().save();
-          } else {
-            log.info("Ignore existing application template '" + applicationName + "/" + categoryName + "/" + templateName + "'.");
-            continue;
-          }
-        }
-        String templateTitle = templateName;
-        if (metadata != null) {
-          templateTitle = metadata.getTitle(filePath);
-        }
-        templateService.createTemplate(category, templateTitle, templateName, zis, new String[] { "*" });
-        zis.closeEntry();
+      } finally {
+        zis.close();
       }
-      zis.close();
 
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing applications templates", e);

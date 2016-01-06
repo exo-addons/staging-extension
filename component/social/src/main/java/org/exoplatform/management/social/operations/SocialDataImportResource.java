@@ -627,64 +627,67 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
       Map<String, ZipOutputStream> zipOutputStreamMap = new HashMap<String, ZipOutputStream>();
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
-        String zipEntryPath = entry.getName();
-        // Skip entries not managed by this extension
-        if (!zipEntryPath.startsWith(MANAGED_ENTRY_PATH_PREFIX)) {
-          continue;
-        }
-
-        // Skip directories
-        if (entry.isDirectory()) {
-          // Create directory in unzipped folder location
-          createFile(new File(targetFolderPath + replaceSpecialChars(zipEntryPath)), true);
-          continue;
-        }
-        int idBeginIndex = MANAGED_ENTRY_PATH_PREFIX.length();
-        String spacePrettyName = zipEntryPath.substring(idBeginIndex, zipEntryPath.indexOf("/", idBeginIndex));
-        if (ignoredSpaces.contains(spacePrettyName)) {
-          continue;
-        }
-
-        if (!filesToImportByOwner.containsKey(spacePrettyName)) {
-          filesToImportByOwner.put(spacePrettyName, new HashMap<String, File>());
-        }
-        Map<String, File> ownerFiles = filesToImportByOwner.get(spacePrettyName);
-
-        log.info("Receiving content " + zipEntryPath);
-
-        if (zipEntryPath.contains(SocialExtension.ANSWER_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.ANSWER_RESOURCE_PATH);
-        } else if (zipEntryPath.contains(SocialExtension.CALENDAR_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.CALENDAR_RESOURCE_PATH);
-        } else if (zipEntryPath.contains(SocialExtension.CONTENT_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.CONTENT_RESOURCE_PATH);
-        } else if (zipEntryPath.contains(SocialExtension.FAQ_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.FAQ_RESOURCE_PATH);
-        } else if (zipEntryPath.contains(SocialExtension.FORUM_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.FORUM_RESOURCE_PATH);
-        } else if (zipEntryPath.contains(SocialExtension.WIKI_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.WIKI_RESOURCE_PATH);
-        } else if (zipEntryPath.contains(SocialExtension.GROUP_SITE_RESOURCE_PATH)) {
-          putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.SITES_IMPORT_RESOURCE_PATH);
-        } else {
-          String localFilePath = targetFolderPath + replaceSpecialChars(zipEntryPath);
-          if (localFilePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-            // Create space here to be sure that it's created before
-            // importing
-            // other application resources
-            boolean toIgnore = createOrReplaceSpace(spacePrettyName, targetSpaceName, replaceExisting, createAbsentUsers, zis);
-            if (toIgnore) {
-              ignoredSpaces.add(spacePrettyName);
-              filesToImportByOwner.remove(spacePrettyName);
-            }
-          } else {
-            ownerFiles.put(zipEntryPath, new File(localFilePath));
-
-            // Put file Export file in temp folder
-            copyToDisk(zis, localFilePath);
+        try {
+          String zipEntryPath = entry.getName();
+          // Skip entries not managed by this extension
+          if (!zipEntryPath.startsWith(MANAGED_ENTRY_PATH_PREFIX)) {
+            continue;
           }
+
+          // Skip directories
+          if (entry.isDirectory()) {
+            // Create directory in unzipped folder location
+            createFile(new File(targetFolderPath + replaceSpecialChars(zipEntryPath)), true);
+            continue;
+          }
+          int idBeginIndex = MANAGED_ENTRY_PATH_PREFIX.length();
+          String spacePrettyName = zipEntryPath.substring(idBeginIndex, zipEntryPath.indexOf("/", idBeginIndex));
+          if (ignoredSpaces.contains(spacePrettyName)) {
+            continue;
+          }
+
+          if (!filesToImportByOwner.containsKey(spacePrettyName)) {
+            filesToImportByOwner.put(spacePrettyName, new HashMap<String, File>());
+          }
+          Map<String, File> ownerFiles = filesToImportByOwner.get(spacePrettyName);
+
+          log.info("Receiving content " + zipEntryPath);
+
+          if (zipEntryPath.contains(SocialExtension.ANSWER_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.ANSWER_RESOURCE_PATH);
+          } else if (zipEntryPath.contains(SocialExtension.CALENDAR_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.CALENDAR_RESOURCE_PATH);
+          } else if (zipEntryPath.contains(SocialExtension.CONTENT_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.CONTENT_RESOURCE_PATH);
+          } else if (zipEntryPath.contains(SocialExtension.FAQ_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.FAQ_RESOURCE_PATH);
+          } else if (zipEntryPath.contains(SocialExtension.FORUM_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.FORUM_RESOURCE_PATH);
+          } else if (zipEntryPath.contains(SocialExtension.WIKI_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.WIKI_RESOURCE_PATH);
+          } else if (zipEntryPath.contains(SocialExtension.GROUP_SITE_RESOURCE_PATH)) {
+            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.SITES_IMPORT_RESOURCE_PATH);
+          } else {
+            String localFilePath = targetFolderPath + replaceSpecialChars(zipEntryPath);
+            if (localFilePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
+              // Create space here to be sure that it's created before
+              // importing
+              // other application resources
+              boolean toIgnore = createOrReplaceSpace(spacePrettyName, targetSpaceName, replaceExisting, createAbsentUsers, zis);
+              if (toIgnore) {
+                ignoredSpaces.add(spacePrettyName);
+                filesToImportByOwner.remove(spacePrettyName);
+              }
+            } else {
+              ownerFiles.put(zipEntryPath, new File(localFilePath));
+
+              // Put file Export file in temp folder
+              copyToDisk(zis, localFilePath);
+            }
+          }
+        } finally {
+          zis.closeEntry();
         }
-        zis.closeEntry();
       }
 
       Collection<ZipOutputStream> zipOutputStreams = zipOutputStreamMap.values();
