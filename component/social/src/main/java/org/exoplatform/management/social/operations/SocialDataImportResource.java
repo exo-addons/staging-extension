@@ -647,6 +647,7 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
       Map<String, ZipOutputStream> zipOutputStreamMap = new HashMap<String, ZipOutputStream>();
       ZipEntry entry;
       while ((entry = zis.getNextEntry()) != null) {
+        try {
         String zipEntryPath = entry.getName();
         // Skip entries not managed by this extension
         if (!zipEntryPath.startsWith(MANAGED_ENTRY_PATH_PREFIX)) {
@@ -703,7 +704,9 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
             copyToDisk(zis, localFilePath);
           }
         }
+        } finally {
         zis.closeEntry();
+      }
       }
 
       Collection<ZipOutputStream> zipOutputStreams = zipOutputStreamMap.values();

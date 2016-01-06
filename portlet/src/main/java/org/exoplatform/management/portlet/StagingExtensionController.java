@@ -316,8 +316,9 @@ public class StagingExtensionController {
     }
 
     ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
-    ZipEntry entry = zipInputStream.getNextEntry();
     Set<String> foundResources = new HashSet<String>();
+    try {
+    ZipEntry entry = zipInputStream.getNextEntry();
     while (entry != null) {
       String fileName = entry.getName();
       if (entry.isDirectory()) {
@@ -339,8 +340,9 @@ public class StagingExtensionController {
     }
 
     log.info("Found resources zip file : {}", foundResources);
-
+    } finally {
     zipInputStream.close();
+    }
 
     if (!foundResources.isEmpty()) {
       return Response.ok(toString(foundResources));

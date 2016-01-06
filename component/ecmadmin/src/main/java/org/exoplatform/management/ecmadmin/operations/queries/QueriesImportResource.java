@@ -71,12 +71,14 @@ public class QueriesImportResource extends ECMAdminImportResource {
 
     try {
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
+      try {
       ZipEntry ze = null;
 
       IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
       IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
 
       while ((ze = zin.getNextEntry()) != null) {
+          try {
         String zipEntryName = ze.getName();
         if (!zipEntryName.startsWith("ecmadmin/queries/")) {
           continue;
@@ -141,7 +143,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
                 Node sharedQuery = queryService.getSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
                 boolean alreadyExists = (sharedQuery != null);
                 if (alreadyExists) {
-                  if(replaceExisting) {
+                      if (replaceExisting) {
                     log.info("Overwrite shared query '" + queryData.getName() + "'.");
                     queryService.removeSharedQuery(queryData.getName(), WCMCoreUtils.getSystemSessionProvider());
                   } else {
@@ -149,7 +151,7 @@ public class QueriesImportResource extends ECMAdminImportResource {
                   }
                 }
 
-                if(!alreadyExists || replaceExisting) {
+                    if (!alreadyExists || replaceExisting) {
                   String[] permissions = new String[queryData.getPermissions().size()];
                   queryService.addSharedQuery(queryData.getName(), queryData.getStatement(), queryData.getLanguage(), queryData.getPermissions().toArray(permissions), queryData.getCacheResult(), WCMCoreUtils.getSystemSessionProvider());
                 }
@@ -157,9 +159,13 @@ public class QueriesImportResource extends ECMAdminImportResource {
             }
           }
         }
+          } finally {
         zin.closeEntry();
       }
+        }
+      } finally {
       zin.close();
+      }
 
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception exception) {

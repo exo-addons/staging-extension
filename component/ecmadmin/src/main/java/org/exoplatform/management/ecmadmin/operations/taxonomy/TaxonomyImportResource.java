@@ -66,36 +66,40 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
 
     try {
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
-      ZipEntry ze = null;
-      while ((ze = zin.getNextEntry()) != null) {
-        if (!ze.getName().startsWith("ecmadmin/taxonomy/")) {
-          continue;
-        }
-        if (ze.getName().endsWith("tree.xml")) {
-          // Write JCR Content in XML Temp File
-          File tempFile = File.createTempFile("jcr", "sysview");
-          tempFile.deleteOnExit();
-          FileOutputStream fout = new FileOutputStream(tempFile);
-          IOUtils.copy(zin, fout);
-          zin.closeEntry();
-          fout.close();
-          String taxonomyName = extractTaxonomyName(ze.getName());
-          // Put temp file location in Map
-          exportMap.put(taxonomyName, tempFile);
-        } else if (ze.getName().endsWith("metadata.xml")) {
-          ByteArrayOutputStream fout = new ByteArrayOutputStream();
-          IOUtils.copy(zin, fout);
-          zin.closeEntry();
-          String taxonomyName = extractTaxonomyName(ze.getName());
+      try {
+        ZipEntry ze = null;
+        while ((ze = zin.getNextEntry()) != null) {
+          try {
+            if (!ze.getName().startsWith("ecmadmin/taxonomy/")) {
+              continue;
+            }
+            if (ze.getName().endsWith("tree.xml")) {
+              // Write JCR Content in XML Temp File
+              File tempFile = File.createTempFile("jcr", "sysview");
+              tempFile.deleteOnExit();
+              FileOutputStream fout = new FileOutputStream(tempFile);
+              IOUtils.copy(zin, fout);
+              fout.close();
+              String taxonomyName = extractTaxonomyName(ze.getName());
+              // Put temp file location in Map
+              exportMap.put(taxonomyName, tempFile);
+            } else if (ze.getName().endsWith("metadata.xml")) {
+              ByteArrayOutputStream fout = new ByteArrayOutputStream();
+              IOUtils.copy(zin, fout);
+              String taxonomyName = extractTaxonomyName(ze.getName());
 
-          XStream xStream = new XStream();
-          xStream.alias("metadata", TaxonomyMetaData.class);
-          TaxonomyMetaData taxonomyMetaData = (TaxonomyMetaData) xStream.fromXML(fout.toString("UTF-8"));
-          metadataMap.put(taxonomyName, taxonomyMetaData);
+              XStream xStream = new XStream();
+              xStream.alias("metadata", TaxonomyMetaData.class);
+              TaxonomyMetaData taxonomyMetaData = (TaxonomyMetaData) xStream.fromXML(fout.toString("UTF-8"));
+              metadataMap.put(taxonomyName, taxonomyMetaData);
+            }
+          } finally {
+            zin.closeEntry();
+          }
         }
-        zin.closeEntry();
+      } finally {
+        zin.close();
       }
-      zin.close();
 
       for (Entry<String, TaxonomyMetaData> entry : metadataMap.entrySet()) {
         String taxonomyName = entry.getKey();

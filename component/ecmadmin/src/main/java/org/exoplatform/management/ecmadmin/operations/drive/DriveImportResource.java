@@ -1,5 +1,6 @@
 package org.exoplatform.management.ecmadmin.operations.drive;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -49,10 +50,11 @@ public class DriveImportResource extends ECMAdminImportResource {
       driveService = operationContext.getRuntimeContext().getRuntimeComponent(ManageDriveService.class);
     }
 
+    ZipInputStream zin = new ZipInputStream(attachmentInputStream);
     try {
-      ZipInputStream zin = new ZipInputStream(attachmentInputStream);
       ZipEntry ze = null;
       while ((ze = zin.getNextEntry()) != null) {
+        try {
         if (!ze.getName().startsWith("ecmadmin/drive/")) {
           continue;
         }
@@ -81,11 +83,18 @@ public class DriveImportResource extends ECMAdminImportResource {
 
           driveService.clearAllDrivesCache();
         }
+        } finally {
         zin.closeEntry();
       }
-      zin.close();
+      }
     } catch (Exception exception) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS drives.", exception);
+    } finally {
+      try {
+        zin.close();
+      } catch (IOException e) {
+        throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while closing stream.", e);
+    }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
   }

@@ -56,9 +56,11 @@ public class ViewImportResource extends ECMAdminImportResource {
     String templatesHomePath = getTemplatesHomePath() + "/";
 
     final ZipInputStream zin = new ZipInputStream(attachmentInputStream);
+    try {
     ZipEntry entry;
     try {
       while ((entry = zin.getNextEntry()) != null) {
+          try {
         String filePath = entry.getName();
         if (!filePath.startsWith("ecmadmin/view/")) {
           continue;
@@ -82,9 +84,9 @@ public class ViewImportResource extends ECMAdminImportResource {
             // template does not exist, ignore the error
           }
 
-          if(template != null) {
-            if(replaceExisting) {
-              log.info("Overwrite existing view template: " + templateName);
+              if (template != null) {
+                if (replaceExisting) {
+                  log.info("Overwrite existing view template: " + templateName);
               viewService.updateTemplate(templateName, content, templatesHomePath, sessionProvider);
             } else {
               log.info("Ignore existing view template: " + templateName);
@@ -107,7 +109,7 @@ public class ViewImportResource extends ECMAdminImportResource {
             }
             ViewConfig config = (ViewConfig) objectParameter.getObject();
             if (viewService.hasView(config.getName())) {
-              if(replaceExisting) {
+                  if (replaceExisting) {
                 log.info("Overwrite existing view: " + config.getName());
                 viewService.removeView(config.getName());
                 viewService.addView(config.getName(), config.getPermissions(), config.isHideExplorerPanel(), config.getTemplate(), config.getTabList());
@@ -120,9 +122,13 @@ public class ViewImportResource extends ECMAdminImportResource {
             }
           }
         }
+          } finally {
         zin.closeEntry();
       }
+        }
+      } finally {
       zin.close();
+      }
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading View Templates from Stream.", e);

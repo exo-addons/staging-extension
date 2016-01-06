@@ -67,29 +67,35 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
       log.info("Import node types (existing nodetypes will be ignored) :");
 
       ZipInputStream zin = new ZipInputStream(attachmentInputStream);
-      ZipEntry ze = null;
       List<NodeTypeValue> nodeTypeValues = new ArrayList<NodeTypeValue>();
-      while ((ze = zin.getNextEntry()) != null) {
-        if (!ze.getName().startsWith(pathPrefix)) {
-          continue;
-        }
-        if (ze.getName().endsWith("-nodeType.xml")) {
-          IBindingFactory factory = BindingDirectory.getFactory(NodeTypeValuesList.class);
-          IUnmarshallingContext uctx = factory.createUnmarshallingContext();
-          NodeTypeValuesList nodeTypeValuesList = (NodeTypeValuesList) uctx.unmarshalDocument(zin, null);
-          ArrayList<?> ntvList = nodeTypeValuesList.getNodeTypeValuesList();
-          for (Object object : ntvList) {
-            NodeTypeValue nodeTypeValue = (NodeTypeValue) object;
-            log.info("- " + nodeTypeValue.getName());
-            nodeTypeValues.add(nodeTypeValue);
+      try {
+        ZipEntry ze = null;
+        while ((ze = zin.getNextEntry()) != null) {
+          try {
+            if (!ze.getName().startsWith(pathPrefix)) {
+              continue;
+            }
+            if (ze.getName().endsWith("-nodeType.xml")) {
+              IBindingFactory factory = BindingDirectory.getFactory(NodeTypeValuesList.class);
+              IUnmarshallingContext uctx = factory.createUnmarshallingContext();
+              NodeTypeValuesList nodeTypeValuesList = (NodeTypeValuesList) uctx.unmarshalDocument(zin, null);
+              ArrayList<?> ntvList = nodeTypeValuesList.getNodeTypeValuesList();
+              for (Object object : ntvList) {
+                NodeTypeValue nodeTypeValue = (NodeTypeValue) object;
+                log.info("- " + nodeTypeValue.getName());
+                nodeTypeValues.add(nodeTypeValue);
+              }
+            } else if (ze.getName().endsWith("namespaces-configuration.xml")) {
+              // Import namespaces
+              registerNamespaces(zin);
+            }
+          } finally {
+            zin.closeEntry();
           }
-        } else if (ze.getName().endsWith("namespaces-configuration.xml")) {
-          // Import namespaces
-          registerNamespaces(zin);
         }
-        zin.closeEntry();
+      } finally {
+        zin.close();
       }
-      zin.close();
 
       if (replaceExisting) {
         log.info("Option replace-existing ignored for nodetypes (" + pathPrefix.substring(0, pathPrefix.length() - 1) + ") import, since the behavior isn't safe. So existing nodetypes will be ignored.");

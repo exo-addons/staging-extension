@@ -102,72 +102,89 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
 
     ZipEntry entry = null;
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
+    try {
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
 
-      if (!filePath.startsWith(GROUPS_PARENT_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
-        continue;
-      }
-      if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
-        continue;
-      }
+          if (!filePath.startsWith(GROUPS_PARENT_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
+            continue;
+          }
+          if (entry.isDirectory() || filePath.trim().isEmpty() || !filePath.endsWith(".xml")) {
+            continue;
+          }
 
-      log.info("Parsing : " + filePath);
-      String groupId = extractParam(filePath, 1);
-      String nodePath = extractParam(filePath, 2);
-      boolean replaceExistingContent = replaceExisting || newlyCreatedGroups.contains(groupId);
-      if (replaceExistingContent) {
-        importNode(nodePath, defaultWorkspace, zin, null, false);
+          log.info("Parsing : " + filePath);
+          String groupId = extractParam(filePath, 1);
+          String nodePath = extractParam(filePath, 2);
+          boolean replaceExistingContent = replaceExisting || newlyCreatedGroups.contains(groupId);
+          if (replaceExistingContent) {
+            importNode(nodePath, defaultWorkspace, zin, null, false);
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
+        }
       }
-
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
   }
 
   private Set<String> importGroups(File tempFile, boolean replaceExisting) throws Exception {
-    ZipEntry entry = null;
-    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
     Set<String> newlyCreatedGroups = new HashSet<String>();
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      if (filePath.startsWith(GROUPS_PARENT_PATH) && filePath.endsWith("group.xml")) {
-        log.debug("Parsing : " + filePath);
-        String groupId = createGroup(zin, replaceExisting);
-        if (groupId != null) {
-          newlyCreatedGroups.add(groupId);
+    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
+    try {
+      ZipEntry entry = null;
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
+          if (filePath.startsWith(GROUPS_PARENT_PATH) && filePath.endsWith("group.xml")) {
+            log.debug("Parsing : " + filePath);
+            String groupId = createGroup(zin, replaceExisting);
+            if (groupId != null) {
+              newlyCreatedGroups.add(groupId);
+            }
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
         }
       }
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
     return newlyCreatedGroups;
   }
 
   private void importMemberships(File tempFile) throws Exception {
-    ZipEntry entry = null;
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
-    while ((entry = zin.getNextEntry()) != null) {
-      String filePath = entry.getName();
-      if (filePath.endsWith("_membership.xml")) {
-        log.debug("Parsing : " + filePath);
-        createMembership(zin);
+    try {
+      ZipEntry entry = null;
+      while ((entry = zin.getNextEntry()) != null) {
+        try {
+          String filePath = entry.getName();
+          if (filePath.endsWith("_membership.xml")) {
+            log.debug("Parsing : " + filePath);
+            createMembership(zin);
+          }
+        } finally {
+          try {
+            zin.closeEntry();
+          } catch (Exception e) {
+            // Already closed, expected
+          }
+        }
       }
-      try {
-        zin.closeEntry();
-      } catch (Exception e) {
-        // Already closed, expected
-      }
+    } finally {
+      zin.close();
     }
-    zin.close();
   }
 
   @SuppressWarnings("deprecation")

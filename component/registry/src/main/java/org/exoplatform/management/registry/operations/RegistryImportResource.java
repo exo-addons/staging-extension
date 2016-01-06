@@ -1,5 +1,6 @@
 package org.exoplatform.management.registry.operations;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,7 @@ public class RegistryImportResource extends AbstractOperationHandler {
     Session session = null;
     try {
       while ((entry = zin.getNextEntry()) != null) {
+        try {
         String filePath = entry.getName();
 
         // Skip directories
@@ -73,10 +75,10 @@ public class RegistryImportResource extends AbstractOperationHandler {
         IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
         ObjectParameter objectParameter = (ObjectParameter) uctx.unmarshalDocument(zin, "UTF-8");
         if (filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX)) {
-          Application application = (Application)objectParameter.getObject();
+            Application application = (Application) objectParameter.getObject();
           createApplication(application, replaceExisting);
         } else {
-          ApplicationCategory category = (ApplicationCategory)objectParameter.getObject();
+            ApplicationCategory category = (ApplicationCategory) objectParameter.getObject();
           ApplicationCategory categoryFromRepo = applicationRegistryService.getApplicationCategory(category.getName());
           if (categoryFromRepo != null) {
             if (replaceExisting) {
@@ -94,12 +96,18 @@ public class RegistryImportResource extends AbstractOperationHandler {
             createApplication(application, replaceExisting);
           }
         }
+        } finally {
         zin.closeEntry();
       }
-      zin.close();
+      }
     } catch (Exception e) {
       throw new OperationException(operationContext.getOperationName(), "Error while importing application registry", e);
     } finally {
+      try {
+        zin.close();
+      } catch (IOException e) {
+        throw new OperationException(operationContext.getOperationName(), "Error while closing stream after import finished", e);
+      }
       if (session != null && session.isLive()) {
         session.logout();
       }
