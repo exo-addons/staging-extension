@@ -109,6 +109,12 @@ public class IDMRestore {
       int numberOfOpenConnections = 0;
       int i = 0;
       do {
+        // using existing DataSource to get a JDBC Connection.
+        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
+        DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
+        DataSource dataSource = connectionProvider.getDataSource();
+
+        numberOfOpenConnections = (int) connectionProvider.getDataSource().getClass().getMethod("getNumActive", new Class[0]).invoke(dataSource);
         if (numberOfOpenConnections > 0) {
           try {
             LOG.warn("Some IDM datasource connections aren't closed yet, wait 5 seconds before retrying.");
@@ -120,13 +126,6 @@ public class IDMRestore {
             // Nothing to do
           }
         }
-
-        // using existing DataSource to get a JDBC Connection.
-        SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
-        DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
-        DataSource dataSource = connectionProvider.getDataSource();
-
-        numberOfOpenConnections = (int) connectionProvider.getDataSource().getClass().getMethod("getNumActive", new Class[0]).invoke(dataSource);
       } while (numberOfOpenConnections > 0 && i++ < 3);
 
       if (numberOfOpenConnections > 0) {

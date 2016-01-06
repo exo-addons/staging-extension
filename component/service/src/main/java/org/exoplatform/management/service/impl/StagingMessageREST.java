@@ -16,10 +16,24 @@ import org.picocontainer.Startable;
 public class StagingMessageREST implements ResourceContainer, Startable {
 
   private static final Log log = ExoLogger.getLogger(StagingServiceImpl.class);
+
   private UserACL userACL;
+  private String message = null;
+  private String position = null;
+  private boolean displayForAll = false;
 
   public StagingMessageREST(UserACL userACL) {
     this.userACL = userACL;
+    readParametersFromProperties();
+  }
+
+  public void readParametersFromProperties() {
+    message = System.getProperty("exo.staging.ui.message", "").trim();
+    position = System.getProperty("exo.staging.ui.message.position", "bottom-left");
+    String displayMessageForAll = System.getProperty("exo.staging.ui.displayMessageForAll", null);
+    if (StringUtils.isNotEmpty(displayMessageForAll)) {
+      displayForAll = displayMessageForAll.trim().equalsIgnoreCase("true");
+    }
   }
 
   @GET
@@ -28,9 +42,7 @@ public class StagingMessageREST implements ResourceContainer, Startable {
   public String getMessageTodisplayInUI() {
     try {
       if (diplayMessageForAll() || Utils.isAdministratorUser() || userACL.isUserInGroup("/platform/web-contributors")) {
-        String message = System.getProperty("exo.staging.ui.message", "").trim();
         if (StringUtils.isNotEmpty(message)) {
-          String position = System.getProperty("exo.staging.ui.message.position", "bottom-left");
           if (StringUtils.isNotEmpty(position)) {
             message += "@" + position;
           }
@@ -44,11 +56,19 @@ public class StagingMessageREST implements ResourceContainer, Startable {
   }
 
   private boolean diplayMessageForAll() {
-    String displayMessageForAll = System.getProperty("exo.staging.ui.displayMessageForAll", null);
-    if (StringUtils.isNotEmpty(displayMessageForAll)) {
-      return displayMessageForAll.trim().equalsIgnoreCase("true");
-    }
-    return false;
+    return displayForAll;
+  }
+
+  public void setDisplayForAll(boolean displayForAll) {
+    this.displayForAll = displayForAll;
+  }
+
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  public void setPosition(String position) {
+    this.position = position;
   }
 
   @Override

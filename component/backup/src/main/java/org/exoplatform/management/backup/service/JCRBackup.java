@@ -9,11 +9,13 @@ import javax.jcr.RepositoryException;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.container.xml.PropertiesParam;
+import org.exoplatform.management.backup.operations.BackupExportResource;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
 import org.exoplatform.services.jcr.config.ValueStorageEntry;
 import org.exoplatform.services.jcr.config.WorkspaceEntry;
 import org.exoplatform.services.jcr.core.ManageableRepository;
+import org.exoplatform.services.jcr.core.WorkspaceContainerFacade;
 import org.exoplatform.services.jcr.ext.backup.BackupConfig;
 import org.exoplatform.services.jcr.ext.backup.BackupConfigurationException;
 import org.exoplatform.services.jcr.ext.backup.BackupManager;
@@ -25,7 +27,7 @@ import org.exoplatform.services.jcr.ext.registry.RegistryService;
 import org.exoplatform.services.jcr.impl.backup.ResumeException;
 import org.exoplatform.services.jcr.impl.backup.Suspendable;
 import org.exoplatform.services.jcr.impl.core.query.SearchManager;
-import org.exoplatform.services.jcr.impl.core.query.SystemSearchManager;
+import org.exoplatform.services.jcr.impl.dataflow.persistent.WorkspacePersistentDataManager;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
@@ -37,6 +39,8 @@ import org.exoplatform.services.log.Log;
 public class JCRBackup {
 
   private static final Log LOG = ExoLogger.getLogger(JCRBackup.class);
+
+  private static final BackupJCRListener BACKUP_JCR_LISTENER = new BackupJCRListener();
 
   public static void backup(PortalContainer portalContainer, File backupDirFile) throws RepositoryException, RepositoryConfigurationException, BackupOperationException, BackupConfigurationException {
     RepositoryService repositoryService = (RepositoryService) portalContainer.getComponentInstanceOfType(RepositoryService.class);
@@ -66,17 +70,26 @@ public class JCRBackup {
     backupConfig.setBackupDir(backupDirFile);
     backupConfig.setRepository(repository.getConfiguration().getName());
 
+    String[] wsNames = repository.getWorkspaceNames();
     try {
-      LOG.info("Suspend repository: " + repository.getConfiguration().getName());
-      repository.setState(ManageableRepository.SUSPENDED);
-      String[] wsNames = repository.getWorkspaceNames();
-      // Reopen indexes to make platform in read-ony mode
-      for (String workspaceName : wsNames) {
-        List<Suspendable> suspendables = repository.getWorkspaceContainer(workspaceName).getComponentInstancesOfType(Suspendable.class);
-        for (Suspendable suspendable : suspendables) {
-          if (suspendable instanceof SearchManager) {
-            suspend(suspendable, workspaceName);
+      if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
+        LOG.info("Suspend repository: " + repository.getConfiguration().getName());
+        repository.setState(ManageableRepository.SUSPENDED);
+        // Reopen indexes to make platform in read-ony mode
+        for (String workspaceName : wsNames) {
+          WorkspaceContainerFacade workspaceContainer = repository.getWorkspaceContainer(workspaceName);
+          List<Suspendable> suspendables = workspaceContainer.getComponentInstancesOfType(Suspendable.class);
+          for (Suspendable suspendable : suspendables) {
+            if (suspendable instanceof SearchManager) {
+              resumeSearchManager(suspendable, workspaceName);
+            }
           }
+        }
+      } else {
+        for (String workspaceName : wsNames) {
+          WorkspaceContainerFacade workspaceContainer = repository.getWorkspaceContainer(workspaceName);
+          WorkspacePersistentDataManager dataManager = (WorkspacePersistentDataManager) workspaceContainer.getComponent(WorkspacePersistentDataManager.class);
+          dataManager.addItemPersistenceListener(BACKUP_JCR_LISTENER);
         }
       }
 
@@ -92,11 +105,22 @@ public class JCRBackup {
         }
       }
     } finally {
-      repository.setState(ManageableRepository.ONLINE);
+      if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
+        repository.setState(ManageableRepository.ONLINE);
+      } else {
+        // remove backup listener
+        for (String workspaceName : wsNames) {
+          WorkspaceContainerFacade workspaceContainer = repository.getWorkspaceContainer(workspaceName);
+          if (workspaceContainer != null) {
+            WorkspacePersistentDataManager dataManager = (WorkspacePersistentDataManager) workspaceContainer.getComponent(WorkspacePersistentDataManager.class);
+            dataManager.removeItemPersistenceListener(BACKUP_JCR_LISTENER);
+          }
+        }
+      }
     }
   }
 
-  private static void suspend(Suspendable searchManager, String workspaceName) {
+  private static void resumeSearchManager(Suspendable searchManager, String workspaceName) {
     if (searchManager.isSuspended()) {
       try {
         LOG.info("Resume SearchManager for workspace: " + workspaceName);

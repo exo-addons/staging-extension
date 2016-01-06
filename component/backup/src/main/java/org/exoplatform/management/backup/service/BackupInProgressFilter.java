@@ -24,7 +24,8 @@ public class BackupInProgressFilter implements Filter {
       chain.doFilter(request, response);
     } catch (Throwable e) {
       if (checkException(e)) {
-        response.getWriter().append("Backup or a restore is in progress. No write operation is allowed.");
+        String content = IOUtil.getResourceAsString("html/backupInProgress.html");
+        response.getWriter().append(content);
       } else {
         throw e;
       }

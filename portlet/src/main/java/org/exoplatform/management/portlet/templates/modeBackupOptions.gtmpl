@@ -3,26 +3,63 @@
 	<div id="backupFolderResult" class="alert {{resultMessageClass}}" ng-bind-html="resultMessage" ng-show="resultMessage.length"></div>
     <form id="form-backup" class="form-horizontal">
       <fieldset>
-		  <legend>Backup</legend>
-		  <input class="row-fluid" type="text" name="/backup/directory" ng-model="optionsModel['/backup/directory']" placeholder="Choose backup parent directory">
-		  <label class="checkbox uiCheckbox">
-			  <input  type="checkbox" ng-init="optionsModel['/backup/export-jcr']=true" ng-checked="optionsModel['/backup/export-jcr']" name="/backup/export-jcr" value="true" ng-model="optionsModel['/backup/export-jcr']"  class="option" />
-			  <span>Backup JCR (Contents, Pages, Forums, Spaces...)</span>
-		  </label>
-		  <label class="checkbox uiCheckbox">
-			  <input  type="checkbox" ng-init="optionsModel['/backup/export-idm']=true" ng-checked="optionsModel['/backup/export-idm']" name="/backup/export-idm" value="true" ng-model="optionsModel['/backup/export-idm']"  class="option" />
-			  <span>Backup IDM (Identity management data: users, groups and roles).</span>
-		  </label>
+		  <legend><h3>Backup</h3></legend>
+		  <h5>Basic options</h5>
+			<p>
+				<input class="row-fluid" type="text" name="/backup/directory" ng-model="optionsModel['/backup/directory']" placeholder="Choose backup parent directory">
+				<label class="checkbox uiCheckbox">
+				  <input  type="checkbox" ng-init="optionsModel['/backup/export-jcr']=true" ng-checked="optionsModel['/backup/export-jcr']" name="/backup/export-jcr" value="true" ng-model="optionsModel['/backup/export-jcr']"  class="option" />
+				  <span>Backup JCR (Contents, Pages, Forums, Spaces...)</span>
+				</label>
+				<label class="checkbox uiCheckbox">
+				  <input  type="checkbox" ng-init="optionsModel['/backup/export-idm']=true" ng-checked="optionsModel['/backup/export-idm']" name="/backup/export-idm" value="true" ng-model="optionsModel['/backup/export-idm']"  class="option" />
+				  <span>Backup IDM (Identity management data: users, groups and roles).</span>
+				</label>
+			</p>
+
+			<HR/>
+			<h5>How to handle write operations while backup is in progress</h5>
+			<p>
+				<span class="uiRadio">
+					<label class="radio">
+						<input class="option" type="radio"  ng-checked="optionsModel['/backup/writeStrategy'] == 'exception'" ng-init="optionsModel['/backup/writeStrategy']='exception'" name="/backup/writeStrategy" value="exception" id="BackupWriteExceptionThrow" ng-model="optionsModel['/backup/writeStrategy']"><span>Throw exception on write</span>
+					</label>
+				</span><br/>
+				<span class="uiRadio">
+					<label class="radio">
+						<input class="option" type="radio" name="/backup/writeStrategy" value="suspend" id="contentEntireSite" ng-model="optionsModel['/backup/writeStrategy']"><span>Suspend write operations</span>
+					</label>
+				</span>
+			</p>
+
+			<HR/>
+			<h5>Display a backup banner message</h5>
+			<p>
+				<span class="uiRadio">
+					<label class="radio">
+						<input class="option" type="radio" ng-init="optionsModel['/backup/displayMessageFor'] = 'all'" ng-checked="optionsModel['/backup/displayMessageFor'] == 'all'" name="/backup/displayMessageFor" value="all" id="displayMessageForAll" ng-model="optionsModel['/backup/displayMessageFor']"><span>All connected users</span>
+					</label>
+				</span><br/>
+				<span class="uiRadio">
+					<label class="radio">
+						<input class="option" type="radio" name="/backup/displayMessageFor" value="admin" id="displayMessageForAdmin" ng-model="optionsModel['/backup/displayMessageFor']"><span>Administrators</span>
+					</label>
+				</span><br/>
+				<input class="row-fluid" type="text" name="/backup/message" ng-model="optionsModel['/backup/message']" placeholder="Choose a backup message to diplay in banner">
+			</p>
+			<HR/>
+
 		  <div class="buttons backup-buttons">
 			<button type="button" class="btn btn-primary backup-button" ng-disabled="button_clicked" ng-click="backup()">Backup</button>
 		  </div>
 	  </fieldset>
     </form>
   </div>
+
   <div>
     <form id="form-restore" class="form-horizontal">
       <fieldset>
-		  <legend>Restore</legend>
+		  <legend><h3>Restore</h3></legend>
 		  <input class="row-fluid" type="text" name="/restore/directory" ng-model="optionsModel['/restore/directory']" placeholder="Choose backup parent directory">
 		  <div class="buttons backup-buttons">
 			<button type="button" class="btn btn-primary backup-button" ng-disabled="button_clicked" ng-click="restore()">Restore</button>

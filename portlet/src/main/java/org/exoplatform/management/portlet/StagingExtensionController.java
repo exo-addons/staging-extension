@@ -351,7 +351,7 @@ public class StagingExtensionController {
 
   @Ajax
   @juzu.Resource
-  public Response backup(String backupDirectory, String exportJCR, String exportIDM) throws IOException {
+  public Response backup(String backupDirectory, String exportJCR, String exportIDM, String writeStrategy, String displayMessageFor, String message) throws IOException {
     try {
       ResourceCategory category = new ResourceCategory("/backup");
       String resourcePath = "/backup/" + PortalContainer.getCurrentPortalContainerName();
@@ -359,6 +359,9 @@ public class StagingExtensionController {
       category.getExportOptions().put("directory", backupDirectory);
       category.getExportOptions().put("export-jcr", exportJCR);
       category.getExportOptions().put("export-idm", exportIDM);
+      category.getExportOptions().put("writeStrategy", writeStrategy);
+      category.getExportOptions().put("displayMessageFor", displayMessageFor);
+      category.getExportOptions().put("message", message);
       List<ResourceCategory> resourceCategories = Collections.singletonList(category);
       stagingService.export(resourceCategories);
       return Response.ok("Backup operation finished successfully.");

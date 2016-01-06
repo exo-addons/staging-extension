@@ -6,9 +6,6 @@
 		<name>BackupContainerLifecycle</name>
 		<type>org.exoplatform.management.backup.service.BackupContainerLifecycle</type>
 	</container-lifecycle-plugin>
-	<component>
-		<type>org.exoplatform.management.backup.service.BackupResquestLifecycle</type>
-	</component>
 	<external-component-plugins>
 		<target-component>org.exoplatform.web.filter.ExtensibleFilter</target-component>
 		<component-plugin>

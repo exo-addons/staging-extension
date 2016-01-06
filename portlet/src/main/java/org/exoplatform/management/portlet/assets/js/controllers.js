@@ -374,6 +374,11 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		var dirFolder = $scope.optionsModel["/backup/directory"];
 		var exportJCR = $scope.optionsModel["/backup/export-jcr"];
 		var exportIDM = $scope.optionsModel["/backup/export-idm"];
+
+		var writeStrategy = $scope.optionsModel["/backup/writeStrategy"];
+		var displayMessageFor = $scope.optionsModel["/backup/displayMessageFor"];
+		var message = $scope.optionsModel["/backup/message"];
+
 		if(dirFolder == null || dirFolder == "") {
 		  $scope.setResultMessage("Error : Empty backup folder", "error");
 		} else {
@@ -386,7 +391,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		  $http({
 		        method: 'POST',
 		        url: stagingContainer.jzURL('StagingExtensionController.backup'),
-		        data: 'backupDirectory=' + encodeURIComponent(dirFolder) + "&exportJCR=" + exportJCR + "&exportIDM=" + exportIDM,
+		        data: 'backupDirectory=' + encodeURIComponent(dirFolder) + "&exportJCR=" + exportJCR + "&exportIDM=" + exportIDM + "&writeStrategy=" + writeStrategy + "&displayMessageFor=" + displayMessageFor + "&message=" + encodeURIComponent(message),
 		        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 		  	}).success(function (data) {
 		  		if(!data) {

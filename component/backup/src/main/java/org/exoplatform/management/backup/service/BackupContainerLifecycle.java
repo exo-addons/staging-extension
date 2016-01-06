@@ -9,7 +9,7 @@ import org.picketlink.idm.api.IdentitySession;
 public class BackupContainerLifecycle extends BaseContainerLifecyclePlugin {
   @Override
   public void startContainer(ExoContainer container) throws Exception {
-    // FIXME workaround for PLF-6455
+    // FIXME workaround for WIKI-1084
     if (container instanceof PortalContainer) {
       PicketLinkIDMService idmService = (PicketLinkIDMService) container.getComponentInstanceOfType(PicketLinkIDMService.class);
       IdentitySession identitySession = idmService.getIdentitySession();

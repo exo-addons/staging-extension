@@ -35,7 +35,6 @@ public class BackupImportResource extends AbstractOperationHandler {
 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
-    restoreInProgress = true;
     Map<Object, Throwable> endedServicesLifecycle = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
@@ -51,6 +50,7 @@ public class BackupImportResource extends AbstractOperationHandler {
     jobSchedulerService.suspend();
 
     increaseCurrentTransactionTimeOut(portalContainer);
+    restoreInProgress = true;
     try {
 
       File backupDirFile = BackupExportResource.getBackupDirectoryFile(attributes);
