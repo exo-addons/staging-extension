@@ -36,13 +36,13 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
  * @version $Revision$
  */
 public class MopReadResource extends AbstractOperationHandler {
-    @Override
-    public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
-        Set<String> children = new LinkedHashSet<String>(3);
-        children.add("portalsites");
-        children.add("groupsites");
-        children.add("usersites");
+  @Override
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
+    Set<String> children = new LinkedHashSet<String>(3);
+    children.add("portalsites");
+    children.add("groupsites");
+    children.add("usersites");
 
-        resultHandler.completed(new ReadResourceModel("Available site types.", children));
-    }
+    resultHandler.completed(new ReadResourceModel("Available site types.", children));
+  }
 }

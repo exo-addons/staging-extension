@@ -65,8 +65,7 @@ public class GadgetExportResource extends AbstractOperationHandler {
       jcrPath = DEFAULT_JCR_PATH;
     }
 
-    ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager
-        .getLifeCycle("app");
+    ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager.getLifeCycle("app");
     String workspaceName = lifeCycle.getWorkspaceName();
 
     increaseCurrentTransactionTimeOut(operationContext);

@@ -27,19 +27,14 @@ public class GadgetManagementExtension extends AbstractManagementExtension {
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("gadget");
 
-    ManagedResource.Registration gadgets = registration
-        .registerManagedResource(description("Gadget Managed Resource, responsible for handling management operations Gadgets."));
-    gadgets
-        .registerOperationHandler(OperationNames.READ_RESOURCE, new GadgetReadResource(), description("Empty read resources."));
-    gadgets.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new GadgetImportResource(),
-        description("Import gadget data"));
+    ManagedResource.Registration gadgets = registration.registerManagedResource(description("Gadget Managed Resource, responsible for handling management operations Gadgets."));
+    gadgets.registerOperationHandler(OperationNames.READ_RESOURCE, new GadgetReadResource(), description("Empty read resources."));
+    gadgets.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new GadgetImportResource(), description("Import gadget data"));
 
     // /gadget/<gadget_name>
-    ManagedResource.Registration gadget = gadgets.registerSubResource("{gadget-name: .*}",
-        description("Management resource responsible for handling management operations on a specific gadget."));
+    ManagedResource.Registration gadget = gadgets.registerSubResource("{gadget-name: .*}", description("Management resource responsible for handling management operations on a specific gadget."));
     gadget.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty."));
-    gadget
-        .registerOperationHandler(OperationNames.EXPORT_RESOURCE, new GadgetExportResource(), description("Export gadget data"));
+    gadget.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new GadgetExportResource(), description("Export gadget data"));
   }
 
 }

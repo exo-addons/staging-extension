@@ -78,7 +78,6 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     publicationService = operationContext.getRuntimeContext().getRuntimeComponent(PublicationService.class);
     wcmPublicationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMPublicationService.class);
 
-
     if (importedSiteName == null) {
       importedSiteName = operationContext.getAddress().resolvePathTemplate("site-name");
     }

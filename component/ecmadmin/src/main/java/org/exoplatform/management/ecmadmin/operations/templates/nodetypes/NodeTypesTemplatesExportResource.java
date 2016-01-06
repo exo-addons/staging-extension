@@ -95,8 +95,7 @@ public class NodeTypesTemplatesExportResource extends AbstractOperationHandler {
    * @param viewNode
    * @throws RepositoryException
    */
-  private void exportTemplates(Node parentNode, String type, String templatesHomePath, List<ExportTask> exportTasks)
-      throws Exception {
+  private void exportTemplates(Node parentNode, String type, String templatesHomePath, List<ExportTask> exportTasks) throws Exception {
     if (parentNode != null) {
       NodeIterator viewTemplateNodes = parentNode.getNodes();
       while (viewTemplateNodes.hasNext()) {

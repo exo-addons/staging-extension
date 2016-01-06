@@ -25,17 +25,21 @@ public interface ResourceHandler {
   /**
    * Export selected resources with selected options as filter.
    * 
-   * @param list : List of resources to export
-   * @param exportFileOS : Write in this zip file the entries
-   * @param exportOptions export options
+   * @param list
+   *          : List of resources to export
+   * @param exportFileOS
+   *          : Write in this zip file the entries
+   * @param exportOptions
+   *          export options
    * 
-   * @throws Exception if an error occurs
+   * @throws Exception
+   *           if an error occurs
    */
   public void exportResourcesInFilter(List<Resource> list, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception;
 
   /**
-   * Synchronise selected resources as filter with host identified by host and port, by
-   * using the selected options.
+   * Synchronise selected resources as filter with host identified by host and
+   * port, by using the selected options.
    * 
    * @param resourcesPaths
    * @param exportOptions
@@ -47,11 +51,15 @@ public interface ResourceHandler {
   /**
    * Export selected resources with selected options.
    * 
-   * @param list : List of resources to export
-   * @param exportFileOS : Write in this zip file the entries
-   * @param exportOptions export options
+   * @param list
+   *          : List of resources to export
+   * @param exportFileOS
+   *          : Write in this zip file the entries
+   * @param exportOptions
+   *          export options
    * 
-   * @throws Exception if an error occurs
+   * @throws Exception
+   *           if an error occurs
    */
   public void export(List<Resource> list, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception;
 }

@@ -20,8 +20,7 @@ public class ApplicationsTemplatesReadResource extends AbstractOperationHandler 
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     Set<String> applications = new HashSet<String>();
-    ApplicationTemplateManagerService templateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(
-        ApplicationTemplateManagerService.class);
+    ApplicationTemplateManagerService templateManagerService = operationContext.getRuntimeContext().getRuntimeComponent(ApplicationTemplateManagerService.class);
     try {
       List<String> applicationNames = templateManagerService.getAllManagedPortletName("repository");
       for (String applicationName : applicationNames) {

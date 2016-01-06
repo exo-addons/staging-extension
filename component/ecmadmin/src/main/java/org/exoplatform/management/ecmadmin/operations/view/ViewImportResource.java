@@ -57,77 +57,77 @@ public class ViewImportResource extends ECMAdminImportResource {
 
     final ZipInputStream zin = new ZipInputStream(attachmentInputStream);
     try {
-    ZipEntry entry;
-    try {
-      while ((entry = zin.getNextEntry()) != null) {
+      ZipEntry entry;
+      try {
+        while ((entry = zin.getNextEntry()) != null) {
           try {
-        String filePath = entry.getName();
-        if (!filePath.startsWith("ecmadmin/view/")) {
-          continue;
-        }
-        // Skip directories
-        // & Skip empty entries
-        // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.trim().isEmpty() || !(filePath.endsWith(".gtmpl") || filePath.endsWith(".xml"))) {
-          continue;
-        }
-        if (filePath.endsWith(".gtmpl")) {
-          String templateName = extractTemplateName(filePath);
+            String filePath = entry.getName();
+            if (!filePath.startsWith("ecmadmin/view/")) {
+              continue;
+            }
+            // Skip directories
+            // & Skip empty entries
+            // & Skip entries not in sites/zip
+            if (entry.isDirectory() || filePath.trim().isEmpty() || !(filePath.endsWith(".gtmpl") || filePath.endsWith(".xml"))) {
+              continue;
+            }
+            if (filePath.endsWith(".gtmpl")) {
+              String templateName = extractTemplateName(filePath);
 
-          log.debug("Reading Stream for template: " + templateName);
-          String content = IOUtils.toString(zin);
+              log.debug("Reading Stream for template: " + templateName);
+              String content = IOUtils.toString(zin);
 
-          Node template = null;
-          try {
-            template = viewService.getTemplate(templatesHomePath + templateName, sessionProvider);
-          } catch (Exception e) {
-            // template does not exist, ignore the error
-          }
+              Node template = null;
+              try {
+                template = viewService.getTemplate(templatesHomePath + templateName, sessionProvider);
+              } catch (Exception e) {
+                // template does not exist, ignore the error
+              }
 
               if (template != null) {
                 if (replaceExisting) {
                   log.info("Overwrite existing view template: " + templateName);
-              viewService.updateTemplate(templateName, content, templatesHomePath, sessionProvider);
-            } else {
-              log.info("Ignore existing view template: " + templateName);
-            }
-          } else {
-            log.info("Add new view template: " + templateName);
-            viewService.addTemplate(templateName, content, templatesHomePath, sessionProvider);
-          }
-
-        } else if (filePath.endsWith(".xml")) {
-          log.debug("Parsing : " + filePath);
-
-          InitParams initParams = Utils.fromXML(IOUtils.toByteArray(zin), InitParams.class);
-          @SuppressWarnings("unchecked")
-          Iterator<ObjectParameter> iterator = initParams.getObjectParamIterator();
-          while (iterator.hasNext()) {
-            ObjectParameter objectParameter = (ObjectParameter) iterator.next();
-            if (!(objectParameter.getObject() instanceof ViewConfig)) {
-              continue;
-            }
-            ViewConfig config = (ViewConfig) objectParameter.getObject();
-            if (viewService.hasView(config.getName())) {
-                  if (replaceExisting) {
-                log.info("Overwrite existing view: " + config.getName());
-                viewService.removeView(config.getName());
-                viewService.addView(config.getName(), config.getPermissions(), config.isHideExplorerPanel(), config.getTemplate(), config.getTabList());
+                  viewService.updateTemplate(templateName, content, templatesHomePath, sessionProvider);
+                } else {
+                  log.info("Ignore existing view template: " + templateName);
+                }
               } else {
-                log.info("Ignore existing view: " + config.getName());
+                log.info("Add new view template: " + templateName);
+                viewService.addTemplate(templateName, content, templatesHomePath, sessionProvider);
               }
-            } else {
-              log.info("Add new view: " + config.getName());
-              viewService.addView(config.getName(), config.getPermissions(), config.getTemplate(), config.getTabList());
+
+            } else if (filePath.endsWith(".xml")) {
+              log.debug("Parsing : " + filePath);
+
+              InitParams initParams = Utils.fromXML(IOUtils.toByteArray(zin), InitParams.class);
+              @SuppressWarnings("unchecked")
+              Iterator<ObjectParameter> iterator = initParams.getObjectParamIterator();
+              while (iterator.hasNext()) {
+                ObjectParameter objectParameter = (ObjectParameter) iterator.next();
+                if (!(objectParameter.getObject() instanceof ViewConfig)) {
+                  continue;
+                }
+                ViewConfig config = (ViewConfig) objectParameter.getObject();
+                if (viewService.hasView(config.getName())) {
+                  if (replaceExisting) {
+                    log.info("Overwrite existing view: " + config.getName());
+                    viewService.removeView(config.getName());
+                    viewService.addView(config.getName(), config.getPermissions(), config.isHideExplorerPanel(), config.getTemplate(), config.getTabList());
+                  } else {
+                    log.info("Ignore existing view: " + config.getName());
+                  }
+                } else {
+                  log.info("Add new view: " + config.getName());
+                  viewService.addView(config.getName(), config.getPermissions(), config.getTemplate(), config.getTabList());
+                }
+              }
             }
-          }
-        }
           } finally {
-        zin.closeEntry();
-      }
+            zin.closeEntry();
+          }
         }
       } finally {
-      zin.close();
+        zin.close();
       }
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {

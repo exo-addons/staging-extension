@@ -40,12 +40,8 @@ import org.exoplatform.webui.form.UIFormSelectBox;
  * @version $Revision$
  */
 
-@ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/staging/page/PushPage.gtmpl",
-  events = { @EventConfig(
-    listeners = PushPageForm.CloseActionListener.class), @EventConfig(
-    listeners = PushPageForm.PushActionListener.class) })
+@ComponentConfig(lifecycle = UIFormLifecycle.class, template = "classpath:groovy/webui/component/staging/page/PushPage.gtmpl", events = {
+    @EventConfig(listeners = PushPageForm.CloseActionListener.class), @EventConfig(listeners = PushPageForm.PushActionListener.class) })
 public class PushPageForm extends UIForm {
   private static final Log LOG = ExoLogger.getLogger(PushPageForm.class.getName());
 

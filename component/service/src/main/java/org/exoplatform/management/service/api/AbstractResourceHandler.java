@@ -237,8 +237,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
       Utils.copyZipEnries(new ZipInputStream(inputStream), exportFileOS, null);
 
-    } catch (Exception ex) {
-      // }
     } finally {
       if (outputStream != null) {
         outputStream.close();
@@ -277,8 +275,8 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       }
       if (fileOutputStream != null) {
         fileOutputStream.close();
+      }
     }
-  }
   }
 
   private String encodeURLParameters(Map<String, String> options) {
@@ -293,7 +291,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         parameters.add(new BasicNameValuePair(parameterName, parameterValue));
       }
     }
-    return URLEncodedUtils.format(parameters, (String)null);
+    return URLEncodedUtils.format(parameters, (String) null);
   }
 
   /**

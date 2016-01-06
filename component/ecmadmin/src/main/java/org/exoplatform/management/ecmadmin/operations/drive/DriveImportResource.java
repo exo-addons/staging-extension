@@ -55,37 +55,37 @@ public class DriveImportResource extends ECMAdminImportResource {
       ZipEntry ze = null;
       while ((ze = zin.getNextEntry()) != null) {
         try {
-        if (!ze.getName().startsWith("ecmadmin/drive/")) {
-          continue;
-        }
-        if (ze.getName().endsWith("drives-configuration.xml")) {
-          IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
-          IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-          String content = IOUtils.toString(zin);
-          content = content.replace(QueriesExportTask.CONFIGURATION_FILE_XSD, "<configuration>");
-          Configuration configuration = (Configuration) uctx.unmarshalDocument(new StringReader(content), "UTF-8");
+          if (!ze.getName().startsWith("ecmadmin/drive/")) {
+            continue;
+          }
+          if (ze.getName().endsWith("drives-configuration.xml")) {
+            IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
+            IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+            String content = IOUtils.toString(zin);
+            content = content.replace(QueriesExportTask.CONFIGURATION_FILE_XSD, "<configuration>");
+            Configuration configuration = (Configuration) uctx.unmarshalDocument(new StringReader(content), "UTF-8");
 
-          ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(ManageDriveService.class.getName());
-          List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
-          for (ComponentPlugin componentPlugin : componentPlugins) {
-            List<DriveData> drives = componentPlugin.getInitParams().getObjectParamValues(DriveData.class);
+            ExternalComponentPlugins externalComponentPlugins = configuration.getExternalComponentPlugins(ManageDriveService.class.getName());
+            List<ComponentPlugin> componentPlugins = externalComponentPlugins.getComponentPlugins();
+            for (ComponentPlugin componentPlugin : componentPlugins) {
+              List<DriveData> drives = componentPlugin.getInitParams().getObjectParamValues(DriveData.class);
 
-            for (DriveData drive : drives) {
-              if(replaceExisting || driveService.getDriveByName(drive.getName()) == null) {
-                log.info("Overwrite existing drive : " + drive.getName());
+              for (DriveData drive : drives) {
+                if (replaceExisting || driveService.getDriveByName(drive.getName()) == null) {
+                  log.info("Overwrite existing drive : " + drive.getName());
                 // The addDrive method add the drive if it does not exist or updates it if it exists
                 driveService.addDrive(drive.getName(), drive.getWorkspace(), drive.getPermissions(), drive.getHomePath(), drive.getViews(), drive.getIcon(), drive.getViewPreferences(), drive.getViewNonDocument(), drive.getViewSideBar(), drive.getShowHiddenNode(), drive.getAllowCreateFolders(), drive.getAllowNodeTypesOnTree());
               } else {
-                log.info("Ignore existing drive : " + drive.getName());
+                  log.info("Ignore existing drive : " + drive.getName());
+                }
               }
             }
-          }
 
-          driveService.clearAllDrivesCache();
-        }
+            driveService.clearAllDrivesCache();
+          }
         } finally {
-        zin.closeEntry();
-      }
+          zin.closeEntry();
+        }
       }
     } catch (Exception exception) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while importing ECMS drives.", exception);
@@ -94,7 +94,7 @@ public class DriveImportResource extends ECMAdminImportResource {
         zin.close();
       } catch (IOException e) {
         throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while closing stream.", e);
-    }
+      }
     }
     resultHandler.completed(NoResultModel.INSTANCE);
   }

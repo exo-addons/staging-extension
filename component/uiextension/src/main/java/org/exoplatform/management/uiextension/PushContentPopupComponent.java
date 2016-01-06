@@ -49,16 +49,11 @@ import org.exoplatform.webui.form.UIFormSelectBox;
  * @version $Revision$
  */
 
-@ComponentConfigs({ @ComponentConfig(
-  type = UIGrid.class,
-  id = "selectedNodesGrid",
-  template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"), @ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl",
-  events = { @EventConfig(
-    listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(
-    listeners = PushContentPopupComponent.PushActionListener.class), @EventConfig(
-    listeners = PushContentPopupComponent.SelectActionListener.class) }) })
+@ComponentConfigs({
+    @ComponentConfig(type = UIGrid.class, id = "selectedNodesGrid", template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"),
+    @ComponentConfig(lifecycle = UIFormLifecycle.class, template = "classpath:groovy/webui/component/explorer/popup/staging/PushContent.gtmpl", events = {
+        @EventConfig(listeners = PushContentPopupComponent.CloseActionListener.class), @EventConfig(listeners = PushContentPopupComponent.PushActionListener.class),
+        @EventConfig(listeners = PushContentPopupComponent.SelectActionListener.class) }) })
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
 

@@ -108,7 +108,7 @@ public class JCRRestore {
     // Checking repository exists.
     try {
       ManageableRepository repository = repositoryService.getRepository(repositoryEntry.getName());
-      if(repository != null) {
+      if (repository != null) {
         throw new BackupException("Repository \"" + repositoryEntry.getName() + "\" already exists.");
       }
     } catch (RepositoryException e) {

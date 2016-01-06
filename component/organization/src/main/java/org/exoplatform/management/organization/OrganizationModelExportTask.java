@@ -25,32 +25,17 @@ public class OrganizationModelExportTask implements ExportTask {
 
     this.organizationObject = organizationObject;
     if (organizationObject instanceof UserProfile) {
-      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER)
-              .append("/")
-              .append(((UserProfile) organizationObject).getUserName())
-              .append("/profile.xml");
+      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER).append("/").append(((UserProfile) organizationObject).getUserName()).append("/profile.xml");
     } else if (organizationObject instanceof User) {
-      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER)
-              .append("/")
-              .append(((User) organizationObject).getUserName())
-              .append("/user.xml");
+      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER).append("/").append(((User) organizationObject).getUserName()).append("/user.xml");
     } else if (organizationObject instanceof Membership) {
-      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER)
-              .append("/")
-              .append(((Membership) organizationObject).getUserName())
-              .append("/memberships/")
-              .append(((Membership) organizationObject).getId().replace(":", "-"))
-              .append("_membership.xml");
+      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_USER).append("/").append(((Membership) organizationObject).getUserName()).append("/memberships/").append(((Membership) organizationObject).getId().replace(":", "-")).append("_membership.xml");
     } else if (organizationObject instanceof Group) {
-      // no need for a / before the group id since the group id already starts with a /
-      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_GROUP)
-              .append(((Group) organizationObject).getId())
-              .append("/group.xml");
+      // no need for a / before the group id since the group id already starts
+      // with a /
+      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_GROUP).append(((Group) organizationObject).getId()).append("/group.xml");
     } else if (organizationObject instanceof MembershipType) {
-      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_ROLE)
-              .append("/")
-              .append(((MembershipType) organizationObject).getName())
-              .append("_role.xml");
+      serializationPath.append(OrganizationManagementExtension.PATH_ORGANIZATION_ROLE).append("/").append(((MembershipType) organizationObject).getName()).append("_role.xml");
     }
   }
 

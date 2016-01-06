@@ -43,49 +43,49 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @version $Revision$
  */
 public class PageExportTask extends AbstractExportTask implements ExportTask {
-    public static final String FILE = "pages.xml";
+  public static final String FILE = "pages.xml";
 
-    private final DataStorage dataStorage;
-    private final PageService pageService;
-    private final Marshaller<Page.PageSet> marshaller;
-    private final List<String> pageNames;
+  private final DataStorage dataStorage;
+  private final PageService pageService;
+  private final Marshaller<Page.PageSet> marshaller;
+  private final List<String> pageNames;
 
-    public PageExportTask(SiteKey siteKey, DataStorage dataStorage, PageService pageService, Marshaller<Page.PageSet> marshaller) {
-        super(siteKey);
-        this.dataStorage = dataStorage;
-        this.pageService = pageService;
-        this.marshaller = marshaller;
-        pageNames = new ArrayList<String>();
+  public PageExportTask(SiteKey siteKey, DataStorage dataStorage, PageService pageService, Marshaller<Page.PageSet> marshaller) {
+    super(siteKey);
+    this.dataStorage = dataStorage;
+    this.pageService = pageService;
+    this.marshaller = marshaller;
+    pageNames = new ArrayList<String>();
+  }
+
+  @Override
+  public void export(OutputStream outputStream) throws IOException {
+    Page.PageSet pages = new Page.PageSet();
+    pages.setPages(new ArrayList<Page>(pageNames.size()));
+    for (String pageName : pageNames) {
+      try {
+        PageKey pageKey = new PageKey(siteKey, pageName);
+        Page page = PageUtils.getPage(dataStorage, pageService, pageKey);
+        DataTransformerService.exportData("Page", page);
+        pages.getPages().add(page);
+      } catch (Exception e) {
+        throw new IOException("Could not retrieve page name " + pageName + " for site " + siteKey, e);
+      }
     }
 
-    @Override
-    public void export(OutputStream outputStream) throws IOException {
-        Page.PageSet pages = new Page.PageSet();
-        pages.setPages(new ArrayList<Page>(pageNames.size()));
-        for (String pageName : pageNames) {
-            try {
-                PageKey pageKey = new PageKey(siteKey, pageName);
-                Page page = PageUtils.getPage(dataStorage, pageService, pageKey);
-                DataTransformerService.exportData("Page", page);
-                pages.getPages().add(page);
-            } catch (Exception e) {
-                throw new IOException("Could not retrieve page name " + pageName + " for site " + siteKey, e);
-            }
-        }
+    marshaller.marshal(pages, outputStream, false);
+  }
 
-        marshaller.marshal(pages, outputStream, false);
-    }
+  @Override
+  protected String getXmlFileName() {
+    return FILE;
+  }
 
-    @Override
-    protected String getXmlFileName() {
-        return FILE;
-    }
+  public void addPageName(String pageName) {
+    pageNames.add(pageName);
+  }
 
-    public void addPageName(String pageName) {
-        pageNames.add(pageName);
-    }
-
-    public List<String> getPageNames() {
-        return Collections.unmodifiableList(pageNames);
-    }
+  public List<String> getPageNames() {
+    return Collections.unmodifiableList(pageNames);
+  }
 }

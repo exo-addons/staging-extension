@@ -275,7 +275,8 @@ public class IDMRestore {
 
   /**
    * Restore table.
-   * @return 
+   * 
+   * @return
    */
   private int restoreTable(File storageDir, Connection jdbcConn, String tableName, int maxId) throws IOException, SQLException {
     ZipObjectReader contentReader = null;
@@ -408,7 +409,7 @@ public class IDMRestore {
 
         commitBatch();
       }
-      
+
       return maxId;
 
     } finally {

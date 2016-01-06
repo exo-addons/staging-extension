@@ -48,8 +48,7 @@ public class ContentManagementExtension extends AbstractManagementExtension {
     site.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new SiteContentsImportResource(), description("Import site data"));
 
     // /content/sites/<site_name>/contents
-    ManagedResource.Registration siteContents = site.registerSubResource(PATH_CONTENT_SITES_CONTENTS,
-        description("Management resource responsible for handling management operations on contents of a specific site."));
+    ManagedResource.Registration siteContents = site.registerSubResource(PATH_CONTENT_SITES_CONTENTS, description("Management resource responsible for handling management operations on contents of a specific site."));
     siteContents.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteContentsReadResource(), description("Read site contents"));
     siteContents.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteContentsExportResource(), description("Export site contents"));
 
@@ -57,9 +56,10 @@ public class ContentManagementExtension extends AbstractManagementExtension {
     ManagedResource.Registration seo = site.registerSubResource(PATH_CONTENT_SITES_SEO, description("Management resource responsible for handling management operations on SEO of a specific site."));
     seo.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteSEOReadResource(), description("Read site SEO data"));
     seo.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteSEOExportResource(), description("Export site SEO data"));
-    
+
     DataTransformerService.addTransformer("Page", new PageSCVTransformer());
     DataTransformerService.addTransformer("Page", new PageCLVTransformer());
-//    DataTransformerService.addTransformer("Content", new JCRBinaryTransformer());
+    // DataTransformerService.addTransformer("Content", new
+    // JCRBinaryTransformer());
   }
 }

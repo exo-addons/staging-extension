@@ -13,8 +13,7 @@ import org.gatein.management.api.operation.model.ReadResourceModel;
 public class TemplatesReadResource extends AbstractOperationHandler {
 
   @Override
-  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException,
-      OperationException {
+  public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     Set<String> children = new LinkedHashSet<String>(2);
     children.add("applications");
     children.add("nodetypes");

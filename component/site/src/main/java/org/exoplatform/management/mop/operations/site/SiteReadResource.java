@@ -41,51 +41,50 @@ import org.gatein.mop.api.workspace.Site;
  * @version $Revision$
  */
 public class SiteReadResource extends AbstractSiteOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site)
-            throws ResourceNotFoundException, OperationException {
-        boolean pageOrNav = false;
-        Set<String> children = new LinkedHashSet<String>(3);
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException {
+    boolean pageOrNav = false;
+    Set<String> children = new LinkedHashSet<String>(3);
 
-        Page pages = site.getRootPage().getChild("pages");
-        if (pages != null && !pages.getChildren().isEmpty()) {
-            children.add("pages");
-            pageOrNav = true;
-        }
-
-        Navigation defaultNav = site.getRootNavigation().getChild("default");
-        if (defaultNav != null && !defaultNav.getChildren().isEmpty()) {
-            children.add("navigation");
-            pageOrNav = true;
-        }
-
-        if (site.getObjectType() != ObjectType.GROUP_SITE || pageOrNav) {
-            if (site.getObjectType() == ObjectType.PORTAL_SITE) {
-                children.add("portal");
-            } else if (site.getObjectType() == ObjectType.GROUP_SITE) {
-                children.add("group");
-            } else if (site.getObjectType() == ObjectType.USER_SITE) {
-                children.add("user");
-            } else {
-                throw new OperationException(operationContext.getOperationName(), "Unknown site type " + site.getObjectType());
-            }
-        } else {
-            if (site.getObjectType() == ObjectType.GROUP_SITE) {
-                Collection<? extends Site> groupsites = site.getWorkspace().getSites(site.getObjectType());
-                for (Site groupsite : groupsites) {
-                    String siteName = site.getName();
-                    String groupName = groupsite.getName();
-                    if (siteName.equals(groupName))
-                        continue;
-
-                    int index = groupName.indexOf(siteName);
-                    if (index == 0) {
-                        children.add(groupName.substring(siteName.length(), groupName.length()));
-                    }
-                }
-            }
-        }
-
-        resultHandler.completed(new ReadResourceModel("Available artifacts for site " + getSiteKey(site), children));
+    Page pages = site.getRootPage().getChild("pages");
+    if (pages != null && !pages.getChildren().isEmpty()) {
+      children.add("pages");
+      pageOrNav = true;
     }
+
+    Navigation defaultNav = site.getRootNavigation().getChild("default");
+    if (defaultNav != null && !defaultNav.getChildren().isEmpty()) {
+      children.add("navigation");
+      pageOrNav = true;
+    }
+
+    if (site.getObjectType() != ObjectType.GROUP_SITE || pageOrNav) {
+      if (site.getObjectType() == ObjectType.PORTAL_SITE) {
+        children.add("portal");
+      } else if (site.getObjectType() == ObjectType.GROUP_SITE) {
+        children.add("group");
+      } else if (site.getObjectType() == ObjectType.USER_SITE) {
+        children.add("user");
+      } else {
+        throw new OperationException(operationContext.getOperationName(), "Unknown site type " + site.getObjectType());
+      }
+    } else {
+      if (site.getObjectType() == ObjectType.GROUP_SITE) {
+        Collection<? extends Site> groupsites = site.getWorkspace().getSites(site.getObjectType());
+        for (Site groupsite : groupsites) {
+          String siteName = site.getName();
+          String groupName = groupsite.getName();
+          if (siteName.equals(groupName))
+            continue;
+
+          int index = groupName.indexOf(siteName);
+          if (index == 0) {
+            children.add(groupName.substring(siteName.length(), groupName.length()));
+          }
+        }
+      }
+    }
+
+    resultHandler.completed(new ReadResourceModel("Available artifacts for site " + getSiteKey(site), children));
+  }
 }

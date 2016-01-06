@@ -53,8 +53,7 @@ public class CalendarExtension extends AbstractManagementExtension {
 
     ManagedResource.Registration calendar = calendarRegistration.registerManagedResource(description("calendar resources."));
 
-    calendar.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Lists available calendars", SPACE_CALENDAR_TYPE, GROUP_CALENDAR_TYPE, PERSONAL_CALENDAR_TYPE),
-        description("Lists available calendars"));
+    calendar.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Lists available calendars", SPACE_CALENDAR_TYPE, GROUP_CALENDAR_TYPE, PERSONAL_CALENDAR_TYPE), description("Lists available calendars"));
 
     ManagedResource.Registration space = calendar.registerSubResource(SPACE_CALENDAR_TYPE, description("space calendar"));
     space.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(true, true), description("Read space calendars"));

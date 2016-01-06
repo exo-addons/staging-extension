@@ -29,14 +29,14 @@ import org.exoplatform.portal.mop.SiteKey;
  * @version $Revision$
  */
 public abstract class AbstractImportTask<T> extends ImportTask<T> {
-    protected final SiteKey siteKey;
+  protected final SiteKey siteKey;
 
-    public AbstractImportTask(T data, SiteKey siteKey) {
-        super(data);
-        this.siteKey = siteKey;
-    }
+  public AbstractImportTask(T data, SiteKey siteKey) {
+    super(data);
+    this.siteKey = siteKey;
+  }
 
-    public SiteKey getSiteKey() {
-        return siteKey;
-    }
+  public SiteKey getSiteKey() {
+    return siteKey;
+  }
 }

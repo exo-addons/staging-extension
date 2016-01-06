@@ -125,7 +125,8 @@ public class ResourceCategory implements Comparable<ResourceCategory> {
       return i;
     }
     i++;
-    // View templates Configuration has to be imported before Drives configuration
+    // View templates Configuration has to be imported before Drives
+    // configuration
     if (path.startsWith(StagingService.ECM_VIEW_CONFIGURATION_PATH)) {
       return i;
     }
@@ -139,7 +140,7 @@ public class ResourceCategory implements Comparable<ResourceCategory> {
     }
     return order - o.getOrder();
   }
-  
+
   @Override
   public String toString() {
     return (resources != null && !resources.isEmpty() ? resources.toString() : ((subResourceCategories != null && !subResourceCategories.isEmpty()) ? subResourceCategories.toString() : ""));

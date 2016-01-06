@@ -33,21 +33,13 @@ import org.exoplatform.webui.form.input.UICheckBoxInput;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-@ComponentConfigs({ @ComponentConfig(
-  type = UIGrid.class,
-  id = "uiSelectedNodesGrid",
-  template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"), @ComponentConfig(
-  type = UIGrid.class,
-  id = "selectNodesGrid",
-  template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectNodesGrid.gtmpl"), @ComponentConfig(
-  lifecycle = UIFormLifecycle.class,
-  template = "classpath:groovy/webui/component/explorer/popup/staging/SelectContents.gtmpl",
-  events = { @EventConfig(
-    listeners = SelectNodesComponent.FilterActionListener.class), @EventConfig(
-    listeners = SelectNodesComponent.SelectActionListener.class), @EventConfig(
-    listeners = SelectNodesComponent.SelectAllActionListener.class), @EventConfig(
-    listeners = SelectNodesComponent.DeleteAllActionListener.class), @EventConfig(
-    listeners = SelectNodesComponent.DeleteActionListener.class) }) })
+@ComponentConfigs({
+    @ComponentConfig(type = UIGrid.class, id = "uiSelectedNodesGrid", template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectedNodesGrid.gtmpl"),
+    @ComponentConfig(type = UIGrid.class, id = "selectNodesGrid", template = "classpath:groovy/webui/component/explorer/popup/staging/UISelectNodesGrid.gtmpl"),
+    @ComponentConfig(lifecycle = UIFormLifecycle.class, template = "classpath:groovy/webui/component/explorer/popup/staging/SelectContents.gtmpl", events = {
+        @EventConfig(listeners = SelectNodesComponent.FilterActionListener.class), @EventConfig(listeners = SelectNodesComponent.SelectActionListener.class),
+        @EventConfig(listeners = SelectNodesComponent.SelectAllActionListener.class), @EventConfig(listeners = SelectNodesComponent.DeleteAllActionListener.class),
+        @EventConfig(listeners = SelectNodesComponent.DeleteActionListener.class) }) })
 public class SelectNodesComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(SelectNodesComponent.class.getName());
 
@@ -163,8 +155,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     nodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, filteredComparison), 5));
 
     if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
-      selectedNodesGrid.getUIPageIterator().setPageList(
-          new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
+      selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
     } else {
       selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
     }
@@ -208,8 +199,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     @Override
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
-      selectNodesComponent.getSelectedNodesGrid().getUIPageIterator()
-          .setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, selectNodesComponent.getPushContentPopupComponent().getDefaultSelection()), 5));
+      selectNodesComponent.getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, selectNodesComponent.getPushContentPopupComponent().getDefaultSelection()), 5));
 
       selectNodesComponent.getPushContentPopupComponent().getSelectedNodes().clear();
       selectNodesComponent.computeComparisons();
@@ -241,11 +231,9 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
         }
         if (removed) {
           if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
-            pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator()
-                .setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
+            pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
           } else {
-            pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator()
-                .setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
+            pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
           }
         }
         if (pushContentPopupComponent.getSelectNodesComponent().isRendered()) {

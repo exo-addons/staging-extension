@@ -10,10 +10,7 @@ public class SiteUtil {
    * @return
    */
   public static final String getSitesBasePath() {
-    return new StringBuilder(20).append(ContentManagementExtension.PATH_CONTENT)
-            .append("/")
-            .append(ContentManagementExtension.PATH_CONTENT_SITES)
-            .toString();
+    return new StringBuilder(20).append(ContentManagementExtension.PATH_CONTENT).append("/").append(ContentManagementExtension.PATH_CONTENT_SITES).toString();
   }
 
   /**
@@ -24,10 +21,7 @@ public class SiteUtil {
    * @return
    */
   public static final String getSiteBasePath(String site) {
-    return new StringBuilder(30).append(getSitesBasePath())
-            .append("/")
-            .append(site)
-            .toString();
+    return new StringBuilder(30).append(getSitesBasePath()).append("/").append(site).toString();
   }
 
   /**
@@ -38,10 +32,7 @@ public class SiteUtil {
    * @return
    */
   public static final String getSiteContentsBasePath(String site) {
-    return new StringBuilder(30).append(getSiteBasePath(site))
-            .append("/")
-            .append(ContentManagementExtension.PATH_CONTENT_SITES_CONTENTS)
-            .toString();
+    return new StringBuilder(30).append(getSiteBasePath(site)).append("/").append(ContentManagementExtension.PATH_CONTENT_SITES_CONTENTS).toString();
   }
 
 }

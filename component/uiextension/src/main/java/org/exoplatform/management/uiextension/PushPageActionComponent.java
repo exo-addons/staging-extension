@@ -11,10 +11,7 @@ import org.exoplatform.webui.event.EventListener;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-@ComponentConfig(
-  template = "classpath:groovy/webui/component/staging/page/PushPageActionComponent.gtmpl",
-  events = { @EventConfig(
-    listeners = PushPageActionComponent.PushPageActionListener.class) })
+@ComponentConfig(template = "classpath:groovy/webui/component/staging/page/PushPageActionComponent.gtmpl", events = { @EventConfig(listeners = PushPageActionComponent.PushPageActionListener.class) })
 public class PushPageActionComponent extends UIContainer {
 
   private static final String PERMISSIONS_VARIABLE = "exo.staging.page.button.permissions";

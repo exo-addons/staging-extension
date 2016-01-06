@@ -62,43 +62,44 @@ public class RegistryImportResource extends AbstractOperationHandler {
     try {
       while ((entry = zin.getNextEntry()) != null) {
         try {
-        String filePath = entry.getName();
+          String filePath = entry.getName();
 
-        // Skip directories
-        // & Skip empty entries
-        // & Skip entries not in sites/zip
-        if (entry.isDirectory() || filePath.equals("") || !(filePath.startsWith(ApplicationExportTask.APPLICATION_FILE_BASE_PATH)) || !(filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX) || filePath.endsWith(CategoryExportTask.CATEGORY_FILE_SUFFIX))) {
-          continue;
-        }
+          // Skip directories
+          // & Skip empty entries
+          // & Skip entries not in sites/zip
+          if (entry.isDirectory() || filePath.equals("") || !(filePath.startsWith(ApplicationExportTask.APPLICATION_FILE_BASE_PATH))
+              || !(filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX) || filePath.endsWith(CategoryExportTask.CATEGORY_FILE_SUFFIX))) {
+            continue;
+          }
 
-        IBindingFactory bfact = BindingDirectory.getFactory(ObjectParameter.class);
-        IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
-        ObjectParameter objectParameter = (ObjectParameter) uctx.unmarshalDocument(zin, "UTF-8");
-        if (filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX)) {
+          IBindingFactory bfact = BindingDirectory.getFactory(ObjectParameter.class);
+          IUnmarshallingContext uctx = bfact.createUnmarshallingContext();
+          ObjectParameter objectParameter = (ObjectParameter) uctx.unmarshalDocument(zin, "UTF-8");
+          if (filePath.endsWith(ApplicationExportTask.APPLICATION_FILE_SUFFIX)) {
             Application application = (Application) objectParameter.getObject();
-          createApplication(application, replaceExisting);
-        } else {
-            ApplicationCategory category = (ApplicationCategory) objectParameter.getObject();
-          ApplicationCategory categoryFromRepo = applicationRegistryService.getApplicationCategory(category.getName());
-          if (categoryFromRepo != null) {
-            if (replaceExisting) {
-              log.info("Replacing Category:  " + category.getName());
-              applicationRegistryService.remove(categoryFromRepo);
-              applicationRegistryService.save(category);
-            } else {
-              log.info("Category already exists:  " + category.getName() + ", set replace-existing=true if you want to override it.");
-            }
-          } else {
-            applicationRegistryService.save(category);
-          }
-          List<Application> applications = category.getApplications();
-          for (Application application : applications) {
             createApplication(application, replaceExisting);
+          } else {
+            ApplicationCategory category = (ApplicationCategory) objectParameter.getObject();
+            ApplicationCategory categoryFromRepo = applicationRegistryService.getApplicationCategory(category.getName());
+            if (categoryFromRepo != null) {
+              if (replaceExisting) {
+                log.info("Replacing Category:  " + category.getName());
+                applicationRegistryService.remove(categoryFromRepo);
+                applicationRegistryService.save(category);
+              } else {
+                log.info("Category already exists:  " + category.getName() + ", set replace-existing=true if you want to override it.");
+              }
+            } else {
+              applicationRegistryService.save(category);
+            }
+            List<Application> applications = category.getApplications();
+            for (Application application : applications) {
+              createApplication(application, replaceExisting);
+            }
           }
-        }
         } finally {
-        zin.closeEntry();
-      }
+          zin.closeEntry();
+        }
       }
     } catch (Exception e) {
       throw new OperationException(operationContext.getOperationName(), "Error while importing application registry", e);

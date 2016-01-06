@@ -318,30 +318,31 @@ public class StagingExtensionController {
     ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
     Set<String> foundResources = new HashSet<String>();
     try {
-    ZipEntry entry = zipInputStream.getNextEntry();
-    while (entry != null) {
-      String fileName = entry.getName();
-      if (entry.isDirectory()) {
+      ZipEntry entry = zipInputStream.getNextEntry();
+      while (entry != null) {
+        String fileName = entry.getName();
+        if (entry.isDirectory()) {
+          entry = zipInputStream.getNextEntry();
+          continue;
+        }
+        fileName = fileName.startsWith("/") ? "" : "/" + fileName;
+        String resourcePath = transformSpecialPath(fileName);
+        // If resource path transformed and treated with Exceptions Resource
+        // Paths
+        if (!resourcePath.equals(fileName)) {
+          // Got it !
+          foundResources.add(resourcePath);
+          // Manage only one resource at a time for the moment
+        } else if (!parentAlreadyAddedInList(foundResources, resourcePath)) {
+          ResourceHandler resourceHandler = ResourceHandlerLocator.findResourceByPath(resourcePath);
+          foundResources.add(resourceHandler.getPath());
+        }
         entry = zipInputStream.getNextEntry();
-        continue;
       }
-      fileName = fileName.startsWith("/") ? "" : "/" + fileName;
-      String resourcePath = transformSpecialPath(fileName);
-      // If resource path transformed and treated with Exceptions Resource Paths
-      if (!resourcePath.equals(fileName)) {
-        // Got it !
-        foundResources.add(resourcePath);
-        // Manage only one resource at a time for the moment
-      } else if (!parentAlreadyAddedInList(foundResources, resourcePath)) {
-        ResourceHandler resourceHandler = ResourceHandlerLocator.findResourceByPath(resourcePath);
-        foundResources.add(resourceHandler.getPath());
-      }
-      entry = zipInputStream.getNextEntry();
-    }
 
-    log.info("Found resources zip file : {}", foundResources);
+      log.info("Found resources zip file : {}", foundResources);
     } finally {
-    zipInputStream.close();
+      zipInputStream.close();
     }
 
     if (!foundResources.isEmpty()) {

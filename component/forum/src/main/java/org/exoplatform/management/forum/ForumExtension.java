@@ -56,8 +56,7 @@ public class ForumExtension extends AbstractManagementExtension {
     forum.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumReadResource(), description("Lists available forums"));
 
     ManagedResource.Registration settings = forum.registerSubResource("settings", description("Forum settings"));
-    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "general-administration", "banned-ip", "user-profiles", "bb-codes", "tags"),
-        description("Forum settings"));
+    settings.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "general-administration", "banned-ip", "user-profiles", "bb-codes", "tags"), description("Forum settings"));
     settings.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(), description("export forum settings"));
     settings.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumSettingsImportResource(), description("import forum settings"));
 

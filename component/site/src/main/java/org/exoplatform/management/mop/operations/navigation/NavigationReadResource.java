@@ -18,26 +18,26 @@ import org.gatein.mop.api.workspace.Navigation;
  * @version $Revision$
  */
 public class NavigationReadResource extends AbstractNavigationOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Navigation defaultNavigation) {
-        SiteKey siteKey = getSiteKey(defaultNavigation.getSite());
-        String navUri = operationContext.getAddress().resolvePathTemplate("nav-uri");
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Navigation defaultNavigation) {
+    SiteKey siteKey = getSiteKey(defaultNavigation.getSite());
+    String navUri = operationContext.getAddress().resolvePathTemplate("nav-uri");
 
-        NavigationService navigationService = operationContext.getRuntimeContext().getRuntimeComponent(NavigationService.class);
-        NavigationContext navigation = navigationService.loadNavigation(siteKey);
+    NavigationService navigationService = operationContext.getRuntimeContext().getRuntimeComponent(NavigationService.class);
+    NavigationContext navigation = navigationService.loadNavigation(siteKey);
 
-        Set<String> children = new LinkedHashSet<String>();
+    Set<String> children = new LinkedHashSet<String>();
 
-        NodeContext<NodeContext<?>> node = NavigationUtils.loadNode(navigationService, navigation, navUri);
-        if (node == null) {
-            throw new ResourceNotFoundException("Navigation node not found for navigation uri '" + navUri + "'");
-        }
-
-        for (NodeContext<?> child : node.getNodes()) {
-            children.add(child.getName());
-        }
-
-        ReadResourceModel model = new ReadResourceModel("Navigation nodes available at this resource.", children);
-        resultHandler.completed(model);
+    NodeContext<NodeContext<?>> node = NavigationUtils.loadNode(navigationService, navigation, navUri);
+    if (node == null) {
+      throw new ResourceNotFoundException("Navigation node not found for navigation uri '" + navUri + "'");
     }
+
+    for (NodeContext<?> child : node.getNodes()) {
+      children.add(child.getName());
+    }
+
+    ReadResourceModel model = new ReadResourceModel("Navigation nodes available at this resource.", children);
+    resultHandler.completed(model);
+  }
 }

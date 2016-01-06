@@ -98,7 +98,8 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
       }
 
       if (replaceExisting) {
-        log.info("Option replace-existing ignored for nodetypes (" + pathPrefix.substring(0, pathPrefix.length() - 1) + ") import, since the behavior isn't safe. So existing nodetypes will be ignored.");
+        log.info("Option replace-existing ignored for nodetypes (" + pathPrefix.substring(0, pathPrefix.length() - 1)
+            + ") import, since the behavior isn't safe. So existing nodetypes will be ignored.");
       }
 
       extManager.registerNodeTypes(nodeTypeValues, ExtendedNodeTypeManager.IGNORE_IF_EXISTS);

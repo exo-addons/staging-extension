@@ -8,7 +8,8 @@ import org.gatein.management.api.operation.model.ExportTask;
 import com.thoughtworks.xstream.XStream;
 
 /**
- * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker Khanfir</a>
+ * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
+ *         Khanfir</a>
  * @version $Revision$
  */
 public class ApplicationTemplatesMetaDataExportTask implements ExportTask {

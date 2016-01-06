@@ -21,12 +21,10 @@ public class LiveSitesReadResource extends AbstractOperationHandler {
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
-      UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(
-          UserPortalConfigService.class);
+      UserPortalConfigService portalConfigService = operationContext.getRuntimeContext().getRuntimeComponent(UserPortalConfigService.class);
       Set<String> sites = new HashSet<String>(portalConfigService.getAllPortalNames());
 
-      WCMConfigurationService wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(
-          WCMConfigurationService.class);
+      WCMConfigurationService wcmConfigurationService = operationContext.getRuntimeContext().getRuntimeComponent(WCMConfigurationService.class);
       sites.add(wcmConfigurationService.getSharedPortalName());
 
       resultHandler.completed(new ReadResourceModel("Available sites.", sites));

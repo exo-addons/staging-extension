@@ -65,8 +65,7 @@ public class ECMAdminManagementExtension extends AbstractManagementExtension {
     ecmadmin.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ECMAdminContentImportResource(), description("Lists available ECMS administration data"));
 
     // /ecmadmin/templates
-    ManagedResource.Registration templates = ecmadmin.registerSubResource("templates",
-        description("ECMS Groovy templates for 'Content List' and 'Advanced Search' Portlets, metadata, nodetypes and JCR Action."));
+    ManagedResource.Registration templates = ecmadmin.registerSubResource("templates", description("ECMS Groovy templates for 'Content List' and 'Advanced Search' Portlets, metadata, nodetypes and JCR Action."));
     templates.registerOperationHandler(OperationNames.READ_RESOURCE, new TemplatesReadResource(), description("Lists available template types"));
 
     // /ecmadmin/templates/applications

@@ -136,9 +136,8 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
 
       for (String application : appsSet) {
         String path = getEntryResourcePath(application);
-        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum)
-            || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer)
-            || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
+        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer)
+            || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
           continue;
         }
 

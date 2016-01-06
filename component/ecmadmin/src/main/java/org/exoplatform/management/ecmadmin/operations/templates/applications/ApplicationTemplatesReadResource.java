@@ -27,10 +27,8 @@ public class ApplicationTemplatesReadResource extends AbstractOperationHandler {
 
   public final static Map<String, String[]> APPLICATION_SUB_TEMPLATES_MAP = new HashMap<String, String[]>();
   static {
-    APPLICATION_SUB_TEMPLATES_MAP.put("content-list-viewer", new String[]
-      { "navigation", "list", "paginators" });
-    APPLICATION_SUB_TEMPLATES_MAP.put("search", new String[]
-      { "search-form", "search-page-layout", "search-paginator", "search-result" });
+    APPLICATION_SUB_TEMPLATES_MAP.put("content-list-viewer", new String[] { "navigation", "list", "paginators" });
+    APPLICATION_SUB_TEMPLATES_MAP.put("search", new String[] { "search-form", "search-page-layout", "search-paginator", "search-result" });
   }
 
   private ApplicationTemplateManagerService templateManagerService;

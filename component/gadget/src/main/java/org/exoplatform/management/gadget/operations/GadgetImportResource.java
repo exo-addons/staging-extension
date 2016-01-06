@@ -92,8 +92,7 @@ public class GadgetImportResource extends AbstractOperationHandler {
       jcrPath = DEFAULT_JCR_PATH;
     }
 
-    ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager
-        .getLifeCycle("app");
+    ApplicationRegistryChromatticLifeCycle lifeCycle = (ApplicationRegistryChromatticLifeCycle) chromatticManager.getLifeCycle("app");
     String workspaceName = lifeCycle.getWorkspaceName();
 
     OperationAttachment attachment = operationContext.getAttachment(false);
@@ -108,50 +107,50 @@ public class GadgetImportResource extends AbstractOperationHandler {
     try {
       session = AbstractOperationHandler.getSession(repositoryService, workspaceName);
       while ((entry = zis.getNextEntry()) != null) {
-          try {
-            String filePath = entry.getName();
+        try {
+          String filePath = entry.getName();
 
-            // Skip directories
-            // & Skip empty entries
-            // & Skip entries not in sites/zip
-            if (entry.isDirectory() || filePath.equals("") || !filePath.startsWith("gadget/") || !filePath.endsWith(".xml")) {
-              continue;
-            }
-
-            String gadgetName = filePath.substring("gadget/".length(), filePath.length() - 4);
-            Gadget gadget = gadgetRegistryService.getGadget(gadgetName);
-
-            if (gadget != null) {
-              if (replaceExisting) {
-                log.info(gadgetName + " already exists. Replace it.");
-                gadgetRegistryService.removeGadget(gadgetName);
-
-                // commit changes
-                RequestLifeCycle.end();
-                // keep an active transaction
-                RequestLifeCycle.begin(PortalContainer.getInstance());
-
-                doImportGadget(jcrPath, zis, session);
-              } else {
-                log.info(gadgetName + " already exists. Ignore gadget (add the attribute replace-existing:true if you want to replace existing gadgets).");
-              }
-            } else {
-              log.info("Import gadget " + gadgetName);
-              doImportGadget(jcrPath, zis, session);
-            }
-          } finally {
-            zis.closeEntry();
+          // Skip directories
+          // & Skip empty entries
+          // & Skip entries not in sites/zip
+          if (entry.isDirectory() || filePath.equals("") || !filePath.startsWith("gadget/") || !filePath.endsWith(".xml")) {
+            continue;
           }
+
+          String gadgetName = filePath.substring("gadget/".length(), filePath.length() - 4);
+          Gadget gadget = gadgetRegistryService.getGadget(gadgetName);
+
+          if (gadget != null) {
+            if (replaceExisting) {
+              log.info(gadgetName + " already exists. Replace it.");
+              gadgetRegistryService.removeGadget(gadgetName);
+
+              // commit changes
+              RequestLifeCycle.end();
+              // keep an active transaction
+              RequestLifeCycle.begin(PortalContainer.getInstance());
+
+              doImportGadget(jcrPath, zis, session);
+            } else {
+              log.info(gadgetName + " already exists. Ignore gadget (add the attribute replace-existing:true if you want to replace existing gadgets).");
+            }
+          } else {
+            log.info("Import gadget " + gadgetName);
+            doImportGadget(jcrPath, zis, session);
+          }
+        } finally {
+          zis.closeEntry();
         }
-      } catch (Exception e) {
+      }
+    } catch (Exception e) {
       throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
     } finally {
-        try {
-          zis.close();
-        } catch (IOException e) {
-          throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
-        }
-        if (session != null && session.isLive()) {
+      try {
+        zis.close();
+      } catch (IOException e) {
+        throw new OperationException(operationContext.getOperationName(), "Error while importing Gadgets", e);
+      }
+      if (session != null && session.isLive()) {
         session.logout();
       }
     }

@@ -35,15 +35,14 @@ import org.gatein.mop.api.workspace.Site;
  * @version $Revision$
  */
 public abstract class AbstractNavigationOperationHandler extends AbstractSiteOperationHandler {
-    @Override
-    protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site)
-            throws ResourceNotFoundException, OperationException {
-        Navigation navigation = site.getRootNavigation().getChild("default");
-        if (navigation == null)
-            throw new ResourceNotFoundException("Navigation does not exist for site " + getSiteKey(site));
+  @Override
+  protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException {
+    Navigation navigation = site.getRootNavigation().getChild("default");
+    if (navigation == null)
+      throw new ResourceNotFoundException("Navigation does not exist for site " + getSiteKey(site));
 
-        execute(operationContext, resultHandler, navigation);
-    }
+    execute(operationContext, resultHandler, navigation);
+  }
 
-    protected abstract void execute(OperationContext operationContext, ResultHandler resultHandler, Navigation defaultNavigation);
+  protected abstract void execute(OperationContext operationContext, ResultHandler resultHandler, Navigation defaultNavigation);
 }

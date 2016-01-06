@@ -70,7 +70,6 @@ public interface StagingService {
    */
   void importResource(String selectedResourcePath, InputStream inputStream, Map<String, List<String>> attributes) throws IOException;
 
-
   /**
    * Returns the list of sub resources of the given path
    * 
