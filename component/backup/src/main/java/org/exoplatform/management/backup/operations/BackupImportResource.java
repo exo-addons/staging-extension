@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
-import org.exoplatform.management.backup.service.IDMRestore;
-import org.exoplatform.management.backup.service.JCRRestore;
+import org.exoplatform.management.backup.service.idm.IDMRestore;
+import org.exoplatform.management.backup.service.jcr.JCRRestore;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.cache.ExoCache;

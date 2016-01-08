@@ -18,7 +18,7 @@
 					<object type="org.exoplatform.web.filter.FilterDefinition">
 						<field name="filter">
 							<object
-								type="org.exoplatform.management.backup.service.BackupInProgressFilter" />
+								type="org.exoplatform.management.backup.service.web.BackupInProgressFilter" />
 						</field>
 						<field name="patterns">
 							<collection type="java.util.ArrayList" item-type="java.lang.String">

@@ -1,4 +1,4 @@
-package org.exoplatform.management.backup.service;
+package org.exoplatform.management.backup.service.idm;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;

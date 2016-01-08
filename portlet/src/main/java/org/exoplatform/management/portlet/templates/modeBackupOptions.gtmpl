@@ -27,7 +27,12 @@
 				</span><br/>
 				<span class="uiRadio">
 					<label class="radio">
-						<input class="option" type="radio" name="/backup/writeStrategy" value="suspend" id="contentEntireSite" ng-model="optionsModel['/backup/writeStrategy']"><span>Suspend write operations</span>
+						<input class="option" type="radio" name="/backup/writeStrategy" value="suspend" id="BackupSuspendWrite" ng-model="optionsModel['/backup/writeStrategy']"><span>Suspend write operations until backup is finished</span>
+					</label>
+				</span>
+				<span class="uiRadio">
+					<label class="radio">
+						<input class="option" type="radio" name="/backup/writeStrategy" value="nothing" id="BackupAllowWrite" ng-model="optionsModel['/backup/writeStrategy']"><span>Allow write operations. ATTENTION: This option can make backup incoherent.</span>
 					</label>
 				</span>
 			</p>

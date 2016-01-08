@@ -1,6 +1,7 @@
 package org.exoplatform.management.backup.operations;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -8,13 +9,17 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.backup.service.BackupInProgressException;
-import org.exoplatform.management.backup.service.IDMBackup;
-import org.exoplatform.management.backup.service.JCRBackup;
+import org.exoplatform.management.backup.service.idm.IDMBackup;
+import org.exoplatform.management.backup.service.jcr.JCRBackup;
+import org.exoplatform.management.backup.service.webui.BackupExceptionHandlerLifeCycle;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.service.impl.StagingMessageREST;
+import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.exoplatform.services.scheduler.JobSchedulerService;
+import org.exoplatform.web.application.Application;
+import org.exoplatform.web.application.ApplicationLifecycle;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
 import org.gatein.management.api.operation.OperationContext;
@@ -34,6 +39,7 @@ public class BackupExportResource extends AbstractOperationHandler {
 
   public static final String WRITE_STRATEGY_SUSPEND = "suspend";
   public static final String WRITE_STRATEGY_EXCEPTION = "exception";
+  public static final String WRITE_STRATEGY_NOTHING = "nothing";
 
   public static final String DISPLAY_MESSAGE_FOR_ALL = "all";
   public static final String DISPLAY_MESSAGE_FOR_ADMIN = "admin";
@@ -80,9 +86,14 @@ public class BackupExportResource extends AbstractOperationHandler {
 
       stagingMessageREST.setDisplayForAll(DISPLAY_MESSAGE_FOR_ALL.equals(displayMessageFor));
       stagingMessageREST.setMessage(message);
+      stagingMessageREST.setPosition("top-center");
 
       if (!exportIDM && !exportJCR) {
         throw new OperationException(OperationNames.EXPORT_RESOURCE, "You have to choose IDM, JCR or both datas to backup.");
+      }
+
+      if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
+        handleWriteOperations();
       }
 
       File backupDirFile = getBackupDirectoryFile(attributes);
@@ -110,6 +121,29 @@ public class BackupExportResource extends AbstractOperationHandler {
       stagingMessageREST.readParametersFromProperties();
       jobSchedulerService.resume();
       restoreDefaultTransactionTimeOut(portalContainer);
+      if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
+        deleteWriteOperationHandler();
+      }
+    }
+  }
+
+  private void handleWriteOperations() {
+    deleteWriteOperationHandler();
+    PortalRequestContext portalRequestContext = PortalRequestContext.getCurrentInstance();
+    Application application = portalRequestContext.getApplication();
+    application.getApplicationLifecycle().add(new BackupExceptionHandlerLifeCycle());
+  }
+
+  private void deleteWriteOperationHandler() {
+    PortalRequestContext portalRequestContext = PortalRequestContext.getCurrentInstance();
+    Application application = portalRequestContext.getApplication();
+    @SuppressWarnings("rawtypes")
+    Iterator<ApplicationLifecycle> applicationLifecycleIterator = application.getApplicationLifecycle().iterator();
+    while (applicationLifecycleIterator.hasNext()) {
+      ApplicationLifecycle<?> applicationLifecycle = (ApplicationLifecycle<?>) applicationLifecycleIterator.next();
+      if (applicationLifecycle instanceof BackupExceptionHandlerLifeCycle) {
+        applicationLifecycleIterator.remove();
+      }
     }
   }
 
@@ -139,4 +173,5 @@ public class BackupExportResource extends AbstractOperationHandler {
 
     return backupDirFile;
   }
+
 }

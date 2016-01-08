@@ -1,7 +1,6 @@
-package org.exoplatform.management.backup.service;
+package org.exoplatform.management.backup.service.jcr;
 
 import java.io.File;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.jcr.RepositoryException;
@@ -12,8 +11,6 @@ import org.exoplatform.container.xml.PropertiesParam;
 import org.exoplatform.management.backup.operations.BackupExportResource;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.config.RepositoryConfigurationException;
-import org.exoplatform.services.jcr.config.ValueStorageEntry;
-import org.exoplatform.services.jcr.config.WorkspaceEntry;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.core.WorkspaceContainerFacade;
 import org.exoplatform.services.jcr.ext.backup.BackupConfig;
@@ -61,9 +58,6 @@ public class JCRBackup {
     BackupManager backupManager = new BackupManagerImpl(null, initParams, repositoryService, registryService);
     ((BackupManagerImpl) backupManager).start();
 
-    // FIXME: Workaround JCR-2405
-    fixWorkspacesConfiguration(repository);
-
     // Prepare BackupConfig
     BackupConfig backupConfig = new BackupConfig();
     backupConfig.setBackupType(BackupManager.FULL_BACKUP_ONLY);
@@ -72,7 +66,9 @@ public class JCRBackup {
 
     String[] wsNames = repository.getWorkspaceNames();
     try {
-      if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
+      if (BackupExportResource.WRITE_STRATEGY_NOTHING.equals(BackupExportResource.writeStrategy)) {
+        // Nothing to do
+      } else if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
         LOG.info("Suspend repository: " + repository.getConfiguration().getName());
         repository.setState(ManageableRepository.SUSPENDED);
         // Reopen indexes to make platform in read-ony mode
@@ -85,7 +81,7 @@ public class JCRBackup {
             }
           }
         }
-      } else {
+      } else if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
         for (String workspaceName : wsNames) {
           WorkspaceContainerFacade workspaceContainer = repository.getWorkspaceContainer(workspaceName);
           WorkspacePersistentDataManager dataManager = (WorkspacePersistentDataManager) workspaceContainer.getComponent(WorkspacePersistentDataManager.class);
@@ -105,9 +101,11 @@ public class JCRBackup {
         }
       }
     } finally {
-      if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
+      if (BackupExportResource.WRITE_STRATEGY_NOTHING.equals(BackupExportResource.writeStrategy)) {
+        // Nothing to do
+      } else if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
         repository.setState(ManageableRepository.ONLINE);
-      } else {
+      } else if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
         // remove backup listener
         for (String workspaceName : wsNames) {
           WorkspaceContainerFacade workspaceContainer = repository.getWorkspaceContainer(workspaceName);
@@ -127,24 +125,6 @@ public class JCRBackup {
         searchManager.resume();
       } catch (ResumeException e) {
         LOG.error(e);
-      }
-    }
-  }
-
-  // FIXME JCR-2405
-  public static void fixWorkspacesConfiguration(final ManageableRepository repository) throws RepositoryConfigurationException {
-    List<WorkspaceEntry> workspaceEntries = repository.getConfiguration().getWorkspaceEntries();
-    for (WorkspaceEntry workspaceEntry : workspaceEntries) {
-      List<ValueStorageEntry> storageEntries = workspaceEntry.getContainer().getValueStorages();
-      if (storageEntries != null) {
-        Iterator<ValueStorageEntry> storageIterator = storageEntries.iterator();
-        while (storageIterator.hasNext()) {
-          ValueStorageEntry valueStorageEntry = (ValueStorageEntry) storageIterator.next();
-          String enabledStorage = valueStorageEntry.getParameterValue("enabled");
-          if (enabledStorage != null && "false".equalsIgnoreCase(enabledStorage)) {
-            storageIterator.remove();
-          }
-        }
       }
     }
   }

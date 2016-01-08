@@ -1,4 +1,4 @@
-package org.exoplatform.management.backup.service;
+package org.exoplatform.management.backup.service.jcr;
 
 import javax.jcr.PathNotFoundException;
 import javax.jcr.RepositoryException;

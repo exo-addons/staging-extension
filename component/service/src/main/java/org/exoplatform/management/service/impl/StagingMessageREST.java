@@ -42,12 +42,13 @@ public class StagingMessageREST implements ResourceContainer, Startable {
   public String getMessageTodisplayInUI() {
     try {
       if (diplayMessageForAll() || Utils.isAdministratorUser() || userACL.isUserInGroup("/platform/web-contributors")) {
-        if (StringUtils.isNotEmpty(message)) {
+        String computedMessage = message;
+        if (StringUtils.isNotEmpty(computedMessage)) {
           if (StringUtils.isNotEmpty(position)) {
-            message += "@" + position;
+            computedMessage += "@" + position;
           }
         }
-        return message;
+        return computedMessage;
       }
     } catch (Exception e) {
       log.error(e);
@@ -63,8 +64,16 @@ public class StagingMessageREST implements ResourceContainer, Startable {
     this.displayForAll = displayForAll;
   }
 
+  public boolean isDisplayForAll() {
+    return displayForAll;
+  }
+
   public void setMessage(String message) {
     this.message = message;
+  }
+
+  public String getMessage() {
+    return message;
   }
 
   public void setPosition(String position) {

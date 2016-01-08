@@ -1,4 +1,4 @@
-package org.exoplatform.management.backup.service;
+package org.exoplatform.management.backup.service.jcr;
 
 import java.io.File;
 import java.util.List;
