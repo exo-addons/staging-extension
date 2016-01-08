@@ -17,6 +17,8 @@ import java.util.zip.ZipEntry;
 
 import org.exoplatform.commons.utils.PrivilegedFileHelper;
 import org.exoplatform.container.PortalContainer;
+import org.exoplatform.management.backup.operations.BackupExportResource;
+import org.exoplatform.management.backup.service.BackupInProgressException;
 import org.exoplatform.services.database.HibernateService;
 import org.exoplatform.services.database.utils.JDBCUtils;
 import org.exoplatform.services.jcr.core.security.JCRRuntimePermissions;
@@ -77,6 +79,24 @@ public class IDMBackup {
         } catch (Exception e) {
           LOG.error("Error while closing DS connection", e);
         }
+      }
+    }
+  }
+
+  public static void interceptIDMModificationOperation() {
+    if (BackupExportResource.backupInProgress) {
+      if (BackupExportResource.WRITE_STRATEGY_NOTHING.equals(BackupExportResource.writeStrategy)) {
+        // Nothing to do
+      } else if (BackupExportResource.WRITE_STRATEGY_SUSPEND.equals(BackupExportResource.writeStrategy)) {
+        do {
+          try {
+            Thread.sleep(2000);
+          } catch (Throwable e) {
+            // Nothing to do
+          }
+        } while (BackupExportResource.backupInProgress);
+      } else if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
+        throw new BackupInProgressException("Backup is in progress, the Platform is in readonly mode. Your changes are ignored.");
       }
     }
   }
