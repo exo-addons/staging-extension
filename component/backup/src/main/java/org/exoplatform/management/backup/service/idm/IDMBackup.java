@@ -25,6 +25,7 @@ import org.exoplatform.services.jcr.impl.backup.BackupException;
 import org.exoplatform.services.jcr.impl.dataflow.serialization.ZipObjectWriter;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.organization.OrganizationService;
 import org.hibernate.internal.SessionFactoryImpl;
 
 /**
@@ -39,9 +40,17 @@ public class IDMBackup {
   protected static final String[] TABLE_NAMES = { "jbid_attr_bin_value", "jbid_creden_bin_value", "jbid_io", "jbid_io_attr", "jbid_io_attr_text_values", "jbid_io_creden", "jbid_io_creden_props",
       "jbid_io_creden_type", "jbid_io_props", "jbid_io_rel", "jbid_io_rel_name", "jbid_io_rel_name_props", "jbid_io_rel_props", "jbid_io_rel_type", "jbid_io_type", "jbid_real_props", "jbid_realm" };
 
+  private static final BackupUserListener BACKUP_USER_LISTENER = new BackupUserListener();
+  private static final BackupUserProfileListener BACKUP_USER_PROFILE_LISTENER = new BackupUserProfileListener();
+  private static final BackupGroupListener BACKUP_GROUP_LISTENER = new BackupGroupListener();
+  private static final BackupMembershipListener BACKUP_MEMBERSHIP_LISTENER = new BackupMembershipListener();
+  private static final BackupMembershipTypeListener BACKUP_MEMBERSHIP_TYPE_LISTENER = new BackupMembershipTypeListener();
+
   public static void backup(PortalContainer portalContainer, final File storageDir) throws Exception {
     Connection jdbcConn = null;
     try {
+      addIDMBackupListeners(portalContainer);
+
       // using existing DataSource to get a JDBC Connection.
       SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
       jdbcConn = sessionFactoryImpl.getConnectionProvider().getConnection();
@@ -56,6 +65,7 @@ public class IDMBackup {
       LOG.error("Error while backup", e);
       throw new BackupException(e);
     } finally {
+      removeIDMBackupListeners(portalContainer);
       if (jdbcConn != null && !jdbcConn.isClosed()) {
         try {
           jdbcConn.commit();
@@ -69,6 +79,22 @@ public class IDMBackup {
         }
       }
     }
+  }
+
+  private static void addIDMBackupListeners(PortalContainer portalContainer) {
+    getOrganizationService(portalContainer).getUserHandler().addUserEventListener(BACKUP_USER_LISTENER);
+    getOrganizationService(portalContainer).getUserProfileHandler().addUserProfileEventListener(BACKUP_USER_PROFILE_LISTENER);
+    getOrganizationService(portalContainer).getGroupHandler().addGroupEventListener(BACKUP_GROUP_LISTENER);
+    getOrganizationService(portalContainer).getMembershipHandler().addMembershipEventListener(BACKUP_MEMBERSHIP_LISTENER);
+    getOrganizationService(portalContainer).getMembershipTypeHandler().addMembershipTypeEventListener(BACKUP_MEMBERSHIP_TYPE_LISTENER);
+  }
+
+  private static void removeIDMBackupListeners(PortalContainer portalContainer) {
+    getOrganizationService(portalContainer).getUserHandler().removeUserEventListener(BACKUP_USER_LISTENER);
+    getOrganizationService(portalContainer).getUserProfileHandler().removeUserProfileEventListener(BACKUP_USER_PROFILE_LISTENER);
+    getOrganizationService(portalContainer).getGroupHandler().removeGroupEventListener(BACKUP_GROUP_LISTENER);
+    getOrganizationService(portalContainer).getMembershipHandler().removeMembershipEventListener(BACKUP_MEMBERSHIP_LISTENER);
+    getOrganizationService(portalContainer).getMembershipTypeHandler().removeMembershipTypeEventListener(BACKUP_MEMBERSHIP_TYPE_LISTENER);
   }
 
   public static void backup(File storageDir, Connection jdbcConn, Map<String, String> scripts) throws BackupException {
@@ -199,5 +225,9 @@ public class IDMBackup {
 
   private static HibernateService getHibernateService(PortalContainer portalContainer) {
     return (HibernateService) portalContainer.getComponentInstanceOfType(HibernateService.class);
+  }
+
+  private static OrganizationService getOrganizationService(PortalContainer portalContainer) {
+    return (OrganizationService) portalContainer.getComponentInstanceOfType(OrganizationService.class);
   }
 }

@@ -84,7 +84,7 @@ public class BackupInProgressFilter implements Filter {
     if (e == null) {
       return false;
     } else if (e instanceof BackupInProgressException) {
-      BackupInProgressException.exceptionCaught.set(false);
+      BackupInProgressException.untreatedException.set(false);
       return true;
     } else if (e.getCause() == null) {
       return false;

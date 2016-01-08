@@ -27,12 +27,12 @@ public class BackupExceptionHandlerLifeCycle implements ApplicationRequestPhaseL
 
   @Override
   public void onEndRequest(Application app, PortalRequestContext context) throws Exception {
-    Boolean exceptionCaught = BackupInProgressException.exceptionCaught.get();
+    Boolean exceptionCaught = BackupInProgressException.untreatedException.get();
     if (exceptionCaught != null && exceptionCaught) {
       context.getUIApplication().getUIPopupMessages().clearMessages();
       ApplicationMessage message = new ApplicationMessage("Operation not allowed, backup is in progress", null, ApplicationMessage.ERROR);
       context.getUIApplication().addMessage(message);
-      BackupInProgressException.exceptionCaught.set(false);
+      BackupInProgressException.untreatedException.set(false);
     }
   }
 
