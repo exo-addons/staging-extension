@@ -3,7 +3,6 @@ package org.exoplatform.management.content;
 import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.common.DataTransformerService;
 import org.exoplatform.management.content.operations.ContentReadResource;
-import org.exoplatform.management.content.operations.site.JCRBinaryTransformer;
 import org.exoplatform.management.content.operations.site.LiveSitesReadResource;
 import org.exoplatform.management.content.operations.site.PageCLVTransformer;
 import org.exoplatform.management.content.operations.site.PageSCVTransformer;

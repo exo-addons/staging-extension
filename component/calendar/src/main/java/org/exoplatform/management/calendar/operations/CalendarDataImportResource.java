@@ -3,6 +3,7 @@ package org.exoplatform.management.calendar.operations;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -10,7 +11,6 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
@@ -220,13 +220,13 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
         log.info("Overwrite existing calendar: " + toReplaceCalendar.getName());
         if (groupCalendar) {
           // FIXME event activities aren't deleted
-          List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
+          List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.singletonList(calendar.getId()));
           deleteCalendarActivities(events);
           // Delete Calendar
           calendarService.removePublicCalendar(calendar.getId());
         } else {
           // FIXME event activities aren't deleted
-          List<CalendarEvent> events = calendarService.getUserEventByCalendar(calendar.getCalendarOwner(), Collections.list(calendar.getId()));
+          List<CalendarEvent> events = calendarService.getUserEventByCalendar(calendar.getCalendarOwner(), Collections.singletonList(calendar.getId()));
           deleteCalendarActivities(events);
           // Delete Calendar
           calendarService.removeUserCalendar(calendar.getCalendarOwner(), calendar.getId());

@@ -15,7 +15,6 @@ import org.exoplatform.management.organization.user.UserExportResource;
 import org.exoplatform.management.organization.user.UserImportResource;
 import org.exoplatform.management.organization.user.UserReadResource;
 import org.gatein.management.api.ComponentRegistration;
-import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.exceptions.ResourceNotFoundException;

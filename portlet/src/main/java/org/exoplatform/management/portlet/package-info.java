@@ -1,7 +1,7 @@
 @Portlet
 @Application(name = "StagingExtension")
 @Bindings({ @Binding(value = ManagementController.class), @Binding(value = ManagementService.class), @Binding(value = StagingService.class), @Binding(value = SynchronizationService.class),
-    @Binding(value = RepositoryService.class), @Binding(value = ChromatticService.class) })
+    @Binding(value = RepositoryService.class) })
 @Scripts({ @Script(id = "jQueryUI", value = "js/lib/jquery-ui.js"), @Script(id = "jQueryFileDownload", value = "js/lib/jquery.fileDownload.js"),
     // AngularJS is still global, should be AMDified
     @Script(id = "angularjs", value = "js/lib/angular.min.js"), @Script(id = "ngSanitize", value = "js/lib/angular-sanitize.js", depends = "angularjs"),
@@ -24,7 +24,6 @@ import juzu.plugin.binding.Bindings;
 import juzu.plugin.less.Less;
 import juzu.plugin.portlet.Portlet;
 
-import org.exoplatform.management.service.api.ChromatticService;
 import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.services.jcr.RepositoryService;

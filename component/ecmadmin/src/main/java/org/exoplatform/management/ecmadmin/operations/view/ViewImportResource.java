@@ -100,7 +100,6 @@ public class ViewImportResource extends ECMAdminImportResource {
               log.debug("Parsing : " + filePath);
 
               InitParams initParams = Utils.fromXML(IOUtils.toByteArray(zin), InitParams.class);
-              @SuppressWarnings("unchecked")
               Iterator<ObjectParameter> iterator = initParams.getObjectParamIterator();
               while (iterator.hasNext()) {
                 ObjectParameter objectParameter = (ObjectParameter) iterator.next();

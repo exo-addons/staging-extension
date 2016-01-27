@@ -1,21 +1,12 @@
 package org.exoplatform.management.gadget;
 
-import java.util.HashSet;
-
 import org.exoplatform.management.common.AbstractManagementExtension;
-import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.gadget.operations.GadgetExportResource;
 import org.exoplatform.management.gadget.operations.GadgetImportResource;
 import org.exoplatform.management.gadget.operations.GadgetReadResource;
 import org.gatein.management.api.ComponentRegistration;
-import org.gatein.management.api.ManagedDescription;
 import org.gatein.management.api.ManagedResource;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.exceptions.ResourceNotFoundException;
-import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
-import org.gatein.management.api.operation.model.ReadResourceModel;
 import org.gatein.management.spi.ExtensionContext;
 
 /**

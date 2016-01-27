@@ -19,9 +19,9 @@ package org.exoplatform.management.calendar.operations;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.List;
 
-import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.gatein.management.api.operation.model.ExportTask;
@@ -59,7 +59,7 @@ public class CalendarExportTask implements ExportTask {
     xStream.alias("Event", CalendarEvent.class);
     OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
 
-    List<Object> objects = Collections.list(calendar, events);
+    List<Object> objects = Arrays.asList(calendar, events);
     xStream.toXML(objects, writer);
     writer.flush();
   }

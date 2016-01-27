@@ -180,9 +180,8 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     return null;
   }
 
-  @SuppressWarnings("unchecked")
   protected static List<PortalContainer> getPortalContainers() {
-    return (List<PortalContainer>) RootContainer.getInstance().getComponentInstancesOfType(PortalContainer.class);
+    return RootContainer.getInstance().getComponentInstancesOfType(PortalContainer.class);
   }
 
   protected static PortalContainer getPortalContainer(String name) {

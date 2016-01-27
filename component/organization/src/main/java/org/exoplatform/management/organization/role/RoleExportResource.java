@@ -45,7 +45,6 @@ public class RoleExportResource extends AbstractOperationHandler {
         exportRole(membershipType, exportTasks);
       } else {
         // If all roles will be exported
-        @SuppressWarnings("unchecked")
         Collection<MembershipType> roles = organizationService.getMembershipTypeHandler().findMembershipTypes();
         for (MembershipType role : roles) {
           exportRole(role, exportTasks);
