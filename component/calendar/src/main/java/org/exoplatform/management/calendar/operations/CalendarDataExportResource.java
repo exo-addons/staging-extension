@@ -18,11 +18,11 @@ package org.exoplatform.management.calendar.operations;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.chromattic.common.collection.Collections;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
@@ -97,7 +97,6 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
       }
       if (filterText == null || filterText.trim().isEmpty()) {
         try {
-          @SuppressWarnings("unchecked")
           Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
           for (Group group : groups) {
             if (spaceCalendar) {
@@ -119,24 +118,26 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
         exportGroupCalendar(exportTasks, spaceCalendar ? filterText : null, spaceCalendar ? null : filterText, exportSpaceMetadata);
       }
     } else {
-      String username = operationContext.getAttributes().getValue("filter");
-      if (username == null || username.trim().isEmpty()) {
-        OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
-        try {
-          ListAccess<User> users = organizationService.getUserHandler().findAllUsers();
-          int size = users.getSize(), i = 0;
-          while (i < size) {
-            int length = i + 10 < size ? 10 : size - i;
-            User[] usersArr = users.load(i, length);
-            for (User user : usersArr) {
-              exportUserCalendar(exportTasks, user.getUserName());
+      List<String> usernames = operationContext.getAttributes().getValues("filter");
+      for (String username : usernames) {
+        if (username == null || username.trim().isEmpty()) {
+          OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
+          try {
+            ListAccess<User> users = organizationService.getUserHandler().findAllUsers();
+            int size = users.getSize(), i = 0;
+            while (i < size) {
+              int length = i + 10 < size ? 10 : size - i;
+              User[] usersArr = users.load(i, length);
+              for (User user : usersArr) {
+                exportUserCalendar(exportTasks, user.getUserName());
+              }
             }
+          } catch (Exception e) {
+            throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
           }
-        } catch (Exception e) {
-          throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
+        } else {
+          exportUserCalendar(exportTasks, username);
         }
-      } else {
-        exportUserCalendar(exportTasks, username);
       }
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
@@ -193,7 +194,7 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
   }
 
   private void exportGroupCalendar(List<ExportTask> exportTasks, Calendar calendar) throws Exception {
-    List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.list(calendar.getId()));
+    List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.singletonList(calendar.getId()));
     exportTasks.add(new CalendarExportTask(type, calendar, events));
 
     if (events.size() > 0) {
@@ -208,11 +209,13 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
       List<Calendar> userCalendars = calendarService.getUserCalendars(username, true);
       if (userCalendars.size() > 0) {
         for (Calendar calendar : userCalendars) {
-          List<CalendarEvent> events = calendarService.getUserEventByCalendar(username, Collections.list(calendar.getId()));
+          List<CalendarEvent> events = calendarService.getUserEventByCalendar(username, Collections.singletonList(calendar.getId()));
           exportTasks.add(new CalendarExportTask(type, calendar, events));
           String prefix = "calendar/" + type + "/" + CalendarExportTask.CALENDAR_SEPARATOR + calendar.getId() + "/";
           exportActivities(exportTasks, username, prefix, CALENDAR_ACTIVITY_TYPE);
         }
+      } else {
+        log.info("User '" + username + "' don't have calendars.");
       }
     } catch (Exception e) {
       throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error occured while exporting Group Calendar data", e);
