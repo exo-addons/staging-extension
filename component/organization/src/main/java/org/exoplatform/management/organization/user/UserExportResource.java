@@ -82,7 +82,7 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
         int i = 0;
         while (i < size) {
           int length = (size - i >= pageSize) ? pageSize : size - i;
-          User[] users = allUsers.load(0, length);
+          User[] users = allUsers.load(i, length);
           for (User user : users) {
             user.setPassword(newPassword);
             exportUser(user, withContent, withMemberships, exportTasks);

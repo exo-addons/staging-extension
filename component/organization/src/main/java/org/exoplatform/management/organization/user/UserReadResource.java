@@ -34,7 +34,7 @@ public class UserReadResource extends AbstractOperationHandler {
       int i = 0;
       while (i < size) {
         int length = (size - i >= pageSize) ? pageSize : size - i;
-        User[] users = allUsers.load(0, length);
+        User[] users = allUsers.load(i, length);
         for (User user : users) {
           userNames.add(user.getUserName());
         }
