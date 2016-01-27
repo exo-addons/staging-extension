@@ -97,7 +97,7 @@ public class CalendarDataReadResource extends AbstractOperationHandler {
         int size = users.getSize(), i = 0;
         while (i < size) {
           int length = i + 10 < size ? 10 : size - i;
-          User[] usersArr = users.load(0, length);
+          User[] usersArr = users.load(i, length);
           for (User user : usersArr) {
             children.add(user.getUserName());
           }
