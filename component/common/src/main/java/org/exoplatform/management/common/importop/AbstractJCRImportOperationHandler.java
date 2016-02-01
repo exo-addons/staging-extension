@@ -20,6 +20,8 @@ import javax.jcr.query.QueryManager;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
+import org.exoplatform.services.cache.CacheService;
+import org.exoplatform.services.cache.ExoCache;
 import org.exoplatform.services.ecm.publication.PublicationService;
 import org.exoplatform.services.wcm.publication.WCMPublicationService;
 
@@ -138,13 +140,6 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
   }
 
   protected final boolean isRecursiveDelete(Node node) throws Exception {
-    // FIXME: eXo ECMS bug, items with exo:actionnable don't define manatory
-    // field exo:actions. Still use this workaround. ECMS-5998
-    if (node.isNodeType("exo:actionable") && !node.hasProperty("exo:actions")) {
-      node.setProperty("exo:actions", "");
-      node.save();
-      node.getSession().refresh(true);
-    }
     NodeType nodeType = node.getPrimaryNodeType();
     NodeType[] nodeTypes = node.getMixinNodeTypes();
     boolean recursive = isRecursiveNT(nodeType);
@@ -247,4 +242,21 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
     return nodePath;
   }
+
+  @SuppressWarnings("rawtypes")
+  public void clearCaches(CacheService cacheService, String namePattern) {
+    for (Object o : cacheService.getAllCacheInstances()) {
+      try {
+        ExoCache exoCache = (ExoCache) o;
+        if(exoCache.getName().contains(namePattern)) {
+          exoCache.clearCache();
+        }
+      } catch (Exception e) {
+        if (log.isTraceEnabled()) {
+          log.trace("An exception occurred: " + e.getMessage());
+        }
+      }
+    }
+  }
+
 }

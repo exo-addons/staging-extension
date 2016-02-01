@@ -35,13 +35,6 @@ public abstract class AbstractJCRExportOperationHandler extends AbstractExportOp
   }
 
   protected final boolean isRecursiveExport(Node node) throws Exception {
-    // FIXME: eXo ECMS bug, items with exo:actionnable don't define manatory
-    // field exo:actions. Still use this workaround. ECMS-5998
-    if (node.isNodeType("exo:actionable") && !node.hasProperty("exo:actions")) {
-      node.setProperty("exo:actions", "");
-      node.save();
-      node.getSession().refresh(true);
-    }
     NodeType nodeType = node.getPrimaryNodeType();
     NodeType[] nodeTypes = node.getMixinNodeTypes();
     boolean recursive = isRecursiveNT(nodeType);

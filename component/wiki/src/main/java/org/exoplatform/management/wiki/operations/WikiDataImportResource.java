@@ -15,6 +15,7 @@ import org.exoplatform.management.common.importop.AbstractJCRImportOperationHand
 import org.exoplatform.management.common.importop.ActivityImportOperationInterface;
 import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.portal.config.UserACL;
+import org.exoplatform.services.cache.CacheService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.manager.ActivityManager;
@@ -48,6 +49,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
   private WikiType wikiType;
   private MOWService mowService;
   private WikiService wikiService;
+  private CacheService cacheService;
 
   public WikiDataImportResource(WikiType wikiType) {
     this.wikiType = wikiType;
@@ -63,6 +65,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     activityStorage = operationContext.getRuntimeContext().getRuntimeComponent(ActivityStorage.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     wikiService = operationContext.getRuntimeContext().getRuntimeComponent(WikiService.class);
+    cacheService = operationContext.getRuntimeContext().getRuntimeComponent(CacheService.class);
 
     OperationAttributes attributes = operationContext.getAttributes();
     List<String> filters = attributes.getValues("filter");
@@ -138,6 +141,7 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
         }
       }
     }
+    clearCaches(cacheService, "wiki");
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
