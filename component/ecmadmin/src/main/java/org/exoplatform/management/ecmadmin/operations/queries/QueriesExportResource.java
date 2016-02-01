@@ -19,6 +19,7 @@ import org.exoplatform.services.cms.queries.impl.QueryData;
 import org.exoplatform.services.cms.queries.impl.QueryPlugin;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
+import org.exoplatform.services.organization.UserStatus;
 import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationContext;
@@ -104,10 +105,26 @@ public class QueriesExportResource extends AbstractOperationHandler {
         exportTasks.add(new QueriesExportTask(configurationSharedQueries, null));
       }
 
-      // users queries
-      ListAccess<User> usersListAccess = organizationService.getUserHandler().findAllUsers();
-      User[] users = usersListAccess.load(0, usersListAccess.getSize());
+      User[] users = null;
+      if (filters.isEmpty()) {
+        // users queries
+        ListAccess<User> usersListAccess = organizationService.getUserHandler().findAllUsers();
+        users = usersListAccess.load(0, usersListAccess.getSize());
+      } else {
+        int i = 0;
+        users = new User[filters.size()];
+        for (String userQuery : filters) {
+          String[] userQueryParts = userQuery.split("/");
+          if (userQueryParts.length == 2) {
+            users[i++] = organizationService.getUserHandler().findUserByName(userQueryParts[0], UserStatus.ANY);
+          }
+        }
+      }
+
       for (User user : users) {
+        if (user == null) {
+          continue;
+        }
         List<Query> userQueries = queryService.getQueries(user.getUserName(), WCMCoreUtils.getSystemSessionProvider());
 
         if (userQueries != null && !userQueries.isEmpty()) {
