@@ -36,15 +36,11 @@ public class SocialExtension extends AbstractManagementExtension {
   public static final String FORUM_PORTLET = "ForumPortlet";
   public static final String WIKI_PORTLET = "WikiPortlet";
   public static final String CALENDAR_PORTLET = "CalendarPortlet";
-  public static final String ANSWERS_PORTLET = "AnswersPortlet";
-  public static final String FAQ_PORTLET = "FAQPortlet";
 
   public static final String SPACE_RESOURCE_PARENT_PATH = "social/space";
   public static final String SPACE_RESOURCE_PATH = "/social/space";
   public static final String FORUM_RESOURCE_PATH = "/forum/space";
   public static final String CALENDAR_RESOURCE_PATH = "/calendar/space";
-  public static final String ANSWER_RESOURCE_PATH = "/answer/space";
-  public static final String FAQ_RESOURCE_PATH = "/answer/template";
   public static final String WIKI_RESOURCE_PATH = "/wiki/group";
   public static final String CONTENT_RESOURCE_PATH = "/content/sites/shared";
   public static final String SITES_RESOURCE_PATH = "/site/groupsites";

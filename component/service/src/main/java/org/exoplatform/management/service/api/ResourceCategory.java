@@ -95,11 +95,6 @@ public class ResourceCategory implements Comparable<ResourceCategory> {
       return i;
     }
     i++;
-    // Action Nodetypes has to be imported before any content
-    if (path.startsWith(StagingService.ECM_ACTION_PATH)) {
-      return i;
-    }
-    i++;
     // Gadgets has to be imported before sites
     if (path.startsWith(StagingService.GADGET_PATH)) {
       return i;

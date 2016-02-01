@@ -72,7 +72,6 @@ public class StagingExtensionController {
   private static final List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
   private static int SPACES_CATEGORY_INDEX = -1;
   private static int FORUM_CATEGORY_INDEX = -1;
-  private static int ANSWER_CATEGORY_INDEX = -1;
   private static int CALENDAR_CATEGORY_INDEX = -1;
   private static int WIKI_CATEGORY_INDEX = -1;
   private static int COUNT_ALL = 0;
@@ -198,9 +197,6 @@ public class StagingExtensionController {
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH + ":activated")) {
         ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
       }
-      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Search Templates", StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
-      }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH + ":activated")) {
         ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
       }
@@ -225,9 +221,6 @@ public class StagingExtensionController {
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_VIEW_CONFIGURATION_PATH + ":activated")) {
         ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Configuration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
       }
-      if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_ACTION_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Action NodeTypes", StagingService.ECM_ACTION_PATH));
-      }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_NODETYPE_PATH + ":activated")) {
         ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
       }
@@ -249,9 +242,6 @@ public class StagingExtensionController {
       }
       if (!isForumActivated() && FORUM_CATEGORY_INDEX > 0) {
         resourceCategories.remove(FORUM_CATEGORY_INDEX);
-      }
-      if (!isAnswerActivated() && ANSWER_CATEGORY_INDEX > 0) {
-        resourceCategories.remove(ANSWER_CATEGORY_INDEX);
       }
       if (!isSocialActivated() && SPACES_CATEGORY_INDEX > 0) {
         resourceCategories.remove(SPACES_CATEGORY_INDEX);
@@ -672,14 +662,6 @@ public class StagingExtensionController {
   private boolean isForumActivated() {
     try {
       return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.forum.service.ForumService")) != null;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
-  }
-
-  private boolean isAnswerActivated() {
-    try {
-      return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.faq.service.FAQService")) != null;
     } catch (ClassNotFoundException e) {
       return false;
     }

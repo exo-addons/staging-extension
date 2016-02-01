@@ -3,8 +3,6 @@ package org.exoplatform.management.ecmadmin;
 import org.exoplatform.management.common.AbstractManagementExtension;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminContentImportResource;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminContentReadResource;
-import org.exoplatform.management.ecmadmin.operations.action.ActionExportResource;
-import org.exoplatform.management.ecmadmin.operations.action.ActionReadResource;
 import org.exoplatform.management.ecmadmin.operations.drive.DriveExportResource;
 import org.exoplatform.management.ecmadmin.operations.drive.DriveImportResource;
 import org.exoplatform.management.ecmadmin.operations.drive.DriveReadResource;
@@ -103,12 +101,6 @@ public class ECMAdminManagementExtension extends AbstractManagementExtension {
     script.registerOperationHandler(OperationNames.READ_RESOURCE, new ScriptReadResource(), description("Lists available scripts"));
     script.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ScriptExportResource(), description("Exports available scripts"));
     script.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ScriptImportResource(), description("Imports scripts"));
-
-    // /ecmadmin/action
-    ManagedResource.Registration action = ecmadmin.registerSubResource("action", description("NodeTypes of type JCR action."));
-    action.registerOperationHandler(OperationNames.READ_RESOURCE, new ActionReadResource(), description("Lists available actions"));
-    action.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ActionExportResource(), description("Exports available actions"));
-    action.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new NodeTypeImportResource("action"), description("Imports actions"));
 
     // /ecmadmin/nodetype
     ManagedResource.Registration nodetype = ecmadmin.registerSubResource("nodetype", description("All JCR Nodetypes and Namespaces."));

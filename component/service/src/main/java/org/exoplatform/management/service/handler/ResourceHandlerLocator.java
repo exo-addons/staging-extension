@@ -5,7 +5,6 @@ import java.util.Arrays;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.service.api.ResourceHandler;
 import org.exoplatform.management.service.api.StagingService;
-import org.exoplatform.management.service.handler.answer.AnswerHandler;
 import org.exoplatform.management.service.handler.common.ResourcesInFilterHandler;
 import org.exoplatform.management.service.handler.common.SimpleHandler;
 import org.exoplatform.management.service.handler.forum.ForumHandler;
@@ -44,20 +43,13 @@ public class ResourceHandlerLocator {
     registry.register(new ResourcesInFilterHandler(StagingService.SPACE_CALENDAR_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.PERSONAL_FORUM_PATH));
 
-    // Answer
-    registry.register(new AnswerHandler(StagingService.PUBLIC_ANSWER_PATH, false));
-    registry.register(new AnswerHandler(StagingService.SPACE_ANSWER_PATH, false));
-    registry.register(new AnswerHandler(StagingService.FAQ_TEMPLATE_PATH, true));
-
     // ECM Admin Handlers
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_NODETYPE_PATH));
-    registry.register(new ResourcesInFilterHandler(StagingService.ECM_ACTION_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_SCRIPT_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_DRIVE_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_QUERY_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_TEMPLATES_METADATA_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
-    registry.register(new SimpleHandler(StagingService.ECM_TEMPLATES_APPLICATION_SEARCH_PATH));
     registry.register(new SimpleHandler(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
     registry.register(new SimpleHandler(StagingService.ECM_TAXONOMY_PATH));
     registry.register(new ResourcesInFilterHandler(StagingService.ECM_VIEW_TEMPLATES_PATH));

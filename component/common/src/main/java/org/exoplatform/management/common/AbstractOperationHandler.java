@@ -39,7 +39,6 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   public static final String POLL_ACTIVITY_TYPE = "ks-poll:spaces";
   public static final String FORUM_ACTIVITY_TYPE = "ks-forum:spaces";
   public static final String CALENDAR_ACTIVITY_TYPE = "cs-calendar:spaces";
-  public static final String ANSWER_ACTIVITY_TYPE = "ks-answer:spaces";
   public static final String WIKI_ACTIVITY_TYPE = "ks-wiki:spaces";
   public static final String CONTENT_ACTIVITY_TYPE = "contents:spaces";
   public static final String FILE_ACTIVITY_TYPE = "files:spaces";

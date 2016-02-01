@@ -108,9 +108,8 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     List<String> operationFilters = attributes.getValues("filter");
 
     // "replace-existing" attribute. Defaults to false.
-    boolean exportAnswer = false, exportCalendar = false, exportForum = false;
+    boolean exportCalendar = false, exportForum = false;
     if (operationFilters != null) {
-      exportAnswer = operationFilters.contains("export-answer:true");
       exportForum = operationFilters.contains("export-forum:true");
       exportCalendar = operationFilters.contains("export-calendar:true");
     }
@@ -136,8 +135,7 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
 
       for (String application : appsSet) {
         String path = getEntryResourcePath(application);
-        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.ANSWER_RESOURCE_PATH) && !exportAnswer)
-            || (path.equals(SocialExtension.FAQ_RESOURCE_PATH) && !exportAnswer) || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
+        if (path == null || (path.equals(SocialExtension.FORUM_RESOURCE_PATH) && !exportForum) || (path.equals(SocialExtension.CALENDAR_RESOURCE_PATH) && !exportCalendar)) {
           continue;
         }
 
@@ -200,8 +198,7 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
       for (ExoSocialActivity activity : activities) {
         // Don't export application activities
         if (activity.getType().equals(CONTENT_ACTIVITY_TYPE) || activity.getType().equals(FILE_ACTIVITY_TYPE) || activity.getType().equals(FORUM_ACTIVITY_TYPE)
-            || activity.getType().equals(POLL_ACTIVITY_TYPE) || activity.getType().equals(WIKI_ACTIVITY_TYPE) || activity.getType().equals(ANSWER_ACTIVITY_TYPE)
-            || activity.getType().equals(CALENDAR_ACTIVITY_TYPE)) {
+            || activity.getType().equals(POLL_ACTIVITY_TYPE) || activity.getType().equals(WIKI_ACTIVITY_TYPE) || activity.getType().equals(CALENDAR_ACTIVITY_TYPE)) {
           continue;
         }
         addActivityWithComments(activitiesList, activity);
@@ -239,15 +236,9 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     if (application.contains(SocialExtension.FORUM_PORTLET)) {
       path = SocialExtension.FORUM_RESOURCE_PATH;
       log.info("export space forum data");
-    } else if (application.contains(SocialExtension.ANSWERS_PORTLET)) {
-      path = SocialExtension.ANSWER_RESOURCE_PATH;
-      log.info("export space answer data");
     } else if (application.contains(SocialExtension.CALENDAR_PORTLET)) {
       path = SocialExtension.CALENDAR_RESOURCE_PATH;
       log.info("export space calendar data");
-    } else if (application.contains(SocialExtension.FAQ_PORTLET)) {
-      path = SocialExtension.FAQ_RESOURCE_PATH;
-      log.info("export FAQ template");
     } else if (application.contains(SocialExtension.WIKI_PORTLET)) {
       path = SocialExtension.WIKI_RESOURCE_PATH;
       log.info("export space wiki data");

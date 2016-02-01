@@ -162,8 +162,8 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
 
         for (String fileKey : filesKeysList) {
           File fileToImport = spaceFiles.get(fileKey);
-          if (fileKey.equals(SocialExtension.ANSWER_RESOURCE_PATH) || fileKey.equals(SocialExtension.CALENDAR_RESOURCE_PATH) || fileKey.equals(SocialExtension.CONTENT_RESOURCE_PATH)
-              || fileKey.equals(SocialExtension.FAQ_RESOURCE_PATH) || fileKey.equals(SocialExtension.FORUM_RESOURCE_PATH) || fileKey.equals(SocialExtension.WIKI_RESOURCE_PATH)
+          if (fileKey.equals(SocialExtension.CALENDAR_RESOURCE_PATH) || fileKey.equals(SocialExtension.CONTENT_RESOURCE_PATH)
+              || fileKey.equals(SocialExtension.FORUM_RESOURCE_PATH) || fileKey.equals(SocialExtension.WIKI_RESOURCE_PATH)
               || fileKey.equals(SocialExtension.SITES_IMPORT_RESOURCE_PATH)) {
             importSubResource(fileToImport, fileKey);
             deleteTempFile(fileToImport);
@@ -375,10 +375,6 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
         } finally {
           RequestLifeCycle.end();
         }
-
-        // FIXME Answer Bug: deleting a space don't delete answers category, but
-        // it will be deleted if answer data is imported
-
       } else {
         log.info("Space '" + space.getDisplayName() + "' was found but replaceExisting=false. Ignore space import.");
         return true;
@@ -673,14 +669,10 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
 
           log.info("Receiving content " + zipEntryPath);
 
-          if (zipEntryPath.contains(SocialExtension.ANSWER_RESOURCE_PATH)) {
-            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.ANSWER_RESOURCE_PATH);
-          } else if (zipEntryPath.contains(SocialExtension.CALENDAR_RESOURCE_PATH)) {
+          if (zipEntryPath.contains(SocialExtension.CALENDAR_RESOURCE_PATH)) {
             putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.CALENDAR_RESOURCE_PATH);
           } else if (zipEntryPath.contains(SocialExtension.CONTENT_RESOURCE_PATH)) {
             putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.CONTENT_RESOURCE_PATH);
-          } else if (zipEntryPath.contains(SocialExtension.FAQ_RESOURCE_PATH)) {
-            putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.FAQ_RESOURCE_PATH);
           } else if (zipEntryPath.contains(SocialExtension.FORUM_RESOURCE_PATH)) {
             putSubResourceEntry(tmpZipFile, targetFolderPath, zis, zipOutputStreamMap, zipEntryPath, spacePrettyName, ownerFiles, SocialExtension.FORUM_RESOURCE_PATH);
           } else if (zipEntryPath.contains(SocialExtension.WIKI_RESOURCE_PATH)) {

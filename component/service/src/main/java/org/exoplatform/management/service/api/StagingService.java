@@ -9,10 +9,6 @@ import java.util.Set;
 
 public interface StagingService {
 
-  public static final String ANSWERS_PARENT_PATH = "/answer";
-  public static final String PUBLIC_ANSWER_PATH = "/answer/public";
-  public static final String SPACE_ANSWER_PATH = "/answer/space";
-  public static final String FAQ_TEMPLATE_PATH = "/answer/template";
   public static final String CALENDARS_PARENT_PATH = "/calendar";
   public static final String GROUP_CALENDAR_PATH = "/calendar/group";
   public static final String SPACE_CALENDAR_PATH = "/calendar/space";
@@ -33,14 +29,12 @@ public interface StagingService {
   public static final String SITES_USER_PATH = "/site/usersites";
   public static final String CONTENT_SITES_PATH = "/content/sites";
   public static final String ECM_TEMPLATES_APPLICATION_CLV_PATH = "/ecmadmin/templates/applications/content-list-viewer";
-  public static final String ECM_TEMPLATES_APPLICATION_SEARCH_PATH = "/ecmadmin/templates/applications/search";
   public static final String ECM_TEMPLATES_DOCUMENT_TYPE_PATH = "/ecmadmin/templates/nodetypes";
   public static final String ECM_TEMPLATES_METADATA_PATH = "/ecmadmin/templates/metadata";
   public static final String ECM_TAXONOMY_PATH = "/ecmadmin/taxonomy";
   public static final String ECM_QUERY_PATH = "/ecmadmin/queries";
   public static final String ECM_DRIVE_PATH = "/ecmadmin/drive";
   public static final String ECM_SCRIPT_PATH = "/ecmadmin/script";
-  public static final String ECM_ACTION_PATH = "/ecmadmin/action";
   public static final String ECM_NODETYPE_PATH = "/ecmadmin/nodetype";
   public static final String ECM_VIEW_CONFIGURATION_PATH = "/ecmadmin/view/configuration";
   public static final String ECM_VIEW_TEMPLATES_PATH = "/ecmadmin/view/templates";
