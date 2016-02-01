@@ -242,7 +242,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
     activity = activityManager.getActivity(activity.getId());
     try {
-      activityStorage.setInjectStreams(false);
+      activityStorage.setInjectStreams(true);
       activityManager.saveComment(activity, comment);
     } catch (NullPointerException e) {
       log.warn("Error while importing comment: '" + comment.getTitle() + "'.");
@@ -259,7 +259,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
   }
 
   protected final void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
-    activityStorage.setInjectStreams(false);
+    activityStorage.setInjectStreams(true);
     long updatedTime = activity.getUpdated().getTime();
     if (spacePrettyName == null) {
       if (activity.getActivityStream() != null && activity.getActivityStream().getType().equals(Type.SPACE) && activity.getActivityStream().getPrettyId() != null) {
