@@ -96,7 +96,7 @@ public class BackupExportResource extends AbstractOperationHandler {
         handleWriteOperations();
       }
 
-      File backupDirFile = getBackupDirectoryFile(attributes);
+      File backupDirFile = getBackupDirectoryFile(attributes, true);
 
       if (exportJCR) {
         // Backup JCR
@@ -115,7 +115,7 @@ public class BackupExportResource extends AbstractOperationHandler {
       // Nothing to return here
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to backup Data : " + e.getMessage(), e);
+      throw new OperationException(OperationNames.EXPORT_RESOURCE, e.getMessage(), e);
     } finally {
       backupInProgress = false;
       stagingMessageREST.readParametersFromProperties();
@@ -147,7 +147,7 @@ public class BackupExportResource extends AbstractOperationHandler {
     }
   }
 
-  public static File getBackupDirectoryFile(OperationAttributes attributes) {
+  public static File getBackupDirectoryFile(OperationAttributes attributes, boolean create) {
     String backupDir = attributes.getValue("directory");
     if (backupDir == null) {
       List<String> filters = attributes.getValues("filter");
@@ -167,7 +167,7 @@ public class BackupExportResource extends AbstractOperationHandler {
 
     File backupDirFile = new File(backupDir);
 
-    if (!backupDirFile.exists()) {
+    if (!backupDirFile.exists() && create) {
       backupDirFile.mkdirs();
     }
 

@@ -38,6 +38,12 @@ public class BackupImportResource extends AbstractOperationHandler {
     Map<Object, Throwable> endedServicesLifecycle = null;
 
     OperationAttributes attributes = operationContext.getAttributes();
+
+    File backupDirFile = BackupExportResource.getBackupDirectoryFile(attributes, false);
+    if (!backupDirFile.exists() || !backupDirFile.isDirectory()) {
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Backup folder doesn't exists or is not a folder: " + backupDirFile.getAbsolutePath());
+    }
+
     String portalContainerName = operationContext.getAddress().resolvePathTemplate("portal");
     PortalContainer portalContainer = getPortalContainer(portalContainerName);
 
@@ -52,8 +58,6 @@ public class BackupImportResource extends AbstractOperationHandler {
     increaseCurrentTransactionTimeOut(portalContainer);
     restoreInProgress = true;
     try {
-
-      File backupDirFile = BackupExportResource.getBackupDirectoryFile(attributes);
 
       // Close transactions of current Thread
       endedServicesLifecycle = RequestLifeCycle.end();
@@ -85,7 +89,7 @@ public class BackupImportResource extends AbstractOperationHandler {
       // Nothing to return here
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Unable to restore Data : " + e.getMessage(), e);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, e.getMessage(), e);
     } finally {
       restoreInProgress = false;
 
@@ -107,7 +111,7 @@ public class BackupImportResource extends AbstractOperationHandler {
           ((ExoCache<?, ?>) o).clearCache();
         }
       } catch (Exception e) {
-        log.warn("An exception occurred: " + e.getMessage());
+        log.warn("An exception occurred", e);
       }
     }
     if (idmCacheService != null) {

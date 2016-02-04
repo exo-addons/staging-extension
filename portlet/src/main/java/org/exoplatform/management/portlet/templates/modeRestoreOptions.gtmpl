@@ -1,0 +1,15 @@
+<div class="mode-restore-options" ng-show="mode=='restore'">
+  <div>
+	<div id="restoreFolderResult" class="alert {{resultMessageClass}}" ng-bind-html="resultMessage" ng-show="resultMessage.length"></div>
+    <form id="form-restore" class="form-horizontal">
+      <fieldset>
+		  <legend><h3>Restore</h3></legend>
+		  <input class="row-fluid" type="text" name="/restore/directory" ng-model="optionsModel['/restore/directory']" placeholder="Choose backup parent directory">
+		  <HR/>
+		  <div class="buttons restore-buttons">
+			<button type="button" class="btn btn-primary restore-button" ng-disabled="button_clicked" ng-click="restore()">Restore</button>
+		  </div>
+	  </fieldset>
+    </form>
+  </div>
+</div>

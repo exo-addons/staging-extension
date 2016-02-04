@@ -31,7 +31,6 @@ import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.controller.ManagedRequest;
 import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
-import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 
 public abstract class AbstractResourceHandler implements ResourceHandler {
@@ -146,8 +145,6 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         throw new IllegalStateException("Synchronization operation error, HTTP error code from target server : " + conn.getResponseCode());
       }
       getLogger().info("Import in target server finished successfully.");
-    } catch (Exception e) {
-      throw new RuntimeException("Error while synchronizing the content", e);
     } finally {
       if (fileInputStream != null) {
         fileInputStream.close();
@@ -268,7 +265,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       sendData(tmpFile, importOptions, targetServer);
 
     } catch (Exception ex) {
-      throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting resource: " + resource.getPath(), ex);
+      throw ex;
     } finally {
       if (tmpFile != null) {
         tmpFile.delete();

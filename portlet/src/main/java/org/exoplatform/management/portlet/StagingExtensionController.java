@@ -359,8 +359,8 @@ public class StagingExtensionController {
       stagingService.export(resourceCategories);
       return Response.ok("Backup operation finished successfully.");
     } catch (Exception e) {
-      log.error("Error while backup", e);
-      return Response.content(500, e.getMessage());
+      log.error("Error occured while backup: ", e);
+      return Response.content(500, "Error occured while backup: " +e.getMessage());
     }
   }
 
@@ -376,7 +376,7 @@ public class StagingExtensionController {
       return Response.ok("Restore operation finished successfully.");
     } catch (Exception e) {
       log.error("Error occured while restoring databases", e);
-      return Response.content(500, "Error occured while restoring databases.");
+      return Response.content(500, "Error occured while restoring databases: " + e.getMessage());
     }
   }
 
@@ -440,7 +440,7 @@ public class StagingExtensionController {
       }
     } catch (Exception e) {
       log.error("Error while exporting resources, ", e);
-      return Response.content(500, "Error occured while exporting Managed Resources: " + e.getMessage());
+      return Response.content(500, "Error occured while exporting resources: " + e.getMessage());
     }
   }
 
@@ -512,7 +512,7 @@ public class StagingExtensionController {
       return Response.ok("Successfully proceeded!");
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
-      return Response.content(500, "Error occured while importing resource. See full stack trace in log file.");
+      return Response.content(500, "Error occured while importing resource: " + e.getMessage());
     }
   }
 
@@ -617,7 +617,7 @@ public class StagingExtensionController {
       return Response.ok("Successfully proceeded.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);
-      return Response.content(500, "Error occured while synchronizing Managed Resources: " + e.getMessage());
+      return Response.content(500, "Error occured while synchronizing resources: " + e.getMessage());
     }
   }
 

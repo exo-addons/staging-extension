@@ -290,7 +290,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
             $scope.button_clicked = false;
             $scope.refreshController();
           }).error(function (data) {
-            $scope.setResultMessage("Import failed. " + data, "error");
+            $scope.setResultMessage(data, "error");
             $scope.button_clicked = false;
             $scope.refreshController();
           });
@@ -357,9 +357,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
               scope.refreshController();
             });
           })
-          .fail(function () {
+          .fail(function (data) {
             $scope.$apply(function(scope) {
-              scope.setResultMessage("Error while exporting the data", "error");
+              scope.setResultMessage(data, "error");
 	          scope.button_clicked = false;
 	          scope.refreshController();
             });
@@ -404,7 +404,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	      	    $scope.button_clicked = false;
 		        $scope.refreshController();
 		    }).error(function (data) {
-			      $scope.setResultMessage("An error occured:" + data, "error");
+			      $scope.setResultMessage(data, "error");
 		      	  $scope.button_clicked = false;
 			      $scope.refreshController();
 		    });
@@ -438,7 +438,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       	    $scope.button_clicked = false;
 	        $scope.refreshController();
         }).error(function (data) {
-			$scope.setResultMessage("An error occured:" + data, "error");
+			$scope.setResultMessage(data, "error");
       	    $scope.button_clicked = false;
 			$scope.refreshController();
         });

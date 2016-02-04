@@ -60,16 +60,4 @@
 	  </fieldset>
     </form>
   </div>
-
-  <div>
-    <form id="form-restore" class="form-horizontal">
-      <fieldset>
-		  <legend><h3>Restore</h3></legend>
-		  <input class="row-fluid" type="text" name="/restore/directory" ng-model="optionsModel['/restore/directory']" placeholder="Choose backup parent directory">
-		  <div class="buttons backup-buttons">
-			<button type="button" class="btn btn-primary backup-button" ng-disabled="button_clicked" ng-click="restore()">Restore</button>
-		  </div>
-	  </fieldset>
-    </form>
-  </div>
 </div>

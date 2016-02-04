@@ -29,8 +29,15 @@
 					<span>Backup</span>
 				</label>
 			</span>
+			<span class="uiRadio">
+				<label class="radio">
+					<input type="radio" name="mode" value="restore" ng-model="mode" ng-click="changeMode('restore')"/>
+					<span>Restore</span>
+				</label>
+			</span>
       </div>
       <div class="mode-options clearfix">
+        #{include path=modeRestoreOptions.gtmpl}#{/include}
         #{include path=modeBackupOptions.gtmpl}#{/include}
         #{include path=modeImportOptions.gtmpl}#{/include}
         #{include path=modeSyncOptions.gtmpl}#{/include}
