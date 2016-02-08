@@ -88,6 +88,8 @@ public class BackupExportResource extends AbstractOperationHandler {
       stagingMessageREST.setMessage(message);
       stagingMessageREST.setPosition("top-center");
 
+      File backupDirFile = getBackupDirectoryFile(attributes, true);
+
       if (!exportIDM && !exportJCR) {
         throw new OperationException(OperationNames.EXPORT_RESOURCE, "You have to choose IDM, JCR or both datas to backup.");
       }
@@ -95,8 +97,6 @@ public class BackupExportResource extends AbstractOperationHandler {
       if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
         handleWriteOperations();
       }
-
-      File backupDirFile = getBackupDirectoryFile(attributes, true);
 
       if (exportJCR) {
         // Backup JCR
