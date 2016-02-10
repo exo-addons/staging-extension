@@ -97,12 +97,14 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
         if (isSpaceForum) {
           String forumId = categoryId;
           FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
+          boolean spaceCreatedOrAlreadyExists = false;
           if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
-            boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
-            if (!spaceCreatedOrAlreadyExists) {
-              log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist. Turn on 'create-space:true' option if you want to automatically create the space.");
-              continue;
-            }
+            spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
+          }
+          if (!spaceCreatedOrAlreadyExists) {
+            log.warn("Import of forum category '" + categoryId + "' is ignored because space doesn't exist."
+                + " Turn on 'create-space:true' option if you want to automatically create the space and you should provide the space metadata with exported ZIP file.");
+            continue;
           }
 
           Category spaceCategory = forumService.getCategoryIncludedSpace();

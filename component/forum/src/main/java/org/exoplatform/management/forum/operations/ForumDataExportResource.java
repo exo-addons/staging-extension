@@ -88,6 +88,9 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
     String name = operationContext.getAttributes().getValue("filter");
+    if(StringUtils.isEmpty(name)) {
+      name = operationContext.getAddress().resolvePathTemplate("name");
+    }
 
     increaseCurrentTransactionTimeOut(operationContext);
     try {
@@ -100,7 +103,7 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
       String workspace = dataLocation.getWorkspace();
       String categoryHomePath = dataLocation.getForumCategoriesLocation();
 
-      if (name == null || name.isEmpty()) {
+      if (StringUtils.isEmpty(name)) {
         log.info("Exporting all Forums of type: " + (isSpaceForumType ? "Spaces" : "Non Spaces"));
         List<Category> categories = forumService.getCategories();
         for (Category category : categories) {

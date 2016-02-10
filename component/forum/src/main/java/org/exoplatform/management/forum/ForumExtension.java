@@ -54,14 +54,22 @@ public class ForumExtension extends AbstractManagementExtension {
     setting.registerOperationHandler(OperationNames.READ_RESOURCE, new ReadResource("Forum settings", "Settings"), description("Forum settings"));
     setting.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumSettingsExportResource(true), description("export forum setting"));
 
-    ManagedResource.Registration portal = forum.registerSubResource(PUBLIC_FORUM_TYPE, description("public forum"));
-    portal.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(false), description("Read non spaces forum categories"));
-    portal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(false), description("export forum category"));
-    portal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(false), description("import forum category"));
+    ManagedResource.Registration portal = forum.registerSubResource(PUBLIC_FORUM_TYPE, description("public forum categories"));
+    portal.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(false), description("Read public forum categories"));
+    portal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(false), description("export forum categories"));
+    portal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(false), description("import forum categories"));
+
+    ManagedResource.Registration portalForumCategory = portal.registerSubResource("{name: .*}", description("public forum categories"));
+    portalForumCategory.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty sub resources"));
+    portalForumCategory.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(false), description("export forum category"));
 
     ManagedResource.Registration group = forum.registerSubResource(SPACE_FORUM_TYPE, description("space forums"));
     group.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(true), description("Read spaces forum categories"));
-    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(true), description("export forum category"));
-    group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(true), description("import forum category"));
+    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(true), description("export forum space categories"));
+    group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(true), description("import forum space categories"));
+
+    ManagedResource.Registration groupForumCategory = group.registerSubResource("{name: .*}", description("space forum categories"));
+    groupForumCategory.registerOperationHandler(OperationNames.READ_RESOURCE, new EmptyReadResource(), description("Empty sub resources"));
+    groupForumCategory.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(true), description("export forum category"));
   }
 }
