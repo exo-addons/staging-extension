@@ -95,14 +95,7 @@
         </div>
       </div>
     </div>
-	
 	<div class="staging-mask" ng-show="button_clicked==true"></div>
-
-    <div class="buttons">
-      <button type="button" class="btn btn-primary button-export" ng-disabled="button_clicked" ng-click="exportResources()" ng-show="mode=='export'">Export</button>
-      <button type="button" class="btn btn-primary button-import" ng-disabled="button_clicked" ng-click="importResources()" ng-show="mode=='import' && readyToImport">Import</button>
-      <button type="button" class="btn btn-primary button-synchronize" ng-disabled="button_clicked" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
-    </div>
   </div>
 <div>
 

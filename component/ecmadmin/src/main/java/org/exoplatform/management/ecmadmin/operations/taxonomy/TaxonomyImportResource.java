@@ -145,7 +145,7 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
       }
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Throwable exception) {
-      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while proceeding taxonomy import", exception);
+      throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while processing taxonomy import", exception);
     }
   }
 

@@ -40,6 +40,7 @@ public class ContentManagementExtension extends AbstractManagementExtension {
     ManagedResource.Registration sites = content.registerSubResource(PATH_CONTENT_SITES, description("Sites Managed Resource, responsible for handling management operations on sites contents."));
     sites.registerOperationHandler(OperationNames.READ_RESOURCE, new LiveSitesReadResource(), description("Lists available sites"));
     sites.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new SiteContentsImportResource(), description("Import sites data"));
+    sites.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteContentsExportResource(), description("Export site contents"));
 
     // /content/sites/<site_name>
     ManagedResource.Registration site = sites.registerSubResource("{site-name: [^/]*}", description("Management resource responsible for handling management operations on a specific site."));
@@ -58,7 +59,5 @@ public class ContentManagementExtension extends AbstractManagementExtension {
 
     DataTransformerService.addTransformer("Page", new PageSCVTransformer());
     DataTransformerService.addTransformer("Page", new PageCLVTransformer());
-    // DataTransformerService.addTransformer("Content", new
-    // JCRBinaryTransformer());
   }
 }

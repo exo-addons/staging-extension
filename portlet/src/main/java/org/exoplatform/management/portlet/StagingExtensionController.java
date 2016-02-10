@@ -509,7 +509,7 @@ public class StagingExtensionController {
 
         stagingService.importResource(selectedResourcesCategory, file.getInputStream(), attributes);
       }
-      return Response.ok("Successfully proceeded!");
+      return Response.ok("Successfully processed!");
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
       return Response.content(500, "Error occured while importing resource: " + e.getMessage());
@@ -614,7 +614,7 @@ public class StagingExtensionController {
 
     try {
       synchronizationService.synchronize(selectedResourceCategoriesWithExceptions, targetServer);
-      return Response.ok("Successfully proceeded.");
+      return Response.ok("Successfully processed.");
     } catch (Exception e) {
       log.error("Error while synchronization, ", e);
       return Response.content(500, "Error occured while synchronizing resources: " + e.getMessage());

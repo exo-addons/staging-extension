@@ -80,7 +80,7 @@ public class BackupImportResource extends AbstractOperationHandler {
       log.info("Clear Services caches");
       clearCaches(cacheService, idmCacheService);
 
-      // Resume cron jobs only if Restore operation is successfully proceeded
+      // Resume cron jobs only if Restore operation is successfully processed
       log.info("Resume Jobs Scheduler Service");
       jobSchedulerService.resume();
 

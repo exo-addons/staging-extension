@@ -346,13 +346,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	  $scope.refreshController();
 	  try {
       // Launch synchronization...
-        $scope.setResultMessage("Proceeding...", "info");
+        $scope.setResultMessage("processing...", "info");
 
 	    var downloadOptions = {};
         $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
           .done(function () {
             $scope.$apply(function(scope) {
-              scope.setResultMessage("Successfully proceeded.", "success");
+              scope.setResultMessage("Successfully processed.", "success");
               scope.button_clicked = false;
               scope.refreshController();
             });
@@ -386,7 +386,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		  $scope.refreshController();
 
 		  // Launch backup...
-	      $scope.setResultMessage("Proceeding...", "info");
+	      $scope.setResultMessage("processing...", "info");
 
 		  $http({
 		        method: 'POST',
@@ -420,7 +420,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         $scope.refreshController();
 
         // Launch restore...
-	    $scope.setResultMessage("Proceeding...", "info");
+	    $scope.setResultMessage("processing...", "info");
 
         $http({
 			method: 'POST',
@@ -505,7 +505,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	   $scope.refreshController();
 	   try {
 	      // Launch synchronization...
-	      $scope.setResultMessage("Proceeding...", "info");
+	      $scope.setResultMessage("processing...", "info");
 	
 	      $http({
 	          method: 'POST',
