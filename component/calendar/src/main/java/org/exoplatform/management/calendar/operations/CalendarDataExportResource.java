@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.exoplatform.calendar.service.Calendar;
 import org.exoplatform.calendar.service.CalendarEvent;
 import org.exoplatform.calendar.service.CalendarService;
@@ -87,7 +88,7 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     if (groupCalendar) {
-      String filterText = operationContext.getAttributes().getValue("filter");
+      String filterText = getParameter(operationContext);
       if (spaceCalendar) {
         Space space = spaceService.getSpaceByDisplayName(filterText);
         if (space == null) {
@@ -119,28 +120,45 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
       }
     } else {
       List<String> usernames = operationContext.getAttributes().getValues("filter");
-      for (String username : usernames) {
-        if (username == null || username.trim().isEmpty()) {
-          OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
-          try {
-            ListAccess<User> users = organizationService.getUserHandler().findAllUsers();
-            int size = users.getSize(), i = 0;
-            while (i < size) {
-              int length = i + 10 < size ? 10 : size - i;
-              User[] usersArr = users.load(i, length);
-              for (User user : usersArr) {
-                exportUserCalendar(exportTasks, user.getUserName());
+      if (usernames == null || usernames.isEmpty()) {
+        String username = getParameter(operationContext);
+        if (StringUtils.isNotEmpty(username)) {
+          usernames = new ArrayList<String>();
+          usernames.add(username);
+        }
+      }
+      if (usernames != null) {
+        for (String username : usernames) {
+          if (username == null || username.trim().isEmpty()) {
+            OrganizationService organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
+            try {
+              ListAccess<User> users = organizationService.getUserHandler().findAllUsers();
+              int size = users.getSize(), i = 0;
+              while (i < size) {
+                int length = i + 10 < size ? 10 : size - i;
+                User[] usersArr = users.load(i, length);
+                for (User user : usersArr) {
+                  exportUserCalendar(exportTasks, user.getUserName());
+                }
               }
+            } catch (Exception e) {
+              throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
             }
-          } catch (Exception e) {
-            throw new OperationException(OperationNames.EXPORT_RESOURCE, "Error while exporting calendars.", e);
+          } else {
+            exportUserCalendar(exportTasks, username);
           }
-        } else {
-          exportUserCalendar(exportTasks, username);
         }
       }
     }
     resultHandler.completed(new ExportResourceModel(exportTasks));
+  }
+
+  private String getParameter(OperationContext operationContext) {
+    String filterText = operationContext.getAddress().resolvePathTemplate("name");
+    if (StringUtils.isEmpty(filterText)) {
+      filterText = operationContext.getAttributes().getValue("filter");
+    }
+    return filterText;
   }
 
   private void exportGroupCalendar(List<ExportTask> exportTasks, String groupId, String calendarName, boolean exportSpaceMetadata) {
@@ -183,7 +201,6 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
   }
 
   private String[] getAllGroupIDs() throws Exception {
-    @SuppressWarnings("unchecked")
     Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
     String[] groupIDs = new String[groups.size()];
     int i = 0;
