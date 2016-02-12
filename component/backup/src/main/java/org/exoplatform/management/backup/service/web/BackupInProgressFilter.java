@@ -17,6 +17,15 @@ import org.exoplatform.management.backup.service.BackupInProgressException;
 import org.exoplatform.web.filter.Filter;
 
 public class BackupInProgressFilter implements Filter {
+  private static final String MAINTENANCE_PAGE_PATH = System.getProperty("exo.staging.maintenance.page", "html/backupInProgress.html");
+  private static String MAINTENANCE_PAGE_CONTENT;
+  static {
+    try {
+      MAINTENANCE_PAGE_CONTENT = IOUtil.getResourceAsString(MAINTENANCE_PAGE_PATH);
+    } catch (IOException e) {
+      MAINTENANCE_PAGE_CONTENT = "Server is in maintenance";
+    }
+  }
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -47,8 +56,7 @@ public class BackupInProgressFilter implements Filter {
   }
 
   private void displayBackupMaintenancePage(ServletResponse response) throws IOException {
-    String content = IOUtil.getResourceAsString("html/backupInProgress.html");
-    response.getWriter().append(content);
+    response.getWriter().append(MAINTENANCE_PAGE_CONTENT);
   }
 
   private boolean checkWantLogout(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws IOException {
