@@ -56,7 +56,6 @@ public class ForumExtension extends AbstractManagementExtension {
 
     ManagedResource.Registration portal = forum.registerSubResource(PUBLIC_FORUM_TYPE, description("public forum categories"));
     portal.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(false), description("Read public forum categories"));
-    portal.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(false), description("export forum categories"));
     portal.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(false), description("import forum categories"));
 
     ManagedResource.Registration portalForumCategory = portal.registerSubResource("{name: .*}", description("public forum categories"));
@@ -65,7 +64,6 @@ public class ForumExtension extends AbstractManagementExtension {
 
     ManagedResource.Registration group = forum.registerSubResource(SPACE_FORUM_TYPE, description("space forums"));
     group.registerOperationHandler(OperationNames.READ_RESOURCE, new ForumDataReadResource(true), description("Read spaces forum categories"));
-    group.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new ForumDataExportResource(true), description("export forum space categories"));
     group.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new ForumDataImportResource(true), description("import forum space categories"));
 
     ManagedResource.Registration groupForumCategory = group.registerSubResource("{name: .*}", description("space forum categories"));

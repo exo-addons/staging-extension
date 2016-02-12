@@ -40,12 +40,12 @@ public class ContentManagementExtension extends AbstractManagementExtension {
     ManagedResource.Registration sites = content.registerSubResource(PATH_CONTENT_SITES, description("Sites Managed Resource, responsible for handling management operations on sites contents."));
     sites.registerOperationHandler(OperationNames.READ_RESOURCE, new LiveSitesReadResource(), description("Lists available sites"));
     sites.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new SiteContentsImportResource(), description("Import sites data"));
-    sites.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteContentsExportResource(), description("Export site contents"));
 
     // /content/sites/<site_name>
     ManagedResource.Registration site = sites.registerSubResource("{site-name: [^/]*}", description("Management resource responsible for handling management operations on a specific site."));
     site.registerOperationHandler(OperationNames.READ_RESOURCE, new SiteReadResource(), description("Read site"));
     site.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new SiteContentsImportResource(), description("Import site data"));
+    site.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteContentsExportResource(), description("Export site contents"));
 
     // /content/sites/<site_name>/contents
     ManagedResource.Registration siteContents = site.registerSubResource(PATH_CONTENT_SITES_CONTENTS, description("Management resource responsible for handling management operations on contents of a specific site."));
