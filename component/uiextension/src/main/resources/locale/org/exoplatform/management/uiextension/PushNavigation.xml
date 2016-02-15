@@ -7,7 +7,7 @@
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>
 			<synchronizationInProgress>Synchronization in progress ...</synchronizationInProgress>
-			<groupSiteSynchronization>Warning: you are about to synchronize a group site.</groupSiteSynchronization>
+			<groupSiteSynchronization>You are about to synchronize a group site.</groupSiteSynchronization>
 		</msg>
 		<action>Push navigation</action>
 	</PushNavigation>

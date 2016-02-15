@@ -627,6 +627,7 @@ public class StagingExtensionController {
     try {
       StringBuilder builder = new StringBuilder();
       if (sites != null && sites.length > 0) {
+        builder.append("Results").append("\r\n");
         builder.append("<ul>");
         Set<String> resultedNodePaths = stagingService.executeSQL(sql, new HashSet<String>(Arrays.asList(sites)));
         for (String path : resultedNodePaths) {

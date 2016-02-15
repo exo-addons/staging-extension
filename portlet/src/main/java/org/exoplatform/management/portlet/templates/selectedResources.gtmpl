@@ -147,7 +147,7 @@
                      ng-model="optionsModel['/content/sites_EXPORT_filter/query']">
             </div>
             <button type="button" class="btn" id="sitesContentSQLButton" ng-click="validateQuery()">Validate Query</button>
-            <div id="sitesContentSQLResult" class="alert {{validateQueryResultMessageClass}}" ng-bind-html="validateQueryResultMessage" ng-show="validateQueryResultMessage.length"></div>
+            <div id="sitesContentSQLResult" class="alert {{validateQueryResultMessageClass}}" ng-show="validateQueryResultMessage.length"><i class="{{validateQueryResultMessageClassExt}}"></i>{{validateQueryResultMessage}}</div>
           </div>
         </div>
       </div>
@@ -193,7 +193,6 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/forum/space']">
   <a ng-click="unselectCategory('/forum/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumSpaceVisible=true" ng-click="resourceDetailsForumSpaceVisible = !resourceDetailsForumSpaceVisible">Space Forum</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces forums will be overriden if the whole space is also imported (Social > Spaces).</div>
   <div class="selected-resource-details" ng-show="resourceDetailsForumSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/replace-existing"
@@ -234,7 +233,6 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/space']">
   <a ng-click="unselectCategory('/calendar/space')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarSpaceVisible=true" ng-click="resourceDetailsCalendarSpaceVisible = !resourceDetailsCalendarSpaceVisible">Space Calendar</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces calendars will be overriden if the space is imported with its calendar data (Social > Spaces).</div>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/space_IMPORT_filter/replace-existing"
@@ -321,7 +319,6 @@
 <div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/group']">
   <a ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category">Remove</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiGroupVisible=true" ng-click="resourceDetailsWikiGroupVisible = !resourceDetailsWikiGroupVisible">Group wiki</label>
-  <div class="alert" ng-show="mode=='import'"><strong>Warning!</strong><br/>Spaces wikis will be overriden if the whole space is also imported (Social > Spaces).</div>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiGroupVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/replace-existing"

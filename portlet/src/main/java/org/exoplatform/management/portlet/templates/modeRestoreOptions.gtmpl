@@ -1,6 +1,6 @@
 <div class="mode-restore-options" ng-show="mode=='restore'">
   <div>
-	<div id="restoreFolderResult" class="alert {{resultMessageClass}}" ng-bind-html="resultMessage" ng-show="resultMessage.length"></div>
+	<div id="restoreFolderResult" class="alert {{resultMessageClass}}" ng-show="resultMessage.length"><i class="{{resultMessageClassExt}}"></i>{{resultMessage}}</div>
     <form id="form-restore" class="form-horizontal">
       <fieldset>
 		  <legend><h3>Restore</h3></legend>

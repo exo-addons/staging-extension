@@ -66,6 +66,8 @@ public class PushNavigationForm extends UIForm {
 
   private List<TargetServer> targetServers;
 
+  String messageType = "info";
+
   public PushNavigationForm() throws Exception {
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
     UIFormStringInput siteNameInput = new UIFormStringInput(SITE_FIELD_NAME, SITE_FIELD_NAME, "");
@@ -91,7 +93,7 @@ public class PushNavigationForm extends UIForm {
     String siteName = Util.getUIPortal().getSiteKey().getName();
     getUIInput(SITE_FIELD_NAME).setValue(siteName);
     if (Util.getUIPortal().getSiteKey().getType().equals(SiteType.GROUP)) {
-      getUIFormInputInfo(INFO_FIELD_NAME).setValue(resolveLabel("PushNavigation.msg.groupSiteSynchronization"));
+      setMessage(resolveLabel("PushNavigation.msg.groupSiteSynchronization"), "warning");
     }
   }
 
@@ -107,6 +109,11 @@ public class PushNavigationForm extends UIForm {
 
   public String[] getActions() {
     return new String[] { "Push", "Close" };
+  }
+
+  public void setMessage(String message, String type) {
+    getUIFormInputInfo(INFO_FIELD_NAME).setValue(message);
+    messageType = type;
   }
 
   public List<TargetServer> getTargetServers() {
@@ -144,15 +151,15 @@ public class PushNavigationForm extends UIForm {
       final PushNavigationForm pushNavigationForm = event.getSource();
       ResourceBundle resourceBundle = pushNavigationForm.getResourceBundle();
 
-      pushNavigationForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+      pushNavigationForm.setMessage(null, "info");
       try {
         // get target server
         final TargetServer targetServer = getTargetServer(pushNavigationForm);
         if (targetServer == null) {
-          pushNavigationForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.targetServerMandatory"));
+          pushNavigationForm.setMessage(resourceBundle.getString("PushNavigation.msg.targetServerMandatory"), "error");
           return;
         }
-        pushNavigationForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"));
+        pushNavigationForm.setMessage(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"), "info");
 
         if (pushNavigationForm.synchronizationFinished && !pushNavigationForm.synchronizationStarted) {
           pushNavigationForm.synchronizationStarted = true;

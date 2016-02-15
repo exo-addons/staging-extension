@@ -47,6 +47,7 @@ public class CalendarExtension extends AbstractManagementExtension {
 
     ManagedResource.Registration spaceCalendars = calendar.registerSubResource(SPACE_CALENDAR_TYPE, description("space calendars"));
     spaceCalendars.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(true, true), description("Read space calendars"));
+    spaceCalendars.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(true, true), description("export space calendar"));
     spaceCalendars.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(true, true), description("import space calendars"));
 
     ManagedResource.Registration spaceCalendar = spaceCalendars.registerSubResource("{name: .*}", description("space calendar"));
@@ -55,6 +56,7 @@ public class CalendarExtension extends AbstractManagementExtension {
 
     ManagedResource.Registration groupCalendars = calendar.registerSubResource(GROUP_CALENDAR_TYPE, description("group calendars"));
     groupCalendars.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(true, false), description("Read group calendars"));
+    groupCalendars.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(true, false), description("export group calendar"));
     groupCalendars.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(true, false), description("import group calendars"));
 
     ManagedResource.Registration groupCalendar = groupCalendars.registerSubResource("{name: .*}", description("group calendar"));
@@ -63,6 +65,7 @@ public class CalendarExtension extends AbstractManagementExtension {
 
     ManagedResource.Registration personalCalendars = calendar.registerSubResource(PERSONAL_CALENDAR_TYPE, description("personal calendars"));
     personalCalendars.registerOperationHandler(OperationNames.READ_RESOURCE, new CalendarDataReadResource(false, false), description("Read personal calendars"));
+    personalCalendars.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new CalendarDataExportResource(false, false), description("export personal calendar"));
     personalCalendars.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new CalendarDataImportResource(false, false), description("import personal calendars"));
 
     ManagedResource.Registration personalCalendar = personalCalendars.registerSubResource("{name: .*}", description("personal calendar"));

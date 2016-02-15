@@ -26,9 +26,11 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
     $scope.syncServersMessage = "";
     $scope.syncServersMessageClass = "alert-info";
+    $scope.syncServersMessageClassExt = "uiIconInfo";
 
     // function which set the result message with the given style
     $scope.setSyncServerMessage = function(text, type) {
+      $scope.syncServersMessageClassExt = "uiIcon" + type.charAt(0).toUpperCase() + type.slice(1);
       $scope.syncServersMessageClass = "alert-" + type;
       $scope.syncServersMessage = text;
     }
@@ -73,13 +75,16 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     };
 
     $scope.deleteServer = function(id) {
+      $scope.syncServersMessageClassExt = "uiIconInfo";
       $scope.syncServersMessageClass = "alert-info";
       $scope.syncServersMessage = "Deleting server ...";
       $http.post(stagingContainer.jzURL('StagingExtensionController.removeSynchonizationServer') + '&id='+id).success(function (data) {
+          $scope.syncServersMessageClassExt = "uiIconSuccess";
         $scope.syncServersMessageClass = "alert-success";
         $scope.syncServersMessage = "Server deleted !";
         $scope.loadServers();
       }).error(function (data) {
+          $scope.syncServersMessageClassExt = "uiIconError";
         $scope.syncServersMessageClass = "alert-error";
         $scope.syncServersMessage = "Error while deleting the server";
       });
@@ -111,7 +116,6 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.optionsModel = [];
     // options default values
     $scope.optionsModel['/organization/user_EXPORT_filter/with-membership'] = true;
-    $scope.optionsModel['/organization/group_EXPORT_filter/with-membership'] = true;
     $scope.optionsModel['/content/sites_EXPORT_filter/taxonomy'] = true;
 
     //
@@ -156,12 +160,14 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
     $scope.resultMessage = "";
     $scope.resultMessageClass = "alert-info";
+    $scope.resultMessageClassExt = "uiIconInfo";
 
     $scope.readyToImport = false;
 
     // function which set the result message with the given style
     $scope.setResultMessage = function(text, type) {
       $scope.resultMessageClass = "alert-" + type;
+      $scope.resultMessageClassExt = "uiIcon" + type.charAt(0).toUpperCase() + type.slice(1);
       $scope.resultMessage = text;
     }
 
@@ -317,7 +323,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
 
       if(selectedResources.length == 0) {
-        $scope.setResultMessage("No resources selected", "error");
+        $scope.setResultMessage("Please select resources", "error");
         return;
       }
 
@@ -346,7 +352,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	  $scope.refreshController();
 	  try {
       // Launch synchronization...
-        $scope.setResultMessage("processing...", "info");
+        $scope.setResultMessage("Processing...", "info");
 
 	    var downloadOptions = {};
         $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
@@ -386,7 +392,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		  $scope.refreshController();
 
 		  // Launch backup...
-	      $scope.setResultMessage("processing...", "info");
+	      $scope.setResultMessage("Processing...", "info");
 
 		  $http({
 		        method: 'POST',
@@ -420,7 +426,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         $scope.refreshController();
 
         // Launch restore...
-	    $scope.setResultMessage("processing...", "info");
+	    $scope.setResultMessage("Processing...", "info");
 
         $http({
 			method: 'POST',
@@ -469,7 +475,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
 
       if(selectedResources.length == 0) {
-        $scope.setResultMessage("No resources selected", "error");
+        $scope.setResultMessage("Please select resources", "error");
         return;
       }
 
@@ -505,7 +511,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	   $scope.refreshController();
 	   try {
 	      // Launch synchronization...
-	      $scope.setResultMessage("processing...", "info");
+	      $scope.setResultMessage("Processing...", "info");
 	
 	      $http({
 	          method: 'POST',
@@ -537,6 +543,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.validateQuery = function() {
       var sql = $scope.optionsModel["/content/sites_EXPORT_filter/query"];
       if(sql == null || sql == "") {
+        $scope.validateQueryResultMessageClassExt = "uiIconError";
         $scope.validateQueryResultMessageClass = "alert-error";
         $scope.validateQueryResultMessage = "Error : Empty query";
       } else {
@@ -555,14 +562,17 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         }).success(function (data) {
 			if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
 	            $scope.validateQueryResultMessage = "Session timeout, please retry again.";
+	            $scope.validateQueryResultMessageClassExt = "uiIconError";
 	            $scope.validateQueryResultMessageClass = "alert-error";
         	} else {
 	            $scope.validateQueryResultMessage = data;
 	            $scope.validateQueryResultMessageClass = "alert-info";
+	            $scope.validateQueryResultMessageClassExt = "uiIconInfo";
         	}
           }).error(function (data) {
             $scope.validateQueryResultMessage = data;
             $scope.validateQueryResultMessageClass = "alert-error";
+            $scope.validateQueryResultMessageClassExt = "uiIconError";
           });
       }
     };

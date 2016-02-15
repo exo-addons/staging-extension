@@ -61,6 +61,8 @@ public class PushPageForm extends UIForm {
 
   private List<TargetServer> targetServers;
 
+  String messageType = "info";
+
   public PushPageForm() throws Exception {
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
@@ -101,6 +103,11 @@ public class PushPageForm extends UIForm {
     return synchronizationStarted;
   }
 
+  public void setMessage(String message, String type) {
+    getUIFormInputInfo(INFO_FIELD_NAME).setValue(message);
+    messageType = type;
+  }
+
   private static void closePopup(Event<PushPageForm> event) {
     PushPageForm pushPageForm = event.getSource();
     UIPopupContainer popupContainer = pushPageForm.getAncestorOfType(UIPopupContainer.class);
@@ -120,15 +127,15 @@ public class PushPageForm extends UIForm {
       final PushPageForm pushPageForm = event.getSource();
       ResourceBundle resourceBundle = pushPageForm.getResourceBundle();
 
-      pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+      pushPageForm.setMessage(null, "info");
       try {
         // get target server
         final TargetServer targetServer = getTargetServer(pushPageForm);
         if (targetServer == null) {
-          pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushPage.msg.targetServerMandatory"));
+          pushPageForm.setMessage(resourceBundle.getString("PushPage.msg.targetServerMandatory"), "error");
           return;
         }
-        pushPageForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushPage.msg.synchronizationInProgress"));
+        pushPageForm.setMessage(resourceBundle.getString("PushPage.msg.synchronizationInProgress"), "info");
 
         if (pushPageForm.synchronizationFinished && !pushPageForm.synchronizationStarted) {
           pushPageForm.synchronizationStarted = true;

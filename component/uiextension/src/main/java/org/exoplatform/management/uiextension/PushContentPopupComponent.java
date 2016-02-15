@@ -73,6 +73,8 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   private List<NodeComparison> defaultSelection = new ArrayList<NodeComparison>();
   private SynchronizationService synchronizationService_;
 
+  String messageType = "info";
+
   String stateString = NodeComparisonState.MODIFIED_ON_SOURCE.getKey();
   Calendar modifiedDateFilter = null;
   String filterString = null;
@@ -142,6 +144,11 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     return false;
   }
 
+  public void setMessage(String message, String type) {
+    getUIFormInputInfo(INFO_FIELD_NAME).setValue(message);
+    messageType = type;
+  }
+
   static public class SelectActionListener extends EventListener<UIForm> {
     public void execute(Event<UIForm> event) throws Exception {
       UIForm uiForm = event.getSource();
@@ -151,7 +158,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       } else if (uiForm instanceof SelectNodesComponent) {
         pushContentPopupComponent = ((SelectNodesComponent) uiForm).getPushContentPopupComponent();
       }
-      pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+      pushContentPopupComponent.setMessage(null, "info");
       try {
         // get target server
         TargetServer targetServer = null;
@@ -166,7 +173,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         if (targetServer == null) {
           ApplicationMessage message = new ApplicationMessage("PushContent.msg.targetServerMandatory", null, ApplicationMessage.ERROR);
           message.setResourceBundle(getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          pushContentPopupComponent.setMessage(message.getMessage(), "error");
           event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getParent());
           return;
         }
@@ -184,7 +191,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
         }
         message.setResourceBundle(getResourceBundle());
-        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        pushContentPopupComponent.setMessage(message.getMessage(), "error");
         LOG.error("Comparison of '" + pushContentPopupComponent.getCurrentPath() + "' failed:", ex);
       }
     }
@@ -193,7 +200,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   static public class PushActionListener extends EventListener<PushContentPopupComponent> {
     public void execute(Event<PushContentPopupComponent> event) throws Exception {
       final PushContentPopupComponent pushContentPopupComponent = event.getSource();
-      pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+      pushContentPopupComponent.setMessage(null, "info");
 
       UIPopupContainer uiPopupContainer = (UIPopupContainer) pushContentPopupComponent.getAncestorOfType(UIPopupContainer.class);
       UIApplication uiApp = pushContentPopupComponent.getAncestorOfType(UIApplication.class);
@@ -217,13 +224,13 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         if (targetServer == null) {
           ApplicationMessage message = new ApplicationMessage("PushContent.msg.targetServerMandatory", null, ApplicationMessage.ERROR);
           message.setResourceBundle(getResourceBundle());
-          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          pushContentPopupComponent.setMessage(message.getMessage(), "error");
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
           return;
         }
 
         ResourceBundle resourceBundle = PushContentPopupComponent.getResourceBundle();
-        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"));
+        pushContentPopupComponent.setMessage(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"), "info");
         if (pushContentPopupComponent.synchronizationFinished && !pushContentPopupComponent.synchronizationStarted) {
           pushContentPopupComponent.synchronizationStarted = true;
           pushContentPopupComponent.synchronizationFinished = false;
@@ -341,7 +348,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
           message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
         }
         message.setResourceBundle(getResourceBundle());
-        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+        pushContentPopupComponent.setMessage(message.getMessage(), "error");
         LOG.error("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' failed:", ex);
         event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
       }

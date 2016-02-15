@@ -1,5 +1,5 @@
 <div class="mode-sync-options" ng-show="mode=='synchronize'">
-  <div id="syncServersMessage" class="alert {{syncServersMessageClass}}">{{syncServersMessage}}</div>
+  <div id="syncServersMessage" class="alert {{syncServersMessageClass}}"><i class="{{syncServersMessageClassExt}}"></i>{{syncServersMessage}}</div>
   <div id="syncServers" ng-show="servers.length > 0">
     <table id="syncServersTable" class="table table-bordered table-striped">
       <thead>

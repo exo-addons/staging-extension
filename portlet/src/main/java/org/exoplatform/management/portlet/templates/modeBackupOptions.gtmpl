@@ -1,6 +1,6 @@
 <div class="mode-backup-options" ng-show="mode=='backup'">
   <div>
-	<div id="backupFolderResult" class="alert {{resultMessageClass}}" ng-bind-html="resultMessage" ng-show="resultMessage.length"></div>
+	<div id="backupFolderResult" class="alert {{resultMessageClass}}" ng-show="resultMessage.length"><i class="{{resultMessageClassExt}}"></i>{{resultMessage}}</div>
     <form id="form-backup" class="form-horizontal">
       <fieldset>
 		  <legend><h3>Backup</h3></legend>

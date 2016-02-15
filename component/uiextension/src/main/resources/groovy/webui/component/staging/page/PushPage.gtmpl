@@ -31,7 +31,7 @@
             <div class="control-group">
               <% if(PushPageForm.INFO_FIELD_NAME.equals(field.getName())) {
                    if(field.getValue() != null && !field.getValue().isEmpty()) { %>
-                    <div class="alert alert-info"><%=field.getValue()%></div>
+                    <div class="alert alert-<%=uicomponent.messageType%>"><i class="uiIcon<%=org.apache.commons.lang.StringUtils.capitalize(uicomponent.messageType)%>"></i><%=field.getValue()%></div>
               <% }
               } else { %>
                 <label class="control-label" for="<%=field.getId()%>">

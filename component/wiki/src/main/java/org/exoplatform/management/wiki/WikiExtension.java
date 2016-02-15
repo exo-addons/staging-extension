@@ -54,7 +54,6 @@ public class WikiExtension extends AbstractManagementExtension {
     user.registerOperationHandler(OperationNames.READ_RESOURCE, new WikiDataReadResource(WikiType.USER), description("users wiki resources"));
     user.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new WikiDataExportResource(WikiType.USER), description("export users wiki"));
     user.registerOperationHandler(OperationNames.IMPORT_RESOURCE, new WikiDataImportResource(WikiType.USER), description("import users wiki"));
-
   }
 
 }

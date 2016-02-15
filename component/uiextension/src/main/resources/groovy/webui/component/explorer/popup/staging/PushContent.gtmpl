@@ -94,7 +94,7 @@
      <div class="control-group">
        <% def field = uicomponent.findComponentById(PushContentPopupComponent.INFO_FIELD_NAME);
        	  if(field.getValue() != null && !field.getValue().isEmpty()) { %>
-        	  <div class="alert alert-info"><%=field.getValue()%></div>
+        	  <div class="alert alert-<%=uicomponent.messageType%>"><i class="uiIcon<%=org.apache.commons.lang.StringUtils.capitalize(uicomponent.messageType)%>"></i><%=field.getValue()%></div>
        <% } %>
        <label class="control-label" for="<%=PushContentPopupComponent.TARGET_SERVER_NAME_FIELD_NAME%>">
            <%=uicomponent.getLabel(PushContentPopupComponent.TARGET_SERVER_NAME_FIELD_NAME) %>

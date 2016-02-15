@@ -1,5 +1,5 @@
 <div id="StagingLoadingBar">
-  <div class="alert alert-warning" role="alert"><h4>Loading ...</h4></div>
+  <div class="alert alert-info" role="alert"><i class="uiIconInfo"></i>Loading ...</div>
 </div>
 <div id="staging" class="staging" style="visibility:hidden;">
   <div ng-controller="stagingCtrl">
@@ -50,7 +50,7 @@
       <button type="button" class="btn btn-primary button-synchronize" ng-disabled="button_clicked" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
     </div>
 
-    <div id="resultMessage" ng-show="mode == 'export' || mode == 'synchronize' || mode == 'import'" class="result-message alert {{resultMessageClass}}">{{resultMessage}}</div>
+    <div id="resultMessage" ng-show="(resultMessage.length > 0) && (mode == 'export' || mode == 'synchronize' || mode == 'import')" class="result-message alert {{resultMessageClass}}"><i class="{{resultMessageClassExt}}"></i>{{resultMessage}}</div>
 
     <div class="resources-panel" ng-show="mode == 'export' || mode == 'synchronize' || readyToImport">
       <div class="uiBox left-column">

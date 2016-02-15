@@ -7,7 +7,7 @@
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
 			<synchronizationInProgress>Synchronisation en cours ...</synchronizationInProgress>
-			<groupSiteSynchronization>Attention: le site courant est un site de groupe. Veuillez vérifier que c'est bien le site que vous voulez synchroniser.</groupSiteSynchronization>
+			<groupSiteSynchronization>Vous êtes sur le point de synchroniser un site de groupe.</groupSiteSynchronization>
 		</msg>
 		<action>Synchroniser la navigation</action>
 	</PushNavigation>

@@ -61,6 +61,8 @@ public class PushSiteForm extends UIForm {
 
   private List<TargetServer> targetServers;
 
+  String messageType = "info";
+
   public PushSiteForm() throws Exception {
     addUIFormInput(new UIFormInputInfo(INFO_FIELD_NAME, INFO_FIELD_NAME, ""));
     addUIFormInput(new UIFormSelectBox(TARGET_SERVER_NAME_FIELD_NAME, TARGET_SERVER_NAME_FIELD_NAME, new ArrayList<SelectItemOption<String>>()));
@@ -101,6 +103,11 @@ public class PushSiteForm extends UIForm {
     return synchronizationStarted;
   }
 
+  public void setMessage(String message, String type) {
+    getUIFormInputInfo(INFO_FIELD_NAME).setValue(message);
+    messageType = type;
+  }
+
   private static void closePopup(PushSiteForm pushSiteForm, WebuiRequestContext context) {
     UIPopupContainer popupContainer = pushSiteForm.getAncestorOfType(UIPopupContainer.class);
     if (popupContainer != null)
@@ -119,16 +126,16 @@ public class PushSiteForm extends UIForm {
       final PushSiteForm pushSiteForm = event.getSource();
       ResourceBundle resourceBundle = pushSiteForm.getResourceBundle();
 
-      pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(null);
+      pushSiteForm.setMessage(null, "info");
       try {
         // get target server
         final TargetServer targetServer = getTargetServer(pushSiteForm);
         if (targetServer == null) {
-          pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.targetServerMandatory"));
+          pushSiteForm.setMessage(resourceBundle.getString("PushSite.msg.targetServerMandatory"), "error");
           return;
         }
 
-        pushSiteForm.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushSite.msg.synchronizationInProgress"));
+        pushSiteForm.setMessage(resourceBundle.getString("PushSite.msg.synchronizationInProgress"), "info");
 
         if (pushSiteForm.synchronizationFinished && !pushSiteForm.synchronizationStarted) {
           pushSiteForm.synchronizationStarted = true;
