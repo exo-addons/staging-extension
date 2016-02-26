@@ -1,6 +1,7 @@
 package org.exoplatform.management.backup.operations;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import org.exoplatform.container.PortalContainer;
@@ -70,11 +71,19 @@ public class BackupImportResource extends AbstractOperationHandler {
 
       // Restore IDM db
       log.info("Restore IDM Data");
-      IDMRestore.restore(portalContainer, backupDirFile);
+      boolean idmRestored = IDMRestore.restore(portalContainer, backupDirFile);
 
       // Restore JCR data
       log.info("Restore JCR Data");
-      JCRRestore.restore(portalContainer, backupDirFile);
+      List<File> logFiles = JCRRestore.restore(portalContainer, backupDirFile);
+
+      if (!idmRestored) {
+        if (logFiles == null || logFiles.size() == 0) {
+          throw new IllegalStateException("Backup files was not found in: " + backupDirFile.getAbsolutePath());
+        } else if (logFiles.size() > 1) {
+          throw new IllegalStateException("Multiple backup directories was found in: " + backupDirFile.getAbsolutePath());
+        }
+      }
 
       // Clear all caches based on eXo CacheService
       log.info("Clear Services caches");

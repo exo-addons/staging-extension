@@ -3,6 +3,7 @@ package org.exoplatform.management.backup.service.idm;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -136,33 +137,41 @@ public class IDMRestore {
     }
   }
 
-  public static void restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
-    if (new File(backupDirFile, IDMBackup.CONTENT_ZIP_FILE).exists()) {
-      // using existing DataSource to get a JDBC Connection.
-      SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
-      DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
-      Connection jdbcConn = connectionProvider.getConnection();
-
-      // Disable autocommit to be able to rollback all script if there is an
-      // error
-      jdbcConn.setAutoCommit(false);
-
-      IDMRestore restorer = new IDMRestore(backupDirFile, jdbcConn);
-      try {
-        restorer.clean();
-        restorer.restore();
-        restorer.applyConstraints();
-        restorer.commit();
-        LOG.info("IDM restored");
-      } catch (Exception e) {
-        restorer.rollback();
-        throw e;
-      } finally {
-        restorer.close();
+  public static boolean restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
+    File[] files = backupDirFile.listFiles(new FileFilter() {
+      public boolean accept(File pathname) {
+        return pathname.isFile() && (pathname.getName().equals(IDMBackup.CONTENT_ZIP_FILE) || pathname.getName().equals(IDMBackup.CONTENT_LEN_ZIP_FILE));
       }
-    } else {
+    });
+
+    if (files == null || files.length != 2) {
       LOG.info("IDM Backup files was not found. IDM restore ignored.");
+      return false;
     }
+
+    // using existing DataSource to get a JDBC Connection.
+    SessionFactoryImpl sessionFactoryImpl = (SessionFactoryImpl) getHibernateService(portalContainer).getSessionFactory();
+    DatasourceConnectionProviderImpl connectionProvider = (DatasourceConnectionProviderImpl) sessionFactoryImpl.getConnectionProvider();
+    Connection jdbcConn = connectionProvider.getConnection();
+
+    // Disable autocommit to be able to rollback all script if there is an
+    // error
+    jdbcConn.setAutoCommit(false);
+
+    IDMRestore restorer = new IDMRestore(backupDirFile, jdbcConn);
+    try {
+      restorer.clean();
+      restorer.restore();
+      restorer.applyConstraints();
+      restorer.commit();
+      LOG.info("IDM restored");
+    } catch (Exception e) {
+      restorer.rollback();
+      throw e;
+    } finally {
+      restorer.close();
+    }
+    return true;
   }
 
   public void clean() throws Exception {

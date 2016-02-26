@@ -2,6 +2,8 @@ package org.exoplatform.management.backup.service.jcr;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.jcr.RepositoryException;
@@ -24,18 +26,20 @@ import org.exoplatform.services.log.Log;
 public class JCRRestore {
   private static final Log log = ExoLogger.getLogger(BackupImportResource.class);
 
-  public static void restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
+  public static List<File> restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
     RepositoryService repositoryService = (RepositoryService) portalContainer.getComponentInstanceOfType(RepositoryService.class);
 
-    File logFile = getLogFile(backupDirFile);
-    if (logFile == null) {
-      log.info("JCR backup files was not found. JCR restore ignored");
-      return;
+    List<File> logFiles = getLogFiles(backupDirFile, null);
+    if (logFiles == null || logFiles.isEmpty()) {
+      return null;
+    } else if (logFiles.size() > 1) {
+      return logFiles;
     }
+
+    File logFile = logFiles.get(0);
 
     String repositoryName = null;
     try {
-
       RepositoryBackupChainLog backupChainLog = new RepositoryBackupChainLog(logFile);
       repositoryName = backupChainLog.getOriginalRepositoryEntry().getName();
 
@@ -56,16 +60,23 @@ public class JCRRestore {
     } finally {
       resumeRepository(repositoryService, repositoryName);
     }
+    return logFiles;
   }
 
-  private static File getLogFile(File backupDirFile) throws IOException {
+  private static List<File> getLogFiles(File backupDirFile, List<File> filesList) throws IOException {
+    if (filesList == null) {
+      filesList = new ArrayList<File>();
+    }
+
     File[] files = backupDirFile.listFiles();
     for (File file : files) {
-      if (!file.isDirectory() && file.getName().endsWith(".xml") && file.getName().startsWith("repository-backup-") && FileUtils.readFileToString(file).contains("<repository-backup-chain-log")) {
-        return file;
+      if (file.isDirectory()) {
+        getLogFiles(file, filesList);
+      } else if (file.getName().endsWith(".xml") && file.getName().startsWith("repository-backup-") && FileUtils.readFileToString(file).contains("<repository-backup-chain-log")) {
+        filesList.add(file);
       }
     }
-    return null;
+    return filesList;
   }
 
   private static void removeRepository(RepositoryService repositoryService, String repositoryName) throws RepositoryException {
