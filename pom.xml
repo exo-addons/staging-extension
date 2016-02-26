@@ -3,7 +3,7 @@
 	<parent>
 		<artifactId>addons-parent-pom</artifactId>
 		<groupId>org.exoplatform.addons</groupId>
-		<version>4</version>
+		<version>6</version>
 	</parent>
 	<groupId>org.exoplatform.addons.staging</groupId>
 	<artifactId>staging-extension-parent</artifactId>
