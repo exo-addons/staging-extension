@@ -19,4 +19,13 @@ public interface SynchronizationService {
    */
   void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws Exception;
 
+  /**
+   * 
+   * Test Server connection
+   * 
+   * @param targetServer : the server connection details (host, port, username, password).
+   * @throws Exception 
+   */
+  void testServerConnection(TargetServer targetServer) throws Exception;
+
 }

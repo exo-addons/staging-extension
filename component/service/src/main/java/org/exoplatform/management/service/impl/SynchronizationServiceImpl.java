@@ -1,9 +1,12 @@
 package org.exoplatform.management.service.impl;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.service.api.ChromatticService;
 import org.exoplatform.management.service.api.ResourceCategory;
@@ -36,6 +39,22 @@ public class SynchronizationServiceImpl implements SynchronizationService, Start
   @Override
   public List<TargetServer> getSynchonizationServers() {
     return chromatticService.getSynchonizationServers();
+  }
+
+  @Override
+  public void testServerConnection(TargetServer targetServer) throws Exception {
+    String targetServerURL = "http" + (targetServer.isSsl() ? "s://" : "://") + targetServer.getHost() + ":" + targetServer.getPort() + "/rest/private/staging/message/get";
+    URL url = new URL(targetServerURL);
+
+    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    conn.setRequestMethod("GET");
+    String passString = targetServer.getUsername() + ":" + targetServer.getPassword();
+    String basicAuth = "Basic " + new String(Base64.encodeBase64(passString.getBytes()));
+    conn.setRequestProperty("Authorization", basicAuth);
+    int responseCode = conn.getResponseCode();
+    if (responseCode != 200) {
+      throw new RuntimeException("Could not connect to server: '" + targetServer + "'. HTTP error code = " + responseCode);
+    }
   }
 
   @Override
