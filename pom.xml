@@ -186,7 +186,6 @@
 		<module>cli</module>
 		<module>portlet</module>	
 		<module>packaging</module>
-		<module>jpp</module>
 	</modules>
 	<profiles>
 		<profile>
