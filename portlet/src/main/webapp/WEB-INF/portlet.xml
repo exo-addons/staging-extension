@@ -7,18 +7,22 @@
 		<portlet-name>StagingExtensionPortlet</portlet-name>
 		<display-name xml:lang="EN">Staging Extension Portlet</display-name>
 		<portlet-class>org.exoplatform.management.portlet.StagingExtensionPortlet</portlet-class>
+		<init-param>
+			<name>juzu.run_mode</name>
+			<value>${juzu.run_mode:prod}</value>
+		</init-param>
 		<supports>
 			<mime-type>text/html</mime-type>
 		</supports>
-    <portlet-info>
-      <title>Staging Extension</title>
-      <keywords>Staging Extension Portlet</keywords>
-    </portlet-info>
-    <portlet-preferences>
-      <preference>
-        <name>synchronizationServers</name>
-        <read-only>false</read-only>
-      </preference>
-    </portlet-preferences>
+		<portlet-info>
+			<title>Staging Extension</title>
+			<keywords>Staging Extension Portlet</keywords>
+		</portlet-info>
+		<portlet-preferences>
+			<preference>
+				<name>synchronizationServers</name>
+				<read-only>false</read-only>
+			</preference>
+		</portlet-preferences>
 	</portlet>
 </portlet-app>

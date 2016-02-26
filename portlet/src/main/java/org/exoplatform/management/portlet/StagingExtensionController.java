@@ -7,22 +7,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.inject.Inject;
 
-import juzu.Action;
 import juzu.Path;
 import juzu.Response;
 import juzu.Route;
 import juzu.SessionScoped;
 import juzu.View;
+import juzu.impl.common.JSON;
 import juzu.impl.request.Request;
 import juzu.request.RequestParameter;
 import juzu.template.Template;
@@ -37,8 +40,10 @@ import org.exoplatform.management.service.api.StagingService;
 import org.exoplatform.management.service.api.SynchronizationService;
 import org.exoplatform.management.service.api.TargetServer;
 import org.exoplatform.management.service.handler.ResourceHandlerLocator;
+import org.exoplatform.portal.application.PortalRequestContext;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
+import org.exoplatform.services.security.ConversationState;
 import org.gatein.management.api.ManagementService;
 
 @SessionScoped
@@ -51,6 +56,12 @@ public class StagingExtensionController {
 
   public static final Map<String, String> IMPORT_ZIP_PATH_EXCEPTIONS = new HashMap<String, String>();
   public static final Map<String, String> IMPORT_PATH_EXCEPTIONS = new HashMap<String, String>();
+
+  private FileItem fileToImport;
+
+  // Don't use inject to not get the merge of all resource bundles
+//  @Inject
+  ResourceBundle bundle;
 
   @Inject
   StagingService stagingService;
@@ -68,6 +79,8 @@ public class StagingExtensionController {
   @Inject
   @Path("index.gtmpl")
   Template indexTmpl;
+
+  private String bundleString;
 
   private static final List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
   private static int SPACES_CATEGORY_INDEX = -1;
@@ -92,137 +105,137 @@ public class StagingExtensionController {
 
     // RESOURCES CATEGORIES
     if (activatedModules.isEmpty() || activatedModules.contains("/site:activated")) {
-      ResourceCategory sites = new ResourceCategory("Sites", "/site");
+      ResourceCategory sites = new ResourceCategory("staging.sites", "/site");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SITES_PORTAL_PATH + ":activated")) {
-        sites.getSubResourceCategories().add(new ResourceCategory("Portal Sites", StagingService.SITES_PORTAL_PATH));
+        sites.getSubResourceCategories().add(new ResourceCategory("staging.portalSites", StagingService.SITES_PORTAL_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SITES_GROUP_PATH + ":activated")) {
-        sites.getSubResourceCategories().add(new ResourceCategory("Group Sites", StagingService.SITES_GROUP_PATH));
+        sites.getSubResourceCategories().add(new ResourceCategory("staging.groupSites", StagingService.SITES_GROUP_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SITES_USER_PATH + ":activated")) {
-        sites.getSubResourceCategories().add(new ResourceCategory("User Sites", StagingService.SITES_USER_PATH));
+        sites.getSubResourceCategories().add(new ResourceCategory("staging.userSites", StagingService.SITES_USER_PATH));
       }
       resourceCategories.add(sites);
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SOCIAL_PARENT_PATH + ":activated")) {
-      ResourceCategory social = new ResourceCategory("Social", StagingService.SOCIAL_PARENT_PATH);
+      ResourceCategory social = new ResourceCategory("staging.social", StagingService.SOCIAL_PARENT_PATH);
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SOCIAL_SPACE_PATH + ":activated")) {
-        social.getSubResourceCategories().add(new ResourceCategory("Spaces", StagingService.SOCIAL_SPACE_PATH));
+        social.getSubResourceCategories().add(new ResourceCategory("staging.spaces", StagingService.SOCIAL_SPACE_PATH));
       }
       resourceCategories.add(social);
       SPACES_CATEGORY_INDEX = resourceCategories.size() - 1;
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains("/content:activated")) {
-      ResourceCategory contents = new ResourceCategory("Contents", "/content");
+      ResourceCategory contents = new ResourceCategory("staging.contents", "/content");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.CONTENT_SITES_PATH + ":activated")) {
-        contents.getSubResourceCategories().add(new ResourceCategory("Sites Contents", StagingService.CONTENT_SITES_PATH));
+        contents.getSubResourceCategories().add(new ResourceCategory("staging.sitesContents", StagingService.CONTENT_SITES_PATH));
       }
       resourceCategories.add(contents);
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FORUMS_PARENT_PATH + ":activated")) {
-      ResourceCategory forums = new ResourceCategory("Forums", StagingService.FORUMS_PARENT_PATH);
+      ResourceCategory forums = new ResourceCategory("staging.forums", StagingService.FORUMS_PARENT_PATH);
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PUBLIC_FORUM_PATH + ":activated")) {
-        forums.getSubResourceCategories().add(new ResourceCategory("Public Forum", StagingService.PUBLIC_FORUM_PATH));
+        forums.getSubResourceCategories().add(new ResourceCategory("staging.publicForums", StagingService.PUBLIC_FORUM_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SPACE_FORUM_PATH + ":activated")) {
-        forums.getSubResourceCategories().add(new ResourceCategory("Space Forum", StagingService.SPACE_FORUM_PATH));
+        forums.getSubResourceCategories().add(new ResourceCategory("staging.spaceForums", StagingService.SPACE_FORUM_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.FORUM_SETTINGS + ":activated")) {
-        forums.getSubResourceCategories().add(new ResourceCategory("Forum settings", StagingService.FORUM_SETTINGS));
+        forums.getSubResourceCategories().add(new ResourceCategory("staging.forumSettings", StagingService.FORUM_SETTINGS));
       }
       resourceCategories.add(forums);
       FORUM_CATEGORY_INDEX = resourceCategories.size() - 1;
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains(StagingService.CALENDARS_PARENT_PATH + ":activated")) {
-      ResourceCategory calendars = new ResourceCategory("Calendars", StagingService.CALENDARS_PARENT_PATH);
+      ResourceCategory calendars = new ResourceCategory("staging.calendar", StagingService.CALENDARS_PARENT_PATH);
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GROUP_CALENDAR_PATH + ":activated")) {
-        calendars.getSubResourceCategories().add(new ResourceCategory("Group Calendar", StagingService.GROUP_CALENDAR_PATH));
+        calendars.getSubResourceCategories().add(new ResourceCategory("staging.groupCalendar", StagingService.GROUP_CALENDAR_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.SPACE_CALENDAR_PATH + ":activated")) {
-        calendars.getSubResourceCategories().add(new ResourceCategory("Space Calendar", StagingService.SPACE_CALENDAR_PATH));
+        calendars.getSubResourceCategories().add(new ResourceCategory("staging.spaceCalendar", StagingService.SPACE_CALENDAR_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PERSONAL_FORUM_PATH + ":activated")) {
-        calendars.getSubResourceCategories().add(new ResourceCategory("Personal Calendar", StagingService.PERSONAL_FORUM_PATH));
+        calendars.getSubResourceCategories().add(new ResourceCategory("staging.personalCalendar", StagingService.PERSONAL_FORUM_PATH));
       }
       resourceCategories.add(calendars);
       CALENDAR_CATEGORY_INDEX = resourceCategories.size() - 1;
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains(StagingService.WIKIS_PARENT_PATH + ":activated")) {
-      ResourceCategory wikis = new ResourceCategory("Wikis", StagingService.WIKIS_PARENT_PATH);
+      ResourceCategory wikis = new ResourceCategory("staging.wikis", StagingService.WIKIS_PARENT_PATH);
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.PORTAL_WIKIS_PATH + ":activated")) {
-        wikis.getSubResourceCategories().add(new ResourceCategory("Portal wikis", StagingService.PORTAL_WIKIS_PATH));
+        wikis.getSubResourceCategories().add(new ResourceCategory("staging.portalWikis", StagingService.PORTAL_WIKIS_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GROUP_WIKIS_PATH + ":activated")) {
-        wikis.getSubResourceCategories().add(new ResourceCategory("Space wikis", StagingService.GROUP_WIKIS_PATH));
+        wikis.getSubResourceCategories().add(new ResourceCategory("staging.spaceWikis", StagingService.GROUP_WIKIS_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.USER_WIKIS_PATH + ":activated")) {
-        wikis.getSubResourceCategories().add(new ResourceCategory("User wikis", StagingService.USER_WIKIS_PATH));
+        wikis.getSubResourceCategories().add(new ResourceCategory("staging.userWikis", StagingService.USER_WIKIS_PATH));
       }
       resourceCategories.add(wikis);
       WIKI_CATEGORY_INDEX = resourceCategories.size() - 1;
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains("/organization:activated")) {
-      ResourceCategory organization = new ResourceCategory("Organization", "/organization");
+      ResourceCategory organization = new ResourceCategory("staging.organization", "/organization");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.USERS_PATH + ":activated")) {
-        organization.getSubResourceCategories().add(new ResourceCategory("Users", StagingService.USERS_PATH));
+        organization.getSubResourceCategories().add(new ResourceCategory("staging.users", StagingService.USERS_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GROUPS_PATH + ":activated")) {
-        organization.getSubResourceCategories().add(new ResourceCategory("Groups", StagingService.GROUPS_PATH));
+        organization.getSubResourceCategories().add(new ResourceCategory("staging.groups", StagingService.GROUPS_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ROLE_PATH + ":activated")) {
-        organization.getSubResourceCategories().add(new ResourceCategory("Roles", StagingService.ROLE_PATH));
+        organization.getSubResourceCategories().add(new ResourceCategory("staging.roles", StagingService.ROLE_PATH));
       }
       resourceCategories.add(organization);
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains("/application:activated")) {
-      ResourceCategory applications = new ResourceCategory("Applications", "/application");
+      ResourceCategory applications = new ResourceCategory("staging.applications", "/application");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.REGISTRY_PATH + ":activated")) {
-        applications.getSubResourceCategories().add(new ResourceCategory("Applications Registry", StagingService.REGISTRY_PATH));
+        applications.getSubResourceCategories().add(new ResourceCategory("staging.applicationRegistry", StagingService.REGISTRY_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.GADGET_PATH + ":activated")) {
-        applications.getSubResourceCategories().add(new ResourceCategory("Gadgets", StagingService.GADGET_PATH));
+        applications.getSubResourceCategories().add(new ResourceCategory("staging.gadgets", StagingService.GADGET_PATH));
       }
       resourceCategories.add(applications);
     }
 
     if (activatedModules.isEmpty() || activatedModules.contains("/ecmadmin:activated")) {
-      ResourceCategory ecmAdmin = new ResourceCategory("ECM Admin", "/ecmadmin");
+      ResourceCategory ecmAdmin = new ResourceCategory("staging.cmsAdmin", "/ecmadmin");
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Content List Templates", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.clv", StagingService.ECM_TEMPLATES_APPLICATION_CLV_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Document Type templates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.docTemplates", StagingService.ECM_TEMPLATES_DOCUMENT_TYPE_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TEMPLATES_METADATA_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Metadata Templates", StagingService.ECM_TEMPLATES_METADATA_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.metadataTemplates", StagingService.ECM_TEMPLATES_METADATA_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_TAXONOMY_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Taxonomies", StagingService.ECM_TAXONOMY_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.taxonomies", StagingService.ECM_TAXONOMY_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_QUERY_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Queries", StagingService.ECM_QUERY_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.queries", StagingService.ECM_QUERY_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_DRIVE_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Drives", StagingService.ECM_DRIVE_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.drives", StagingService.ECM_DRIVE_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_SCRIPT_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("ECMS Groovy Script", StagingService.ECM_SCRIPT_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.scripts", StagingService.ECM_SCRIPT_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_VIEW_TEMPLATES_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Templates", StagingService.ECM_VIEW_TEMPLATES_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.viewTemplate", StagingService.ECM_VIEW_TEMPLATES_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_VIEW_CONFIGURATION_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("Sites Explorer View Configuration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.viewConfiguration", StagingService.ECM_VIEW_CONFIGURATION_PATH));
       }
       if (activatedModules.isEmpty() || activatedModules.contains(StagingService.ECM_NODETYPE_PATH + ":activated")) {
-        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("NodeTypes", StagingService.ECM_NODETYPE_PATH));
+        ecmAdmin.getSubResourceCategories().add(new ResourceCategory("staging.nodetypes", StagingService.ECM_NODETYPE_PATH));
       }
       resourceCategories.add(ecmAdmin);
     }
@@ -248,97 +261,135 @@ public class StagingExtensionController {
       }
     }
 
-    Map<String, Object> parameters = new HashMap<String, Object>();
-
-    parameters.put("resourceCategories", resourceCategories);
-
-    return indexTmpl.ok(parameters);
+    return indexTmpl.ok(Collections.singletonMap("isAdmin", isUserAdmin()));
   }
 
   @Ajax
   @juzu.Resource
   public Response getCategories() {
-    StringBuilder jsonCategories = new StringBuilder(50);
-    jsonCategories.append("{\"categories\":[");
+    try {
+      StringBuilder jsonCategories = new StringBuilder(50);
+      jsonCategories.append("{\"categories\":[");
 
-    for (ResourceCategory category : resourceCategories) {
-      jsonCategories.append("{\"path\":\"").append(category.getPath()).append("\",\"label\":\"").append(category.getLabel()).append("\",\"subcategories\":[");
-      for (ResourceCategory subcategory : category.getSubResourceCategories()) {
-        jsonCategories.append("{\"path\":\"").append(subcategory.getPath()).append("\",\"label\":\"").append(subcategory.getLabel()).append("\"},");
+      for (ResourceCategory category : resourceCategories) {
+        jsonCategories.append("{\"path\":\"").append(category.getPath()).append("\",\"label\":\"").append(getResourceBundle().getString(category.getLabel())).append("\",\"subcategories\":[");
+        for (ResourceCategory subcategory : category.getSubResourceCategories()) {
+          jsonCategories.append("{\"path\":\"").append(subcategory.getPath()).append("\",\"label\":\"").append(getResourceBundle().getString(subcategory.getLabel())).append("\"},");
+        }
+        if (!category.getSubResourceCategories().isEmpty()) {
+          jsonCategories.deleteCharAt(jsonCategories.length() - 1);
+        }
+        jsonCategories.append("]},");
       }
-      if (!category.getSubResourceCategories().isEmpty()) {
+      if (!resourceCategories.isEmpty()) {
         jsonCategories.deleteCharAt(jsonCategories.length() - 1);
       }
-      jsonCategories.append("]},");
-    }
-    if (!resourceCategories.isEmpty()) {
-      jsonCategories.deleteCharAt(jsonCategories.length() - 1);
-    }
-    jsonCategories.append("]}");
+      jsonCategories.append("]}");
 
-    return Response.ok(jsonCategories.toString());
+      return Response.ok(jsonCategories.toString());
+    } catch (Exception e) {
+      log.error("error while getting categories", e);
+      return Response.status(500).content(getResourceBundle().getString("staging.error"));
+    }
+  }
+
+  @Ajax
+  @juzu.Resource
+  @juzu.MimeType.JSON
+  public Response getBundle() {
+    try {
+      if (bundleString != null && getResourceBundle().getLocale().equals(PortalRequestContext.getCurrentInstance().getLocale())) {
+        return Response.ok(bundleString);
+      }
+      bundle = getResourceBundle(PortalRequestContext.getCurrentInstance().getLocale());
+      JSON data = new JSON();
+      Enumeration<String> enumeration = getResourceBundle().getKeys();
+      while (enumeration.hasMoreElements()) {
+        String key = (String) enumeration.nextElement();
+        if (key.startsWith("staging.")) {
+          data.set(key.replace("staging.", ""), getResourceBundle().getObject(key));
+        }
+      }
+      bundleString = data.toString();
+      return Response.ok(bundleString);
+    } catch (Exception e) {
+      log.error("error while getting categories", e);
+      return Response.status(500).content(getResourceBundle().getString("staging.error"));
+    }
   }
 
   @Ajax
   @juzu.Resource
   public Response getResourcesOfCategory(String path) {
-    Set<Resource> resources = stagingService.getResources(path);
+    try {
+      Set<Resource> resources = stagingService.getResources(path);
 
-    StringBuilder jsonResources = new StringBuilder(50);
-    jsonResources.append("{\"resources\":[");
+      StringBuilder jsonResources = new StringBuilder(50);
+      jsonResources.append("{\"resources\":[");
 
-    for (Resource resource : resources) {
-      jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText()).append("\"},");
+      for (Resource resource : resources) {
+        jsonResources.append("{\"path\":\"").append(resource.getPath()).append("\",\"description\":\"").append(resource.getDescription()).append("\",\"text\":\"").append(resource.getText()).append("\"},");
+      }
+      if (!resources.isEmpty()) {
+        jsonResources.deleteCharAt(jsonResources.length() - 1);
+      }
+      jsonResources.append("]}");
+
+      return Response.ok(jsonResources.toString());
+    } catch (Exception e) {
+      log.error(e);
+      return Response.content(500, getResourceBundle().getString("staging.error"));
     }
-    if (!resources.isEmpty()) {
-      jsonResources.deleteCharAt(jsonResources.length() - 1);
-    }
-    jsonResources.append("]}");
-
-    return Response.ok(jsonResources.toString());
   }
 
   @Ajax
   @juzu.Resource
   public Response.Content prepareImportResources(FileItem file) throws IOException {
-    if (file == null || file.getSize() == 0) {
-      return Response.content(500, "File is empty");
-    }
-
-    ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
-    Set<String> foundResources = new HashSet<String>();
     try {
-      ZipEntry entry = zipInputStream.getNextEntry();
-      while (entry != null) {
-        String fileName = entry.getName();
-        if (entry.isDirectory()) {
-          entry = zipInputStream.getNextEntry();
-          continue;
-        }
-        fileName = fileName.startsWith("/") ? "" : "/" + fileName;
-        String resourcePath = transformSpecialPath(fileName);
-        // If resource path transformed and treated with Exceptions Resource
-        // Paths
-        if (!resourcePath.equals(fileName)) {
-          // Got it !
-          foundResources.add(resourcePath);
-          // Manage only one resource at a time for the moment
-        } else if (!parentAlreadyAddedInList(foundResources, resourcePath)) {
-          ResourceHandler resourceHandler = ResourceHandlerLocator.findResourceByPath(resourcePath);
-          foundResources.add(resourceHandler.getPath());
-        }
-        entry = zipInputStream.getNextEntry();
+      if (file == null || file.getSize() == 0) {
+        return Response.content(500, getResourceBundle().getString("staging.emptyFile"));
       }
 
-      log.info("Found resources zip file : {}", foundResources);
-    } finally {
-      zipInputStream.close();
-    }
+      ZipInputStream zipInputStream = new ZipInputStream(file.getInputStream());
+      Set<String> foundResources = new HashSet<String>();
+      try {
+        ZipEntry entry = zipInputStream.getNextEntry();
+        while (entry != null) {
+          String fileName = entry.getName();
+          if (entry.isDirectory()) {
+            entry = zipInputStream.getNextEntry();
+            continue;
+          }
+          fileName = fileName.startsWith("/") ? "" : "/" + fileName;
+          String resourcePath = transformSpecialPath(fileName);
+          // If resource path transformed and treated with Exceptions Resource
+          // Paths
+          if (!resourcePath.equals(fileName)) {
+            // Got it !
+            foundResources.add(resourcePath);
+            // Manage only one resource at a time for the moment
+          } else if (!parentAlreadyAddedInList(foundResources, resourcePath)) {
+            ResourceHandler resourceHandler = ResourceHandlerLocator.findResourceByPath(resourcePath);
+            foundResources.add(resourceHandler.getPath());
+          }
+          entry = zipInputStream.getNextEntry();
+        }
 
-    if (!foundResources.isEmpty()) {
-      return Response.ok(toString(foundResources));
-    } else {
-      return Response.content(500, "Zip file does not contain known resources to import");
+        fileToImport = file;
+
+        log.info("Found resources zip file : {}", foundResources);
+      } finally {
+        zipInputStream.close();
+      }
+
+      if (!foundResources.isEmpty()) {
+        return Response.ok(toString(foundResources));
+      } else {
+        return Response.content(500, getResourceBundle().getString("staging.invalidArchive"));
+      }
+    } catch (Exception e) {
+      log.error(e);
+      return Response.content(500, getResourceBundle().getString("staging.error"));
     }
   }
 
@@ -346,6 +397,10 @@ public class StagingExtensionController {
   @juzu.Resource
   public Response backup(String backupDirectory, String exportJCR, String exportIDM, String writeStrategy, String displayMessageFor, String message) throws IOException {
     try {
+      if (!isUserAdmin()) {
+        log.warn("User '" + getCurrentUser() + "' is not authorized to backup the system.");
+        return Response.content(403, getResourceBundle().getString("staging.unauthorizedUser"));
+      }
       ResourceCategory category = new ResourceCategory("/backup");
       String resourcePath = "/backup/" + PortalContainer.getCurrentPortalContainerName();
       category.getResources().add(new Resource(resourcePath, resourcePath, ""));
@@ -357,10 +412,10 @@ public class StagingExtensionController {
       category.getExportOptions().put("message", message);
       List<ResourceCategory> resourceCategories = Collections.singletonList(category);
       stagingService.export(resourceCategories);
-      return Response.ok("Backup operation finished successfully.");
+      return Response.ok(getResourceBundle().getString("staging.backupSuccess"));
     } catch (Exception e) {
       log.error("Error occured while backup: ", e);
-      return Response.content(500, "Error occured while backup: " +e.getMessage());
+      return Response.content(500, getResourceBundle().getString("staging.error"));
     }
   }
 
@@ -368,105 +423,107 @@ public class StagingExtensionController {
   @juzu.Resource
   public Response restore(String backupDirectory) throws IOException {
     try {
+      if (!isUserAdmin()) {
+        log.warn("User '" + getCurrentUser() + "' is not authorized to restore the system.");
+        return Response.content(403, "User is not authorized to restore the system.");
+      }
       Map<String, List<String>> attributes = new HashMap<String, List<String>>();
       attributes.put("directory", Collections.singletonList(backupDirectory));
 
       stagingService.importResource("/backup/portal", null, attributes);
 
-      return Response.ok("Restore operation finished successfully.");
+      return Response.ok(getResourceBundle().getString("staging.restoreSuccess"));
     } catch (Exception e) {
       log.error("Error occured while restoring databases", e);
-      return Response.content(500, "Error occured while restoring databases: " + e.getMessage());
+      return Response.content(500, getResourceBundle().getString("staging.error"));
     }
   }
 
   @Ajax
   @juzu.Resource
   public Response.Content export(String[] resourceCategories, String[] resources, String[] options) throws IOException {
-    // Create selected resources categories
-    List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
-    for (String selectedResourcesCategory : resourceCategories) {
-      ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
-      selectedResourceCategories.add(resourceCategory);
-    }
-
-    // Dispatch selected resources in resources categories
-    for (String selectedResource : resources) {
-      for (ResourceCategory resourceCategory : selectedResourceCategories) {
-        if (selectedResource.startsWith(resourceCategory.getPath())) {
-          resourceCategory.getResources().add(new Resource(selectedResource, null, null));
-          break;
-        }
+    try {
+      // Create selected resources categories
+      List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
+      for (String selectedResourcesCategory : resourceCategories) {
+        ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
+        selectedResourceCategories.add(resourceCategory);
       }
-    }
 
-    // Dispatch selected options in resources categories
-    for (String selectedOption : options) {
-      int indexColon = selectedOption.indexOf(":");
-      if (indexColon > 0) {
-        String optionName = selectedOption.substring(0, indexColon);
-        String optionValue = selectedOption.substring(indexColon + 1);
-
-        String optionParts[] = optionName.split("_");
+      // Dispatch selected resources in resources categories
+      for (String selectedResource : resources) {
         for (ResourceCategory resourceCategory : selectedResourceCategories) {
-          if (optionParts[0].equals(resourceCategory.getPath())) {
-            if (optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
-              resourceCategory.getExportOptions().put(optionParts[2], optionValue);
-            } else if (optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
-              resourceCategory.getImportOptions().put(optionParts[2], optionValue);
-            }
+          if (selectedResource.startsWith(resourceCategory.getPath())) {
+            resourceCategory.getResources().add(new Resource(selectedResource, null, null));
             break;
           }
         }
       }
-    }
 
-    // Manage paths exceptions (/site/portalsites -> /site)
-    List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
-    for (ResourceCategory resourceCategory : selectedResourceCategories) {
-      if (IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
-        resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+      // Dispatch selected options in resources categories
+      for (String selectedOption : options) {
+        int indexColon = selectedOption.indexOf(":");
+        if (indexColon > 0) {
+          String optionName = selectedOption.substring(0, indexColon);
+          String optionValue = selectedOption.substring(indexColon + 1);
+
+          String optionParts[] = optionName.split("_");
+          for (ResourceCategory resourceCategory : selectedResourceCategories) {
+            if (optionParts[0].equals(resourceCategory.getPath())) {
+              if (optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
+                resourceCategory.getExportOptions().put(optionParts[2], optionValue);
+              } else if (optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
+                resourceCategory.getImportOptions().put(optionParts[2], optionValue);
+              }
+              break;
+            }
+          }
+        }
       }
-      selectedResourceCategoriesWithExceptions.add(resourceCategory);
-    }
 
-    try {
+      // Manage paths exceptions (/site/portalsites -> /site)
+      List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
+      for (ResourceCategory resourceCategory : selectedResourceCategories) {
+        if (IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
+          resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+        }
+        selectedResourceCategoriesWithExceptions.add(resourceCategory);
+      }
+
       File file = stagingService.export(selectedResourceCategoriesWithExceptions);
       if (file == null) {
-        return Response.ok("").withHeader("Set-Cookie", "fileDownload=true; path=/");
-
+        return Response.content(500, getResourceBundle().getString("staging.emptyResourceList"));
       } else {
         return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/").withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
       }
     } catch (Exception e) {
       log.error("Error while exporting resources, ", e);
-      return Response.content(500, "Error occured while exporting resources: " + e.getMessage());
+      return Response.content(500, getResourceBundle().getString("staging.exportError"));
     }
   }
 
   @Ajax
   @juzu.Resource
-  public Response.Content importResources(FileItem file) throws IOException {
-    if (file == null || file.getSize() == 0) {
-      return Response.content(500, "File is empty.");
+  public Response.Content importResources() throws IOException {
+    if (fileToImport == null || fileToImport.getSize() == 0) {
+      return Response.content(500, getResourceBundle().getString("staging.emptyFile"));
     }
 
     Map<String, RequestParameter> parameters = Request.getCurrent().getParameterArguments();
     RequestParameter selectedResourcesCategories = parameters.get("staging:resourceCategory");
 
     if (selectedResourcesCategories == null || selectedResourcesCategories.size() == 0) {
-      return Response.content(500, "You must select a resource category.");
+      return Response.content(500, getResourceBundle().getString("staging.emptyResourceList"));
     }
 
-    List<String> selectedResourcesCategoriesList = new ArrayList<String>(selectedResourcesCategories);
-    Collections.sort(selectedResourcesCategoriesList, new Comparator<String>() {
-      @Override
-      public int compare(String o1, String o2) {
-        return ResourceCategory.getOrder(o1) - ResourceCategory.getOrder(o1);
-      }
-    });
-
     try {
+      List<String> selectedResourcesCategoriesList = new ArrayList<String>(selectedResourcesCategories);
+      Collections.sort(selectedResourcesCategoriesList, new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+          return ResourceCategory.getOrder(o1) - ResourceCategory.getOrder(o1);
+        }
+      });
       for (String selectedResourcesCategory : selectedResourcesCategoriesList) {
         log.info("inporting resources for : " + selectedResourcesCategory);
         String exceptionPathCategory = IMPORT_PATH_EXCEPTIONS.get(selectedResourcesCategory);
@@ -507,12 +564,12 @@ public class StagingExtensionController {
           selectedResourcesCategory = exceptionPathCategory;
         }
 
-        stagingService.importResource(selectedResourcesCategory, file.getInputStream(), attributes);
+        stagingService.importResource(selectedResourcesCategory, fileToImport.getInputStream(), attributes);
       }
-      return Response.ok("Successfully processed!");
+      return Response.ok(getResourceBundle().getString("staging.importSuccess"));
     } catch (Exception e) {
       log.error("Error occured while importing content", e);
-      return Response.content(500, "Error occured while importing resource: " + e.getMessage());
+      return Response.content(500, getResourceBundle().getString("staging.importError"));
     }
   }
 
@@ -520,104 +577,132 @@ public class StagingExtensionController {
   @juzu.Resource
   @Route("/servers")
   public Response getSynchonizationServers() {
-    List<TargetServer> synchronizationServers;
     try {
-      synchronizationServers = synchronizationService.getSynchonizationServers();
+      List<TargetServer> synchronizationServers = synchronizationService.getSynchonizationServers();
+
+      StringBuilder jsonServers = new StringBuilder(50);
+      jsonServers.append("{\"synchronizationServers\":[");
+      for (TargetServer targetServer : synchronizationServers) {
+        jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost()).append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword()).append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
+      }
+      if (!synchronizationServers.isEmpty()) {
+        jsonServers.deleteCharAt(jsonServers.length() - 1);
+      }
+      jsonServers.append("]}");
+
+      return Response.ok(jsonServers.toString());
     } catch (Exception e) {
-      log.error("Error while fetching synchronization target servers", e);
-      synchronizationServers = new ArrayList<TargetServer>();
+      log.error("Error while getting target server list", e);
+      return Response.content(500, getResourceBundle().getString("staging.error"));
     }
-
-    StringBuilder jsonServers = new StringBuilder(50);
-    jsonServers.append("{\"synchronizationServers\":[");
-    for (TargetServer targetServer : synchronizationServers) {
-      jsonServers.append("{\"id\":\"").append(targetServer.getId()).append("\",\"name\":\"").append(targetServer.getName()).append("\",\"host\":\"").append(targetServer.getHost()).append("\",\"port\":\"").append(targetServer.getPort()).append("\",\"username\":\"").append(targetServer.getUsername()).append("\",\"password\":\"").append(targetServer.getPassword()).append("\",\"ssl\":").append(targetServer.isSsl()).append("},");
-    }
-    if (!synchronizationServers.isEmpty()) {
-      jsonServers.deleteCharAt(jsonServers.length() - 1);
-    }
-    jsonServers.append("]}");
-
-    return Response.ok(jsonServers.toString());
   }
 
   @Ajax
-  @Action
-  public void addSynchonizationServer(String name, String host, String port, String username, String password, String ssl) {
-    TargetServer targetServer = new TargetServer(name, host, port, username, password, "true".equals(ssl));
-
-    synchronizationService.addSynchonizationServer(targetServer);
+  @juzu.Resource
+  public Response testServerConnection(String name, String host, String port, String username, String password, String ssl) throws Exception {
+    try {
+      TargetServer targetServer = new TargetServer(name, host, port, username, password, "true".equals(ssl));
+      synchronizationService.testServerConnection(targetServer);
+      return Response.ok(getResourceBundle().getString("staging.connectionSuccess"));
+    } catch (Exception e) {
+      if (log.isTraceEnabled()) {
+        log.warn("Test connection error: ", e);
+      }
+      return Response.content(500, getResourceBundle().getString("staging.connectionError"));
+    }
   }
 
   @Ajax
-  @Action
-  public void removeSynchonizationServer(String id) {
-    TargetServer targetServer = new TargetServer(id, null, null, null, null, null, false);
+  @juzu.Resource
+  public Response addSynchonizationServer(String name, String host, String port, String username, String password, String ssl) {
+    try {
+      TargetServer targetServer = new TargetServer(name, host, port, username, password, "true".equals(ssl));
+      List<TargetServer> targetServers = synchronizationService.getSynchonizationServers();
+      if(targetServers.contains(targetServer)) {
+        return Response.content(500, getResourceBundle().getString("staging.serverAlreadyExists"));
+      }
+      
+      synchronizationService.addSynchonizationServer(targetServer);
+      return Response.ok(getResourceBundle().getString("staging.serverCreated"));
+    } catch (Exception e) {
+      log.error("Error while creating target server", e);
+      return Response.content(500, getResourceBundle().getString("staging.serverCreationError"));
+    }
+  }
 
-    synchronizationService.removeSynchonizationServer(targetServer);
+  @Ajax
+  @juzu.Resource
+  public Response removeSynchonizationServer(String id) {
+    try {
+      TargetServer targetServer = new TargetServer(id, null, null, null, null, null, false);
+      synchronizationService.removeSynchonizationServer(targetServer);
+      return Response.ok(getResourceBundle().getString("staging.serverRemoved"));
+    } catch (Exception e) {
+      log.error("Error while deleting target server", e);
+      return Response.content(500, getResourceBundle().getString("staging.serverRemovalError"));
+    }
   }
 
   @Ajax
   @juzu.Resource
   public Response synchronize(String isSSLString, String host, String port, String username, String password, String[] resourceCategories, String[] resources, String[] options) throws IOException {
     TargetServer targetServer = new TargetServer(host, port, username, password, "true".equals(isSSLString));
-
-    // Create selected resources categories
-    List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
-    for (String selectedResourcesCategory : resourceCategories) {
-      ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
-      selectedResourceCategories.add(resourceCategory);
-    }
-
-    // Dispatch selected resources in resources categories
-    for (String selectedResource : resources) {
-      for (ResourceCategory resourceCategory : selectedResourceCategories) {
-        if (selectedResource.startsWith(resourceCategory.getPath())) {
-          resourceCategory.getResources().add(new Resource(selectedResource, null, null));
-          break;
-        }
+    try {
+      // Create selected resources categories
+      List<ResourceCategory> selectedResourceCategories = new ArrayList<ResourceCategory>();
+      for (String selectedResourcesCategory : resourceCategories) {
+        ResourceCategory resourceCategory = new ResourceCategory(selectedResourcesCategory);
+        selectedResourceCategories.add(resourceCategory);
       }
-    }
 
-    // Dispatch selected options in resources categories
-    for (String selectedOption : options) {
-      int indexColon = selectedOption.indexOf(":");
-      if (indexColon > 0) {
-        String optionName = selectedOption.substring(0, indexColon);
-        String optionValue = selectedOption.substring(indexColon + 1);
-
-        String optionParts[] = optionName.split("_");
+      // Dispatch selected resources in resources categories
+      for (String selectedResource : resources) {
         for (ResourceCategory resourceCategory : selectedResourceCategories) {
-          if (optionParts[0].equals(resourceCategory.getPath())) {
-            if (optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
-              resourceCategory.getExportOptions().put(optionParts[2], optionValue);
-            } else if (optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
-              resourceCategory.getImportOptions().put(optionParts[2], optionValue);
-            }
+          if (selectedResource.startsWith(resourceCategory.getPath())) {
+            resourceCategory.getResources().add(new Resource(selectedResource, null, null));
             break;
           }
         }
       }
-    }
 
-    // Manage paths exceptions (/site/portalsites -> /site)
-    List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
-    for (ResourceCategory resourceCategory : selectedResourceCategories) {
-      if (IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
-        resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+      // Dispatch selected options in resources categories
+      for (String selectedOption : options) {
+        int indexColon = selectedOption.indexOf(":");
+        if (indexColon > 0) {
+          String optionName = selectedOption.substring(0, indexColon);
+          String optionValue = selectedOption.substring(indexColon + 1);
+
+          String optionParts[] = optionName.split("_");
+          for (ResourceCategory resourceCategory : selectedResourceCategories) {
+            if (optionParts[0].equals(resourceCategory.getPath())) {
+              if (optionParts[1].equals(OPERATION_EXPORT_PREFIX)) {
+                resourceCategory.getExportOptions().put(optionParts[2], optionValue);
+              } else if (optionParts[1].equals(OPERATION_IMPORT_PREFIX)) {
+                resourceCategory.getImportOptions().put(optionParts[2], optionValue);
+              }
+              break;
+            }
+          }
+        }
       }
-      selectedResourceCategoriesWithExceptions.add(resourceCategory);
-    }
 
-    // Sort categories with order of export/import operation dependency
-    Collections.sort(selectedResourceCategoriesWithExceptions);
+      // Manage paths exceptions (/site/portalsites -> /site)
+      List<ResourceCategory> selectedResourceCategoriesWithExceptions = new ArrayList<ResourceCategory>();
+      for (ResourceCategory resourceCategory : selectedResourceCategories) {
+        if (IMPORT_PATH_EXCEPTIONS.containsKey(resourceCategory.getPath())) {
+          resourceCategory.setPath(IMPORT_PATH_EXCEPTIONS.get(resourceCategory.getPath()));
+        }
+        selectedResourceCategoriesWithExceptions.add(resourceCategory);
+      }
 
-    try {
+      // Sort categories with order of export/import operation dependency
+      Collections.sort(selectedResourceCategoriesWithExceptions);
+
       synchronizationService.synchronize(selectedResourceCategoriesWithExceptions, targetServer);
-      return Response.ok("Successfully processed.");
+      return Response.ok(getResourceBundle().getString("staging.synchronizationSuccess"));
     } catch (Exception e) {
-      log.error("Error while synchronization, ", e);
-      return Response.content(500, "Error occured while synchronizing resources: " + e.getMessage());
+      log.error("Error while synchronizing data to target server: " + targetServer, e);
+      return Response.content(500, getResourceBundle().getString("staging.synchronizationError"));
     }
   }
 
@@ -640,8 +725,19 @@ public class StagingExtensionController {
       return Response.ok(builder.toString());
     } catch (Exception e) {
       log.error("Error while executing request: " + sql, e);
-      return Response.content(500, "Error while executing request: " + e.getMessage());
+      return Response.content(500, getResourceBundle().getString("staging.testSQLError") + ":" + e.getMessage());
     }
+  }
+
+  private ResourceBundle getResourceBundle(Locale locale) {
+    return bundle = ResourceBundle.getBundle("locale.portlet.staging", locale, PortalContainer.getInstance().getPortalClassLoader());
+  }
+
+  private ResourceBundle getResourceBundle() {
+    if(bundle == null) {
+      bundle = ResourceBundle.getBundle("locale.portlet.staging", PortalRequestContext.getCurrentInstance().getLocale(), PortalContainer.getInstance().getPortalClassLoader());
+    }
+    return bundle;
   }
 
   private boolean isWikiActivated() {
@@ -702,6 +798,24 @@ public class StagingExtensionController {
       }
     }
     return resourcePath;
+  }
+
+  private boolean isUserAdmin() {
+    try {
+      return ConversationState.getCurrent().getIdentity().getRoles().contains("administrators");
+    } catch (Exception e) {
+      log.error(e);
+      return false;
+    }
+  }
+
+  private String getCurrentUser() {
+    try {
+      return ConversationState.getCurrent().getIdentity().getUserId();
+    } catch (Exception e) {
+      log.error(e);
+      return null;
+    }
   }
 
 }

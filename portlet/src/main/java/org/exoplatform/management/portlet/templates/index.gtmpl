@@ -2,62 +2,71 @@
   <div class="alert alert-info" role="alert"><i class="uiIconInfo"></i>Loading ...</div>
 </div>
 <div id="staging" class="staging" style="visibility:hidden;">
+  <h3>Data staging administration</h3>
   <div ng-controller="stagingCtrl">
-    <div class="uiBox modes">
-      <div class="mode-items">
+    <div class="modes">
+      <div class="uiBox mode-items">
 			<span class="uiRadio">
 				<label class="radio">
 					<input type="radio" name="mode" value="export" ng-model="mode" ng-click="changeMode('export')"/>
-					<span>Export</span>
+					<span>{{i18n.export}}</span>
 				</label>
 			</span>
 			<span class="uiRadio">
 				<label class="radio">
 					<input type="radio" name="mode" value="import" ng-model="mode" ng-click="changeMode('import')"/>
-					<span>Import</span>
+					<span>{{i18n.import}}</span>
 				</label>
 			</span>
 			<span class="uiRadio">
 				<label class="radio">
 					<input type="radio" name="mode" value="synchronize" ng-model="mode" ng-click="changeMode('synchronize')"/>
-					<span>Synchronize</span>
+					<span>{{i18n.synchronize}}</span>
 				</label>
 			</span>
+			<% if(isAdmin) { %>
 			<span class="uiRadio">
 				<label class="radio">
 					<input type="radio" name="mode" value="backup" ng-model="mode" ng-click="changeMode('backup')"/>
-					<span>Backup</span>
+					<span>{{i18n.backup}}</span>
 				</label>
 			</span>
 			<span class="uiRadio">
 				<label class="radio">
 					<input type="radio" name="mode" value="restore" ng-model="mode" ng-click="changeMode('restore')"/>
-					<span>Restore</span>
+					<span>{{i18n.restore}}</span>
 				</label>
 			</span>
+			<% } %>
       </div>
+
+	<br />
+    <div id="resultMessage" ng-show="(resultMessage.length > 0)" class="result-message alert {{resultMessageClass}}"><i class="{{resultMessageClassExt}}"></i>{{resultMessage}}</div>
+
       <div class="mode-options clearfix">
+		<% if(isAdmin) { %>
         #{include path=modeRestoreOptions.gtmpl}#{/include}
         #{include path=modeBackupOptions.gtmpl}#{/include}
+        <% } %>
         #{include path=modeImportOptions.gtmpl}#{/include}
         #{include path=modeSyncOptions.gtmpl}#{/include}
       </div>
     </div>
 
+    <div class="resources-panel" ng-show="mode == 'export' || mode == 'synchronize' || readyToImport">
+      <h4 class="titleWithBorder">{{i18n.managed}}</h4>
+
     <div class="buttons">
-      <button type="button" class="btn btn-primary button-export" ng-disabled="button_clicked" ng-click="exportResources()" ng-show="mode=='export'">Export</button>
-      <button type="button" class="btn btn-primary button-import" ng-disabled="button_clicked" ng-click="importResources()" ng-show="mode=='import' && readyToImport">Import</button>
-      <button type="button" class="btn btn-primary button-synchronize" ng-disabled="button_clicked" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">Synchronize</button>
+      <button type="button" class="btn btn-primary button-export" ng-disabled="button_clicked" ng-click="exportResources()" ng-show="mode=='export'">{{i18n.export}}</button>
+      <button type="button" class="btn btn-primary button-import" ng-disabled="button_clicked" ng-click="importResources()" ng-show="mode=='import' && readyToImport">{{i18n.import}}</button>
+      <button type="button" class="btn btn-primary button-synchronize" ng-disabled="button_clicked" ng-click="synchronizeResources()" ng-show="mode=='synchronize'">{{i18n.synchronize}}</button>
     </div>
 
-    <div id="resultMessage" ng-show="(resultMessage.length > 0) && (mode == 'export' || mode == 'synchronize' || mode == 'import')" class="result-message alert {{resultMessageClass}}"><i class="{{resultMessageClassExt}}"></i>{{resultMessage}}</div>
-
-    <div class="resources-panel" ng-show="mode == 'export' || mode == 'synchronize' || readyToImport">
       <div class="uiBox left-column">
-        <h5 class="title">Resources Types</h5>
+        <h5 class="title">{{i18n.resourceTypes}}</h5>
         <div class="uiTreeExplorer treeview">
           <ul>
-            <div class="loader" ng-show="loadingCategoriesTree">Loading...</div>
+            <div class="loader" ng-show="loadingCategoriesTree">{{i18n.loading}}...</div>
             <li class="resource-category" ng-repeat="category in categories">
               <div class="{{category.expanded && 'collapseIcon' || 'expandIcon'}} clickable" ng-click="category.expanded = !category.expanded">
                 <label class="clickable">{{category.label}}</label>
@@ -73,7 +82,7 @@
                     <div class="resources-table">
                       <table class="table table-striped table-condensed">
                         <tr ng-show="!loadingResources[subCategory.path] && !resources[subCategory.path].length">
-                          <td class="no-resource-available">No resource available</td>
+                          <td class="no-resource-available">{{i18n.noResources}}</td>
                         </tr>
                         <tr ng-repeat="resource in resources[subCategory.path] | filter:resourcesSearchTerm">
                           <td><span class="uiCheckbox"><input type="checkbox" ng-model="resource.selected"></input><span></span></span></td>
@@ -89,7 +98,7 @@
         </div>
       </div>
       <div class="uiBox right-column">
-        <h5 class="title">Selected Resources</h5>
+        <h5 class="title">{{i18n.selectedResources}}</h5>
         <div id="selectedResourcesForm">
           #{include path=selectedResources.gtmpl}#{/include}
         </div>
@@ -98,5 +107,3 @@
 	<div class="staging-mask" ng-show="button_clicked==true"></div>
   </div>
 <div>
-
-

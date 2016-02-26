@@ -1,9 +1,13 @@
 <div class="mode-import-options" ng-show="mode=='import'">
-  <div>
-    <form id="form-import-upload" class="form-horizontal" ng-submit="prepareImportResources()">
-      Import file : <input title="Upload file" type="file" id="fileToImport" accept=".zip" name="fileToImport"
-                           onchange="angular.element(this).scope().setFile(this);angular.element(this).scope().prepareImportResources();"/>
-    </form>
-  </div>
+  <h4 class="titleWithBorder">Archive</h4>
+  <form id="form-import-upload" class="form-horizontal pull-left" ng-submit="prepareImportResources()">
+    <input type="file" id="fileToImport" accept=".zip" name="fileToImport" style="display: none;"
+    onchange="angular.element(this).scope().setFile(this);angular.element(this).scope().prepareImportResources();"/>
+    <div class="uiAction">
+      <input id="btUpload" class="btn btn-primate" type="button" value="{{i18n.chooseFile}}" onclick="angular.element(this).scope().fileUploadClick();">
+      <span>
+      	{{fileToImportTitle}}
+      </span>
+    </div>
+  </form>
 </div>
-

@@ -184,7 +184,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * @param options
    * @return
    */
-  public String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
+  public static String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
     String targetServerURL = "http";
     if (targetServer.isSsl()) {
       targetServerURL += "s";
@@ -194,9 +194,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       targetServerURL += "/";
     }
     targetServerURL += uri;
-    String optionsString = encodeURLParameters(options);
-    if (!options.isEmpty()) {
-      targetServerURL += "?" + optionsString;
+    if (options != null) {
+      String optionsString = encodeURLParameters(options);
+      if (!options.isEmpty()) {
+        targetServerURL += "?" + optionsString;
+      }
     }
     return targetServerURL;
   }
@@ -276,7 +278,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     }
   }
 
-  private String encodeURLParameters(Map<String, String> options) {
+  private static String encodeURLParameters(Map<String, String> options) {
     Map<String, List<String>> attributes = extractAttributes(options);
     List<NameValuePair> parameters = new ArrayList<NameValuePair>();
     Iterator<Entry<String, List<String>>> entryIterator = attributes.entrySet().iterator();
@@ -300,7 +302,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * @param selectedOptions
    * @return
    */
-  private Map<String, List<String>> extractAttributes(Map<String, String> selectedOptions) {
+  private static Map<String, List<String>> extractAttributes(Map<String, String> selectedOptions) {
     Map<String, List<String>> attributes = new HashMap<String, List<String>>();
 
     Set<Entry<String, String>> optionsEntrySet = selectedOptions.entrySet();

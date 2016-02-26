@@ -15,6 +15,14 @@
 		<listener-class>org.exoplatform.container.web.PortalContainerConfigOwner</listener-class>
 	</listener>
 	<context-param>
+		<param-name>juzu.run_mode</param-name>
+    	<param-value>${juzu.run_mode:prod}</param-value>
+	</context-param>
+	<context-param>
+		<param-name>juzu.src_path</param-name>
+    	<param-value>${juzu.src_path}</param-value>
+	</context-param>
+	<context-param>
 		<param-name>juzu.inject</param-name>
 		<param-value>guice</param-value>
 	</context-param>

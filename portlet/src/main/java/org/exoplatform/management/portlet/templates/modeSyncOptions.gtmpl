@@ -1,16 +1,16 @@
 <div class="mode-sync-options" ng-show="mode=='synchronize'">
-  <div id="syncServersMessage" class="alert {{syncServersMessageClass}}"><i class="{{syncServersMessageClassExt}}"></i>{{syncServersMessage}}</div>
+  <h4 class="titleWithBorder">{{i18n.targetServers}}</h4>
   <div id="syncServers" ng-show="servers.length > 0">
     <table id="syncServersTable" class="table table-bordered table-striped">
       <thead>
         <tr>
           <th></th>
-          <th>Name</th>
-          <th>Host</th>
-          <th>Port</th>
-          <th>Username</th>
-          <th>SSL</th>
-          <th>Action</th>
+          <th>{{i18n.serverName}}</th>
+          <th>{{i18n.serverHost}}</th>
+          <th>{{i18n.serverPort}}</th>
+          <th>{{i18n.serverUsername}}</th>
+          <th>{{i18n.serverSSL}}</th>
+          <th>{{i18n.serverAction}}</th>
         </tr>
       </thead>
       <tbody>
@@ -25,50 +25,50 @@
         </tr>
       </tbody>
     </table>
-    <button type="button" class="btn button-newserver" ng-click="displayServerForm()">New Server</button>
+    <button type="button" class="btn button-newserver" ng-click="displayServerForm()">{{i18n.newServer}}</button>
   </div>
   <div id="syncServersForm" ng-show="isNewServerFormDisplayed || servers.length == 0">
     <form name="newServerForm" class="form-horizontal" novalidate>
       <div class="control-group {{hostClass}}">
-        <label class="control-label" for="inputHost">Host</label>
+        <label class="control-label" for="inputHost">{{i18n.serverHost}}</label>
         <div class="controls">
-          <input type="text" name="inputHost" id="inputHost" placeholder="Host" ng-model="newServer.host" required>
-          <span class="help-inline">Host is required</span>
+          <input type="text" name="inputHost" id="inputHost" placeholder="{{i18n.serverHost}}" ng-model="newServer.host" required>
+          <span class="help-inline">{{i18n.serverHost}}&nbsp;{{i18n.isRequired}}</span>
         </div>
       </div>
       <div class="control-group {{portClass}}">
-        <label class="control-label" for="inputPort">Port</label>
+        <label class="control-label" for="inputPort">{{i18n.serverPort}}</label>
         <div class="controls">
-          <input type="text" name="inputPort" id="inputPort" placeholder="Port" ng-model="newServer.port" required>
-          <span class="help-inline">Port is required</span>
+          <input type="text" name="inputPort" id="inputPort" placeholder="{{i18n.serverPort}}" ng-model="newServer.port" required>
+          <span class="help-inline">{{i18n.serverPort}}&nbsp;{{i18n.isRequired}}</span>
         </div>
       </div>
       <div class="control-group {{usernameClass}}">
-        <label class="control-label" for="inputUsername">Username</label>
+        <label class="control-label" for="inputUsername">{{i18n.serverUsername}}</label>
         <div class="controls">
-          <input type="text" name="inputUsername" id="inputUsername" placeholder="Username" ng-model="newServer.username" required>
-          <span class="help-inline">Username is required</span>
+          <input type="text" name="inputUsername" id="inputUsername" placeholder="{{i18n.serverUsername}}" ng-model="newServer.username" required>
+          <span class="help-inline">{{i18n.serverUsername}}&nbsp;{{i18n.isRequired}}</span>
         </div>
       </div>
       <div class="control-group {{passwordClass}}">
-        <label class="control-label" for="inputPassword">Password</label>
+        <label class="control-label" for="inputPassword">{{i18n.serverPassword}}</label>
         <div class="controls">
-          <input type="password" name="inputPassword" id="inputPassword" placeholder="Password" ng-model="newServer.password" password-validate required>
-          <span class="help-inline">Password is required</span>
+          <input type="password" name="inputPassword" id="inputPassword" placeholder="{{i18n.serverPassword}}" ng-model="newServer.password" password-validate required>
+          <span class="help-inline">{{i18n.serverPassword}}&nbsp;{{i18n.isRequired}}</span>
         </div>
       </div>
       <div class="control-group">
-        <label class="control-label" for="inputSSL">Is SSL</label>
+        <label class="control-label" for="inputSSL">{{i18n.serverSSL}}</label>
         <div class="controls">
           <input type="checkbox" name="inputSSL" id="inputSSL" ng-model="newServer.ssl">
         </div>
       </div>
       <div id="syncServerSaveAs" class="control-group {{serverNameClass}}">
-        <button type="button" class="btn button-saveserver" ng-click="saveServer(newServer)">Save as</button>
+        <button type="button" class="btn" ng-click="testConnection(newServer)">{{i18n.serverTestConnection}}</button>
+        <button type="button" class="btn btn-primary" ng-click="saveServer(newServer)">{{i18n.saveAs}}</button>
         <input type="text" id="newSaveName" placeholder="Server title" ng-model="newServer.name" required></input>
-        <span class="help-inline">Server name is required</span>
+        <span class="help-inline">{{i18n.serverName}}&nbsp;{{i18n.isRequired}}</span>
       </div>
     </form>
   </div>
 </div>
-

@@ -1,16 +1,17 @@
 .staging {
+	padding: 20px 30px;
 	.staging-mask {
-	    width: 100%;
-	    height: 100%;
-	    background: #E4E4E4;
-	    position: absolute;
-	    top: 0;
-	    left: 0;
-	    z-index: 10000;
-	    opacity: 0.5;
-	    cursor: progress;
+		width: 100%;
+		height: 100%;
+		background: #E4E4E4;
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 10000;
+		opacity: 0.5;
+		cursor: progress;
 	}
-	
+
 	.loader {
 		background: url("/staging-extension-portlet/skin/images/loading-16x16.gif") no-repeat scroll left center rgba(0, 0, 0, 0);
 		padding: 10px 0px 10px 20px;
@@ -27,16 +28,11 @@
 		cursor: default;
 	}
 
-	.mode-options {
-	}
-
-	.mode-backup-options, .mode-restore-options {
+	.mode-backup-options , .mode-restore-options {
 		margin: 0 auto;
-		width: 700px;
-		.backup-buttons, .restore-buttons {
-			text-align: center;
-			padding: 20px;
-			.backup-button, .restore-button {
+		.backup-buttons , .restore-buttons {
+			margin: 20px 0;
+			.backup-button , .restore-button {
 				width: 150px;
 			}
 		}
@@ -44,12 +40,16 @@
 
 	.mode-import-options {
 		margin: 0 auto;
-		width: 400px;
+		#btUpload {
+			margin: 0;
+		}
+		#form-import-upload {
+			padding: 0;
+		}
 	}
 
 	.mode-sync-options {
 		margin: 0 auto;
-		width: 600px;
 		padding-top: 10px;
 		#syncServersMessage {
 			margin: 10px auto;
@@ -120,10 +120,6 @@
 		display: none;
 	}
 
-	.resources-panel {
-		padding: 0 10px;
-	}
-
 	.left-column {
 		width: 25%;
 		display: block;
@@ -183,6 +179,7 @@
 		}
 
 		.leaf {
+			white-space: nowrap;
 			padding-left: 25px;
 			.uiCheckbox {
 				width: 10px;
@@ -297,9 +294,12 @@
 
 			.selected-resource-details {
 				margin: 15px 0 0 45px;
+				border: 0;
 				table {
 					margin: 0;
-					border-bottom: 1px solid #DDDDDD;
+					td {
+						border: 0;
+					}
 				}
 
 				.uiRadio > span {
@@ -407,36 +407,44 @@
 		clear: both;
 	}
 
-	h3 {
+	.mode-items {
+		font-size: 1.2em;
+		width: 98%;
+		padding: 5px 10px 0px 10px;
+		margin: 0px 0px 0px 0px;
 		text-align: center;
 	}
 
-	.modes {
-		padding: 10px;
-		margin: 10px;
-	}
-
-	.mode-items {
-		display: inline;
-		font-size: 1.2em;
-		width: 98%;
-	}
-
-	.mode-items > span {
-		margin-left: 12%;
-		margin-right: 5px;
+	.mode-items > .uiRadio {
+		margin: 5px 5%;
+		span {
+			font-weight: bold;
+			font-size: 12px;
+			text-transform: uppercase;
+		}
 	}
 
 	.sync-servers {
 		display: none;
 	}
 
-	.form-horizontal .help-inline {
-		display: none;
-	}
+	.form-horizontal {
+		.help-inline {
+			display: none;
+		}
 
-	.form-horizontal .error .help-inline {
-		display: inline;
+		.error .help-inline {
+			display: inline;
+		}
+
+		.uiAction {
+			padding: 0;
+		}
+
+		.resources-loader {
+			background: url("/staging-extension-portlet/skin/images/loading-bar.gif") no-repeat scroll right center rgba(0, 0, 0, 0);
+			padding-right: 23px;
+		}
 	}
 
 	.form-actions {

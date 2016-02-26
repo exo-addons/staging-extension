@@ -1,18 +1,33 @@
 define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function ( $ )
 {
-
-  var stagingCtrl = function($scope, $http, stagingService) {
+  var stagingCtrl = function($scope, $timeout, $http, stagingService) {
     var stagingContainer = $('#staging');
+    $http.get(stagingContainer.jzURL('StagingExtensionController.getBundle')).success(function (data) {
+        $scope.i18n = data;
+    });
 
     $scope.mode = "export";
     $scope.button_clicked = false;
 
     $scope.changeMode = function(mode) {
+      if($scope.readyToImport) {
+    	  $("#fileToImport").attr({ value: '' });
+    	  $scope.fileToImportTitle = "";
+          $scope.readyToImport = false;
+          // reset all selected categories
+          $scope.categoriesModel = [];
+          // expand/unexpand first level resources categories
+          for(var i=0; i<$scope.categories.length; i++) {
+        	  $scope.categories[i].expanded = false;
+          }
+      }
       $scope.mode = mode;
-      $scope.readyToImport = false;
-      if(mode == 'synchronize') {
-        $scope.syncServersMessage = "";
-        $scope.loadServers();
+      if(mode == 'import') {
+    	  $("#fileToImport").attr({ value: '' });
+      } else {
+	      if(mode == 'synchronize') {
+	        $scope.loadServers();
+	      }
       }
       $scope.setResultMessage("", "info");
     };
@@ -24,17 +39,6 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.selectedServer = "";
     $scope.newServer = "";
 
-    $scope.syncServersMessage = "";
-    $scope.syncServersMessageClass = "alert-info";
-    $scope.syncServersMessageClassExt = "uiIconInfo";
-
-    // function which set the result message with the given style
-    $scope.setSyncServerMessage = function(text, type) {
-      $scope.syncServersMessageClassExt = "uiIcon" + type.charAt(0).toUpperCase() + type.slice(1);
-      $scope.syncServersMessageClass = "alert-" + type;
-      $scope.syncServersMessage = text;
-    }
-
     /** Load synchronization servers **/
     $scope.loadServers = function() {
       $http.get(stagingContainer.jzURL('StagingExtensionController.getSynchonizationServers')).success(function (data) {
@@ -44,7 +48,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
     $scope.refreshController = function() {
     	try{
-    		$scope.$digest()
+    	   $scope.$digest()
     	} catch(excep){
     		// No need to display errors in console
     	}
@@ -60,33 +64,51 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $scope.selectedServer = "";
     };
 
+    $scope.testConnection = function(server) {
+      if(!$scope.validateSyncServerForm($scope.newServer, false)) {
+        return;
+      }
+
+      $scope.setResultMessage($scope.i18n.testingConnection, "info");
+      $http.post(stagingContainer.jzURL('StagingExtensionController.testServerConnection') + '&name='+server.name+'&host='+server.host+'&port='+server.port+'&username='+server.username+'&password='+server.password+'&ssl='+(server.ssl? 'true' : 'false')).success(function (data) {
+    	  $scope.setResultMessage(data, "success");
+          $scope.loadServers();
+          $timeout(function(){$scope.setResultMessage("", "info")}, 3000);
+        }).error(function (data) {
+          $scope.setResultMessage(data, "error");
+        });
+    };
+
     $scope.saveServer = function(server) {
       if(!$scope.validateSyncServerForm($scope.newServer, true)) {
         return;
       }
 
-      $scope.setSyncServerMessage("Saving new server ...", "info");
+      $scope.setResultMessage($scope.i18n.savingServer, "info");
       $http.post(stagingContainer.jzURL('StagingExtensionController.addSynchonizationServer') + '&name='+server.name+'&host='+server.host+'&port='+server.port+'&username='+server.username+'&password='+server.password+'&ssl='+(server.ssl? 'true' : 'false')).success(function (data) {
-          $scope.setSyncServerMessage("Server saved !", "success");
+    	  $scope.setResultMessage(data, "success");
           $scope.loadServers();
+          server.name = '';
+          server.host = '';
+          server.port = '';
+          server.username = '';
+          server.password = '';
+          server.ssl = false;
+
+          $scope.isNewServerFormDisplayed = false;
+          $timeout(function(){$scope.setResultMessage("", "info")}, 3000);
         }).error(function (data) {
-          $scope.setSyncServerMessage("Error while saving the server", "error");
+          $scope.setResultMessage(data, "error");
         });
     };
 
     $scope.deleteServer = function(id) {
-      $scope.syncServersMessageClassExt = "uiIconInfo";
-      $scope.syncServersMessageClass = "alert-info";
-      $scope.syncServersMessage = "Deleting server ...";
+      $scope.setResultMessage($scope.i18n.deletingServer, "info");
       $http.post(stagingContainer.jzURL('StagingExtensionController.removeSynchonizationServer') + '&id='+id).success(function (data) {
-          $scope.syncServersMessageClassExt = "uiIconSuccess";
-        $scope.syncServersMessageClass = "alert-success";
-        $scope.syncServersMessage = "Server deleted !";
+        $scope.setResultMessage(data, "success");
         $scope.loadServers();
       }).error(function (data) {
-          $scope.syncServersMessageClassExt = "uiIconError";
-        $scope.syncServersMessageClass = "alert-error";
-        $scope.syncServersMessage = "Error while deleting the server";
+        $scope.setResultMessage(data, "error");
       });
     };
 
@@ -127,6 +149,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $http.get(stagingContainer.jzURL('StagingExtensionController.getCategories')).success(function (data) {
       $scope.categories = data.categories;
       $scope.loadingCategoriesTree = false;
+    }).error(function (data) {
+        $scope.setResultMessage(data, "error");
+        $scope.loadingCategoriesTree = false;
     });
 
     $scope.onToggleCategorySelection = function(selectedCategory) {
@@ -163,6 +188,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.resultMessageClassExt = "uiIconInfo";
 
     $scope.readyToImport = false;
+    $scope.fileToImportTitle = "";
 
     // function which set the result message with the given style
     $scope.setResultMessage = function(text, type) {
@@ -186,14 +212,17 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     // import action
     $scope.prepareImportResources = function() {
       if(!$scope.importFile) {
-        $scope.setResultMessage("No file selected", "error");
+    	$scope.fileToImportTitle = "";
+        $scope.setResultMessage($scope.i18n.noSelectedFile, "error");
         return;
       }
+
+      $(".staging .mode-import-options .uiAction").addClass("resources-loader");
 
       var form = new FormData();
       form.append('file', $scope.importFile);
 
-      $scope.setResultMessage("Analyzing import file ...", "info");
+      $scope.setResultMessage($scope.i18n.analyzingFile, "info");
       $http({
           url: stagingContainer.jzURL("StagingExtensionController.prepareImportResources"),
           data : form,
@@ -207,7 +236,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
           // reset all selected categories
           $scope.categoriesModel = [];
-          
+
     	  var datas = dataList.split(',');
 
           // expand/unexpand first level resources categories
@@ -232,7 +261,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
             	  }
 	            } else {
 	              if(data.indexOf($scope.categories[i].path) == 0) {
-		              $scope.categories[i].expanded = true;
+	            	    $scope.categories[i].expanded = true;
 	              }
 		          // select category
 		          $scope.categoriesModel[$scope.categories[i].path] = (data === $scope.categories[i].path);
@@ -241,16 +270,18 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
           	  $scope.onToggleCategorySelection(data);
           }
+          $(".staging .mode-import-options .uiAction").removeClass("resources-loader");
         }).error(function (data) {
-          $scope.setResultMessage("Prepare Import failed. " + data, "error");
+          $scope.setResultMessage(data, "error");
           $scope.readyToImport = false;
+          $(".staging .mode-import-options .uiAction").removeClass("resources-loader");
         });
     }
 
     // import action
     $scope.importResources = function() {
       if(!$scope.importFile) {
-        $scope.setResultMessage("No file selected", "error");
+        $scope.setResultMessage($scope.i18n.noSelectedFile, "error");
         return;
       }
 
@@ -258,12 +289,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       var nbOfSelectedCategories = selectedCategories.length;
 
       if(nbOfSelectedCategories == 0) {
-        $scope.setResultMessage("No resource category selected", "error");
+        $scope.setResultMessage($scope.i18n.noSelectedResourceCategory, "error");
         return;
       }
-
-      var form = new FormData();
-      form.append('file', $scope.importFile);
 
       var queryParams = "";
       for(index in selectedCategories) {
@@ -278,19 +306,18 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	        queryParams = "&" + queryParams;
 	      }
 	      // resource category
-	      queryParams += "&staging:resourceCategory=" + selectedCategory;
+	      queryParams += "&staging:resourceCategory=" + encodeURIComponent(selectedCategory);
       }
 
   	  $scope.button_clicked = true;
       $scope.refreshController();
       try {
-        $scope.setResultMessage("Importing ...", "info");
+        $scope.setResultMessage($scope.i18n.importing, "info");
         $http({
-            url: stagingContainer.jzURL("StagingExtensionController.importResources") + queryParams,
-            data : form,
+            url: stagingContainer.jzURL("StagingExtensionController.importResources"),
+            data: queryParams,
             method : 'POST',
-            headers : {'Content-Type':undefined},
-            transformRequest: function(data) { return data; }
+	        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
           }).success(function (data) {
             $scope.setResultMessage(data, "success");
             $scope.button_clicked = false;
@@ -309,6 +336,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.setFile = function(element) {
         $scope.$apply(function($scope) {
             $scope.importFile = element.files[0];
+            $scope.fileToImportTitle = $scope.importFile.name;
+        });
+    };
+
+    $scope.fileUploadClick = function(element) {
+        $scope.$apply(function($scope) {
+            $(".staging input#fileToImport").click();
         });
     };
 
@@ -323,7 +357,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
 
       if(selectedResources.length == 0) {
-        $scope.setResultMessage("Please select resources", "error");
+        $scope.setResultMessage($scope.i18n.selectResources, "error");
         return;
       }
 
@@ -351,14 +385,14 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	  $scope.button_clicked = true;
 	  $scope.refreshController();
 	  try {
-      // Launch synchronization...
-        $scope.setResultMessage("Processing...", "info");
+      // Launch synchronization
+        $scope.setResultMessage($scope.i18n.processing, "info");
 
 	    var downloadOptions = {};
         $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
           .done(function () {
             $scope.$apply(function(scope) {
-              scope.setResultMessage("Successfully processed.", "success");
+              scope.setResultMessage("", "info");
               scope.button_clicked = false;
               scope.refreshController();
             });
@@ -384,15 +418,18 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		var writeStrategy = $scope.optionsModel["/backup/writeStrategy"];
 		var displayMessageFor = $scope.optionsModel["/backup/displayMessageFor"];
 		var message = $scope.optionsModel["/backup/message"];
+		if(!message) {
+			message = "";
+		}
 
 		if(dirFolder == null || dirFolder == "") {
-		  $scope.setResultMessage("Error : Empty backup folder", "error");
+		  $scope.setResultMessage($scope.i18n.emptyBackupFolder, "error");
 		} else {
 		  $scope.button_clicked = true;
 		  $scope.refreshController();
 
-		  // Launch backup...
-	      $scope.setResultMessage("Processing...", "info");
+		  // Launch backup
+	      $scope.setResultMessage($scope.i18n.processing, "info");
 
 		  $http({
 		        method: 'POST',
@@ -401,9 +438,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 		        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 		  	}).success(function (data) {
 		  		if(!data) {
-		    	  $scope.setResultMessage("An error occured. Please see log files to get more information.", "error");
+		    	  $scope.setResultMessage($scope.i18n.errorOccured, "error");
 		        }  else if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
-		          $scope.setResultMessage("Session timeout, please retry again.", "error");
+		          $scope.setResultMessage($scope.i18n.sessionTimeout, "error");
 		      	} else {
 			      $scope.setResultMessage(data, "success");
 		      	}
@@ -420,13 +457,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
     $scope.restore = function() {
 	  var dirFolder = $scope.optionsModel["/restore/directory"];
       if(dirFolder == null || dirFolder == "") {
-        $scope.setResultMessage("Error : Empty backup folder", "error");
+        $scope.setResultMessage($scope.i18n.emptyBackupFolder, "error");
       } else {
     	$scope.button_clicked = true;
         $scope.refreshController();
 
-        // Launch restore...
-	    $scope.setResultMessage("Processing...", "info");
+        // Launch restore
+	    $scope.setResultMessage($scope.i18n.processing, "info");
 
         $http({
 			method: 'POST',
@@ -435,9 +472,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       	}).success(function (data) {
       		if(!data) {
-    	      $scope.setResultMessage("An error occured. Please see log files to get more information.", "error");
+    	      $scope.setResultMessage($scope.i18n.errorOccured, "error");
             } else if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
-  	          $scope.setResultMessage("Session timeout, please retry again.", "error");
+  	          $scope.setResultMessage($scope.i18n.sessionTimeout, "error");
           	} else {
     	      $scope.setResultMessage(data, "success");
           	}
@@ -462,7 +499,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         }
         targetServer = $scope.newServer;
       } else {
-        $scope.setResultMessage("No destination server selected...", "error");
+        $scope.setResultMessage($scope.i18n.selectDestinationServer, "error");
         return;
       }
 
@@ -475,7 +512,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
 
       if(selectedResources.length == 0) {
-        $scope.setResultMessage("Please select resources", "error");
+        $scope.setResultMessage($scope.i18n.selectResources, "error");
         return;
       }
 
@@ -510,8 +547,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	   $scope.button_clicked = true;
 	   $scope.refreshController();
 	   try {
-	      // Launch synchronization...
-	      $scope.setResultMessage("Processing...", "info");
+	      // Launch synchronization
+	      $scope.setResultMessage($scope.i18n.processing, "info");
 	
 	      $http({
 	          method: 'POST',
@@ -520,7 +557,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 	        }).success(function (data) {
 				if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
-		            $scope.setResultMessage("Session timeout, please retry again.", "error");
+		            $scope.setResultMessage($scope.i18n.sessionTimeout, "error");
 		            $scope.button_clicked = false;
 		            $scope.refreshController();
 	        	} else {
@@ -545,9 +582,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       if(sql == null || sql == "") {
         $scope.validateQueryResultMessageClassExt = "uiIconError";
         $scope.validateQueryResultMessageClass = "alert-error";
-        $scope.validateQueryResultMessage = "Error : Empty query";
+        $scope.validateQueryResultMessage = $scope.i18n.emptyQuery;
       } else {
-
         var selectedSites = $scope.resources["/content/sites"].filter(function(element) { return element.selected && element.path.indexOf("/content/sites") == 0; });
         var paramsSites = "";
         for(var i=0; i<selectedSites.length; i++) {
@@ -561,7 +597,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
         }).success(function (data) {
 			if(data.indexOf('<body') >= 0 || data.indexOf('<head') >= 0) {
-	            $scope.validateQueryResultMessage = "Session timeout, please retry again.";
+	            $scope.validateQueryResultMessage = $scope.i18n.sessionTimeout;
 	            $scope.validateQueryResultMessageClassExt = "uiIconError";
 	            $scope.validateQueryResultMessageClass = "alert-error";
         	} else {
