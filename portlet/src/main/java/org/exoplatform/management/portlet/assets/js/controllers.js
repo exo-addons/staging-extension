@@ -1,10 +1,14 @@
 define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function ( $ )
 {
-  var stagingCtrl = function($scope, $timeout, $http, stagingService) {
-    var stagingContainer = $('#staging');
-    $http.get(stagingContainer.jzURL('StagingExtensionController.getBundle')).success(function (data) {
-        $scope.i18n = data;
-    });
+  var stagingCtrl = function($scope, $q, $timeout, $http, stagingService) {
+  var stagingContainer = $('#staging');
+
+    var deferred = $q.defer();
+	$http.get(stagingContainer.jzURL('StagingExtensionController.getBundle'))
+	    .success( function(data) {
+	         $scope.i18n = data;
+	         deferred.resolve(data);
+	    })
 
     $scope.mode = "export";
     $scope.button_clicked = false;
@@ -613,7 +617,8 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
     };
 
+    $('#stagingCtrl').css('visibility', 'visible');
+    $(".stagingLoadingBar").remove();
   };
-
   return stagingCtrl;
 });

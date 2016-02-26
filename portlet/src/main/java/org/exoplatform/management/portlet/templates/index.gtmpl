@@ -1,10 +1,8 @@
-<div id="StagingLoadingBar">
-  <div class="alert alert-info" role="alert"><i class="uiIconInfo"></i>Loading ...</div>
-</div>
-<div id="staging" class="staging" style="visibility:hidden;">
-  <h3>Data staging administration</h3>
-  <div ng-controller="stagingCtrl">
-    <div class="modes">
+<div id="staging" class="staging">
+  <div id="stagingLoadingBar" class="stagingLoadingBar"></div>
+  <div ng-controller="stagingCtrl" id="stagingCtrl" style="visibility:hidden;">
+    <h3>{{staging.title}}</h3>
+  	  <div class="modes">
       <div class="uiBox mode-items">
 			<span class="uiRadio">
 				<label class="radio">

@@ -10,7 +10,5 @@ require( ["SHARED/jquery", "stagingControllers", "stagingServices"], function ( 
 	  stagingApp.controller('stagingCtrl', stagingControllers);
 	  stagingApp.service('stagingService', stagingServices);
 	  angular.bootstrap(stagingAppRoot, ['stagingApp']);
-	  $('#StagingLoadingBar').remove();
-	  $('#staging').css('visibility', 'visible');
 	});
 });
