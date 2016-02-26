@@ -1,6 +1,9 @@
 package org.exoplatform.management.backup.operations;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -43,6 +46,8 @@ public class BackupExportResource extends AbstractOperationHandler {
 
   public static final String DISPLAY_MESSAGE_FOR_ALL = "all";
   public static final String DISPLAY_MESSAGE_FOR_ADMIN = "admin";
+
+  public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yy-MMM-dd-HH-mm-ss");
 
   public static boolean backupInProgress = false;
   public static String writeStrategy = null;
@@ -96,6 +101,12 @@ public class BackupExportResource extends AbstractOperationHandler {
 
       if (BackupExportResource.WRITE_STRATEGY_EXCEPTION.equals(BackupExportResource.writeStrategy)) {
         handleWriteOperations();
+      }
+
+      String backupParentFolder = backupDirFile.getAbsolutePath() + File.separator + "Backup-" + DATE_FORMAT.format(Calendar.getInstance().getTime());
+      backupDirFile = new File(backupParentFolder);
+      if (!backupDirFile.mkdir()) {
+        throw new IllegalStateException("Cannot create directory: " + backupParentFolder + ". " + (backupDirFile.exists() ? " It already exists." : ""));
       }
 
       if (exportJCR) {
