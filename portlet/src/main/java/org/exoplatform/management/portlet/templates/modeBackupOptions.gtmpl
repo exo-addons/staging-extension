@@ -1,6 +1,6 @@
 <div class="mode-backup-options" ng-show="mode=='backup'">
   <div>
-    <form id="form-backup" class="form-horizontal">
+    <form id="form-backup">
 		  	<h4 class="titleWithBorder">{{i18n.basicOptions}}</h4>
 			<h5>{{i18n.selectDirectory}}</h5>
 			<div class="inputXxxlarge">

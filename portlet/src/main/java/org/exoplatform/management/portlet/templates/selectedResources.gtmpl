@@ -3,7 +3,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/site/portalsites']">
-  <a ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsPortalSitesVisible=true" ng-click="resourceDetailsPortalSitesVisible = !resourceDetailsPortalSitesVisible">{{i18n.portalSites}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsPortalSitesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -29,7 +29,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/site/groupsites']">
-  <a ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroupSitesVisible=true" ng-click="resourceDetailsGroupSitesVisible = !resourceDetailsGroupSitesVisible">{{i18n.groupSites}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsGroupSitesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -55,7 +55,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/site/usersites']">
-  <a ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsUserSitesVisible=true" ng-click="resourceDetailsUserSitesVisible = !resourceDetailsUserSitesVisible">{{i18n.userSites}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsUserSitesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -81,7 +81,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
-  <a ng-click="unselectCategory('/social/space')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/social/space')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSocialSpaceVisible=true" ng-click="resourceDetailsSocialSpaceVisible = !resourceDetailsSocialSpaceVisible">{{i18n.spaces}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSocialSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -114,7 +114,7 @@
 </div>
 
 <div class="uiBox selected-resource sites-content" ng-show="categoriesModel['/content/sites']">
-  <a ng-click="unselectCategory('/content/sites')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/content/sites')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSitesContentVisible=true" ng-click="resourceDetailsSitesContentVisible = !resourceDetailsSitesContentVisible">Sites Contents</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSitesContentVisible">
     <div ng-show="mode == 'export' || mode == 'synchronize'">
@@ -160,7 +160,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/forum/public']">
-  <a ng-click="unselectCategory('/forum/public')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/forum/public')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumPublicVisible=true" ng-click="resourceDetailsForumPublicVisible = !resourceDetailsForumPublicVisible">Public Forum</label>
   <div class="selected-resource-details" ng-show="resourceDetailsForumPublicVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -179,7 +179,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/forum/space']">
-  <a ng-click="unselectCategory('/forum/space')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/forum/space')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumSpaceVisible=true" ng-click="resourceDetailsForumSpaceVisible = !resourceDetailsForumSpaceVisible">Space Forum</label>
   <div class="selected-resource-details" ng-show="resourceDetailsForumSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -200,7 +200,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/forum/settings']">
-  <a ng-click="unselectCategory('/forum/settings')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/forum/settings')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumSettingsVisible=true" ng-click="resourceDetailsForumSettingsVisible = !resourceDetailsForumSettingsVisible">Forum settings</label>
   <div class="selected-resource-details" ng-show="resourceDetailsForumSettingsVisible">
     <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/forum/settings'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedForumSetting}}</div>
@@ -215,7 +215,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/space']">
-  <a ng-click="unselectCategory('/calendar/space')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/calendar/space')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarSpaceVisible=true" ng-click="resourceDetailsCalendarSpaceVisible = !resourceDetailsCalendarSpaceVisible">Space Calendar</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -236,7 +236,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/group']">
-  <a ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarGroupVisible=true" ng-click="resourceDetailsCalendarGroupVisible = !resourceDetailsCalendarGroupVisible">Group Calendar</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarGroupVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -258,7 +258,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/personal']">
-  <a ng-click="unselectCategory('/calendar/personal')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/calendar/personal')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarPersonalVisible=true" ng-click="resourceDetailsCalendarPersonalVisible = !resourceDetailsCalendarPersonalVisible">Personal Calendar</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarPersonalVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -277,7 +277,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/user']">
-  <a ng-click="unselectCategory('/wiki/user')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/wiki/user')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiUserVisible=true" ng-click="resourceDetailsWikiUserVisible = !resourceDetailsWikiUserVisible">User wiki</label>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiUserVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -296,7 +296,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/group']">
-  <a ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiGroupVisible=true" ng-click="resourceDetailsWikiGroupVisible = !resourceDetailsWikiGroupVisible">Group wiki</label>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiGroupVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -317,7 +317,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/portal']">
-  <a ng-click="unselectCategory('/wiki/portal')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/wiki/portal')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiPortalVisible=true" ng-click="resourceDetailsWikiPortalVisible = !resourceDetailsWikiPortalVisible">Portal wiki</label>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiPortalVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -336,7 +336,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/organization/user']">
-  <a ng-click="unselectCategory('/organization/user')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/organization/user')" class="unselect-resources-category">{{i18n.remove}}</a>
   <div class="selected-resource-title clickable" ng-init="resourceDetailsOrgUsersVisible=true" ng-click="resourceDetailsOrgUsersVisible = !resourceDetailsOrgUsersVisible">Users</div>
   <div class="selected-resource-details" ng-show="resourceDetailsOrgUsersVisible">
     <div ng-show="mode == 'export' || mode == 'synchronize'">
@@ -363,7 +363,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/organization/group']">
-  <a ng-click="unselectCategory('/organization/group')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/organization/group')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsOrgGroupsVisible=true" ng-click="resourceDetailsOrgGroupsVisible = !resourceDetailsOrgGroupsVisible">Groups</label>
   <div class="selected-resource-details" ng-show="resourceDetailsOrgGroupsVisible">
     <div ng-show="mode == 'export' || mode == 'synchronize'">
@@ -388,7 +388,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/organization/role']">
-  <a ng-click="unselectCategory('/organization/role')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/organization/role')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsOrgRolesVisible=true" ng-click="resourceDetailsOrgRolesVisible = !resourceDetailsOrgRolesVisible">{{i18n.roles}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsOrgRolesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -407,7 +407,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/registry']">
-  <a ng-click="unselectCategory('/registry')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/registry')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsAppRegistryVisible=true" ng-click="resourceDetailsAppRegistryVisible = !resourceDetailsAppRegistryVisible">Applications Registry</label>
   <div class="selected-resource-details" ng-show="resourceDetailsAppRegistryVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -426,7 +426,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/gadget']">
-  <a ng-click="unselectCategory('/gadget')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/gadget')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGadgetVisible=true" ng-click="resourceDetailsGadgetVisible = !resourceDetailsGadgetVisible">{{i18n.gadgets}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsGadgetVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -445,7 +445,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/templates/applications/content-list-viewer']">
-  <a ng-click="unselectCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCLVTemplatesVisible=true" ng-click="resourceDetailsCLVTemplatesVisible = !resourceDetailsCLVTemplatesVisible">{{i18n.clv}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCLVTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -464,7 +464,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/templates/nodetypes']">
-  <a ng-click="unselectCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsDocTemplatesVisible=true" ng-click="resourceDetailsDocTemplatesVisible = !resourceDetailsDocTemplatesVisible">Document Type Templates</label>
   <div class="selected-resource-details" ng-show="resourceDetailsDocTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -483,7 +483,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/templates/metadata']">
-  <a ng-click="unselectCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsMetadataTemplatesVisible=true" ng-click="resourceDetailsMetadataTemplatesVisible = !resourceDetailsMetadataTemplatesVisible">Metadata Templates</label>
   <div class="selected-resource-details" ng-show="resourceDetailsMetadataTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -502,7 +502,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/taxonomy']">
-  <a ng-click="unselectCategory('/ecmadmin/taxonomy')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/taxonomy')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsTaxonomiesVisible=true" ng-click="resourceDetailsTaxonomiesVisible = !resourceDetailsTaxonomiesVisible">Taxonomies</label>
   <div class="selected-resource-details" ng-show="resourceDetailsTaxonomiesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -521,7 +521,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/queries']">
-  <a ng-click="unselectCategory('/ecmadmin/queries')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/queries')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsQueriesVisible=true" ng-click="resourceDetailsQueriesVisible = !resourceDetailsQueriesVisible">Queries</label>
   <div class="selected-resource-details" ng-show="resourceDetailsQueriesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -540,7 +540,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/drive']">
-  <a ng-click="unselectCategory('/ecmadmin/drive')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/drive')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsDrivesVisible=true" ng-click="resourceDetailsDrivesVisible = !resourceDetailsDrivesVisible">Sites Explorer drives</label>
   <div class="selected-resource-details" ng-show="resourceDetailsDrivesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -559,7 +559,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/script']">
-  <a ng-click="unselectCategory('/ecmadmin/script')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/script')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">ECMS Groovy Scripts</label>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -578,7 +578,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/view/templates']">
-  <a ng-click="unselectCategory('/ecmadmin/view/templates')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/view/templates')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSEViewTemplatesVisible=true" ng-click="resourceDetailsSEViewTemplatesVisible = !resourceDetailsSEViewTemplatesVisible">Sites Explorer View Templates</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSEViewTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -597,7 +597,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/view/configuration']">
-  <a ng-click="unselectCategory('/ecmadmin/view/configuration')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/view/configuration')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSEViewConfVisible=true" ng-click="resourceDetailsSEViewConfVisible = !resourceDetailsSEViewConfVisible">Sites Explorer View Configuration</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSEViewConfVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -616,7 +616,7 @@
 </div>
 
 <div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/nodetype']">
-  <a ng-click="unselectCategory('/ecmadmin/nodetype')" class="unselect-resources-category">{{i18n.remove}}</a>
+  <a href="#" ng-click="unselectCategory('/ecmadmin/nodetype')" class="unselect-resources-category">{{i18n.remove}}</a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsNodetypesVisible=true" ng-click="resourceDetailsNodetypesVisible = !resourceDetailsNodetypesVisible">{{i18n.nodetypes}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsNodetypesVisible">
     <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/nodetype'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedNodeType}}</div>

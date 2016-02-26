@@ -1,7 +1,7 @@
 <div id="staging" class="staging">
   <div id="stagingLoadingBar" class="stagingLoadingBar"></div>
   <div ng-controller="stagingCtrl" id="stagingCtrl" style="visibility:hidden;">
-    <h3>{{staging.title}}</h3>
+    <h3>{{i18n.title}}</h3>
   	  <div class="modes">
       <div class="uiBox mode-items">
 			<span class="uiRadio">

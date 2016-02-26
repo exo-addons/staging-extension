@@ -111,6 +111,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $http.post(stagingContainer.jzURL('StagingExtensionController.removeSynchonizationServer') + '&id='+id).success(function (data) {
         $scope.setResultMessage(data, "success");
         $scope.loadServers();
+        $timeout(function(){$scope.setResultMessage("", "info")}, 3000);
       }).error(function (data) {
         $scope.setResultMessage(data, "error");
       });
