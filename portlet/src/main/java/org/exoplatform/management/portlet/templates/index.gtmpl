@@ -4,32 +4,32 @@
     <h3>{{i18n.title}}</h3>
     <div class="uiBox mode-items uiGrayLightBox">
       <ul class="clearfix">
-        <li class="pull-left">
+        <li>
           <a class="actionIcon export" href="#" ng-model="mode" ng-click="changeMode('export')">
             <i class="uiIconStagingExport"></i>
             <span>{{i18n.export}}</span>
           </a>
         </li>
-        <li class="pull-left">
+        <li>
           <a class="actionIcon import" href="#" ng-model="mode" ng-click="changeMode('import')">
             <i class="uiIconStagingImport"></i>
             <span>{{i18n.import}}</span>
           </a>
         </li>
-        <li class="pull-left">
+        <li>
           <a class="actionIcon synchronize" href="#" ng-model="mode" ng-click="changeMode('synchronize')">
             <i class="uiIconStagingSynchronize"></i>
             <span>{{i18n.synchronize}}</span>
           </a>
         </li>
       <% if(isAdmin) { %>
-        <li class="pull-left">
+        <li>
           <a class="actionIcon backup" href="#" ng-model="mode" ng-click="changeMode('backup')">
             <i class="uiIconStagingBackup"></i>
             <span>{{i18n.backup}}</span>
           </a>
         </li>
-        <li class="pull-left">
+        <li>
           <a class="actionIcon restore" href="#" ng-model="mode" ng-click="changeMode('restore')">
             <i class="uiIconStagingRestore"></i>
             <span>{{i18n.restore}}</span>

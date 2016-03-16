@@ -288,7 +288,7 @@ public class StagingExtensionController {
       jsonCategories.append("]}");
 
       return Response.ok(jsonCategories.toString());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("error while getting categories", e);
       return Response.status(500).content(getResourceBundle().getString("staging.error"));
     }
@@ -317,7 +317,7 @@ public class StagingExtensionController {
       }
       bundleString = data.toString();
       return Response.ok(bundleString);
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("error while getting categories", e);
       return Response.status(500).content(getResourceBundle().getString("staging.error"));
     }
@@ -341,7 +341,7 @@ public class StagingExtensionController {
       jsonResources.append("]}");
 
       return Response.ok(jsonResources.toString());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error(e);
       return Response.content(500, getResourceBundle().getString("staging.error"));
     }
@@ -392,7 +392,7 @@ public class StagingExtensionController {
       } else {
         return Response.content(500, getResourceBundle().getString("staging.invalidArchive"));
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error(e);
       return Response.content(500, getResourceBundle().getString("staging.error"));
     }
@@ -418,7 +418,7 @@ public class StagingExtensionController {
       List<ResourceCategory> resourceCategories = Collections.singletonList(category);
       stagingService.export(resourceCategories);
       return Response.ok(getResourceBundle().getString("staging.backupSuccess"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error occured while backup: ", e);
       return Response.content(500, getResourceBundle().getString("staging.error"));
     }
@@ -438,7 +438,7 @@ public class StagingExtensionController {
       stagingService.importResource("/backup/portal", null, attributes);
 
       return Response.ok(getResourceBundle().getString("staging.restoreSuccess"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error occured while restoring databases", e);
       return Response.content(500, getResourceBundle().getString("staging.error"));
     }
@@ -501,7 +501,7 @@ public class StagingExtensionController {
       } else {
         return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/").withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
       }
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error while exporting resources, ", e);
       return Response.content(500, getResourceBundle().getString("staging.exportError"));
     }
@@ -572,7 +572,7 @@ public class StagingExtensionController {
         stagingService.importResource(selectedResourcesCategory, fileToImport.getInputStream(), attributes);
       }
       return Response.ok(getResourceBundle().getString("staging.importSuccess"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error occured while importing content", e);
       return Response.content(500, getResourceBundle().getString("staging.importError"));
     }
@@ -596,7 +596,7 @@ public class StagingExtensionController {
       jsonServers.append("]}");
 
       return Response.ok(jsonServers.toString());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error while getting target server list", e);
       return Response.content(500, getResourceBundle().getString("staging.error"));
     }
@@ -609,7 +609,7 @@ public class StagingExtensionController {
       TargetServer targetServer = new TargetServer(name, host, port, username, password, "true".equals(ssl));
       synchronizationService.testServerConnection(targetServer);
       return Response.ok(getResourceBundle().getString("staging.connectionSuccess"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       if (log.isTraceEnabled()) {
         log.warn("Test connection error: ", e);
       }
@@ -629,7 +629,7 @@ public class StagingExtensionController {
       
       synchronizationService.addSynchonizationServer(targetServer);
       return Response.ok(getResourceBundle().getString("staging.serverCreated"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error while creating target server", e);
       return Response.content(500, getResourceBundle().getString("staging.serverCreationError"));
     }
@@ -642,7 +642,7 @@ public class StagingExtensionController {
       TargetServer targetServer = new TargetServer(id, null, null, null, null, null, false);
       synchronizationService.removeSynchonizationServer(targetServer);
       return Response.ok(getResourceBundle().getString("staging.serverRemoved"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error while deleting target server", e);
       return Response.content(500, getResourceBundle().getString("staging.serverRemovalError"));
     }
@@ -705,7 +705,7 @@ public class StagingExtensionController {
 
       synchronizationService.synchronize(selectedResourceCategoriesWithExceptions, targetServer);
       return Response.ok(getResourceBundle().getString("staging.synchronizationSuccess"));
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error while synchronizing data to target server: " + targetServer, e);
       return Response.content(500, getResourceBundle().getString("staging.synchronizationError"));
     }
@@ -728,7 +728,7 @@ public class StagingExtensionController {
         builder.append("</ul>");
       }
       return Response.ok(builder.toString());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error("Error while executing request: " + sql, e);
       return Response.content(500, getResourceBundle().getString("staging.testSQLError") + ":" + e.getMessage());
     }
@@ -808,7 +808,7 @@ public class StagingExtensionController {
   private boolean isUserAdmin() {
     try {
       return ConversationState.getCurrent().getIdentity().getRoles().contains("administrators");
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error(e);
       return false;
     }
@@ -817,7 +817,7 @@ public class StagingExtensionController {
   private String getCurrentUser() {
     try {
       return ConversationState.getCurrent().getIdentity().getUserId();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       log.error(e);
       return null;
     }
