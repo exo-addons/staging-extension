@@ -83,25 +83,10 @@
 		padding-top: 10px;
 		#syncServersMessage {
 			margin: 10px auto;
-			text-align: center;
-			width: 50%;
 		}
 
 		#syncServersMessage:empty {
 			display: none;
-		}
-
-		#syncServers {
-			#syncServersTable {
-				margin-bottom: 10px;
-				th , td {
-					text-align: center;
-				}
-
-				.delete-sync-server-action {
-					cursor: pointer;
-				}
-			}
 		}
 
 		#syncServersForm {
@@ -147,8 +132,6 @@
 
 	.result-message {
 		margin: 0 auto 10px;
-		text-align: center;
-		width: 50%;
 	}
 
 	.result-message:empty {
@@ -237,7 +220,6 @@
 
 				.no-resource-available {
 					font-style: italic;
-					text-align: center;
 				}
 
 				table {
@@ -266,7 +248,6 @@
 		margin: 0 0 10px 2%;
 		.no-resource-selected {
 			width: 100%;
-			text-align: center;
 			padding: 10px 0;
 			div {
 				width: 200px;
@@ -306,7 +287,6 @@
 				margin-bottom: 10px;
 				.no-element-selected {
 					font-style: italic;
-					text-align: center;
 					background-color: #f7b5b5;
 				}
 			}
@@ -421,18 +401,17 @@
 	}
 
 	.mode-items {
-		width: 100%;
 		padding: 5px;
 		margin: 0;
-		text-align: center;
 		ul {
 			display: table;
 			width: 100%;
+			text-align: center;
 			li {
-    			display: table-cell;
+				display: table-cell;
 				span {
 					font-weight: bold;
-					text-transform: uppercase;
+					text-transform: capitalize;
 				}
 			}
 		}

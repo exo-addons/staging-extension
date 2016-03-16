@@ -1,5 +1,5 @@
 <div class="no-resource-selected" ng-show="!getSelectedCategories(mode != 'import').length">
-    <div class="alert alert-info"><i class="uiIconInfo"></i>{{i18n.noSelectedResources}}</div>
+    <div class="alert alert-warn"><i class="uiIconWarning"></i>{{i18n.noSelectedResources}}</div>
 </div>
 
 <div class="uiBox selected-resource" ng-show="(resources['/site/portalsites'] | filter:{selected:(mode != 'import')}).length">

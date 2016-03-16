@@ -1,7 +1,7 @@
 <div class="mode-sync-options" ng-show="mode=='synchronize'">
   <h4 class="titleWithBorder">{{i18n.targetServers}}</h4>
   <div id="syncServers" ng-show="servers.length > 0">
-    <table id="syncServersTable" class="table table-bordered table-striped">
+    <table id="syncServersTable" class="table uiGrid table-hover table-striped">
       <thead>
         <tr>
           <th></th>
@@ -15,13 +15,17 @@
       </thead>
       <tbody>
         <tr ng-repeat="server in servers">
-          <td><input type="radio" id="{{server.id}}" name="syncServer" ng-click="$parent.isNewServerFormDisplayed = false" ng-model="$parent.selectedServer" ng-value="server"></input></td>
+          <td class="center"><input type="radio" id="{{server.id}}" name="syncServer" ng-click="$parent.isNewServerFormDisplayed = false" ng-model="$parent.selectedServer" ng-value="server"></input></td>
           <td>{{server.name}}</td>
           <td>{{server.host}}</td>
           <td>{{server.port}}</td>
           <td>{{server.username}}</td>
           <td><span class="{{server.ssl && 'uiIconTick' || 'uiIconClose'}}" disabled="disabled"></span></td>
-          <td><span class="uiIconDelete delete-sync-server-action" ng-click="deleteServer(server.id)"></span></td>
+          <td class="center actionContainer">
+            <a data-placement="bottom" rel="tooltip" class="actionIcon" data-original-title="Delete" ng-click="deleteServer(server.id)">
+                <i class="uiIconDeleteUser uiIconLightGray"></i>
+            </a>
+          </td>
         </tr>
       </tbody>
     </table>
