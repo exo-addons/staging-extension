@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -307,7 +308,11 @@ public class StagingExtensionController {
       while (enumeration.hasMoreElements()) {
         String key = (String) enumeration.nextElement();
         if (key.startsWith("staging.")) {
-          data.set(key.replace("staging.", ""), getResourceBundle().getObject(key));
+          try {
+            data.set(key.replace("staging.", ""), getResourceBundle().getObject(key));
+          } catch(MissingResourceException e) {
+            // Nothing to do, this happens sometimes
+          }
         }
       }
       bundleString = data.toString();

@@ -1,10 +1,10 @@
 .stagingLoadingBar {
-    background: url("/staging-extension-portlet/skin/images/loading-16x16.gif") no-repeat scroll left center rgba(0, 0, 0, 0);
-    background-size: 25px;
-    padding: 10px 0px 10px 20px;
-    margin: 0 auto;
-    width: 80px;
-    height: 100px;
+	background: url("/staging-extension-portlet/skin/images/loading-16x16.gif") no-repeat scroll left center rgba(0, 0, 0, 0);
+	background-size: 25px;
+	padding: 10px 0px 10px 20px;
+	margin: 0 auto;
+	width: 80px;
+	height: 100px;
 }
 
 .staging {
@@ -19,6 +19,26 @@
 		z-index: 10000;
 		opacity: 0.5;
 		cursor: progress;
+	}
+
+	.uiIconStagingExport:before {
+		content: "\e632";
+	}
+
+	.uiIconStagingImport:before {
+		content: "\e633";
+	}
+
+	.uiIconStagingSynchronize:before {
+		content: "\e640";
+	}
+
+	.uiIconStagingBackup:before {
+		content: "\e784";
+	}
+
+	.uiIconStagingRestore:before {
+		content: "\e798";
 	}
 
 	.loader {
@@ -52,6 +72,7 @@
 		#btUpload {
 			margin: 0;
 		}
+
 		#form-import-upload {
 			padding: 0;
 		}
@@ -101,22 +122,31 @@
 		clear: both;
 	}
 
+	.title {
+		font-weight: bold;
+		padding: 2px;
+		span {
+			margin: 5px;
+			display: inline-block;
+		}
+	}
+
 	.button-export {
 		display: block;
 		margin: 0 auto;
-		width: 300px;
+		width: 100px;
 	}
 
 	.button-import {
 		display: block;
 		margin: 0 auto;
-		width: 300px;
+		width: 100px;
 	}
 
 	.button-synchronize {
 		display: block;
 		margin: 0 auto;
-		width: 300px;
+		width: 100px;
 	}
 
 	.result-message {
@@ -130,9 +160,7 @@
 	}
 
 	.left-column {
-		width: 25%;
-		display: block;
-		float: left;
+		width: 10%;
 	}
 
 	.treeview {
@@ -226,16 +254,27 @@
 		}
 	}
 
+	.resources-panel {
+		width: 100%;
+		display: table;
+		h4 {
+			display: table-caption;
+		}
+		> div {
+			display: table-cell;
+		}
+	}
+
 	.right-column {
-		width: 72%;
-		display: block;
-		float: left;
 		margin: 0 0 10px 2%;
 		.no-resource-selected {
 			width: 100%;
 			text-align: center;
 			padding: 10px 0;
-			background-color: #f9f9f9;
+			div {
+				width: 200px;
+				margin: 0 auto;
+			}
 		}
 
 		.selected-resource {
@@ -385,14 +424,15 @@
 	}
 
 	.mode-items {
-		width: 98%;
+		display: table;
+		width: 100%;
 		padding: 5px 15px 0 0;
 		margin: 0px 0px 0px 0px;
 		text-align: center;
 	}
 
-	.mode-items > .uiRadio {
-		margin: 5px 5%;
+	.mode-items li {
+		margin: 5px 6%;
 		span {
 			font-weight: bold;
 			text-transform: uppercase;

@@ -1,6 +1,6 @@
 define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function ( $ )
 {
-  var stagingCtrl = function($scope, $q, $timeout, $http, stagingService) {
+  var stagingCtrl = function($scope, $q, $timeout, $http, $filter,stagingService) {
   var stagingContainer = $('#staging');
 
     var deferred = $q.defer();
@@ -34,6 +34,13 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	      }
       }
       $scope.setResultMessage("", "info");
+      $(".mode-items .actionIcon.export").removeClass("active");
+      $(".mode-items .actionIcon.import").removeClass("active");
+      $(".mode-items .actionIcon.synchronize").removeClass("active");
+      $(".mode-items .actionIcon.backup").removeClass("active");
+      $(".mode-items .actionIcon.restore").removeClass("active");
+
+      $(".mode-items .actionIcon."+mode).addClass("active");
     };
 
     /**********************************************************************/
@@ -122,9 +129,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       $scope.portClass = server.port ? "" : "error";
       $scope.usernameClass = server.username ? "" : "error";
       $scope.passwordClass = server.password ? "" : "error";
-      if(validateServerName) {
-        $scope.serverNameClass = server.name ? "" : "error";
-      }
+      $scope.serverNameClass = !validateServerName || server.name ? "" : "error";
 
       return server.host && server.port && server.username && server.password && (!validateServerName || server.name);
     };
@@ -204,11 +209,17 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 
     // function which lists the selected categories
     // TODO see if it can be improved with a better binding
-    $scope.getSelectedCategories = function() {
+    $scope.getSelectedCategories = function(isFiltered) {
       var selectedCategories = [];
       for(var category in $scope.categoriesModel) {
         if($scope.categoriesModel[category]) {
-          selectedCategories.push(category);
+        	if(isFiltered) {
+        		if($scope.resources[category] && $filter('filter')($scope.resources[category], {selected:true}).length) {
+                    selectedCategories.push(category);
+        		}
+        	} else {
+                selectedCategories.push(category);
+        	}
         }
       }
       return selectedCategories;
@@ -290,11 +301,9 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         return;
       }
 
-      var selectedCategories = $scope.getSelectedCategories();
-      var nbOfSelectedCategories = selectedCategories.length;
-
-      if(nbOfSelectedCategories == 0) {
-        $scope.setResultMessage($scope.i18n.noSelectedResourceCategory, "error");
+      var selectedCategories = $scope.getSelectedCategories(false);
+      if(!selectedCategories.length) {
+        $scope.setResultMessage($scope.i18n.noSelectedResources, "error");
         return;
       }
 
@@ -369,7 +378,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       // Request parameters
 
       // resource categories
-      var selectedCategories = $scope.getSelectedCategories();
+      var selectedCategories = $scope.getSelectedCategories(true);
       var paramsResourceCategories = "";
       for(var i=0; i<selectedCategories.length; i++) {
         paramsResourceCategories += "&resourceCategories=" + selectedCategories[i];
@@ -531,7 +540,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       paramsTargetServer += "&isSSLString=" + targetServer.isSSLString;
 
       // resource categories
-      var selectedCategories = $scope.getSelectedCategories();
+      var selectedCategories = $scope.getSelectedCategories(true);
       var paramsResourceCategories = "";
       for(var i=0; i<selectedCategories.length; i++) {
         paramsResourceCategories += "&resourceCategories=" + selectedCategories[i];
@@ -581,7 +590,6 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
     };
 
-
     $scope.validateQuery = function() {
       var sql = $scope.optionsModel["/content/sites_EXPORT_filter/query"];
       if(sql == null || sql == "") {
@@ -618,8 +626,12 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
       }
     };
 
-    $('#stagingCtrl').css('visibility', 'visible');
-    $(".stagingLoadingBar").remove();
+    $scope.initTask = function() {
+        $scope.changeMode('export');
+        $('#stagingCtrl').css('visibility', 'visible');
+        $(".stagingLoadingBar").remove();
+    }
+
   };
   return stagingCtrl;
 });

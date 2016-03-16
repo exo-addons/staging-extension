@@ -1,9 +1,9 @@
-<div class="no-resource-selected" ng-show="!getSelectedCategories().length">
-  <i>{{i18n.noSelectedResources}}</i>
+<div class="no-resource-selected" ng-show="!getSelectedCategories(mode != 'import').length">
+    <div class="alert alert-info"><i class="uiIconInfo"></i>{{i18n.noSelectedResources}}</div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/site/portalsites']">
-  <a href="#" ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/site/portalsites'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/site/portalsites')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsPortalSitesVisible=true" ng-click="resourceDetailsPortalSitesVisible = !resourceDetailsPortalSitesVisible">{{i18n.portalSites}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsPortalSitesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -17,7 +17,6 @@
         </select>
       </label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/site/portalsites'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedPortalSite}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/site/portalsites'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/site/portalsites'] | filter:{selected:true}">
@@ -28,8 +27,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/site/groupsites']">
-  <a href="#" ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/site/groupsites'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/site/groupsites')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroupSitesVisible=true" ng-click="resourceDetailsGroupSitesVisible = !resourceDetailsGroupSitesVisible">{{i18n.groupSites}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsGroupSitesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -43,7 +42,6 @@
         </select>
       </label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/site/groupsites'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedGroupSite}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/site/groupsites'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/site/groupsites'] | filter:{selected:true}">
@@ -54,8 +52,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/site/usersites']">
-  <a href="#" ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/site/usersites'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/site/usersites')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsUserSitesVisible=true" ng-click="resourceDetailsUserSitesVisible = !resourceDetailsUserSitesVisible">{{i18n.userSites}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsUserSitesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -69,7 +67,6 @@
         </select>
       </label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/site/usersites'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedUserSite}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/site/usersites'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/site/usersites'] | filter:{selected:true}">
@@ -80,8 +77,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/social/space']">
-  <a href="#" ng-click="unselectCategory('/social/space')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/social/space'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/social/space')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSocialSpaceVisible=true" ng-click="resourceDetailsSocialSpaceVisible = !resourceDetailsSocialSpaceVisible">{{i18n.spaces}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSocialSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -102,7 +99,6 @@
       <label class="checkbox uiCheckbox"><input ng-init="optionsModel['/social/space_EXPORT_filter/export-calendar']=true" class="option" type="checkbox" name="/social/space_EXPORT_filter/export-calendar" ng-checked="optionsModel['/social/space_EXPORT_filter/export-calendar']"
                                                 ng-model="optionsModel['/social/space_EXPORT_filter/export-calendar']"><span>{{i18n.calendarOption}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/social/space'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedSpace}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/social/space'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/social/space'] | filter:{selected:true}">
@@ -113,8 +109,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource sites-content" ng-show="categoriesModel['/content/sites']">
-  <a href="#" ng-click="unselectCategory('/content/sites')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource sites-content" ng-show="(resources['/content/sites'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/content/sites')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSitesContentVisible=true" ng-click="resourceDetailsSitesContentVisible = !resourceDetailsSitesContentVisible">Sites Contents</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSitesContentVisible">
     <div ng-show="mode == 'export' || mode == 'synchronize'">
@@ -148,7 +144,6 @@
       <label class="checkbox uiCheckbox"><input id="withoutVersionHistory" class="option" type="checkbox" name="/content/sites_EXPORT_filter/no-history" value="true"
                                                 ng-model="optionsModel['/content/sites_EXPORT_filter/no-history']"/><span>{{i18n.withoutVersionsOption}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && !(resources['/content/sites'] | filter:{selected:true}).length"><i class="uiIconInfo"></i>{{i18n.noSelectedSiteContent}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/content/sites'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/content/sites'] | filter:{selected:true}">
@@ -159,15 +154,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/forum/public']">
-  <a href="#" ng-click="unselectCategory('/forum/public')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/forum/public'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/forum/public')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumPublicVisible=true" ng-click="resourceDetailsForumPublicVisible = !resourceDetailsForumPublicVisible">Public Forum</label>
   <div class="selected-resource-details" ng-show="resourceDetailsForumPublicVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/public_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/forum/public_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/forum/public'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedPublicForum}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/forum/public'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/forum/public'] | filter:{selected:true}">
@@ -178,8 +172,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/forum/space']">
-  <a href="#" ng-click="unselectCategory('/forum/space')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/forum/space'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/forum/space')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumSpaceVisible=true" ng-click="resourceDetailsForumSpaceVisible = !resourceDetailsForumSpaceVisible">Space Forum</label>
   <div class="selected-resource-details" ng-show="resourceDetailsForumSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -188,7 +182,6 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/forum/space_IMPORT_filter/create-space"
                                                 ng-model="optionsModel['/forum/space_IMPORT_filter/create-space']"><span>{{i18n.createSpaceIfExists}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/forum/space'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedSpaceForum}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/forum/space'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/forum/space'] | filter:{selected:true}">
@@ -199,11 +192,10 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/forum/settings']">
-  <a href="#" ng-click="unselectCategory('/forum/settings')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/forum/settings'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/forum/settings')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsForumSettingsVisible=true" ng-click="resourceDetailsForumSettingsVisible = !resourceDetailsForumSettingsVisible">Forum settings</label>
   <div class="selected-resource-details" ng-show="resourceDetailsForumSettingsVisible">
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/forum/settings'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedForumSetting}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/forum/settings'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/forum/settings'] | filter:{selected:true}">
@@ -214,8 +206,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/space']">
-  <a href="#" ng-click="unselectCategory('/calendar/space')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/calendar/space'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/calendar/space')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarSpaceVisible=true" ng-click="resourceDetailsCalendarSpaceVisible = !resourceDetailsCalendarSpaceVisible">Space Calendar</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarSpaceVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -224,7 +216,6 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/space_IMPORT_filter/create-space"
                                                 ng-model="optionsModel['/calendar/space_IMPORT_filter/create-space']"><span>{{i18n.createSpaceIfExists}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/calendar/space'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedSpaceCalendar}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/calendar/space'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/calendar/space'] | filter:{selected:true}">
@@ -235,20 +226,16 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/group']">
-  <a href="#" ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/calendar/group'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/calendar/group')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarGroupVisible=true" ng-click="resourceDetailsCalendarGroupVisible = !resourceDetailsCalendarGroupVisible">Group Calendar</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarGroupVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/group_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/calendar/group_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && !(resources['/calendar/group'] | filter:{selected:true}).length"><i class="uiIconInfo"></i>{{i18n.noSelectedGroupCalendar}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/calendar/group'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
-        <tr ng-show="!(resources['/calendar/group'] | filter:{selected:true}).length">
-          <td class="no-element-selected">No group selected</td>
-        </tr>
         <tr ng-repeat="resource in resources['/calendar/group'] | filter:{selected:true}">
           <td>{{resource.text}}</td>
         </tr>
@@ -257,15 +244,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/calendar/personal']">
-  <a href="#" ng-click="unselectCategory('/calendar/personal')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/calendar/personal'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/calendar/personal')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCalendarPersonalVisible=true" ng-click="resourceDetailsCalendarPersonalVisible = !resourceDetailsCalendarPersonalVisible">Personal Calendar</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCalendarPersonalVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/calendar/personal_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/calendar/personal_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/calendar/personal'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedPersonalCalendar}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/calendar/personal'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/calendar/personal'] | filter:{selected:true}">
@@ -276,15 +262,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/user']">
-  <a href="#" ng-click="unselectCategory('/wiki/user')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/wiki/user'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/wiki/user')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiUserVisible=true" ng-click="resourceDetailsWikiUserVisible = !resourceDetailsWikiUserVisible">User wiki</label>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiUserVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/user_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/wiki/user_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/wiki/user'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedPersonalWiki}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/wiki/user'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/wiki/user'] | filter:{selected:true}">
@@ -295,8 +280,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/group']">
-  <a href="#" ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/wiki/group'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/wiki/group')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiGroupVisible=true" ng-click="resourceDetailsWikiGroupVisible = !resourceDetailsWikiGroupVisible">Group wiki</label>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiGroupVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
@@ -305,7 +290,6 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/group_IMPORT_filter/create-space"
                                                 ng-model="optionsModel['/wiki/group_IMPORT_filter/create-space']"><span>{{i18n.createSpaceIfExists}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/wiki/group'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedGroupWiki}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/wiki/group'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/wiki/group'] | filter:{selected:true}">
@@ -316,15 +300,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/wiki/portal']">
-  <a href="#" ng-click="unselectCategory('/wiki/portal')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/wiki/portal'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/wiki/portal')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsWikiPortalVisible=true" ng-click="resourceDetailsWikiPortalVisible = !resourceDetailsWikiPortalVisible">Portal wiki</label>
   <div class="selected-resource-details" ng-show="resourceDetailsWikiPortalVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/wiki/portal_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/wiki/portal_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/wiki/portal'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedPortalwiki}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/wiki/portal'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/wiki/portal'] | filter:{selected:true}">
@@ -335,8 +318,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/organization/user']">
-  <a href="#" ng-click="unselectCategory('/organization/user')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/organization/user'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/organization/user')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <div class="selected-resource-title clickable" ng-init="resourceDetailsOrgUsersVisible=true" ng-click="resourceDetailsOrgUsersVisible = !resourceDetailsOrgUsersVisible">Users</div>
   <div class="selected-resource-details" ng-show="resourceDetailsOrgUsersVisible">
     <div ng-show="mode == 'export' || mode == 'synchronize'">
@@ -351,7 +334,6 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/organization/user_IMPORT_filter/replace-existing']"/><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/organization/user'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedUser}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/organization/user'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/organization/user'] | filter:{selected:true}">
@@ -362,8 +344,8 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/organization/group']">
-  <a href="#" ng-click="unselectCategory('/organization/group')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/organization/group'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/organization/group')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsOrgGroupsVisible=true" ng-click="resourceDetailsOrgGroupsVisible = !resourceDetailsOrgGroupsVisible">Groups</label>
   <div class="selected-resource-details" ng-show="resourceDetailsOrgGroupsVisible">
     <div ng-show="mode == 'export' || mode == 'synchronize'">
@@ -376,7 +358,6 @@
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/group_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/organization/group_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/organization/group'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedGroup}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/organization/group'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/organization/group'] | filter:{selected:true}">
@@ -387,15 +368,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/organization/role']">
-  <a href="#" ng-click="unselectCategory('/organization/role')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/organization/role'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/organization/role')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsOrgRolesVisible=true" ng-click="resourceDetailsOrgRolesVisible = !resourceDetailsOrgRolesVisible">{{i18n.roles}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsOrgRolesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/role_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/organization/role_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/organization/role'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedRole}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/organization/role'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/organization/role'] | filter:{selected:true}">
@@ -406,15 +386,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/registry']">
-  <a href="#" ng-click="unselectCategory('/registry')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/registry'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/registry')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsAppRegistryVisible=true" ng-click="resourceDetailsAppRegistryVisible = !resourceDetailsAppRegistryVisible">Applications Registry</label>
   <div class="selected-resource-details" ng-show="resourceDetailsAppRegistryVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/registry_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/registry_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/registry'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedAppRegistry}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/registry'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/registry'] | filter:{selected:true}">
@@ -425,15 +404,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/gadget']">
-  <a href="#" ng-click="unselectCategory('/gadget')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/gadget'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/gadget')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGadgetVisible=true" ng-click="resourceDetailsGadgetVisible = !resourceDetailsGadgetVisible">{{i18n.gadgets}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsGadgetVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/gadget_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/gadget_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/gadget'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedGadget}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/gadget'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/gadget'] | filter:{selected:true}">
@@ -444,15 +422,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/templates/applications/content-list-viewer']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/applications/content-list-viewer')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsCLVTemplatesVisible=true" ng-click="resourceDetailsCLVTemplatesVisible = !resourceDetailsCLVTemplatesVisible">{{i18n.clv}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsCLVTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/templates/applications/content-list-viewer_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/templates/applications/content-list-viewer_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedAppTemplate}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/templates/applications/content-list-viewer'] | filter:{selected:true}">
@@ -463,15 +440,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/templates/nodetypes']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/templates/nodetypes'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/nodetypes')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsDocTemplatesVisible=true" ng-click="resourceDetailsDocTemplatesVisible = !resourceDetailsDocTemplatesVisible">Document Type Templates</label>
   <div class="selected-resource-details" ng-show="resourceDetailsDocTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/templates/nodetypes_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/templates/nodetypes_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/templates/nodetypes'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedDocTemplate}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/templates/nodetypes'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/templates/nodetypes'] | filter:{selected:true}">
@@ -482,15 +458,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/templates/metadata']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/templates/metadata'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/templates/metadata')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsMetadataTemplatesVisible=true" ng-click="resourceDetailsMetadataTemplatesVisible = !resourceDetailsMetadataTemplatesVisible">Metadata Templates</label>
   <div class="selected-resource-details" ng-show="resourceDetailsMetadataTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/templates/metadata_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/templates/metadata_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/templates/metadata'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedTemplate}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/templates/metadata'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/templates/metadata'] | filter:{selected:true}">
@@ -501,15 +476,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/taxonomy']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/taxonomy')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/taxonomy'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/taxonomy')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsTaxonomiesVisible=true" ng-click="resourceDetailsTaxonomiesVisible = !resourceDetailsTaxonomiesVisible">Taxonomies</label>
   <div class="selected-resource-details" ng-show="resourceDetailsTaxonomiesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/taxonomy_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/taxonomy_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/taxonomy'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedTaxonomy}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/taxonomy'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/taxonomy'] | filter:{selected:true}">
@@ -520,15 +494,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/queries']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/queries')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/queries'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/queries')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsQueriesVisible=true" ng-click="resourceDetailsQueriesVisible = !resourceDetailsQueriesVisible">Queries</label>
   <div class="selected-resource-details" ng-show="resourceDetailsQueriesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/queries_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/queries_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/queries'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedQuery}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/queries'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/queries'] | filter:{selected:true}">
@@ -539,15 +512,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/drive']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/drive')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/drive'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/drive')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsDrivesVisible=true" ng-click="resourceDetailsDrivesVisible = !resourceDetailsDrivesVisible">Sites Explorer drives</label>
   <div class="selected-resource-details" ng-show="resourceDetailsDrivesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/drive_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/drive_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/drive'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedDrive}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/drive'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/drive'] | filter:{selected:true}">
@@ -558,15 +530,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/script']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/script')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/script'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/script')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsGroovyScriptsVisible=true" ng-click="resourceDetailsGroovyScriptsVisible = !resourceDetailsGroovyScriptsVisible">ECMS Groovy Scripts</label>
   <div class="selected-resource-details" ng-show="resourceDetailsGroovyScriptsVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/script_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/script_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/script'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedScript}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/script'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/script'] | filter:{selected:true}">
@@ -577,15 +548,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/view/templates']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/view/templates')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/view/templates'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/view/templates')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSEViewTemplatesVisible=true" ng-click="resourceDetailsSEViewTemplatesVisible = !resourceDetailsSEViewTemplatesVisible">Sites Explorer View Templates</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSEViewTemplatesVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/view/templates_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/view/templates_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/view/templates'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedViewTemplate}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/view/templates'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/view/templates'] | filter:{selected:true}">
@@ -596,15 +566,14 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/view/configuration']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/view/configuration')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/view/configuration'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/view/configuration')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsSEViewConfVisible=true" ng-click="resourceDetailsSEViewConfVisible = !resourceDetailsSEViewConfVisible">Sites Explorer View Configuration</label>
   <div class="selected-resource-details" ng-show="resourceDetailsSEViewConfVisible">
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/ecmadmin/view/configuration_IMPORT_filter/replace-existing"
                                                 ng-model="optionsModel['/ecmadmin/view/configuration_IMPORT_filter/replace-existing']"><span>{{i18n.replaceExisting}}</span></label>
     </div>
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/view/configuration'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedViewConfiguration}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/view/configuration'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/view/configuration'] | filter:{selected:true}">
@@ -615,11 +584,10 @@
   </div>
 </div>
 
-<div class="uiBox selected-resource" ng-show="categoriesModel['/ecmadmin/nodetype']">
-  <a href="#" ng-click="unselectCategory('/ecmadmin/nodetype')" class="unselect-resources-category">{{i18n.remove}}</a>
+<div class="uiBox selected-resource" ng-show="(resources['/ecmadmin/nodetype'] | filter:{selected:(mode != 'import')}).length">
+  <a href="#" ng-click="unselectCategory('/ecmadmin/nodetype')" class="unselect-resources-category"><i class="uiIconTrash"></i></a>
   <label class="selected-resource-title clickable" ng-init="resourceDetailsNodetypesVisible=true" ng-click="resourceDetailsNodetypesVisible = !resourceDetailsNodetypesVisible">{{i18n.nodetypes}}</label>
   <div class="selected-resource-details" ng-show="resourceDetailsNodetypesVisible">
-    <div class="alert alert-info" ng-show="mode != 'import' && (!(resources['/ecmadmin/nodetype'] | filter:{selected:true}).length)"><i class="uiIconInfo"></i>{{i18n.noSelectedNodeType}}</div>
     <div class="selected-resource-table" ng-show="mode != 'import' && (resources['/ecmadmin/nodetype'] | filter:{selected:true}).length">
       <table class="table table-striped table-condensed">
         <tr ng-repeat="resource in resources['/ecmadmin/nodetype'] | filter:{selected:true}">

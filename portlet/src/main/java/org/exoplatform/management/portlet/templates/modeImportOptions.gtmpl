@@ -4,7 +4,7 @@
     <input type="file" id="fileToImport" accept=".zip" name="fileToImport" style="display: none;"
     onchange="angular.element(this).scope().setFile(this);angular.element(this).scope().prepareImportResources();"/>
     <div class="uiAction">
-      <input id="btUpload" class="btn btn-primate" type="button" value="{{i18n.chooseFile}}" onclick="angular.element(this).scope().fileUploadClick();">
+      <input id="btUpload" class="btn btn-primary" type="button" value="{{i18n.chooseFile}}" onclick="angular.element(this).scope().fileUploadClick();">
       <span>
       	{{fileToImportTitle}}
       </span>
