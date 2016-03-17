@@ -13,7 +13,7 @@
 	<PushContent>
 		<msg>
 			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
-			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
+			<synchronizationError>Une erreur est survenue lors de la synchronisation. Veuillez contacter votre administrateur.</synchronizationError>
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
 			<userNameMandatory>Le nom de l'utilisateur est obligatoire</userNameMandatory>
 			<passwordMandatory>Le mot de passe est obligatoire</passwordMandatory>

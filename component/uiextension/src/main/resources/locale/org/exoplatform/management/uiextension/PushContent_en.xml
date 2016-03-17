@@ -13,7 +13,7 @@
 	<PushContent>
 		<msg>
 			<unableToConnect>Unable to connect to server</unableToConnect>
-			<synchronizationError>An error occurred while synchronizing content</synchronizationError>
+			<synchronizationError>An error occurred while synchronizing content. Please contact your administrator.</synchronizationError>
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
 			<userNameMandatory>Login is mandatory</userNameMandatory>
 			<passwordMandatory>Password is mandatory</passwordMandatory>

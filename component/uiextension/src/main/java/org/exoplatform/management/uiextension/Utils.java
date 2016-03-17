@@ -182,7 +182,7 @@ public class Utils {
   }
 
   private static Map<String, NodeMetadata> getTargetServerMetadata(TargetServer targetServer, Map<String, String> exportOptions) throws Exception {
-    String targetServerURL = CONTENTS_HANDLER.getServerURL(targetServer, StagingService.CONTENT_SITES_PATH + "/shared.zip", exportOptions);
+    String targetServerURL = AbstractResourceHandler.getServerURL(targetServer, StagingService.CONTENT_SITES_PATH + "/shared.zip", exportOptions);
     URL url = new URL(targetServerURL);
 
     HttpURLConnection conn = (HttpURLConnection) url.openConnection();

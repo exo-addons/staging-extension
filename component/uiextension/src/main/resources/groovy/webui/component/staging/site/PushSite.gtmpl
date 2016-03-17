@@ -6,12 +6,14 @@
 		 link = link.substring(link.indexOf(":") + 1);
 	%>
 		 function execute<%=action%>Site() {
-		 		if(typeof eXo.webui.UIForm  != 'undefined') {
-					$link;
-		 		}
+			 try {
+				$link;
 				<% if(action.equals("Push")) {%>
 					window.setTimeout(execute<%=action%>Site, 2000);
 				<% } %>
+			 } catch(e) {
+				 // Nothing to trace
+			 }
 		 }
 	<% } %>
 	<% if(uicomponent.isSynchronizationStarted()) { %>

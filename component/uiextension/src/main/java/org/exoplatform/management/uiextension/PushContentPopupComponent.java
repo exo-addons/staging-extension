@@ -339,18 +339,16 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
             }
           }
         }
-
       } catch (Throwable ex) {
-        ApplicationMessage message;
+        ApplicationMessage message = null;
         if (isConnectionException(ex)) {
           message = new ApplicationMessage("PushContent.msg.unableToConnect", null, ApplicationMessage.ERROR);
         } else {
           message = new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.ERROR);
         }
         message.setResourceBundle(getResourceBundle());
-        pushContentPopupComponent.setMessage(message.getMessage(), "error");
-        LOG.error("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' failed:", ex);
-        event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
+        uiPopupContainer.deActivate();
+        uiApp.addMessage(message);
       }
     }
   }

@@ -1,17 +1,19 @@
 <% import org.exoplatform.management.uiextension.PushContentPopupComponent;%>
 <script>
 	<% for(action in uicomponent.getActions()) {
-		 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action)
+		 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action);
 		 String link = uicomponent.event(action);
 		 link = link.substring(link.indexOf(":") + 1);
 	%>
 		 function execute<%=action%>Content() {
-		 		if(typeof eXo.webui.UIForm  != 'undefined') {
-					$link;
-		 		}
+			 try {
+				$link;
 				<% if(action.equals("Push")) {%>
 					window.setTimeout(execute<%=action%>Content, 2000);
 				<% } %>
+			 } catch(e) {
+				 // Nothing to trace
+			 }
 		 }
 	<% } %>
 	<% if(uicomponent.isSynchronizationStarted()) { %>
@@ -89,13 +91,13 @@
 	}
 </style>
 <div class="uiForm $uicomponent.id">
+   <% def field = uicomponent.findComponentById(PushContentPopupComponent.INFO_FIELD_NAME);
+      if(field.getValue() != null && !field.getValue().isEmpty()) { %>
+          <div class="alert alert-<%=uicomponent.messageType%>"><i class="uiIcon<%=org.apache.commons.lang.StringUtils.capitalize(uicomponent.messageType)%>"></i><%=field.getValue()%></div>
+   <% } %>
 	<% uiform.begin() %>
 	<div class="form-horizontal">
      <div class="control-group">
-       <% def field = uicomponent.findComponentById(PushContentPopupComponent.INFO_FIELD_NAME);
-       	  if(field.getValue() != null && !field.getValue().isEmpty()) { %>
-        	  <div class="alert alert-<%=uicomponent.messageType%>"><i class="uiIcon<%=org.apache.commons.lang.StringUtils.capitalize(uicomponent.messageType)%>"></i><%=field.getValue()%></div>
-       <% } %>
        <label class="control-label" for="<%=PushContentPopupComponent.TARGET_SERVER_NAME_FIELD_NAME%>">
            <%=uicomponent.getLabel(PushContentPopupComponent.TARGET_SERVER_NAME_FIELD_NAME) %>
        </label>
