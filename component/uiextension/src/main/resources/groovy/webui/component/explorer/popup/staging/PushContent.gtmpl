@@ -1,25 +1,31 @@
 <% import org.exoplatform.management.uiextension.PushContentPopupComponent;%>
 <script>
-	<% for(action in uicomponent.getActions()) {
-		 String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action)
-		 String link = uicomponent.event(action);
-		 link = link.substring(link.indexOf(":") + 1);
+	executePushContentStarted = <%=uicomponent.isSynchronizationStarted()%>;
+	<%
+	 String closeLink = uicomponent.event("Close");
+	 closeLink = closeLink.substring(closeLink.indexOf(":") + 1);
+     String pushLink = uicomponent.event("Push");
+     pushLink = pushLink.substring(pushLink.indexOf(":") + 1);
+     pushLink = pushLink.replace(");", "function(){window.setTimeout(executePushContent, 2000);}");
 	%>
-		 function execute<%=action%>Content() {
-		 		if(typeof eXo.webui.UIForm  != 'undefined') {
-					$link;
-		 		}
-				<% if(action.equals("Push")) {%>
-					window.setTimeout(execute<%=action%>Content, 2000);
-				<% } %>
+	 function executeCloseContent() {
+		$closeLink;
+	 }
+
+	 function executePushContent() {
+		 try {
+			if(executePushContentStarted) {
+				$pushLink;
+				executePushContentStarted = false;
+			}
+		 } catch(e) {
+			 // Nothing to trace
 		 }
-	<% } %>
-	<% if(uicomponent.isSynchronizationStarted()) { %>
-		if(typeof executePushContentStarted == 'undefined') {
-	 		executePushContent();
-		}
-	<% } %>
-	executePushContentStarted = "started";
+	 }
+
+	if(executePushContentStarted) {
+		window.setTimeout(executePushContent, 2000);
+	}
 </script>
 <style>
 	.$uicomponent.id {
@@ -89,7 +95,7 @@
 	}
 </style>
 <div class="uiForm $uicomponent.id">
-	<% uiform.begin() %>
+	<% uiform.begin(); %>
 	<div class="form-horizontal">
      <div class="control-group">
        <% def field = uicomponent.findComponentById(PushContentPopupComponent.INFO_FIELD_NAME);
@@ -104,18 +110,15 @@
        </div>
      </div>
     </div>
-	<div class="uiAction uiActionBorder">
-		<% for(action in uicomponent.getActions()) {
-			String actionLabel = _ctx.appRes(uicomponent.getName() + ".action." + action) 
-		%>
-			<button type="button" onclick="execute<%=action%>Content()" class="btn"  href="javascript:void(0);">$actionLabel</button>
-		<% } %>
-	</div>
-	<% uiform.end() %>
-	<div class="control-group">
-	     <% field = uicomponent.findComponentById("SelectNodesComponent");
-	        if(field.isRendered()) { %>
-	      <% uiform.renderField(field); %>
-	     <% } %>
-	</div>
+	<% uiform.end(); %>
+    <% field = uicomponent.findComponentById("SelectNodesComponent");
+    if(field.isRendered()) { %>
+    	<div class="control-group">
+    	      <% uiform.renderField(field); %>
+    	</div>
+        <div class="uiAction uiActionBorder">
+            <button type="button" onclick="executePushContentStarted = true;executePushContent()" class="btn primary"><%=_ctx.appRes(uicomponent.getName() + ".action.Push")%></button>
+            <button type="button" onclick="executeCloseContent()" class="btn"><%=_ctx.appRes(uicomponent.getName() + ".action.Close")%></button>
+        </div>
+    <% } %>
 </div>

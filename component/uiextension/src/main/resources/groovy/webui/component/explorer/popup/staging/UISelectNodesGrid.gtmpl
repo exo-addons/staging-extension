@@ -116,7 +116,7 @@
                   } else {
                      fieldValue = "";
                   }
-                  String value = encoder.encode(fieldValue.toString());
+                  String value = encoder.encode(java.net.URLDecoder.decode(fieldValue.toString(), "UTF-8"));
                   %>
                   <div class="column $cssClass" title="$value" style="width:<%=colWidth[i]%>;">$value</div>
 				  <div class="lineLeft"><span></span></div>

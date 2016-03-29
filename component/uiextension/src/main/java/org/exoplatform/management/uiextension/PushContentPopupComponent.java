@@ -1,7 +1,6 @@
 package org.exoplatform.management.uiextension;
 
 import java.net.ConnectException;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -73,10 +72,10 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   private List<NodeComparison> defaultSelection = new ArrayList<NodeComparison>();
   private SynchronizationService synchronizationService_;
 
-  String stateString = NodeComparisonState.MODIFIED_ON_SOURCE.getKey();
+  String stateString;
   Calendar modifiedDateFilter = null;
   String filterString = null;
-  boolean publishedContentOnly = true;
+  boolean publishedContentOnly;
 
   private final UIFormSelectBox targetServerInput;
   private final UIFormInputInfo infoField;
@@ -106,6 +105,8 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   public void init() throws Exception {
     List<SelectItemOption<String>> itemOptions = getChild(UIFormSelectBox.class).getOptions();
     itemOptions.clear();
+    itemOptions.add(new SelectItemOption<String>(""));
+    getChild(UIFormSelectBox.class).setOnChange("Select");
     try {
       targetServers = synchronizationService_.getSynchonizationServers();
     } catch (Exception e) {
@@ -248,7 +249,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
                   Map<String, String> importOptions = new HashMap<String, String>();
 
                   String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
-                  exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
+                  exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(sqlQueryFilter));
                   exportOptions.put("filter/taxonomy", "false");
                   exportOptions.put("filter/no-history", "" + cleanupPublication);
                   exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
@@ -296,7 +297,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
                       }
 
                       String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + nodeComparison.getPath() + "'";
-                      exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(URLDecoder.decode(sqlQueryFilter, "UTF-8")));
+                      exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(sqlQueryFilter));
                       exportOptions.put("filter/taxonomy", "false");
                       exportOptions.put("filter/no-history", "" + cleanupPublication);
                       exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
