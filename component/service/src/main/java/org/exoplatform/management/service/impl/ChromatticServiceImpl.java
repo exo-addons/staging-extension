@@ -17,6 +17,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 
@@ -135,25 +136,14 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     ChromatticSession session = null;
     try {
       session = openSession();
-      if (!session.getJCRSession().itemExists(STAGING_SERVERS_ROOT_PATH)) {
+      TargetServerChromattic server = findServerByName(name, session);
+
+      if (server == null) {
         return null;
       }
 
-      TargetServerChromattic server = null;
-      QueryResult<TargetServerChromattic> servers = session.createQueryBuilder(TargetServerChromattic.class).where("jcr:path = '" + STAGING_SERVERS_ROOT_PATH + "/" + name + "'").get().objects();
-      if (servers.size() == 0) {
-        return null;
-      } else if (servers.size() > 1) {
-        throw new IllegalStateException("found more than one server with name: " + name);
-      } else if (servers.hasNext()) {
-        server = servers.next();
-      }
-      if (server != null) {
-        String password = decodePassword(server.getPassword());
-        targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), password, server.isSsl());
-      }
-    } catch (RepositoryException e) {
-      throw new IllegalStateException("Error while attempting to access JCR repository", e);
+      String password = decodePassword(server.getPassword());
+      targetServer = new TargetServer(server.getId(), server.getName(), server.getHost(), server.getPort(), server.getUsername(), password, server.isSsl());
     } finally {
       if (session != null) {
         session.close();
@@ -166,21 +156,13 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
   public void addSynchonizationServer(TargetServer targetServer) {
     ChromatticSession session = null;
 
+    String serverName = targetServer.getName();
     try {
       session = openSession();
 
-      TargetServerChromattic chromatticObject = null;
-      try {
-        chromatticObject = session.findByPath(TargetServerChromattic.class, STAGING_SERVERS_ROOT_PATH + "/" + targetServer.getName());
-        if (chromatticObject != null) {
-          LOG.warn("Attempt to add server with same name");
-          return;
-        }
-      } catch (Exception e) {
-        // Nothing to do
-      }
+      findServerByName(serverName, session);
 
-      TargetServerChromattic server = session.insert(TargetServerChromattic.class, targetServer.getName());
+      TargetServerChromattic server = session.insert(TargetServerChromattic.class, serverName);
       server.setHost(targetServer.getHost());
       server.setPort(targetServer.getPort());
       server.setUsername(targetServer.getUsername());
@@ -193,12 +175,27 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
       String jcrPath = session.getPath(server);
       setPermissions(jcrPath, DEFAULT_PERMISSIONS);
     } catch (Exception e) {
-      LOG.warn("error while adding server details" + targetServer.getName(), e);
+      LOG.warn("error while adding server details" + serverName, e);
     } finally {
       if (session != null) {
         session.close();
       }
     }
+  }
+
+  private TargetServerChromattic findServerByName(String serverName, ChromatticSession session) {
+    TargetServerChromattic chromatticObject = null;
+    try {
+      Node parentNode = (Node)session.getJCRSession().getItem(STAGING_SERVERS_ROOT_PATH);
+      if(parentNode.hasNode(serverName)) {
+        Node node = parentNode.getNode(serverName);
+        chromatticObject = session.findByNode(TargetServerChromattic.class, node);
+      }
+    } catch (Exception e) {
+      LOG.warn(e.getMessage());
+      // Nothing to do
+    }
+    return chromatticObject;
   }
 
   @Override
