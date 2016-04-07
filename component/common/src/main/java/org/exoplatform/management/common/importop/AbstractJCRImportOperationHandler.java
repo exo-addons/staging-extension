@@ -89,7 +89,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
 
       if (isCleanPublication) {
         // Clean publication information
-        cleanPublication(parentNodePath, session);
+        cleanPublication(nodePath, session);
       } else if (historyFile != null) {
         log.info("Importing history of the node " + nodePath);
         historyFis1 = new FileInputStream(historyFile);
@@ -117,17 +117,17 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
-  protected final void cleanPublication(String parentPath, Session session) throws Exception {
+  protected final void cleanPublication(String nodePath, Session session) throws Exception {
     QueryManager manager = session.getWorkspace().getQueryManager();
-    String statement = "select * from nt:base where jcr:path LIKE '" + parentPath + "/%' and publication:liveRevision IS NOT NULL";
+    String statement = "select * from nt:base where jcr:path LIKE '" + nodePath + "/%' and publication:liveRevision IS NOT NULL";
     Query query = manager.createQuery(statement.toString(), Query.SQL);
     NodeIterator iter = query.execute().getNodes();
     while (iter.hasNext()) {
       Node node = iter.nextNode();
       cleanPublication(node);
     }
-    if (session.itemExists(parentPath)) {
-      Node node = (Node) session.getItem(parentPath);
+    if (session.itemExists(nodePath)) {
+      Node node = (Node) session.getItem(nodePath);
       cleanPublication(node);
     }
   }
