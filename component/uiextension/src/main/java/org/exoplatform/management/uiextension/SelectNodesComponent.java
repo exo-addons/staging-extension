@@ -152,13 +152,17 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
         filteredComparison.add(nodeComparison);
       }
     }
+    int currentPage = nodesGrid.getUIPageIterator().getCurrentPage();
     nodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, filteredComparison), 5));
+    updateGridPage(nodesGrid, currentPage);
 
+    currentPage = selectedNodesGrid.getUIPageIterator().getCurrentPage();
     if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
       selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
     } else {
       selectedNodesGrid.getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
     }
+    updateGridPage(selectedNodesGrid, currentPage);
   }
 
   public static class FilterActionListener extends EventListener<SelectNodesComponent> {
@@ -208,6 +212,18 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  private void updateGridPage(UIGrid grid, int currentPage) {
+    try {
+      if (currentPage < grid.getUIPageIterator().getAvailablePage()) {
+        grid.getUIPageIterator().setCurrentPage(currentPage);
+      } else {
+        grid.getUIPageIterator().setCurrentPage(grid.getUIPageIterator().getAvailablePage());
+      }
+    } catch (Exception e) {
+      LOG.warn(e.getMessage());
+    }
+  }
+
   static public class DeleteActionListener extends EventListener<UIForm> {
     public void execute(Event<UIForm> event) throws Exception {
       UIForm uiForm = event.getSource();
@@ -229,13 +245,7 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
             removed = true;
           }
         }
-        if (removed) {
-          if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
-            pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getDefaultSelection()), 5));
-          } else {
-            pushContentPopupComponent.getSelectNodesComponent().getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, pushContentPopupComponent.getSelectedNodes()), 5));
-          }
-        }
+
         if (pushContentPopupComponent.getSelectNodesComponent().isRendered()) {
           pushContentPopupComponent.getSelectNodesComponent().computeComparisons();
           event.getRequestContext().addUIComponentToUpdateByAjax(pushContentPopupComponent.getSelectNodesComponent());
