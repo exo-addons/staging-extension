@@ -294,10 +294,10 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
       String parameterName = entry.getKey();
       List<String> parameterValues = entry.getValue();
       for (String parameterValue : parameterValues) {
-        parameters.add(new BasicNameValuePair(parameterName, parameterValue));
+          parameters.add(new BasicNameValuePair(parameterName, parameterValue));
       }
     }
-    return URLEncodedUtils.format(parameters, null);
+    return URLEncodedUtils.format(parameters, "UTF-8");
   }
 
   /**
