@@ -15,6 +15,7 @@
 			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
 			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
+			<noContent>Veuillez choisir des contenus à synchroniser</noContent>
 			<userNameMandatory>Le nom de l'utilisateur est obligatoire</userNameMandatory>
 			<passwordMandatory>Le mot de passe est obligatoire</passwordMandatory>
 			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>

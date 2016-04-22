@@ -15,6 +15,7 @@
 			<unableToConnect>Unable to connect to server</unableToConnect>
 			<synchronizationError>An error occurred while synchronizing content</synchronizationError>
 			<targetServerMandatory>Target Server is mandatory</targetServerMandatory>
+			<noContent>Select contents to synchronize</noContent>
 			<userNameMandatory>Login is mandatory</userNameMandatory>
 			<passwordMandatory>Password is mandatory</passwordMandatory>
 			<synchronizationDone>Synchronization done successfully</synchronizationDone>

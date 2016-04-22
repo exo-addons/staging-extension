@@ -43,7 +43,7 @@
 
       <% if (uicomponent.getUIPageIterator().getAvailable() < 1)
       { %>
-      <div class="rowView odd">
+      <div class="rowView odd center">
         <%=_ctx.appRes("UIGrid.msg.empty")%>
       </div>
       <% }
@@ -87,7 +87,6 @@
         {
         %>
         <div class="column lineLeft actions">
-        <% if(!uicomponent.getParent().isDefaultEntry(bean.getPath())) { %>
           <%
           def beanIdField = uicomponent.getBeanIdField();
           def beanId = uicomponent.getBeanIdFor(bean);
@@ -107,7 +106,6 @@
           %>
           <img onclick="$actionLink" alt="$action" title="$title" src="/staging-extension-portlet/skin/images/${action}.gif"/>
           <% } %>
-        <% } %>
         </div>
         <%
         }

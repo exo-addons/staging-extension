@@ -331,13 +331,4 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     return isMatch;
   }
 
-  public boolean isDefaultEntry(String path) {
-    for (NodeComparison comparison : pushContentPopupComponent.getDefaultSelection()) {
-      if (path.equals(comparison.getPath())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
 }

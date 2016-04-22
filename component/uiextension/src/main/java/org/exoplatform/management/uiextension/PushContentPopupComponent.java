@@ -3,6 +3,7 @@ package org.exoplatform.management.uiextension;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -69,7 +70,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   public static final String INFO_FIELD_NAME = "info";
   private static final String CLEANUP_PUBLICATION = "exo.staging.explorer.content.noVersion";
 
-  private List<NodeComparison> defaultSelection = new ArrayList<NodeComparison>();
+  private List<NodeComparison> defaultSelection = Collections.emptyList();
   private SynchronizationService synchronizationService_;
 
   String stateString;
@@ -117,12 +118,7 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
       SelectItemOption<String> selectItemOption = new SelectItemOption<String>(targetServer.getName(), targetServer.getId());
       itemOptions.add(selectItemOption);
     }
-    NodeComparison nodeComparison = new NodeComparison();
-    nodeComparison.setTitle(getResourceBundle().getString("PushContentPopupComponent.label.currentContent"));
-    nodeComparison.setPath(getCurrentPath());
-    nodeComparison.setState(NodeComparisonState.UNKNOWN);
-    defaultSelection.add(nodeComparison);
-
+    selectedNodes.clear();
     selectNodesComponent.getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, defaultSelection), 5));
   }
 
@@ -132,15 +128,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
 
   public static boolean isSynchronizationStarted() {
     return synchronizationStarted;
-  }
-
-  public boolean isDefaultEntry(String path) {
-    for (NodeComparison comparison : defaultSelection) {
-      if (path.equals(comparison.getPath())) {
-        return true;
-      }
-    }
-    return false;
   }
 
   static public class SelectActionListener extends EventListener<UIForm> {
@@ -217,6 +204,14 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         final TargetServer selectedServer = targetServer;
         if (targetServer == null) {
           ApplicationMessage message = new ApplicationMessage("PushContent.msg.targetServerMandatory", null, ApplicationMessage.ERROR);
+          message.setResourceBundle(getResourceBundle());
+          pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
+          event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
+          return;
+        }
+
+        if (pushContentPopupComponent.getSelectedNodes().isEmpty()) {
+          ApplicationMessage message = new ApplicationMessage("PushContent.msg.noContent", null, ApplicationMessage.ERROR);
           message.setResourceBundle(getResourceBundle());
           pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(message.getMessage());
           event.getRequestContext().addUIComponentToUpdateByAjax(uiPopupContainer);
