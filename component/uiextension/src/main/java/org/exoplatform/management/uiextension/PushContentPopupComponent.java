@@ -57,21 +57,27 @@ import org.exoplatform.webui.form.UIFormSelectBox;
 public class PushContentPopupComponent extends UIForm implements UIPopupComponent {
   private static final Log LOG = ExoLogger.getLogger(PushContentPopupComponent.class.getName());
 
-  private static boolean synchronizationStarted = false;
-  private static boolean synchronizationFinished = true;
-  private static Throwable synchronizationError = null;
-
-  protected static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
-
-  public static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
-
-  // public static final String PUBLISH_FIELD_NAME = "publishOnTarget";
-
   public static final String INFO_FIELD_NAME = "info";
   private static final String CLEANUP_PUBLICATION = "exo.staging.explorer.content.noVersion";
 
+  public static final String TARGET_SERVER_NAME_FIELD_NAME = "targetServer";
+
+  protected static SiteContentsHandler CONTENTS_HANDLER = (SiteContentsHandler) ResourceHandlerLocator.getResourceHandler(StagingService.CONTENT_SITES_PATH);;
+
+  private boolean synchronizationStarted = false;
+  private boolean synchronizationFinished = true;
+  private Throwable synchronizationError = null;
+
+  private List<String> synchronizedContents = new ArrayList<String>();
+  private List<String> notSynchronizedContents = new ArrayList<String>();
+
+  // public static final String PUBLISH_FIELD_NAME = "publishOnTarget";
+
   private List<NodeComparison> defaultSelection = Collections.emptyList();
   private SynchronizationService synchronizationService_;
+
+  String currentNodePath = "";
+  int currentNodesCount = 0;
 
   String stateString;
   Calendar modifiedDateFilter = null;
@@ -120,13 +126,18 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
     }
     selectedNodes.clear();
     selectNodesComponent.getSelectedNodesGrid().getUIPageIterator().setPageList(new LazyPageList<NodeComparison>(new ListAccessImpl<NodeComparison>(NodeComparison.class, defaultSelection), 5));
+    synchronizationStarted = false;
+    synchronizationFinished = true;
+    synchronizationError = null;
+    synchronizedContents.clear();
+    notSynchronizedContents.clear();
   }
 
   public void addSelection(NodeComparison nodeComparison) {
     selectedNodes.add(nodeComparison);
   }
 
-  public static boolean isSynchronizationStarted() {
+  public boolean isSynchronizationStarted() {
     return synchronizationStarted;
   }
 
@@ -219,10 +230,11 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
         }
 
         ResourceBundle resourceBundle = PushContentPopupComponent.getResourceBundle();
-        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress"));
-        if (synchronizationFinished && !synchronizationStarted) {
-          synchronizationStarted = true;
-          synchronizationFinished = false;
+        pushContentPopupComponent.getUIFormInputInfo(INFO_FIELD_NAME).setValue(resourceBundle.getString("PushNavigation.msg.synchronizationInProgress")
+            + (pushContentPopupComponent.currentNodesCount == 0 ? "" : (": " + pushContentPopupComponent.currentNodePath + "  (" + pushContentPopupComponent.currentNodesCount + "/" + pushContentPopupComponent.getSelectedNodes().size() + ")")));
+        if (pushContentPopupComponent.synchronizationFinished && !pushContentPopupComponent.synchronizationStarted) {
+          pushContentPopupComponent.synchronizationStarted = true;
+          pushContentPopupComponent.synchronizationFinished = false;
 
           Thread synchronizeThread = new Thread(new Runnable() {
             @Override
@@ -235,41 +247,14 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
               RequestLifeCycle.begin(ExoContainerContext.getCurrentContainer());
               try {
                 List<NodeComparison> selectedComparisons = (List<NodeComparison>) pushContentPopupComponent.getSelectedNodes();
-                // If default selection
-                if (selectedComparisons.isEmpty()) {
-                  List<Resource> resources = new ArrayList<Resource>();
-                  resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared", "shared", "shared"));
+                // Multiple contents was selected,
+                // synchronize one by one
 
-                  Map<String, String> exportOptions = new HashMap<String, String>();
-                  Map<String, String> importOptions = new HashMap<String, String>();
+                for (NodeComparison nodeComparison : selectedComparisons) {
+                  try {
+                    pushContentPopupComponent.currentNodePath = nodeComparison.getPath();
+                    pushContentPopupComponent.currentNodesCount++;
 
-                  String sqlQueryFilter = "query:select * from nt:base where jcr:path like '" + pushContentPopupComponent.getCurrentPath() + "'";
-                  exportOptions.put("filter/query", StringEscapeUtils.unescapeHtml(sqlQueryFilter));
-                  exportOptions.put("filter/taxonomy", "false");
-                  exportOptions.put("filter/no-history", "" + cleanupPublication);
-                  exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
-
-                  boolean noVersion = false;
-                  String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
-                  if (!StringUtils.isEmpty(noVersionString)) {
-                    noVersion = noVersionString.trim().equals("true");
-                  }
-
-                  if (noVersion) {
-                    exportOptions.put("filter/no-history", "true");
-                    importOptions.put("filter/cleanPublication", "true");
-                  }
-
-                  // importOptions.put("filter/cleanPublication",
-                  // "" +
-                  // cleanupPublication);
-
-                  CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, selectedServer);
-                } else {
-                  // Multiple contents was selected,
-                  // synchronize one by one
-
-                  for (NodeComparison nodeComparison : selectedComparisons) {
                     List<Resource> resources = new ArrayList<Resource>();
                     resources.add(new Resource(StagingService.CONTENT_SITES_PATH + "/shared/contents", "shared", "shared"));
 
@@ -279,7 +264,6 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
                     if (nodeComparison.getState().equals(NodeComparisonState.NOT_FOUND_ON_SOURCE)) {
                       exportOptions.put("filter/removeNodes", nodeComparison.getPath());
                     } else {
-
                       boolean noVersion = false;
                       String noVersionString = System.getProperty(CLEANUP_PUBLICATION, null);
                       if (!StringUtils.isEmpty(noVersionString)) {
@@ -298,37 +282,57 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
                       exportOptions.put("filter/workspace", pushContentPopupComponent.getWorkspace());
                     }
                     CONTENTS_HANDLER.synchronize(resources, exportOptions, importOptions, selectedServer);
+                    pushContentPopupComponent.synchronizedContents.add(nodeComparison.getPath());
+                  } catch (Exception e) {
+                    pushContentPopupComponent.synchronizationError = e;
+                    pushContentPopupComponent.notSynchronizedContents.add(nodeComparison.getPath());
                   }
                 }
                 LOG.info("Synchronization of '" + pushContentPopupComponent.getCurrentPath() + "' done.");
-
-              } catch (Exception e) {
-                synchronizationError = e;
               } finally {
-                synchronizationFinished = true;
+                pushContentPopupComponent.synchronizationFinished = true;
                 RequestLifeCycle.end();
               }
             }
           });
           synchronizeThread.start();
         } else {
-          if (synchronizationStarted) {
-            if (synchronizationFinished) {
-              if (synchronizationError == null) {
-                synchronizationStarted = false;
-                // Update UI
-                uiPopupContainer.deActivate();
-                uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
-              } else {
-                Throwable tempException = synchronizationError;
-                synchronizationStarted = false;
-                synchronizationError = null;
-                throw tempException;
+          if (pushContentPopupComponent.synchronizationStarted) {
+            if (pushContentPopupComponent.synchronizationFinished) {
+              try {
+                if (pushContentPopupComponent.synchronizationError == null) {
+                  uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationDone", null, ApplicationMessage.INFO));
+                  for (String contentPath : pushContentPopupComponent.synchronizedContents) {
+                    uiApp.addMessage(new NoI18NApplicationMessage("OK: " + contentPath, null, ApplicationMessage.INFO));
+                  }
+                  pushContentPopupComponent.synchronizationStarted = false;
+                  // Update UI
+                  uiPopupContainer.deActivate();
+                } else {
+                  uiApp.addMessage(new ApplicationMessage("PushContent.msg.synchronizationError", null, ApplicationMessage.INFO));
+                  for (String contentPath : pushContentPopupComponent.synchronizedContents) {
+                    uiApp.addMessage(new NoI18NApplicationMessage(contentPath, null, ApplicationMessage.INFO));
+                  }
+                  for (String contentPath : pushContentPopupComponent.notSynchronizedContents) {
+                    uiApp.addMessage(new NoI18NApplicationMessage(contentPath, null, ApplicationMessage.ERROR));
+                  }
+                  // Update UI
+                  uiPopupContainer.deActivate();
+                  pushContentPopupComponent.synchronizationStarted = false;
+                  pushContentPopupComponent.synchronizationError = null;
+                }
+              } finally {
+                pushContentPopupComponent.synchronizationStarted = false;
+                pushContentPopupComponent.synchronizationFinished = true;
+                pushContentPopupComponent.synchronizationError = null;
+                pushContentPopupComponent.synchronizedContents.clear();
+                pushContentPopupComponent.notSynchronizedContents.clear();
+                pushContentPopupComponent.currentNodesCount = 0;
+                pushContentPopupComponent.currentNodePath = "";
               }
             }
           }
         }
-
       } catch (Throwable ex) {
         ApplicationMessage message;
         if (isConnectionException(ex)) {
@@ -420,4 +424,21 @@ public class PushContentPopupComponent extends UIForm implements UIPopupComponen
   public SelectNodesComponent getSelectNodesComponent() {
     return selectNodesComponent;
   }
+
+  public boolean isSynchronizationFinished() {
+    return synchronizationFinished;
+  }
+
+  public void setSynchronizationFinished(boolean synchronizationFinished) {
+    this.synchronizationFinished = synchronizationFinished;
+  }
+
+  public Throwable getSynchronizationError() {
+    return synchronizationError;
+  }
+
+  public void setSynchronizationError(Throwable synchronizationError) {
+    this.synchronizationError = synchronizationError;
+  }
+
 }
