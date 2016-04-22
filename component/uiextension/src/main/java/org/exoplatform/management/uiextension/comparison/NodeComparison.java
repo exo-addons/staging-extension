@@ -15,6 +15,10 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
   String title;
   String path;
   String lastModifierUserName;
+
+  String[] sourcePermissions;
+  String[] targetPermissions;
+
   Calendar sourceModificationDateCalendar;
   Calendar targetModificationDateCalendar;
 
@@ -96,6 +100,22 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
 
   public Calendar getSourceModificationDateCalendar() {
     return sourceModificationDateCalendar;
+  }
+
+  public String[] getSourcePermissions() {
+    return sourcePermissions;
+  }
+
+  public void setSourcePermissions(String[] sourcePermissions) {
+    this.sourcePermissions = sourcePermissions;
+  }
+
+  public String[] getTargetPermissions() {
+    return targetPermissions;
+  }
+
+  public void setTargetPermissions(String[] targetPermissions) {
+    this.targetPermissions = targetPermissions;
   }
 
   public void setTargetModificationDateCalendar(Calendar targetModificationDateCalendar) {

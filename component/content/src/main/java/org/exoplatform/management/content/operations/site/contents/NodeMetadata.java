@@ -12,6 +12,7 @@ public class NodeMetadata implements Serializable {
   private Calendar liveDate;
   private String lastModifier;
   private boolean published;
+  private String[] permissions;
 
   public String getPath() {
     return path;
@@ -51,6 +52,14 @@ public class NodeMetadata implements Serializable {
 
   public void setPublished(boolean published) {
     this.published = published;
+  }
+
+  public String[] getPermissions() {
+    return permissions;
+  }
+
+  public void setPermissions(String[] permissions) {
+    this.permissions = permissions;
   }
 
 }

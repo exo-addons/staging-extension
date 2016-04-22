@@ -10,6 +10,7 @@ import javax.jcr.Node;
 import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.Value;
 import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
@@ -332,6 +333,14 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
         }
         if (childNode.hasProperty("publication:liveDate")) {
           nodeMetadata.setLiveDate(childNode.getProperty("publication:liveDate").getDate());
+        }
+        if (childNode.hasProperty("exo:permissions")) {
+          Value[] permissions = childNode.getProperty("exo:permissions").getValues();
+          String[] permissionsString = new String[permissions.length];
+          for (int i = 0; i < permissions.length; i++) {
+            permissionsString[i] = permissions[i].getString();
+          }
+          nodeMetadata.setPermissions(permissionsString);
         }
       }
       // If not export the whole node

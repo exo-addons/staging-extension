@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -100,10 +101,17 @@ public class Utils {
       comparison.setTargetModificationDateCalendar(targetNodeMetadata != null && targetNodeMetadata.getLiveDate() != null ? targetNodeMetadata.getLiveDate() : null);
       comparison.setSourceModificationDateCalendar(sourceNodeMetadata.getLiveDate() != null ? sourceNodeMetadata.getLiveDate() : null);
 
+      comparison.setSourcePermissions(sourceNodeMetadata != null ? sourceNodeMetadata.getPermissions() : null);
+      comparison.setTargetPermissions(targetNodeMetadata != null ? targetNodeMetadata.getPermissions() : null);
+
+      comparison.setState(NodeComparisonState.SAME);
+      comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
+
       if (targetNodeMetadata == null) {
         comparison.setState(NodeComparisonState.NOT_FOUND_ON_TARGET);
         comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
       } else {
+        // Compare using live date
         boolean sameContent = false;
         if (targetNodeMetadata.getLiveDate() != null && sourceNodeMetadata.getLiveDate() != null) {
           int comp = targetNodeMetadata.getLiveDate().compareTo(sourceNodeMetadata.getLiveDate());
@@ -113,23 +121,27 @@ public class Utils {
             comparison.setLastModifierUserName(comp > 0 ? targetNodeMetadata.getLastModifier() : sourceNodeMetadata.getLastModifier());
           } else if (targetNodeMetadata.isPublished() && !sourceNodeMetadata.isPublished()) {
             comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
-            comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
           }
         } else if (targetNodeMetadata.getLiveDate() == null && sourceNodeMetadata.getLiveDate() == null) {
           sameContent = true;
         } else if (targetNodeMetadata.getLiveDate() == null) {
           comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
-          comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
         } else if (sourceNodeMetadata.getLiveDate() == null) {
           comparison.setState(NodeComparisonState.MODIFIED_ON_TARGET);
           comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
         } else {
           comparison.setState(NodeComparisonState.UNKNOWN);
-          comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
         }
+        // Compare using permissions
         if (sameContent) {
-          comparison.setState(NodeComparisonState.SAME);
-          comparison.setLastModifierUserName(sourceNodeMetadata.getLastModifier());
+          if (comparison.getSourcePermissions() != comparison.getTargetPermissions()) {
+            if (comparison.getSourcePermissions() == null) {
+              comparison.setState(NodeComparisonState.MODIFIED_ON_TARGET);
+              comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
+            } else if (comparison.getTargetPermissions() == null || !equals(comparison.getSourcePermissions(), comparison.getTargetPermissions())) {
+              comparison.setState(NodeComparisonState.MODIFIED_ON_SOURCE);
+            }
+          }
         }
       }
       nodesComparison.add(comparison);
@@ -155,6 +167,12 @@ public class Utils {
     }
     Collections.sort(nodesComparison);
     return nodesComparison;
+  }
+
+  private static boolean equals(String[] sourcePermissions, String[] targetPermissions) {
+    Arrays.sort(sourcePermissions);
+    Arrays.sort(targetPermissions);
+    return Arrays.equals(sourcePermissions, targetPermissions);
   }
 
   private static Map<String, NodeMetadata> getSourceServerMetadata(Map<String, String> exportOptions) {
