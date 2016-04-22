@@ -11,13 +11,16 @@ import javax.jcr.NodeIterator;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.jcr.Value;
-import javax.jcr.query.Query;
-import javax.jcr.query.QueryManager;
+import javax.jcr.nodetype.NodeType;
+import javax.transaction.UserTransaction;
 
 import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.services.cms.templates.TemplateService;
+import org.exoplatform.services.deployment.Utils;
+import org.exoplatform.services.transaction.TransactionService;
 
 public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {
 
@@ -46,89 +49,82 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
     parentNodePath = parentNodePath.replaceAll("//", "/");
 
-    // Delete old node
-    Session session = getSession(workspace);
+    UserTransaction transaction = getTransaction();
+    transaction.begin();
+
+    String activityId = null;
+    Session session = null;
     try {
+      session = getSession(workspace);
       if (session.itemExists(nodePath) && session.getItem(nodePath) instanceof Node) {
+        // Delete old node
         log.info("Deleting the node " + workspace + ":" + nodePath);
 
         Node oldNode = (Node) session.getItem(nodePath);
         if (oldNode.isNodeType("exo:activityInfo") && activityManager != null) {
-          String activityId = ActivityTypeUtils.getActivityId(oldNode);
-          deleteActivity(activityId);
+          activityId = ActivityTypeUtils.getActivityId(oldNode);
         }
-
-        oldNode.remove();
-        session.save();
-        session.refresh(false);
+        remove(oldNode, session);
       }
-    } catch (Exception e) {
-      log.error("Error when trying to find and delete the node: '" + nodePath + "'. Ignore this node and continue.", e);
-      return false;
-    } finally {
-      if (session != null) {
-        session.logout();
-      }
-    }
 
-    // Import Node from Extracted Zip file
-    session = getSession(workspace);
-    FileInputStream historyFis1 = null, historyFis2 = null;
-    try {
+      // Import Node from Extracted Zip file
       log.info("Importing the node '" + nodePath + "'");
 
       // Create the parent path
-      Node currentNode = createJCRPath(session, parentNodePath);
-
+      createJCRPath(session, parentNodePath);
       if (parentNodePath.isEmpty()) {
         parentNodePath = "/";
       }
-      session.refresh(false);
+
+      // Import content
       session.importXML(parentNodePath, inputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
       session.save();
 
-      if (isCleanPublication) {
-        // Clean publication information
-        cleanPublication(nodePath, session);
-      } else if (historyFile != null) {
-        log.info("Importing history of the node " + nodePath);
-        historyFis1 = new FileInputStream(historyFile);
-        Map<String, String> mapHistoryValue = org.exoplatform.services.cms.impl.Utils.getMapImportHistory(historyFis1);
-
-        historyFis2 = new FileInputStream(historyFile);
-        org.exoplatform.services.cms.impl.Utils.processImportHistory(currentNode, historyFis2, mapHistoryValue);
+      if (!session.itemExists(nodePath)) {
+        nodePath = nodePath.replaceAll("\\[[0-9]*\\]", "");
       }
+      Node importedNode = (Node) session.getItem(nodePath);
+
+      if (isCleanPublication) {
+        if (importedNode.hasProperty("publication:liveRevision")) {
+          // Clean publication information
+          cleanPublication(importedNode);
+        }
+      } else if (historyFile != null) {
+        // Import version history
+        log.info("Importing history of the node " + nodePath);
+        FileInputStream historyFis1 = null, historyFis2 = null;
+        try {
+          historyFis1 = new FileInputStream(historyFile);
+          Map<String, String> mapHistoryValue = Utils.getMapImportHistory(historyFis1);
+
+          historyFis2 = new FileInputStream(historyFile);
+          Utils.processImportHistory(importedNode, historyFis2, mapHistoryValue);
+        } finally {
+          if (historyFis1 != null) {
+            historyFis1.close();
+          }
+          if (historyFis2 != null) {
+            historyFis2.close();
+          }
+        }
+      }
+      // Delete activity
+      if (activityId != null) {
+        deleteActivity(activityId);
+      }
+      session.save();
+      transaction.commit();
+      // Commit transaction
       return true;
-    } catch (Exception e) {
+    } catch (Throwable e) {
+      transaction.rollback();
       log.error("Error when trying to import node: " + nodePath, e);
       // Revert changes
-      session.refresh(false);
-      return false;
-    } finally {
       if (session != null) {
-        session.logout();
+        session.refresh(false);
       }
-      if (historyFis1 != null) {
-        historyFis1.close();
-      }
-      if (historyFis2 != null) {
-        historyFis2.close();
-      }
-    }
-  }
-
-  protected final void cleanPublication(String nodePath, Session session) throws Exception {
-    QueryManager manager = session.getWorkspace().getQueryManager();
-    String statement = "select * from nt:base where jcr:path LIKE '" + nodePath + "/%' and publication:liveRevision IS NOT NULL";
-    Query query = manager.createQuery(statement.toString(), Query.SQL);
-    NodeIterator iter = query.execute().getNodes();
-    while (iter.hasNext()) {
-      Node node = iter.nextNode();
-      cleanPublication(node);
-    }
-    if (session.itemExists(nodePath)) {
-      Node node = (Node) session.getItem(nodePath);
-      cleanPublication(node);
+      return false;
     }
   }
 
@@ -185,4 +181,39 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
     return nodePath;
   }
+
+  private void remove(Node node, Session session) throws Exception {
+    if (node.hasNodes() && !isRecursiveDelete(node)) {
+      NodeIterator subnodes = node.getNodes();
+      while (subnodes.hasNext()) {
+        Node subNode = subnodes.nextNode();
+        remove(subNode, session);
+      }
+    }
+    log.info("Delete node: " + node.getPath());
+    if (node.isNodeType("mix:versionable")) {
+      node.removeMixin("mix:versionable");
+    }
+    node.remove();
+  }
+
+  protected final boolean isRecursiveDelete(Node node) throws Exception {
+    NodeType nodeType = node.getPrimaryNodeType();
+    NodeType[] nodeTypes = node.getMixinNodeTypes();
+    boolean recursive = isRecursiveNT(nodeType);
+    if (!recursive && nodeTypes != null && nodeTypes.length > 0) {
+      int i = 0;
+      while (!recursive && i < nodeTypes.length) {
+        recursive = isRecursiveNT(nodeTypes[i]);
+        i++;
+      }
+    }
+    return recursive;
+  }
+
+  private UserTransaction getTransaction() {
+    TransactionService txService = (TransactionService) PortalContainer.getInstance().getComponentInstanceOfType(TransactionService.class);
+    return txService.getUserTransaction();
+  }
+
 }

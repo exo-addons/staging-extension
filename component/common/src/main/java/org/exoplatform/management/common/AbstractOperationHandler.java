@@ -3,7 +3,9 @@ package org.exoplatform.management.common;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipInputStream;
 
@@ -11,9 +13,12 @@ import javax.jcr.LoginException;
 import javax.jcr.NoSuchWorkspaceException;
 import javax.jcr.RepositoryException;
 import javax.jcr.Session;
+import javax.jcr.nodetype.NodeDefinition;
+import javax.jcr.nodetype.NodeType;
 import javax.transaction.SystemException;
 
 import org.apache.commons.io.FileUtils;
+import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.jcr.RepositoryService;
 import org.exoplatform.services.jcr.core.ManageableRepository;
 import org.exoplatform.services.jcr.ext.common.SessionProvider;
@@ -52,6 +57,9 @@ public abstract class AbstractOperationHandler implements OperationHandler {
   protected IdentityStorage identityStorage = null;
   protected SpaceService spaceService = null;
   protected Long defaultJCRSessionTimeout = null;
+  protected TemplateService templateService = null;
+
+  private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
   // This is used to test on duplicated activities
   protected Set<Long> activitiesByPostTime = new HashSet<Long>();
@@ -143,6 +151,30 @@ public abstract class AbstractOperationHandler implements OperationHandler {
       log.error("Error while retrieving identity: ", e);
     }
     return null;
+  }
+
+  protected final boolean isRecursiveNT(NodeType nodeType) throws Exception {
+    if (nodeType.getName().equals("exo:actionStorage")) {
+      return true;
+    }
+    isNTRecursiveMap = new HashMap<String, Boolean>();
+    if (!isNTRecursiveMap.containsKey(nodeType.getName())) {
+      boolean hasMandatoryChild = false;
+      NodeDefinition[] nodeDefinitions = nodeType.getChildNodeDefinitions();
+      if (nodeDefinitions != null) {
+        int i = 0;
+        while (!hasMandatoryChild && i < nodeDefinitions.length) {
+          hasMandatoryChild = nodeDefinitions[i].isMandatory();
+          i++;
+        }
+      }
+      boolean recursive = hasMandatoryChild;
+      if (templateService != null) {
+        recursive |= templateService.isManagedNodeType(nodeType.getName());
+      }
+      isNTRecursiveMap.put(nodeType.getName(), recursive);
+    }
+    return isNTRecursiveMap.get(nodeType.getName());
   }
 
   // Bug in SUN's JDK XMLStreamReader implementation closes the underlying
