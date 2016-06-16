@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 
 import javax.jcr.Node;
 import javax.jcr.Session;
+import org.exoplatform.services.cms.templates.TemplateService;
+
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
@@ -73,6 +75,7 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
     seoService = operationContext.getRuntimeContext().getRuntimeComponent(SEOService.class);
+    templateService = operationContext.getRuntimeContext().getRuntimeComponent(TemplateService.class);
 
     increaseCurrentTransactionTimeOut(operationContext);
     try {

@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
-
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -13,18 +12,15 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.transaction.UserTransaction;
-
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
-import org.exoplatform.services.cms.templates.TemplateService;
 import org.exoplatform.services.deployment.Utils;
 import org.exoplatform.services.transaction.TransactionService;
 
 public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {
 
-  protected TemplateService templateService = null;
 
   protected final boolean importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
     File xmlFile = fileEntry.getFile();
