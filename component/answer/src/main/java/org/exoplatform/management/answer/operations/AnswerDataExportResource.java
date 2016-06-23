@@ -148,16 +148,19 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
     exportTasks.add(new AnswerExportTask(type, category, questions));
 
     categoryThreadLocal.set(category);
-    String prefix = "answer/" + type + "/" + category.getId() + "/";
-    exportActivities(exportTasks, space == null ? ((category.getModerators() == null || category.getModerators().length == 0) ? userACL.getSuperUser() : category.getModerators()[0])
-        : space.getPrettyName(), prefix, ANSWER_ACTIVITY_TYPE);
+    // In case of minimal profile
+    if (activityManager != null) {
+      String prefix = "answer/" + type + "/" + category.getId() + "/";
+      exportActivities(exportTasks, space == null ? ((category.getModerators() == null || category.getModerators().length == 0) ? userACL.getSuperUser() : category.getModerators()[0])
+              : space.getPrettyName(), prefix, ANSWER_ACTIVITY_TYPE);
 
-    if (exportSpaceMetadata && isSpaceType) {
-      if (space == null) {
-        log.warn("Should export space DATA but it is null");
-      } else {
-        prefix = "answer/space/" + category.getId() + "/";
-        exportTasks.add(new SpaceMetadataExportTask(space, prefix));
+      if (exportSpaceMetadata && isSpaceType) {
+        if (space == null) {
+          log.warn("Should export space DATA but it is null");
+        } else {
+          prefix = "answer/space/" + category.getId() + "/";
+          exportTasks.add(new SpaceMetadataExportTask(space, prefix));
+        }
       }
     }
   }
