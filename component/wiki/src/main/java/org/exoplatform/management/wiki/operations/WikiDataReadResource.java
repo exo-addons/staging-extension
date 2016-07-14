@@ -51,6 +51,7 @@ public class WikiDataReadResource extends AbstractOperationHandler {
     MOWService mowService = operationContext.getRuntimeContext().getRuntimeComponent(MOWService.class);
     for (WikiImpl wiki : mowService.getWikiStore().getWikiContainer(wikiType).getAllWikis()) {
       String wikiOwner = wiki.getOwner();
+      if (wikiOwner == null) continue;
       if (wikiType.equals(WikiType.GROUP)) {
         Space space = spaceService.getSpaceByGroupId(wikiOwner);
         if (space != null) {
