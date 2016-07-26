@@ -7,8 +7,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,6 +18,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.poi.openxml4j.util.ZipInputStreamZipEntrySource;
 import org.apache.poi.util.IOUtils;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
@@ -71,6 +74,7 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
       OutputStream fos = new FileOutputStream(tempFile);
       IOUtils.copy(attachmentInputStream, fos);
       fos.close();
+      attachmentInputStream.close();
 
       // Start by importing all groups
       Set<String> newlyCreatedGroups = importGroups(tempFile, replaceExisting);
@@ -101,10 +105,11 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     String defaultWorkspace = manageableRepository.getConfiguration().getDefaultWorkspaceName();
 
     ZipEntry entry = null;
-    ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
+    ZipInputStreamZipEntrySource zin_entry = new ZipInputStreamZipEntrySource(new ZipInputStream(new FileInputStream(tempFile)));
+    int count = 0;
     try {
-      while ((entry = zin.getNextEntry()) != null) {
-        try {
+      Enumeration<? extends ZipEntry> entries = zin_entry.getEntries();
+      while ((entry = entries.nextElement()) != null) {
           String filePath = entry.getName();
 
           if (!filePath.startsWith(GROUPS_PARENT_PATH) || !filePath.contains(JCRNodeExportTask.JCR_DATA_SEPARATOR)) {
@@ -119,18 +124,14 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
           String nodePath = extractParam(filePath, 2);
           boolean replaceExistingContent = replaceExisting || newlyCreatedGroups.contains(groupId);
           if (replaceExistingContent) {
-            importNode(nodePath, defaultWorkspace, zin, null, false);
+            importNode(nodePath, defaultWorkspace, zin_entry.getInputStream(entry), null, false);
+            count++;
           }
-        } finally {
-          try {
-            zin.closeEntry();
-          } catch (Exception e) {
-            // Already closed, expected
-          }
-        }
       }
+    } catch (NoSuchElementException e) {
+      log.info(count + " files have been processed.");
     } finally {
-      zin.close();
+      zin_entry.close();
     }
   }
 
