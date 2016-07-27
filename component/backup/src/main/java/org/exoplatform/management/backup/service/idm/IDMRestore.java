@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import javax.sql.DataSource;
 
@@ -291,6 +293,7 @@ public class IDMRestore {
     ZipObjectReader contentReader = null;
     ZipObjectReader contentLenReader = null;
 
+    Statement stmt = null;
     PreparedStatement insertNode = null;
     ResultSet tableMetaData = null;
 
@@ -329,6 +332,16 @@ public class IDMRestore {
       for (int i = 0; i < targetColumnCount; i++) {
         names.append(columnName.get(i)).append(i == targetColumnCount - 1 ? "" : ",");
         parameters.append("?").append(i == targetColumnCount - 1 ? "" : ",");
+      }
+
+      stmt = jdbcConn.createStatement();
+      // Specific for 'Microsoft SQL Server'
+      if (jdbcConn.getMetaData().getDatabaseProductName().matches(".*((?i)microsoft).*") &&
+          stmt.executeQuery("SELECT name FROM sys.columns WHERE object_id = OBJECT_ID('" + tableName + "', 'U') AND is_identity = 'true'").next())
+        stmt.execute("SET IDENTITY_INSERT " + tableName + " ON");
+      else {
+        stmt.close();
+        stmt = null;
       }
 
       int batchSize = 0;
@@ -430,6 +443,11 @@ public class IDMRestore {
         contentLenReader.close();
       }
 
+      if (stmt != null) {
+    	  stmt.execute("SET IDENTITY_INSERT " + tableName + " OFF");
+    	  stmt.close();
+      }
+      
       if (insertNode != null) {
         insertNode.close();
       }
