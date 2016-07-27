@@ -207,8 +207,51 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     while (nodeIterator.hasNext()) {
       Node node = nodeIterator.nextNode();
       exportNode(workspace, node.getParent(), excludePaths, exportVersionHistory, exportTasks, node, metaData, activitiesId, exportOnlyMetadata);
+
+
+      while(!node.getParent().getName().equals("")) {
+        try {
+          exportParentsMetadata(node.getParent(), metaData);
+          node = node.getParent();
+        } catch (Exception e) {
+          e.printStackTrace();
+          return exportTasks;
+        }
+      }
+
     }
     return exportTasks;
+  }
+
+  private void exportParentsMetadata(Node parentNode, SiteMetaData metaData) throws Exception {
+    String path = parentNode.getPath();
+    NodeMetadata nodeMetadata = new NodeMetadata();
+    metaData.getNodesMetadata().put(path, nodeMetadata);
+    nodeMetadata.setPath(path);
+    if (parentNode.hasProperty("exo:title")) {
+      nodeMetadata.setTitle(parentNode.getProperty("exo:title").getString());
+    } else if (parentNode.hasProperty("exo:name")) {
+      nodeMetadata.setTitle(parentNode.getProperty("exo:name").getString());
+    } else {
+      nodeMetadata.setTitle(parentNode.getName());
+    }
+    if (parentNode.hasProperty("exo:lastModifier")) {
+      nodeMetadata.setLastModifier(parentNode.getProperty("exo:lastModifier").getString());
+    }
+    if (parentNode.hasProperty("publication:currentState")) {
+      nodeMetadata.setPublished(parentNode.getProperty("publication:currentState").getString().equals("published"));
+    }
+    if (parentNode.hasProperty("publication:liveDate")) {
+      nodeMetadata.setLiveDate(parentNode.getProperty("publication:liveDate").getDate());
+    }
+    if (parentNode.hasProperty("exo:permissions")) {
+      Value[] permissions = parentNode.getProperty("exo:permissions").getValues();
+      String[] permissionsString = new String[permissions.length];
+      for (int i = 0; i < permissions.length; i++) {
+        permissionsString[i] = permissions[i].getString();
+      }
+      nodeMetadata.setPermissions(permissionsString);
+    }
   }
 
   /**
@@ -275,7 +318,6 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
   /**
    * Export all sub-nodes of the given node
    * 
-   * @param repositoryService
    * @param workspace
    * @param parentNode
    * @param excludedNodes
