@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-
+import org.exoplatform.container.ExoContainer;
+import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.portal.config.model.NavigationFragment;
 import org.exoplatform.portal.config.model.PageNavigation;
 import org.exoplatform.portal.mop.SiteKey;
@@ -15,6 +16,8 @@ import org.exoplatform.portal.mop.navigation.NavigationContext;
 import org.exoplatform.portal.mop.navigation.NavigationService;
 import org.exoplatform.portal.mop.navigation.NavigationState;
 import org.exoplatform.portal.pom.config.Utils;
+import org.exoplatform.services.cache.CacheService;
+import org.exoplatform.services.cache.ExoCache;
 
 public class NavigationImporter {
 
@@ -107,6 +110,10 @@ public class NavigationImporter {
 
           //
           fragmentImporter.perform();
+          ExoContainer container = ExoContainerContext.getCurrentContainer();
+          CacheService cacheService = (CacheService) container.getComponentInstanceOfType(CacheService.class);
+          ExoCache cache = cacheService.getCacheInstance(NavigationService.class.getSimpleName());
+          cache.clearCache();
         }
       }
     }
