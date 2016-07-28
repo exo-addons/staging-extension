@@ -20,6 +20,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  */
 public class JCRNodeExportTask implements ExportTask {
   public static final String JCR_DATA_SEPARATOR = "JCR_EXP_DATA";
+  public static final String JCR_OPTIONAL_DATA_SEPARATOR = "JCR_OPTIONAL_DATA";
 
   private static final Log log = ExoLogger.getLogger(JCRNodeExportTask.class);
 
@@ -30,8 +31,15 @@ public class JCRNodeExportTask implements ExportTask {
   private final boolean recurse;
 
   public JCRNodeExportTask(RepositoryService repositoryService, String workspace, String absolutePath, String entryPath, boolean recurse, boolean isPrefix) {
+    this(repositoryService, workspace, absolutePath, entryPath, recurse, isPrefix, false);
+  }
+
+  public JCRNodeExportTask(RepositoryService repositoryService, String workspace, String absolutePath, String entryPath, boolean recurse, boolean isPrefix, boolean optional) {
     this.repositoryService = repositoryService;
     this.workspace = workspace;
+    if(optional) {
+      entryPath += "/" + JCR_OPTIONAL_DATA_SEPARATOR;
+    }
     if (isPrefix) {
       this.entryPath = entryPath + "/" + JCR_DATA_SEPARATOR + absolutePath + ".xml";
     } else {

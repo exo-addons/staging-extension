@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
+
 import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.NodeIterator;
@@ -12,6 +13,7 @@ import javax.jcr.Session;
 import javax.jcr.Value;
 import javax.jcr.nodetype.NodeType;
 import javax.transaction.UserTransaction;
+
 import org.exoplatform.commons.utils.ActivityTypeUtils;
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.common.FileEntry;
@@ -21,8 +23,11 @@ import org.exoplatform.services.transaction.TransactionService;
 
 public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {
 
-
   protected final boolean importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
+    return importNode(fileEntry, workspace, isCleanPublication, true);
+  }
+
+  protected final boolean importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication, boolean replaceExisting) throws Exception {
     File xmlFile = fileEntry.getFile();
     if (xmlFile == null || !xmlFile.exists()) {
       log.warn("Cannot import file" + xmlFile);
@@ -30,7 +35,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
     FileInputStream fis = new FileInputStream(xmlFile);
     try {
-      return importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication);
+      return importNode(fileEntry.getNodePath(), workspace, fis, fileEntry.getHistoryFile(), isCleanPublication, replaceExisting);
     } finally {
       if (fis != null) {
         fis.close();
@@ -41,7 +46,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
-  protected final boolean importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
+  protected final boolean importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication, boolean replaceExisting) throws Exception {
     String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
     parentNodePath = parentNodePath.replaceAll("//", "/");
 
@@ -53,8 +58,14 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     try {
       session = getSession(workspace);
       if (session.itemExists(nodePath) && session.getItem(nodePath) instanceof Node) {
+        if(!replaceExisting) {
+          log.info("Ignore existing node '{}'", nodePath);
+          transaction.commit();
+          return true;
+        }
+
         // Delete old node
-        log.info("Deleting the node " + workspace + ":" + nodePath);
+        log.info("Delete node  '{}' to be replaced by new one.", nodePath);
 
         Node oldNode = (Node) session.getItem(nodePath);
         if (oldNode.isNodeType("exo:activityInfo") && activityManager != null) {

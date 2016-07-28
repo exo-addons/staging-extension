@@ -15,4 +15,7 @@ public interface FileImportOperationInterface {
   String extractIdFromPath(String path);
 
   String getNodePath(String filePath);
+
+  boolean isNodeOptional(String filePath);
+
 }

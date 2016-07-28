@@ -6,6 +6,7 @@ public class FileEntry implements Comparable<FileEntry> {
   String nodePath;
   File file;
   File historyFile;
+  boolean optional;
 
   public FileEntry(String nodePath, File file) {
     super();
@@ -35,6 +36,14 @@ public class FileEntry implements Comparable<FileEntry> {
 
   public void setHistoryFile(File historyFile) {
     this.historyFile = historyFile;
+  }
+
+  public boolean isOptional() {
+    return optional;
+  }
+  
+  public void setOptional(boolean optional) {
+    this.optional = optional;
   }
 
   @Override

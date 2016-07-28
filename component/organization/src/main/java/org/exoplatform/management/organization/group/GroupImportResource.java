@@ -121,7 +121,7 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
           String nodePath = extractParam(filePath, 2);
           boolean replaceExistingContent = replaceExisting || newlyCreatedGroups.contains(groupId);
           if (replaceExistingContent) {
-            importNode(nodePath, defaultWorkspace, zin, null, false);
+            importNode(nodePath, defaultWorkspace, zin, null, false, true);
           }
         } finally {
           try {

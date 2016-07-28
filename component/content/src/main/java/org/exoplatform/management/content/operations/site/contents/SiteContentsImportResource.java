@@ -114,8 +114,18 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
 
           try {
             if (fileEntries != null) {
+              // Import parent folders if not exists first
               for (FileEntry fileEntry : fileEntries) {
-                errors |= !importNode(fileEntry, workspace, isCleanPublication);
+                if(fileEntry.isOptional()) {
+                  errors |= !importNode(fileEntry, workspace, false, false);
+                }
+              }
+
+              // Import contents
+              for (FileEntry fileEntry : fileEntries) {
+                if(!fileEntry.isOptional()) {
+                  errors |= !importNode(fileEntry, workspace, isCleanPublication);
+                }
               }
             }
             log.info("Content import has been finished");

@@ -131,7 +131,7 @@ public class UserImportResource extends AbstractJCRImportOperationHandler {
           String nodePath = extractParam(filePath, 2);
           boolean replaceExistingContent = replaceExisting || newlyCreatedUsers.contains(username);
           if (replaceExistingContent) {
-            importNode(nodePath, defaultWorkspace, zin, null, false);
+            importNode(nodePath, defaultWorkspace, zin, null, false, true);
           }
         } finally {
           try {

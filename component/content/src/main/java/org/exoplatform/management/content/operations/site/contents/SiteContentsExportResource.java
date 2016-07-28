@@ -2,8 +2,10 @@ package org.exoplatform.management.content.operations.site.contents;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.jcr.Node;
@@ -203,12 +205,35 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     Session session = getSession(workspace);
 
     Query query = session.getWorkspace().getQueryManager().createQuery(jcrQuery, Query.SQL);
+    Map<String, Node> parentNodesMap = new HashMap<String, Node>();
+
     NodeIterator nodeIterator = query.execute().getNodes();
     while (nodeIterator.hasNext()) {
       Node node = nodeIterator.nextNode();
+      parentNodesMap.put(node.getPath(), node.getParent());
       exportNode(workspace, node.getParent(), excludePaths, exportVersionHistory, exportTasks, node, metaData, activitiesId, exportOnlyMetadata);
     }
+
+    if (!exportOnlyMetadata) {
+      Set<Node> parentNodes = new HashSet<Node>();
+      for (Node node : parentNodesMap.values()) {
+        addNodesRecursively(node, parentNodes);
+      }
+      for (Node node : parentNodes) {
+        String prefix = SiteUtil.getSiteContentsBasePath(metaData.getOptions().get(SiteMetaData.SITE_NAME));
+        JCRNodeExportTask parentFolderExportTask = new JCRNodeExportTask(repositoryService, workspace, node.getPath(), prefix, false, true, true);
+        exportTasks.add(parentFolderExportTask);
+      }
+    }
     return exportTasks;
+  }
+
+  private void addNodesRecursively(Node node, Set<Node> parentNodePaths) throws RepositoryException {
+    if (node.getPath().equals("/")) {
+      return;
+    }
+    parentNodePaths.add(node);
+    addNodesRecursively(node.getParent(), parentNodePaths);
   }
 
   /**

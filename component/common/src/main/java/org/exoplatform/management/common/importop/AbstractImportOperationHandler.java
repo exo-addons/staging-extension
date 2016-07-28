@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.SpaceMetaData;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
@@ -457,6 +458,10 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return file;
   }
 
+  public boolean isNodeOptional(String filePath) {
+    return filePath.contains(JCRNodeExportTask.JCR_OPTIONAL_DATA_SEPARATOR);
+  }
+
   public final static FileEntry getAndRemoveFileByPath(List<FileEntry> fileEntries, String nodePath) {
     Iterator<FileEntry> iterator = fileEntries.iterator();
     while (iterator.hasNext()) {
@@ -559,7 +564,14 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         if (nodePath == null) {
           continue;
         }
-        fileEntries.add(new FileEntry(nodePath, file));
+
+        // Treat special files
+        boolean isOptional = ((FileImportOperationInterface) this).isNodeOptional(filePath);
+
+        FileEntry fileEntry = new FileEntry(nodePath, file);
+        fileEntry.setOptional(isOptional);
+
+        fileEntries.add(fileEntry);
       }
     } finally {
       if (zis != null) {
