@@ -18,16 +18,15 @@ package org.exoplatform.management.answer.operations;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.List;
+import javax.jcr.Node;
+import javax.jcr.Session;
 
-import org.chromattic.common.collection.Collections;
-import org.exoplatform.faq.service.Answer;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.faq.service.Category;
-import org.exoplatform.faq.service.Question;
+import org.gatein.common.logging.Logger;
+import org.gatein.common.logging.LoggerFactory;
+import org.exoplatform.faq.service.FAQService;
 import org.gatein.management.api.operation.model.ExportTask;
-
-import com.thoughtworks.xstream.XStream;
 
 /**
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
@@ -35,15 +34,14 @@ import com.thoughtworks.xstream.XStream;
  */
 public class AnswerExportTask implements ExportTask {
   public static final String FILENAME = "/category.xml";
+  final private static Logger log      = LoggerFactory.getLogger(AnswerDataImportResource.class);
 
   private final String type;
   private final Category category;
-  private final List<Question> questions;
 
-  public AnswerExportTask(String type, Category category, List<Question> questions) {
+  public AnswerExportTask(String type, Category category) {
     this.category = category;
     this.type = type;
-    this.questions = questions;
   }
 
   @Override
@@ -57,19 +55,13 @@ public class AnswerExportTask implements ExportTask {
 
   @Override
   public void export(OutputStream outputStream) throws IOException {
-    XStream xStream = new XStream();
-    OutputStreamWriter writer = new OutputStreamWriter(outputStream, "UTF-8");
-
-    for (Question question : questions) {
-      for (Answer answer : question.getAnswers()) {
-        if (answer.getLanguage() == null) {
-          answer.setLanguage(question.getLanguage());
-        }
-      }
+    FAQService faqService = (FAQService) PortalContainer.getInstance().getComponentInstanceOfType(FAQService.class);
+    try {
+      Node categoryNode = faqService.getCategoryNodeById(category.getId());
+      Session session = categoryNode.getSession();
+      session.exportSystemView(categoryNode.getPath(), outputStream, false, false);
+    } catch (Exception e) {
+      log.error("Fail to export data:", e);
     }
-
-    List<Object> objects = Collections.list(category, questions);
-    xStream.toXML(objects, writer);
-    writer.flush();
   }
 }

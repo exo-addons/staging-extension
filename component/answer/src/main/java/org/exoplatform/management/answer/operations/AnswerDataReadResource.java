@@ -59,26 +59,33 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
     try {
       List<Category> categories = faqService.getAllCategories();
       for (Category category : categories) {
-        if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
-          continue;
-        }
-        String name = category.getName();
-        if (isSpaceType) {
-          String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
-          Space space = spaceService.getSpaceByGroupId(spaceGroupId);
-          if (space == null) {
+        if (isParent(category)) {
+          if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
             continue;
           }
-          name = space.getDisplayName();
+          String name = category.getName();
+          if (isSpaceType) {
+            String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
+            Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+            if (space == null) {
+              continue;
+            }
+            name = space.getDisplayName();
+          }
+          children.add(name);
         }
-        children.add(name);
-      }
-      if (!isSpaceType) {
-        children.add(AnswerExtension.ROOT_CATEGORY);
       }
     } catch (Exception e) {
       log.error("Error while listing FAQ categories.", e);
     }
     resultHandler.completed(new ReadResourceModel("All FAQ:", children));
+  }
+
+  public boolean isParent(Category category) {
+    String isParent = category.getPath().replace("/" + category.getId(), "");
+    if (isParent.equals("categories")) {
+      return true;
+    }
+    return false;
   }
 }

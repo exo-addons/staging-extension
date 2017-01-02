@@ -1,8 +1,10 @@
 package org.exoplatform.management.answer.operations;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -76,12 +78,12 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
 
       for (String categoryId : contentsByOwner.keySet()) {
         List<FileEntry> fileEntries = contentsByOwner.get(categoryId);
-        FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
-        FileEntry activitiesFile = getAndRemoveFileByPath(fileEntries, ActivitiesExportTask.FILENAME);
+        FileEntry spaceMetadataFile = getAndRemoveFileByPathIfAnswer(fileEntries, categoryId + "/" + SpaceMetadataExportTask.FILENAME);
+        FileEntry activitiesFile = getAndRemoveFileByPathIfAnswer(fileEntries, categoryId + "/" + ActivitiesExportTask.FILENAME);
+        FileEntry categoryMetadata = getAndRemoveFileByPathIfAnswer(fileEntries, categoryId + CategoryMetaDataExportTask.FILENAME);
+        FileEntry categoryContent = getAndRemoveFileByPathIfAnswer(fileEntries, categoryId + AnswerExportTask.FILENAME);
 
-        for (FileEntry fileEntry : fileEntries) {
-          importAnswerData(fileEntry.getFile(), spaceMetadataFile == null ? null : spaceMetadataFile.getFile(), replaceExisting, createSpace);
-        }
+        importAnswerData(categoryContent.getFile(), spaceMetadataFile == null ? null : spaceMetadataFile.getFile(), categoryMetadata.getFile(), replaceExisting, createSpace);
 
         boolean isSpaceFAQ = categoryId.contains(Utils.CATE_SPACE_ID_PREFIX);
         if (isSpaceFAQ) {
@@ -111,11 +113,10 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
   }
 
   @SuppressWarnings("unchecked")
-  private void importAnswerData(File file, File spaceMetadataFile, boolean replaceExisting, boolean createSpace) throws Exception {
-    List<Object> objects = (List<Object>) deserializeObject(file, null, null);
-    Category category = (Category) objects.get(0);
+  private void importAnswerData(File file, File spaceMetadataFile, File CategoryMetadataFile, boolean replaceExisting, boolean createSpace) throws Exception {
+    InputStream inputStream = new FileInputStream(file);
+    Category category = deserializeObject(CategoryMetadataFile, null, null);
     String parentId = category.getPath().replace("/" + category.getId(), "");
-    List<Question> questions = (List<Question>) objects.get(1);
     Category parentCategory = faqService.getCategoryById(parentId);
     if (parentCategory == null) {
       log.warn("Parent Answer Category of Category '" + category.getName() + "' doesn't exist, ignore import operation for this category.");
@@ -131,7 +132,7 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
 
     Category toReplaceCategory = faqService.getCategoryById(category.getId());
     if (toReplaceCategory != null) {
-      if (replaceExisting) {
+      if (replaceExisting && category.getName() != AnswerExtension.ROOT_CATEGORY) {
         log.info("Overwrite existing FAQ Category: '" + toReplaceCategory.getName() + "'  (replace-existing=true)");
         deleteActivities(category.getId(), null);
         faqService.removeCategory(category.getPath());
@@ -145,30 +146,13 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
         return;
       }
     }
-
-    faqService.saveCategory(parentId, category, true);
+    // Import JCR data
+    faqService.importData(parentId, inputStream, false);
 
     // FIXME Exception swallowed FORUM-971, so we have to make test
     if (faqService.getCategoryById(category.getId()) == null) {
       throw new RuntimeException("Category isn't imported");
     }
-
-    for (Question question : questions) {
-      faqService.saveQuestion(question, true, AnswerExtension.EMPTY_FAQ_SETTIGNS);
-      if (question.getAnswers() != null) {
-        for (Answer answer : question.getAnswers()) {
-          answer.setNew(true);
-          faqService.saveAnswer(question.getPath(), answer, true);
-        }
-      }
-      if (question.getComments() != null) {
-        for (Comment comment : question.getComments()) {
-          comment.setNew(true);
-          faqService.saveComment(question.getPath(), comment, question.getLanguage());
-        }
-      }
-    }
-    deleteActivities(category.getId(), questions);
   }
 
   private void deleteActivities(String categoryId, List<Question> questions) throws Exception {
@@ -188,18 +172,11 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
 
   @Override
   public boolean isUnKnownFileFormat(String filePath) {
-    return !filePath.endsWith(AnswerExportTask.FILENAME) && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.endsWith(ActivitiesExportTask.FILENAME);
+    return !filePath.endsWith(AnswerExportTask.FILENAME) && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.endsWith(ActivitiesExportTask.FILENAME) && !filePath.endsWith(CategoryMetaDataExportTask.FILENAME);
   }
 
   @Override
   public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
-    if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
-      fileEntries.add(new FileEntry(SpaceMetadataExportTask.FILENAME, file));
-      return true;
-    } else if (filePath.endsWith(ActivitiesExportTask.FILENAME)) {
-      fileEntries.add(new FileEntry(ActivitiesExportTask.FILENAME, file));
-      return true;
-    }
     return false;
   }
 
@@ -274,4 +251,24 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
     return false;
   }
 
+  public final static FileEntry getAndRemoveFileByPathIfAnswer(List<FileEntry> fileEntries, String nodePath) {
+    Iterator<FileEntry> iterator = fileEntries.iterator();
+    while (iterator.hasNext()) {
+      FileEntry fileEntry = (FileEntry) iterator.next();
+      String tmpNodePath = fileEntry.getNodePath();
+      String correctNodePath = "";
+      if (tmpNodePath.contains(AnswerExtension.PUBLIC_FAQ_TYPE)) {
+        correctNodePath = tmpNodePath.replace("answer/" + AnswerExtension.PUBLIC_FAQ_TYPE + "/", "");
+      } else if (tmpNodePath.contains(AnswerExtension.FAQ_TEMPLATE)) {
+        correctNodePath = tmpNodePath.replace("answer/" + AnswerExtension.FAQ_TEMPLATE + "/", "");
+      } else if (tmpNodePath.contains(AnswerExtension.SPACE_FAQ_TYPE)) {
+        correctNodePath = tmpNodePath.replace("answer/" + AnswerExtension.SPACE_FAQ_TYPE + "/", "");
+      }
+      if (correctNodePath.equals(nodePath)) {
+        iterator.remove();
+        return fileEntry;
+      }
+    }
+    return null;
+  }
 }
