@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -43,10 +40,16 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.spi.ExtensionContext;
 
 /**
+ * The Class MopManagementExtension.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class MopManagementExtension extends AbstractManagementExtension {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration registration = context.registerManagedComponent("site");
@@ -73,6 +76,11 @@ public class MopManagementExtension extends AbstractManagementExtension {
     navigationManagementRegistration(sites);
   }
 
+  /**
+   * Site layout management registration.
+   *
+   * @param sites the sites
+   */
   @SuppressWarnings("deprecation")
   private void siteLayoutManagementRegistration(ManagedResource.Registration sites) {
     // This allows us to filter based on path template site-layout.
@@ -82,6 +90,11 @@ public class MopManagementExtension extends AbstractManagementExtension {
     siteLayout.registerOperationHandler(OperationNames.EXPORT_RESOURCE, new SiteLayoutExportResource(), description("Exports site layout configuration xml as a zip file."));
   }
 
+  /**
+   * Page management registration.
+   *
+   * @param sites the sites
+   */
   @SuppressWarnings("deprecation")
   private void pageManagementRegistration(ManagedResource.Registration sites) {
     // Pages management resource registration
@@ -96,6 +109,11 @@ public class MopManagementExtension extends AbstractManagementExtension {
     pages.registerSubResource("{page-name}", description("Page resource representing an individual page of a site."));
   }
 
+  /**
+   * Navigation management registration.
+   *
+   * @param sites the sites
+   */
   @SuppressWarnings("deprecation")
   private void navigationManagementRegistration(ManagedResource.Registration sites) {
     // Navigation management resource registration

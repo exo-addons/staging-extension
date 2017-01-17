@@ -1,12 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.taxonomy;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
-import javax.jcr.Value;
-import javax.jcr.ValueFormatException;
 
 import org.exoplatform.ecm.webui.utils.Utils;
 import org.exoplatform.management.common.AbstractOperationHandler;
@@ -20,17 +30,34 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Value;
+import javax.jcr.ValueFormatException;
+
 /**
+ * The Class TaxonomyExportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class TaxonomyExportResource extends AbstractOperationHandler {
 
+  /** The Constant EXPORT_BASE_PATH. */
   private static final String EXPORT_BASE_PATH = "ecmadmin/taxonomy";
 
+  /** The taxonomy service. */
   private TaxonomyService taxonomyService;
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     PathAddress address = operationContext.getAddress();
@@ -54,6 +81,12 @@ public class TaxonomyExportResource extends AbstractOperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
+  /**
+   * Sets the data.
+   *
+   * @param node the node
+   * @return the taxonomy meta data
+   */
   private TaxonomyMetaData setData(Node node) {
     TaxonomyMetaData taxonomyTreeData = null;
     try {

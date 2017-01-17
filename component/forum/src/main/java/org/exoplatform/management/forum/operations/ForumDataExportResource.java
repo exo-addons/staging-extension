@@ -1,26 +1,22 @@
 /*
- * Copyright (C) 2003-2014 eXo Platform SAS.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.exoplatform.management.forum.operations;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.Session;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -55,27 +51,54 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.Session;
+
 /**
+ * The Class ForumDataExportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class ForumDataExportResource extends AbstractJCRExportOperationHandler implements ActivityExportOperationInterface {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(ForumDataExportResource.class);
 
+  /** The forum service. */
   private ForumService forumService;
+  
+  /** The poll service. */
   private PollService pollService;
+  
+  /** The data location. */
   private KSDataLocation dataLocation;
 
+  /** The is space forum type. */
   private boolean isSpaceForumType;
+  
+  /** The type. */
   private String type;
+  
+  /** The form id thread local. */
   private ThreadLocal<String> formIdThreadLocal = new ThreadLocal<String>();
 
+  /**
+   * Instantiates a new forum data export resource.
+   *
+   * @param isSpaceForumType the is space forum type
+   */
   public ForumDataExportResource(boolean isSpaceForumType) {
     this.isSpaceForumType = isSpaceForumType;
     this.type = isSpaceForumType ? ForumExtension.SPACE_FORUM_TYPE : ForumExtension.PUBLIC_FORUM_TYPE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
@@ -134,6 +157,9 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {
     if (params.length != 4) {
@@ -145,6 +171,16 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
     subNodesExportTask.add(exportTask);
   }
 
+  /**
+   * Export forum.
+   *
+   * @param exportTasks the export tasks
+   * @param workspace the workspace
+   * @param categoryHomePath the category home path
+   * @param categoryId the category id
+   * @param spacePrettyName the space pretty name
+   * @param exportSpaceMetadata the export space metadata
+   */
   private void exportForum(List<ExportTask> exportTasks, String workspace, String categoryHomePath, String categoryId, String spacePrettyName, boolean exportSpaceMetadata) {
     try {
       String forumId = (spacePrettyName == null ? "" : Utils.FORUM_SPACE_ID_PREFIX + spacePrettyName);
@@ -186,6 +222,9 @@ public class ForumDataExportResource extends AbstractJCRExportOperationHandler i
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isActivityValid(ExoSocialActivity activity) throws Exception {
     if (activity.isComment()) {

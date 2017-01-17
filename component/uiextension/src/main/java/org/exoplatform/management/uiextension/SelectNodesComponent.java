@@ -1,10 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.uiextension;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ResourceBundle;
 
 import org.exoplatform.commons.utils.LazyPageList;
 import org.exoplatform.commons.utils.ListAccessImpl;
@@ -29,7 +41,15 @@ import org.exoplatform.webui.form.UIFormSelectBox;
 import org.exoplatform.webui.form.UIFormStringInput;
 import org.exoplatform.webui.form.input.UICheckBoxInput;
 
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ResourceBundle;
+
 /**
+ * The Class SelectNodesComponent.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
@@ -41,37 +61,78 @@ import org.exoplatform.webui.form.input.UICheckBoxInput;
         @EventConfig(listeners = SelectNodesComponent.SelectAllActionListener.class), @EventConfig(listeners = SelectNodesComponent.DeleteAllActionListener.class),
         @EventConfig(listeners = SelectNodesComponent.DeleteActionListener.class) }) })
 public class SelectNodesComponent extends UIForm implements UIPopupComponent {
+  
+  /** The Constant LOG. */
   private static final Log LOG = ExoLogger.getLogger(SelectNodesComponent.class.getName());
 
+  /** The Constant CONTENT_STATE_FIELD_NAME. */
   public static final String CONTENT_STATE_FIELD_NAME = "contentState";
+  
+  /** The Constant FILTER_CONTENT_FIELD_NAME. */
   public static final String FILTER_CONTENT_FIELD_NAME = "filter";
+  
+  /** The Constant PUBLICATION_DATE_FIELD_NAME. */
   public static final String PUBLICATION_DATE_FIELD_NAME = "modifiedAfter";
+  
+  /** The Constant PUBLISHED_CONTENT_ONLY_FIELD_NAME. */
   public static final String PUBLISHED_CONTENT_ONLY_FIELD_NAME = "publishedContentOnly";
 
+  /** The comparison bean field. */
   public static String[] COMPARISON_BEAN_FIELD = { "title", "path", "published", "sourceModificationDate", "targetModificationDate", "stateLocalized" };
 
+  /** The comparison bean action. */
   public static String[] COMPARISON_BEAN_ACTION = { "Select" };
 
+  /** The selected comparison bean field. */
   public static String[] SELECTED_COMPARISON_BEAN_FIELD = { "title", "path", "actionLocalized" };
 
+  /** The selected comparison bean action. */
   public static String[] SELECTED_COMPARISON_BEAN_ACTION = { "Delete" };
 
+  /** The nodes grid. */
   private UIGrid nodesGrid;
+  
+  /** The selected nodes grid. */
   private UIGrid selectedNodesGrid;
+  
+  /** The filter field. */
   protected UIFormStringInput filterField;
+  
+  /** The state select box input. */
   protected UIFormSelectBox stateSelectBoxInput;
+  
+  /** The published check box input. */
   protected UICheckBoxInput publishedCheckBoxInput;
+  
+  /** The from date modified. */
   UIFormDateTimeInput fromDateModified = null;
+  
+  /** The push content popup component. */
   private PushContentPopupComponent pushContentPopupComponent;
 
+  /** The state string. */
   String stateString = null;
+  
+  /** The modified date filter. */
   Calendar modifiedDateFilter = null;
+  
+  /** The filter string. */
   String filterString = null;
+  
+  /** The published content only. */
   boolean publishedContentOnly = false;
 
+  /** The comparisons. */
   private List<NodeComparison> comparisons;
+  
+  /** The filtered comparison. */
   private List<NodeComparison> filteredComparison;
 
+  /**
+   * Instantiates a new select nodes component.
+   *
+   * @throws Exception the exception
+   */
   public SelectNodesComponent() throws Exception {
     ResourceBundle resourceBundle = WebuiRequestContext.getCurrentInstance().getApplicationResourceBundle();
 
@@ -109,6 +170,11 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     selectedNodesGrid.getUIPageIterator().setId("UISelectedNodesGridIterator");
   }
 
+  /**
+   * Inits the.
+   *
+   * @throws Exception the exception
+   */
   public void init() throws Exception {
     String fieldJavascriptAction = event("Filter", null).replace("javascript:", "");
     filterField.setHTMLAttribute("onblur", fieldJavascriptAction);
@@ -132,12 +198,20 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     publishedCheckBoxInput.setChecked(this.publishedContentOnly);
   }
 
+  /**
+   * Sets the comparisons.
+   *
+   * @param comparisons the new comparisons
+   */
   public void setComparisons(List<NodeComparison> comparisons) {
     this.comparisons = comparisons;
     filteredComparison = new ArrayList<NodeComparison>(comparisons);
     computeComparisons();
   }
 
+  /**
+   * Compute comparisons.
+   */
   public void computeComparisons() {
     List<NodeComparison> alreadySelectedNodes = pushContentPopupComponent.getSelectedNodes();
     filteredComparison.clear();
@@ -161,7 +235,21 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  /**
+   * The listener interface for receiving filterAction events.
+   * The class that is interested in processing a filterAction
+   * event implements this interface, and the object created
+   * with that class is registered with a component using the
+   * component's <code>addFilterActionListener</code> method. When
+   * the filterAction event occurs, that object's appropriate
+   * method is invoked.
+   *
+   */
   public static class FilterActionListener extends EventListener<SelectNodesComponent> {
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
@@ -171,7 +259,21 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  /**
+   * The listener interface for receiving selectAction events.
+   * The class that is interested in processing a selectAction
+   * event implements this interface, and the object created
+   * with that class is registered with a component using the
+   * component's <code>addSelectActionListener</code> method. When
+   * the selectAction event occurs, that object's appropriate
+   * method is invoked.
+   *
+   */
   public static class SelectActionListener extends EventListener<SelectNodesComponent> {
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
@@ -195,7 +297,21 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  /**
+   * The listener interface for receiving deleteAllAction events.
+   * The class that is interested in processing a deleteAllAction
+   * event implements this interface, and the object created
+   * with that class is registered with a component using the
+   * component's <code>addDeleteAllActionListener</code> method. When
+   * the deleteAllAction event occurs, that object's appropriate
+   * method is invoked.
+   *
+   */
   public static class DeleteAllActionListener extends EventListener<SelectNodesComponent> {
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
@@ -208,7 +324,21 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  /**
+   * The listener interface for receiving deleteAction events.
+   * The class that is interested in processing a deleteAction
+   * event implements this interface, and the object created
+   * with that class is registered with a component using the
+   * component's <code>addDeleteActionListener</code> method. When
+   * the deleteAction event occurs, that object's appropriate
+   * method is invoked.
+   *
+   */
   static public class DeleteActionListener extends EventListener<UIForm> {
+    
+    /**
+     * {@inheritDoc}
+     */
     public void execute(Event<UIForm> event) throws Exception {
       UIForm uiForm = event.getSource();
       PushContentPopupComponent pushContentPopupComponent = null;
@@ -249,7 +379,21 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  /**
+   * The listener interface for receiving selectAllAction events.
+   * The class that is interested in processing a selectAllAction
+   * event implements this interface, and the object created
+   * with that class is registered with a component using the
+   * component's <code>addSelectAllActionListener</code> method. When
+   * the selectAllAction event occurs, that object's appropriate
+   * method is invoked.
+   *
+   */
   public static class SelectAllActionListener extends EventListener<SelectNodesComponent> {
+    
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void execute(Event<SelectNodesComponent> event) throws Exception {
       SelectNodesComponent selectNodesComponent = event.getSource();
@@ -267,36 +411,78 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void activate() {}
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void deActivate() {}
 
+  /**
+   * Gets the selected nodes grid.
+   *
+   * @return the selected nodes grid
+   */
   public UIGrid getSelectedNodesGrid() {
     return selectedNodesGrid;
   }
 
+  /**
+   * Gets the nodes grid.
+   *
+   * @return the nodes grid
+   */
   public UIGrid getNodesGrid() {
     return nodesGrid;
   }
 
+  /**
+   * Gets the comparisons.
+   *
+   * @return the comparisons
+   */
   public List<NodeComparison> getComparisons() {
     return comparisons;
   }
 
+  /**
+   * Gets the filtered comparison.
+   *
+   * @return the filtered comparison
+   */
   public List<NodeComparison> getFilteredComparison() {
     return filteredComparison;
   }
 
+  /**
+   * Sets the push content popup component.
+   *
+   * @param pushContentPopupComponent the new push content popup component
+   */
   public void setPushContentPopupComponent(PushContentPopupComponent pushContentPopupComponent) {
     this.pushContentPopupComponent = pushContentPopupComponent;
   }
 
+  /**
+   * Gets the push content popup component.
+   *
+   * @return the push content popup component
+   */
   public PushContentPopupComponent getPushContentPopupComponent() {
     return pushContentPopupComponent;
   }
 
+  /**
+   * Check filter.
+   *
+   * @param nodeComparison the node comparison
+   * @return true, if successful
+   */
   private boolean checkFilter(NodeComparison nodeComparison) {
     boolean isMatch = filterString == null || filterString.isEmpty() || nodeComparison.getTitle().toLowerCase().contains(filterString.toLowerCase());
 
@@ -321,6 +507,12 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     return isMatch;
   }
 
+  /**
+   * Checks if is default entry.
+   *
+   * @param path the path
+   * @return true, if is default entry
+   */
   public boolean isDefaultEntry(String path) {
     for (NodeComparison comparison : pushContentPopupComponent.getDefaultSelection()) {
       if (path.equals(comparison.getPath())) {

@@ -1,25 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.portlet;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.inject.Inject;
 
 import juzu.Path;
 import juzu.Response;
@@ -47,47 +44,100 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.services.security.ConversationState;
 import org.gatein.management.api.ManagementService;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.inject.Inject;
+
+/**
+ * The Class StagingExtensionController.
+ */
 @SessionScoped
 public class StagingExtensionController {
+  
+  /** The log. */
   private static Log log = ExoLogger.getLogger(StagingExtensionController.class);
 
+  /** The Constant OPERATION_IMPORT_PREFIX. */
   public static final String OPERATION_IMPORT_PREFIX = "IMPORT";
+  
+  /** The Constant OPERATION_EXPORT_PREFIX. */
   public static final String OPERATION_EXPORT_PREFIX = "EXPORT";
+  
+  /** The Constant PARAM_PREFIX_OPTION. */
   public static final String PARAM_PREFIX_OPTION = "staging-option:";
 
+  /** The Constant IMPORT_ZIP_PATH_EXCEPTIONS. */
   public static final Map<String, String> IMPORT_ZIP_PATH_EXCEPTIONS = new HashMap<String, String>();
+  
+  /** The Constant IMPORT_PATH_EXCEPTIONS. */
   public static final Map<String, String> IMPORT_PATH_EXCEPTIONS = new HashMap<String, String>();
 
+  /** The file to import. */
   private FileItem fileToImport;
 
   // Don't use inject to not get the merge of all resource bundles
-//  @Inject
+/** The bundle. */
+  //  @Inject
   ResourceBundle bundle;
 
+  /** The staging service. */
   @Inject
   StagingService stagingService;
 
+  /** The synchronization service. */
   @Inject
   SynchronizationService synchronizationService;
 
+  /** The management service. */
   @Inject
   ManagementService managementService;
 
+  /** The selected resources tmpl. */
   @Inject
   @Path("selectedResources.gtmpl")
   Template selectedResourcesTmpl;
 
+  /** The index tmpl. */
   @Inject
   @Path("index.gtmpl")
   Template indexTmpl;
 
+  /** The bundle string. */
   private String bundleString;
 
+  /** The Constant resourceCategories. */
   private static final List<ResourceCategory> resourceCategories = new ArrayList<ResourceCategory>();
+  
+  /** The spaces category index. */
   private static int SPACES_CATEGORY_INDEX = -1;
+  
+  /** The forum category index. */
   private static int FORUM_CATEGORY_INDEX = -1;
+  
+  /** The calendar category index. */
   private static int CALENDAR_CATEGORY_INDEX = -1;
+  
+  /** The wiki category index. */
   private static int WIKI_CATEGORY_INDEX = -1;
+  
+  /** The count all. */
   private static int COUNT_ALL = 0;
 
   static {
@@ -244,6 +294,11 @@ public class StagingExtensionController {
     COUNT_ALL = resourceCategories.size();
   }
 
+  /**
+   * Index.
+   *
+   * @return the response. content
+   */
   @View
   public Response.Content index() {
     if (resourceCategories.size() == COUNT_ALL) {
@@ -265,6 +320,11 @@ public class StagingExtensionController {
     return indexTmpl.ok(Collections.singletonMap("isAdmin", isUserAdmin()));
   }
 
+  /**
+   * Gets the categories.
+   *
+   * @return the categories
+   */
   @Ajax
   @juzu.Resource
   public Response getCategories() {
@@ -294,6 +354,11 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Gets the bundle.
+   *
+   * @return the bundle
+   */
   @Ajax
   @juzu.Resource
   @juzu.MimeType.JSON
@@ -323,6 +388,12 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Gets the resources of category.
+   *
+   * @param path the path
+   * @return the resources of category
+   */
   @Ajax
   @juzu.Resource
   public Response getResourcesOfCategory(String path) {
@@ -347,6 +418,13 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Prepare import resources.
+   *
+   * @param file the file
+   * @return the response. content
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response.Content prepareImportResources(FileItem file) throws IOException {
@@ -398,6 +476,18 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Backup.
+   *
+   * @param backupDirectory the backup directory
+   * @param exportJCR the export JCR
+   * @param exportIDM the export IDM
+   * @param writeStrategy the write strategy
+   * @param displayMessageFor the display message for
+   * @param message the message
+   * @return the response
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response backup(String backupDirectory, String exportJCR, String exportIDM, String writeStrategy, String displayMessageFor, String message) throws IOException {
@@ -424,6 +514,13 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Restore.
+   *
+   * @param backupDirectory the backup directory
+   * @return the response
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response restore(String backupDirectory) throws IOException {
@@ -444,6 +541,15 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Export.
+   *
+   * @param resourceCategories the resource categories
+   * @param resources the resources
+   * @param options the options
+   * @return the response. content
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response.Content export(String[] resourceCategories, String[] resources, String[] options) throws IOException {
@@ -507,6 +613,12 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Import resources.
+   *
+   * @return the response. content
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response.Content importResources() throws IOException {
@@ -578,6 +690,11 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Gets the synchonization servers.
+   *
+   * @return the synchonization servers
+   */
   @Ajax
   @juzu.Resource
   @Route("/servers")
@@ -602,6 +719,18 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Test server connection.
+   *
+   * @param name the name
+   * @param host the host
+   * @param port the port
+   * @param username the username
+   * @param password the password
+   * @param ssl the ssl
+   * @return the response
+   * @throws Exception the exception
+   */
   @Ajax
   @juzu.Resource
   public Response testServerConnection(String name, String host, String port, String username, String password, String ssl) throws Exception {
@@ -617,6 +746,17 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Adds the synchonization server.
+   *
+   * @param name the name
+   * @param host the host
+   * @param port the port
+   * @param username the username
+   * @param password the password
+   * @param ssl the ssl
+   * @return the response
+   */
   @Ajax
   @juzu.Resource
   public Response addSynchonizationServer(String name, String host, String port, String username, String password, String ssl) {
@@ -635,6 +775,12 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Removes the synchonization server.
+   *
+   * @param id the id
+   * @return the response
+   */
   @Ajax
   @juzu.Resource
   public Response removeSynchonizationServer(String id) {
@@ -648,6 +794,20 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Synchronize.
+   *
+   * @param isSSLString the is SSL string
+   * @param host the host
+   * @param port the port
+   * @param username the username
+   * @param password the password
+   * @param resourceCategories the resource categories
+   * @param resources the resources
+   * @param options the options
+   * @return the response
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response synchronize(String isSSLString, String host, String port, String username, String password, String[] resourceCategories, String[] resources, String[] options) throws IOException {
@@ -711,6 +871,14 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Execute SQL.
+   *
+   * @param sql the sql
+   * @param sites the sites
+   * @return the response
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   @Ajax
   @juzu.Resource
   public Response executeSQL(String sql, String[] sites) throws IOException {
@@ -734,10 +902,21 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Gets the resource bundle.
+   *
+   * @param locale the locale
+   * @return the resource bundle
+   */
   private ResourceBundle getResourceBundle(Locale locale) {
     return bundle = ResourceBundle.getBundle("locale.portlet.staging", locale, PortalContainer.getInstance().getPortalClassLoader());
   }
 
+  /**
+   * Gets the resource bundle.
+   *
+   * @return the resource bundle
+   */
   private ResourceBundle getResourceBundle() {
     if(bundle == null) {
       bundle = ResourceBundle.getBundle("locale.portlet.staging", PortalRequestContext.getCurrentInstance().getLocale(), PortalContainer.getInstance().getPortalClassLoader());
@@ -745,6 +924,11 @@ public class StagingExtensionController {
     return bundle;
   }
 
+  /**
+   * Checks if is wiki activated.
+   *
+   * @return true, if is wiki activated
+   */
   private boolean isWikiActivated() {
     try {
       return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.wiki.service.WikiService")) != null;
@@ -753,6 +937,11 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Checks if is calendar activated.
+   *
+   * @return true, if is calendar activated
+   */
   private boolean isCalendarActivated() {
     try {
       return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.calendar.service.CalendarService")) != null;
@@ -761,6 +950,11 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Checks if is forum activated.
+   *
+   * @return true, if is forum activated
+   */
   private boolean isForumActivated() {
     try {
       return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.forum.service.ForumService")) != null;
@@ -769,6 +963,11 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Checks if is social activated.
+   *
+   * @return true, if is social activated
+   */
   private boolean isSocialActivated() {
     try {
       return PortalContainer.getInstance().getComponentInstanceOfType(Class.forName("org.exoplatform.social.core.space.spi.SpaceService")) != null;
@@ -777,6 +976,13 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Parent already added in list.
+   *
+   * @param foundResources the found resources
+   * @param address the address
+   * @return true, if successful
+   */
   private boolean parentAlreadyAddedInList(Set<String> foundResources, String address) {
     for (String path : foundResources) {
       if (address.startsWith(path)) {
@@ -786,6 +992,12 @@ public class StagingExtensionController {
     return false;
   }
 
+  /**
+   * To string.
+   *
+   * @param foundResources the found resources
+   * @return the char sequence
+   */
   private CharSequence toString(Set<String> foundResources) {
     StringBuilder result = new StringBuilder();
     for (String string : foundResources) {
@@ -794,6 +1006,12 @@ public class StagingExtensionController {
     return result;
   }
 
+  /**
+   * Transform special path.
+   *
+   * @param resourcePath the resource path
+   * @return the string
+   */
   private String transformSpecialPath(String resourcePath) {
     Set<String> keys = IMPORT_ZIP_PATH_EXCEPTIONS.keySet();
     KEYS: for (String key : keys) {
@@ -805,6 +1023,11 @@ public class StagingExtensionController {
     return resourcePath;
   }
 
+  /**
+   * Checks if is user admin.
+   *
+   * @return true, if is user admin
+   */
   private boolean isUserAdmin() {
     try {
       return ConversationState.getCurrent().getIdentity().getRoles().contains("administrators");
@@ -814,6 +1037,11 @@ public class StagingExtensionController {
     }
   }
 
+  /**
+   * Gets the current user.
+   *
+   * @return the current user
+   */
   private String getCurrentUser() {
     try {
       return ConversationState.getCurrent().getIdentity().getUserId();

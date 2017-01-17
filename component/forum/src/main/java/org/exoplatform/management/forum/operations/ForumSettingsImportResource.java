@@ -1,10 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.forum.operations;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
 
 import org.exoplatform.forum.common.jcr.KSDataLocation;
 import org.exoplatform.forum.service.ForumService;
@@ -21,15 +33,32 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * The Class ForumSettingsImportResource.
+ */
 public class ForumSettingsImportResource extends AbstractJCRImportOperationHandler implements FileImportOperationInterface {
 
+  /** The Constant FORUM_SETTINGS_LABEL. */
   private static final String FORUM_SETTINGS_LABEL = "FORUM_SETTINGS";
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(ForumSettingsImportResource.class);
 
+  /** The data location. */
   private KSDataLocation dataLocation;
+  
+  /** The forum service. */
   private ForumService forumService;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
@@ -83,11 +112,17 @@ public class ForumSettingsImportResource extends AbstractJCRImportOperationHandl
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getManagedFilesPrefix() {
     return "forum/settings/";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(ForumSettingsExportResource.SYSTEM_ADMINISTRATION) && !filePath.endsWith(ForumSettingsExportResource.BANNED_IP)
@@ -95,16 +130,25 @@ public class ForumSettingsImportResource extends AbstractJCRImportOperationHandl
         && !filePath.endsWith(ForumSettingsExportResource.TAGS);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String extractIdFromPath(String path) {
     return FORUM_SETTINGS_LABEL;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getNodePath(String filePath) {
     return filePath;

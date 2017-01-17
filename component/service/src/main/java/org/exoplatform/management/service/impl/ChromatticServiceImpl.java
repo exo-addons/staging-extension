@@ -1,22 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.service.impl;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.KeyStore;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 import org.chromattic.api.Chromattic;
 import org.chromattic.api.ChromatticBuilder;
@@ -39,15 +39,38 @@ import org.exoplatform.web.security.security.TokenServiceInitializationException
 import org.gatein.common.io.IOTools;
 import org.picocontainer.Startable;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.KeyStore;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 /**
+ * The Class ChromatticServiceImpl.
+ *
  * @author Thomas Delhoménie
  */
 public class ChromatticServiceImpl implements ChromatticService, Startable {
 
+  /** The Constant EXO_PRIVILEGEABLE_MIXIN. */
   private static final String EXO_PRIVILEGEABLE_MIXIN = "exo:privilegeable";
 
+  /** The Constant LOG. */
   private static final Log LOG = ExoLogger.getLogger(ChromatticServiceImpl.class);
 
+  /** The default permissions. */
   private static Map<String, String[]> DEFAULT_PERMISSIONS = new HashMap<String, String[]>();
   static {
     try {
@@ -59,21 +82,36 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     }
   }
 
+  /** The Constant STAGING_SERVERS_ROOT_PATH. */
   public final static String STAGING_SERVERS_ROOT_PATH = "/exo:applications/staging/servers";
 
+  /** The workspace name. */
   private String workspaceName = null;
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
 
+  /** The chromattic. */
   Chromattic chromattic;
 
+  /** The codec. */
   private AbstractCodec codec;
 
+  /**
+   * Instantiates a new chromattic service impl.
+   *
+   * @param chromatticManager the chromattic manager
+   * @param repositoryService the repository service
+   */
   public ChromatticServiceImpl(ChromatticManager chromatticManager, RepositoryService repositoryService) {
     // Nothing to do with chromatticManager, it's only to ensure that
     // ChromatticManager is started before this service
     this.repositoryService = repositoryService;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void start() {
     try {
@@ -100,6 +138,9 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<TargetServer> getSynchonizationServers() {
     List<TargetServer> targetServers = new ArrayList<TargetServer>();
@@ -126,6 +167,9 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     return targetServers;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public TargetServer getServerByName(String name) {
     TargetServer targetServer = null;
@@ -159,6 +203,9 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     return targetServer;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void addSynchonizationServer(TargetServer targetServer) {
     ChromatticSession session = null;
@@ -198,6 +245,9 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void removeSynchonizationServer(TargetServer targetServer) {
     ChromatticSession session = null;
@@ -217,10 +267,21 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     }
   }
 
+  /**
+   * Open session.
+   *
+   * @return the chromattic session
+   */
   private ChromatticSession openSession() {
     return chromattic.openSession(workspaceName);
   }
 
+  /**
+   * Sets the permissions.
+   *
+   * @param jcrPath the jcr path
+   * @param permissions the permissions
+   */
   public void setPermissions(String jcrPath, Map<String, String[]> permissions) {
     Session session = null;
     try {
@@ -243,9 +304,17 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void stop() {}
 
+  /**
+   * Inits the codec.
+   *
+   * @throws Exception the exception
+   */
   private void initCodec() throws Exception {
     String builderType = PropertyManager.getProperty("gatein.codec.builderclass");
     Map<String, String> config = new HashMap<String, String>();
@@ -318,6 +387,12 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     }
   }
 
+  /**
+   * Decode password.
+   *
+   * @param password the password
+   * @return the string
+   */
   private String decodePassword(String password) {
     if (codec != null) {
       try {
@@ -329,6 +404,12 @@ public class ChromatticServiceImpl implements ChromatticService, Startable {
     return password;
   }
 
+  /**
+   * Encode password.
+   *
+   * @param password the password
+   * @return the string
+   */
   private String encodePassword(String password) {
     if (codec != null) {
       try {

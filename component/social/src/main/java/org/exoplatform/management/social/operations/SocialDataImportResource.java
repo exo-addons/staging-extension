@@ -1,24 +1,24 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.social.operations;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.PortalContainer;
@@ -67,23 +67,55 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
+ * The Class SocialDataImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class SocialDataImportResource extends AbstractImportOperationHandler implements ActivityImportOperationInterface {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(SocialDataImportResource.class);
 
+  /** The Constant MANAGED_ENTRY_PATH_PREFIX. */
   final private static String MANAGED_ENTRY_PATH_PREFIX = "social/space/";
 
+  /** The organization service. */
   private OrganizationService organizationService;
+  
+  /** The identity manager. */
   private IdentityManager identityManager;
+  
+  /** The management controller. */
   private ManagementController managementController;
+  
+  /** The data storage. */
   private DataStorage dataStorage;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
@@ -207,6 +239,11 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * Delete space activities.
+   *
+   * @param extractedSpacePrettyName the extracted space pretty name
+   */
   private void deleteSpaceActivities(String extractedSpacePrettyName) {
     Identity spaceIdentity = identityManager.getOrCreateIdentity(SpaceIdentityProvider.NAME, extractedSpacePrettyName, false);
     RealtimeListAccess<ExoSocialActivity> listAccess = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
@@ -226,6 +263,12 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * Update avatar.
+   *
+   * @param space the space
+   * @param fileToImport the file to import
+   */
   private void updateAvatar(Space space, File fileToImport) {
     log.info("Update Space avatar '" + space.getDisplayName() + "'");
 
@@ -264,6 +307,11 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * Fix space editor.
+   *
+   * @param space the space
+   */
   private void fixSpaceEditor(Space space) {
     if (space.getEditor() == null) {
       // Fix space editor that is always null
@@ -271,6 +319,12 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * Update dashboard.
+   *
+   * @param spaceGroupId the space group id
+   * @param fileToImport the file to import
+   */
   private void updateDashboard(String spaceGroupId, File fileToImport) {
     FileInputStream inputStream = null;
     try {
@@ -310,6 +364,9 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     Identity spaceIdentity = getIdentity(activity.getStreamOwner());
     if (SpaceActivityPublisher.SPACE_PROFILE_ACTIVITY.equals(activity.getType()) || SpaceActivityPublisher.USER_ACTIVITIES_FOR_SPACE.equals(activity.getType())) {
@@ -320,6 +377,9 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
       boolean notValidActivity = activity.getActivityStream() == null || !activity.getActivityStream().getType().equals(Type.SPACE);
@@ -332,6 +392,17 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * Creates the or replace space.
+   *
+   * @param spacePrettyName the space pretty name
+   * @param targetSpaceName the target space name
+   * @param replaceExisting the replace existing
+   * @param createAbsentUsers the create absent users
+   * @param inputStream the input stream
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   private boolean createOrReplaceSpace(String spacePrettyName, String targetSpaceName, boolean replaceExisting, boolean createAbsentUsers, InputStream inputStream) throws Exception {
     // Unmarshall metadata xml file
     XStream xstream = new XStream();
@@ -555,6 +626,12 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     return false;
   }
 
+  /**
+   * Gets the existing users.
+   *
+   * @param users the users
+   * @return the existing users
+   */
   private String[] getExistingUsers(String... users) {
     Set<String> existingUsers = new HashSet<String>();
     if (users != null && users.length > 0) {
@@ -577,6 +654,12 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     return existingUsers.toArray(EMPTY_STRING_ARRAY);
   }
 
+  /**
+   * Import sub resource.
+   *
+   * @param tempFile the temp file
+   * @param subResourcePath the sub resource path
+   */
   private void importSubResource(File tempFile, String subResourcePath) {
     Map<String, List<String>> attributesMap = new HashMap<String, List<String>>();
     attributesMap.put("filter", Collections.singletonList("replace-existing:true"));
@@ -605,6 +688,17 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * Extract data from zip and create spaces.
+   *
+   * @param attachment the attachment
+   * @param spaceName the space name
+   * @param replaceExisting the replace existing
+   * @param createAbsentUsers the create absent users
+   * @param tmpZipFile the tmp zip file
+   * @return the map
+   * @throws OperationException the operation exception
+   */
   private Map<String, Map<String, File>> extractDataFromZipAndCreateSpaces(OperationAttachment attachment, String spaceName, boolean replaceExisting, boolean createAbsentUsers, File tmpZipFile)
       throws OperationException {
     if (attachment == null || attachment.getStream() == null) {
@@ -630,6 +724,16 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     }
   }
 
+  /**
+   * Extract files by id and create spaces.
+   *
+   * @param tmpZipFile the tmp zip file
+   * @param targetSpaceName the target space name
+   * @param replaceExisting the replace existing
+   * @param createAbsentUsers the create absent users
+   * @return the map
+   * @throws Exception the exception
+   */
   private Map<String, Map<String, File>> extractFilesByIdAndCreateSpaces(File tmpZipFile, String targetSpaceName, boolean replaceExisting, boolean createAbsentUsers) throws Exception {
     // Get path of folder where to unzip files
     String targetFolderPath = tmpZipFile.getAbsolutePath().replaceAll("\\.zip$", "") + "/";
@@ -716,6 +820,19 @@ public class SocialDataImportResource extends AbstractImportOperationHandler imp
     return filesToImportByOwner;
   }
 
+  /**
+   * Put sub resource entry.
+   *
+   * @param tmpZipFile the tmp zip file
+   * @param targetFolderPath the target folder path
+   * @param zis the zis
+   * @param zipOutputStreamMap the zip output stream map
+   * @param zipEntryPath the zip entry path
+   * @param spacePrettyName the space pretty name
+   * @param ownerFiles the owner files
+   * @param subResourcePath the sub resource path
+   * @throws Exception the exception
+   */
   private void putSubResourceEntry(File tmpZipFile, String targetFolderPath, NonCloseableZipInputStream zis, Map<String, ZipOutputStream> zipOutputStreamMap, String zipEntryPath,
       String spacePrettyName, Map<String, File> ownerFiles, String subResourcePath) throws Exception {
     if (!ownerFiles.containsKey(subResourcePath)) {

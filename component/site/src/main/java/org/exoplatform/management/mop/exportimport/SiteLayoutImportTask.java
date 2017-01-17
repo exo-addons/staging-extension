@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -29,19 +26,37 @@ import org.exoplatform.portal.mop.SiteKey;
 import org.exoplatform.portal.mop.importer.ImportMode;
 
 /**
+ * The Class SiteLayoutImportTask.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class SiteLayoutImportTask extends AbstractImportTask<PortalConfig> {
+  
+  /** The data storage. */
   private final DataStorage dataStorage;
+  
+  /** The rollback delete. */
   private PortalConfig rollbackDelete;
+  
+  /** The rollback save. */
   private PortalConfig rollbackSave;
 
+  /**
+   * Instantiates a new site layout import task.
+   *
+   * @param data the data
+   * @param siteKey the site key
+   * @param dataStorage the data storage
+   */
   public SiteLayoutImportTask(PortalConfig data, SiteKey siteKey, DataStorage dataStorage) {
     super(data, siteKey);
     this.dataStorage = dataStorage;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void importData(ImportMode importMode) throws Exception {
     PortalConfig dst = dataStorage.getPortalConfig(siteKey.getTypeName(), siteKey.getName());
@@ -79,6 +94,9 @@ public class SiteLayoutImportTask extends AbstractImportTask<PortalConfig> {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void rollback() throws Exception {
     if (rollbackDelete != null) {

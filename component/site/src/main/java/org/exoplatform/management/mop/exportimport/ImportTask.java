@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -25,17 +22,38 @@ package org.exoplatform.management.mop.exportimport;
 import org.exoplatform.portal.mop.importer.ImportMode;
 
 /**
+ * The Class ImportTask.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
+ * @param <T> the generic type
  */
 public abstract class ImportTask<T> {
+  
+  /** The data. */
   protected final T data;
 
+  /**
+   * Instantiates a new import task.
+   *
+   * @param data the data
+   */
   protected ImportTask(T data) {
     this.data = data;
   }
 
+  /**
+   * Import data.
+   *
+   * @param importMode the import mode
+   * @throws Exception the exception
+   */
   public abstract void importData(ImportMode importMode) throws Exception;
 
+  /**
+   * Rollback.
+   *
+   * @throws Exception the exception
+   */
   public abstract void rollback() throws Exception;
 }

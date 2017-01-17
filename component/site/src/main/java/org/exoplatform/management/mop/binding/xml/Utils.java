@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,6 +19,12 @@
 
 package org.exoplatform.management.mop.binding.xml;
 
+import org.exoplatform.portal.config.model.LocalizedString;
+import org.gatein.common.xml.stax.navigator.StaxNavUtils;
+import org.gatein.common.xml.stax.writer.StaxWriter;
+import org.staxnav.StaxNavException;
+import org.staxnav.StaxNavigator;
+
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -30,19 +33,24 @@ import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.exoplatform.portal.config.model.LocalizedString;
-import org.gatein.common.xml.stax.navigator.StaxNavUtils;
-import org.gatein.common.xml.stax.writer.StaxWriter;
-import org.staxnav.StaxNavException;
-import org.staxnav.StaxNavigator;
-
 /**
+ * The Class Utils.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 class Utils {
+  
+  /** The Constant XMLLANG_PATTERN. */
   private static final Pattern XMLLANG_PATTERN = Pattern.compile("^([a-zA-Z]{2})(?:-([a-zA-Z]{2}))?$");
 
+  /**
+   * Write gatein objects namespace.
+   *
+   * @param <N> the number type
+   * @param writer the writer
+   * @throws XMLStreamException the XML stream exception
+   */
   public static <N> void writeGateinObjectsNamespace(StaxWriter<N> writer) throws XMLStreamException {
     String gatein_object_ns = Namespace.CURRENT.getUri();
     String location = new StringBuilder().append(gatein_object_ns).append(" ").append(gatein_object_ns).toString();
@@ -52,6 +60,14 @@ class Utils {
     writer.writeAttribute(new QName(XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "schemaLocation"), location);
   }
 
+  /**
+   * Parses the localized string.
+   *
+   * @param <N> the number type
+   * @param navigator the navigator
+   * @return the localized string
+   * @throws StaxNavException the stax nav exception
+   */
   public static <N> LocalizedString parseLocalizedString(StaxNavigator<N> navigator) throws StaxNavException {
     String attribute = navigator.getAttribute(new QName(XMLConstants.XML_NS_URI, "lang", XMLConstants.XML_NS_PREFIX));
     if (attribute == null) {

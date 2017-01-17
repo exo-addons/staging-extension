@@ -1,16 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.content.operations.site.contents;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.jcr.Node;
-import javax.jcr.Session;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
@@ -40,7 +46,21 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.jcr.Node;
+import javax.jcr.Session;
+
 /**
+ * The Class SiteContentsImportResource.
+ *
  * @author <a href="mailto:soren.schmidt@exoplatform.com">Soren Schmidt</a>
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
@@ -51,22 +71,40 @@ import org.gatein.management.api.operation.model.NoResultModel;
  */
 public class SiteContentsImportResource extends AbstractJCRImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
 
+  /** The Constant log. */
   private final static Logger log = LoggerFactory.getLogger(SiteContentsImportResource.class);
 
+  /** The Constant CONTENT_LINK_PATTERN. */
   private final static Pattern CONTENT_LINK_PATTERN = Pattern.compile("([a-zA-Z]*)/([a-zA-Z]*)/(.*)");
 
+  /** The seo service. */
   private static SEOService seoService = null;
 
+  /** The imported site name. */
   private String importedSiteName = null;
+  
+  /** The file path. */
   private String filePath = null;
 
+  /**
+   * Instantiates a new site contents import resource.
+   */
   public SiteContentsImportResource() {}
 
+  /**
+   * Instantiates a new site contents import resource.
+   *
+   * @param siteName the site name
+   * @param filePath the file path
+   */
   public SiteContentsImportResource(String siteName, String filePath) {
     this.importedSiteName = siteName;
     this.filePath = filePath;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
@@ -170,6 +208,13 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     }
   }
 
+  /**
+   * Removes the nodes.
+   *
+   * @param workspace the workspace
+   * @param removeNodePaths the remove node paths
+   * @throws Exception the exception
+   */
   private void removeNodes(String workspace, String[] removeNodePaths) throws Exception {
     Session session = getSession(workspace);
 
@@ -190,6 +235,13 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     }
   }
 
+  /**
+   * Gets the site metadata.
+   *
+   * @param fileEntries the file entries
+   * @return the site metadata
+   * @throws Exception the exception
+   */
   public static SiteMetaData getSiteMetadata(List<FileEntry> fileEntries) throws Exception {
     FileEntry metadataFile = getAndRemoveFileByPath(fileEntries, SiteMetaDataExportTask.FILENAME);
     if (metadataFile == null) {
@@ -203,15 +255,24 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     return siteMetaData;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String getManagedFilesPrefix() {
     return "content/sites/";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(".xml") && !filePath.endsWith(SiteMetaDataExportTask.FILENAME) && !filePath.endsWith(SiteSEOExportTask.FILENAME)
         && !filePath.endsWith(SiteContentsVersionHistoryExportTask.VERSION_HISTORY_FILE_SUFFIX) && !filePath.endsWith(ActivitiesExportTask.FILENAME);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SiteMetaDataExportTask.FILENAME)) {
       fileEntries.add(new FileEntry(SiteMetaDataExportTask.FILENAME, file));
@@ -243,11 +304,17 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String extractIdFromPath(String path) {
     int beginIndex = SiteUtil.getSitesBasePath().length() + 1;
     return path.substring(beginIndex, path.indexOf("/", beginIndex));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null) {
       return;
@@ -274,6 +341,9 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
       String contentLink = activity.getTemplateParams().get("contenLink");

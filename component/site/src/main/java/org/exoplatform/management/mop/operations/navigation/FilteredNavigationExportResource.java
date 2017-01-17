@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -21,9 +18,6 @@
  */
 
 package org.exoplatform.management.mop.operations.navigation;
-
-import java.util.Collections;
-import java.util.List;
 
 import org.exoplatform.management.mop.exportimport.NavigationExportTask;
 import org.exoplatform.portal.config.model.NavigationFragment;
@@ -46,11 +40,24 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
+ * The Class FilteredNavigationExportResource.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class FilteredNavigationExportResource {
+  
+  /**
+   * Execute.
+   *
+   * @param operationContext the operation context
+   * @param resultHandler the result handler
+   * @param filter the filter
+   */
   @SuppressWarnings("deprecation")
   protected void execute(OperationContext operationContext, ResultHandler resultHandler, PathTemplateFilter filter) {
     BindingProvider bindingProvider = operationContext.getBindingProvider();
@@ -99,6 +106,17 @@ public class FilteredNavigationExportResource {
     }
   }
 
+  /**
+   * Execute handlers.
+   *
+   * @param resource the resource
+   * @param operationContext the operation context
+   * @param address the address
+   * @param operationName the operation name
+   * @param stepResultHandler the step result handler
+   * @param filter the filter
+   * @param root the root
+   */
   private void executeHandlers(ManagedResource resource, final OperationContext operationContext, PathAddress address, String operationName, StepResultHandler<PageNavigation> stepResultHandler,
       PathTemplateFilter filter, boolean root) {
     OperationHandler handler = resource.getOperationHandler(address, operationName);
@@ -135,6 +153,14 @@ public class FilteredNavigationExportResource {
     }
   }
 
+  /**
+   * Gets the step message.
+   *
+   * @param t the t
+   * @param originalAddress the original address
+   * @param stepResultHandler the step result handler
+   * @return the step message
+   */
   private String getStepMessage(Throwable t, PathAddress originalAddress, StepResultHandler<PageNavigation> stepResultHandler) {
     String message = (t.getMessage() == null) ? "Step operation failure" : t.getMessage();
     if (originalAddress.equals(stepResultHandler.getCurrentAddress())) {
@@ -144,6 +170,12 @@ public class FilteredNavigationExportResource {
     }
   }
 
+  /**
+   * Merge.
+   *
+   * @param navigation the navigation
+   * @param result the result
+   */
   private void merge(PageNavigation navigation, PageNavigation result) {
     for (NavigationFragment fragment : result.getFragments()) {
       if (fragment.getParentURI() != null) {
@@ -159,6 +191,13 @@ public class FilteredNavigationExportResource {
     }
   }
 
+  /**
+   * Find fragment.
+   *
+   * @param navigation the navigation
+   * @param parentUri the parent uri
+   * @return the navigation fragment
+   */
   private NavigationFragment findFragment(PageNavigation navigation, String parentUri) {
     for (NavigationFragment fragment : navigation.getFragments()) {
       if (fragment.getParentURI().equals(parentUri))
@@ -168,24 +207,47 @@ public class FilteredNavigationExportResource {
     return null;
   }
 
+  /**
+   * The Class BasicResultHandler.
+   */
   private static class BasicResultHandler implements ResultHandler {
+    
+    /** The result. */
     private Object result;
+    
+    /** The failure description. */
     private String failureDescription;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void completed(Object result) {
       this.result = result;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void failed(String failureDescription) {
       this.failureDescription = failureDescription;
     }
 
+    /**
+     * Gets the result.
+     *
+     * @return the result
+     */
     public Object getResult() {
       return result;
     }
 
+    /**
+     * Gets the failure description.
+     *
+     * @return the failure description
+     */
     public String getFailureDescription() {
       return failureDescription;
     }

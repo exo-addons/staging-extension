@@ -1,16 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.nodetype;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.AccessDeniedException;
-import javax.jcr.NamespaceException;
-import javax.jcr.NamespaceRegistry;
-import javax.jcr.RepositoryException;
-import javax.jcr.UnsupportedRepositoryOperationException;
 
 import org.exoplatform.container.xml.ComponentPlugin;
 import org.exoplatform.container.xml.Configuration;
@@ -34,25 +40,59 @@ import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
 import org.jibx.runtime.JiBXException;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.AccessDeniedException;
+import javax.jcr.NamespaceException;
+import javax.jcr.NamespaceRegistry;
+import javax.jcr.RepositoryException;
+import javax.jcr.UnsupportedRepositoryOperationException;
+
 /**
+ * The Class NodeTypeImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class NodeTypeImportResource extends ECMAdminImportResource {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(NodeTypeImportResource.class);
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
+  
+  /** The path prefix. */
   private String pathPrefix = null;
 
+  /**
+   * Instantiates a new node type import resource.
+   *
+   * @param pathPrefix the path prefix
+   */
   public NodeTypeImportResource(String pathPrefix) {
     super(null);
     this.pathPrefix = "ecmadmin/" + pathPrefix + "/";
   }
 
+  /**
+   * Instantiates a new node type import resource.
+   *
+   * @param pathPrefix the path prefix
+   * @param filePath the file path
+   */
   public NodeTypeImportResource(String pathPrefix, String filePath) {
     super(filePath);
     this.pathPrefix = "ecmadmin/" + pathPrefix + "/";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream
@@ -112,6 +152,16 @@ public class NodeTypeImportResource extends ECMAdminImportResource {
     }
   }
 
+  /**
+   * Register namespaces.
+   *
+   * @param zin the zin
+   * @throws JiBXException the ji BX exception
+   * @throws RepositoryException the repository exception
+   * @throws NamespaceException the namespace exception
+   * @throws UnsupportedRepositoryOperationException the unsupported repository operation exception
+   * @throws AccessDeniedException the access denied exception
+   */
   private void registerNamespaces(ZipInputStream zin) throws JiBXException, RepositoryException, NamespaceException, UnsupportedRepositoryOperationException, AccessDeniedException {
     IBindingFactory bfact = BindingDirectory.getFactory(Configuration.class);
     IUnmarshallingContext uctx = bfact.createUnmarshallingContext();

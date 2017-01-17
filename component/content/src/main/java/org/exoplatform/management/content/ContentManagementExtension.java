@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.content;
 
 import org.exoplatform.management.common.AbstractManagementExtension;
@@ -18,17 +36,29 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.spi.ExtensionContext;
 
 /**
+ * The Class ContentManagementExtension.
+ *
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @version $Revision$
  */
 public class ContentManagementExtension extends AbstractManagementExtension {
 
+  /** The Constant PATH_CONTENT. */
   public final static String PATH_CONTENT = "content";
+  
+  /** The Constant PATH_CONTENT_SITES. */
   public final static String PATH_CONTENT_SITES = "sites";
+  
+  /** The Constant PATH_CONTENT_SITES_CONTENTS. */
   public final static String PATH_CONTENT_SITES_CONTENTS = "contents";
+  
+  /** The Constant PATH_CONTENT_SITES_SEO. */
   public final static String PATH_CONTENT_SITES_SEO = "seo";
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void initialize(ExtensionContext context) {
     ComponentRegistration contentRegistration = context.registerManagedComponent(PATH_CONTENT);

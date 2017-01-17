@@ -1,12 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.content.operations.site;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.RepositoryException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
@@ -16,12 +26,28 @@ import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+
+/**
+ * The Class JCRBinaryTransformer.
+ */
 public class JCRBinaryTransformer implements DataTransformerPlugin {
 
+  /** The Constant BINARY_FILE_NAME_PREFIX. */
   public static final String BINARY_FILE_NAME_PREFIX = "Binary_";
 
+  /** The Constant LOG. */
   protected static final Log LOG = ExoLogger.getLogger(JCRBinaryTransformer.class);
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void exportData(Object... objects) {
     if (objects == null || objects.length != 3) {
@@ -78,23 +104,45 @@ public class JCRBinaryTransformer implements DataTransformerPlugin {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void importData(Object... objects) {}
 
+  /**
+   * The Class JCRBinaryExportTask.
+   */
   public static class JCRBinaryExportTask implements ExportTask {
+    
+    /** The filename. */
     String filename;
+    
+    /** The input stream. */
     InputStream inputStream;
 
+    /**
+     * Instantiates a new JCR binary export task.
+     *
+     * @param filename the filename
+     * @param inputStream the input stream
+     */
     public JCRBinaryExportTask(String filename, InputStream inputStream) {
       this.filename = filename;
       this.inputStream = inputStream;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getEntry() {
       return filename;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void export(OutputStream outputStream) throws IOException {
       try {

@@ -1,27 +1,22 @@
 /*
- * Copyright (C) 2003-2014 eXo Platform SAS.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.exoplatform.management.calendar.operations;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.calendar.service.Calendar;
@@ -52,26 +47,54 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
+ * The Class CalendarDataExportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class CalendarDataExportResource extends AbstractExportOperationHandler implements ActivityExportOperationInterface {
 
+  /** The group calendar. */
   private boolean groupCalendar;
+  
+  /** The space calendar. */
   private boolean spaceCalendar;
+  
+  /** The type. */
   private String type;
 
+  /** The user ACL. */
   private UserACL userACL;
+  
+  /** The organization service. */
   private OrganizationService organizationService;
+  
+  /** The calendar service. */
   private CalendarService calendarService;
 
+  /**
+   * Instantiates a new calendar data export resource.
+   *
+   * @param groupCalendar the group calendar
+   * @param spaceCalendar the space calendar
+   */
   public CalendarDataExportResource(boolean groupCalendar, boolean spaceCalendar) {
     this.groupCalendar = groupCalendar;
     this.spaceCalendar = spaceCalendar;
     type = groupCalendar ? spaceCalendar ? CalendarExtension.SPACE_CALENDAR_TYPE : CalendarExtension.GROUP_CALENDAR_TYPE : CalendarExtension.PERSONAL_CALENDAR_TYPE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
@@ -153,6 +176,12 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
+  /**
+   * Gets the parameter.
+   *
+   * @param operationContext the operation context
+   * @return the parameter
+   */
   private String getParameter(OperationContext operationContext) {
     String filterText = operationContext.getAddress().resolvePathTemplate("name");
     if (StringUtils.isEmpty(filterText)) {
@@ -161,6 +190,14 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     return filterText;
   }
 
+  /**
+   * Export group calendar.
+   *
+   * @param exportTasks the export tasks
+   * @param groupId the group id
+   * @param calendarName the calendar name
+   * @param exportSpaceMetadata the export space metadata
+   */
   private void exportGroupCalendar(List<ExportTask> exportTasks, String groupId, String calendarName, boolean exportSpaceMetadata) {
     try {
       List<GroupCalendarData> groupCalendars = calendarService.getGroupCalendars(groupId == null ? getAllGroupIDs() : new String[] { groupId }, true, userACL.getSuperUser());
@@ -200,6 +237,12 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     }
   }
 
+  /**
+   * Gets the all group I ds.
+   *
+   * @return the all group I ds
+   * @throws Exception the exception
+   */
   private String[] getAllGroupIDs() throws Exception {
     Collection<Group> groups = organizationService.getGroupHandler().getAllGroups();
     String[] groupIDs = new String[groups.size()];
@@ -210,6 +253,13 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     return groupIDs;
   }
 
+  /**
+   * Export group calendar.
+   *
+   * @param exportTasks the export tasks
+   * @param calendar the calendar
+   * @throws Exception the exception
+   */
   private void exportGroupCalendar(List<ExportTask> exportTasks, Calendar calendar) throws Exception {
     List<CalendarEvent> events = calendarService.getGroupEventByCalendar(Collections.singletonList(calendar.getId()));
     exportTasks.add(new CalendarExportTask(type, calendar, events));
@@ -221,6 +271,12 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     }
   }
 
+  /**
+   * Export user calendar.
+   *
+   * @param exportTasks the export tasks
+   * @param username the username
+   */
   private void exportUserCalendar(List<ExportTask> exportTasks, String username) {
     try {
       List<Calendar> userCalendars = calendarService.getUserCalendars(username, true);
@@ -239,6 +295,9 @@ public class CalendarDataExportResource extends AbstractExportOperationHandler i
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isActivityValid(ExoSocialActivity activity) throws Exception {
     String eventId = activity.getTemplateParams().get(CalendarExtension.EVENT_ID_KEY);
     if (eventId == null) {

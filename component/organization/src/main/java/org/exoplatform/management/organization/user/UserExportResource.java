@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.organization.user;
 
 import java.util.ArrayList;
@@ -27,14 +45,23 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
 /**
+ * The Class UserExportResource.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class UserExportResource extends AbstractJCRExportOperationHandler {
+  
+  /** The organization service. */
   private OrganizationService organizationService = null;
+  
+  /** The hierarchy creator. */
   private NodeHierarchyCreator hierarchyCreator = null;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
@@ -99,6 +126,15 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
     }
   }
 
+  /**
+   * Export user.
+   *
+   * @param user the user
+   * @param withContent the with content
+   * @param withMemberships the with memberships
+   * @param exportTasks the export tasks
+   * @throws Exception the exception
+   */
   private void exportUser(User user, boolean withContent, boolean withMemberships, List<ExportTask> exportTasks) throws Exception {
     UserProfile profile = organizationService.getUserProfileHandler().findUserProfileByName(user.getUserName());
     exportTasks.add(new OrganizationModelExportTask(user));
@@ -119,6 +155,9 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception {
     String prefixInZiipFile = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/" + params[1];

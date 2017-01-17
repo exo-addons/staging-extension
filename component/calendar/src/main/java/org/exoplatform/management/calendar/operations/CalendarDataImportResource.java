@@ -1,13 +1,24 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.calendar.operations;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
@@ -64,34 +75,71 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 /**
+ * The Class CalendarDataImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class CalendarDataImportResource extends AbstractImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
+  
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(CalendarDataImportResource.class);
 
+  /** The Constant CALENDAR_PORTLET_NAME. */
   public static final String CALENDAR_PORTLET_NAME = "CalendarPortlet";
+  
+  /** The Constant INVITATION_DETAIL. */
   public static final String INVITATION_DETAIL = "/invitation/detail/";
 
+  /** The calendar service. */
   private CalendarService calendarService;
+  
+  /** The calendar storage. */
   private JCRDataStorage calendarStorage;
+  
+  /** The portal config service. */
   private UserPortalConfigService portalConfigService;
+  
+  /** The page service. */
   private PageService pageService;
+  
+  /** The data storage. */
   private DataStorage dataStorage;
 
+  /** The group calendar. */
   private boolean groupCalendar;
+  
+  /** The space calendar. */
   private boolean spaceCalendar;
+  
+  /** The type. */
   private String type;
 
+  /**
+   * Instantiates a new calendar data import resource.
+   *
+   * @param groupCalendar the group calendar
+   * @param spaceCalendar the space calendar
+   */
   public CalendarDataImportResource(boolean groupCalendar, boolean spaceCalendar) {
     this.groupCalendar = groupCalendar;
     this.spaceCalendar = spaceCalendar;
     type = groupCalendar ? spaceCalendar ? CalendarExtension.SPACE_CALENDAR_TYPE : CalendarExtension.GROUP_CALENDAR_TYPE : CalendarExtension.PERSONAL_CALENDAR_TYPE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     calendarService = operationContext.getRuntimeContext().getRuntimeComponent(CalendarService.class);
@@ -158,6 +206,9 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null) {
@@ -171,6 +222,9 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     saveEvent(event, activity);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null || activity.isComment()) {
@@ -192,6 +246,15 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     return false;
   }
 
+  /**
+   * Import calendar.
+   *
+   * @param file the file
+   * @param spaceMetadataFile the space metadata file
+   * @param replaceExisting the replace existing
+   * @param createSpace the create space
+   * @throws Exception the exception
+   */
   private void importCalendar(File file, File spaceMetadataFile, boolean replaceExisting, boolean createSpace) throws Exception {
     // Unmarshall calendar data file
     XStream xStream = new XStream();
@@ -266,6 +329,11 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     deleteCalendarActivities(events);
   }
 
+  /**
+   * Delete calendar activities.
+   *
+   * @param events the events
+   */
   private void deleteCalendarActivities(List<CalendarEvent> events) {
     for (CalendarEvent event : events) {
       if (event != null && event.getActivityId() != null) {
@@ -274,6 +342,13 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
   }
 
+  /**
+   * Save event.
+   *
+   * @param event the event
+   * @param exoSocialActivity the exo social activity
+   * @throws Exception the exception
+   */
   private void saveEvent(CalendarEvent event, ExoSocialActivity exoSocialActivity) throws Exception {
     event.setActivityId(exoSocialActivity.getId());
     Calendar calendar = calendarService.getCalendarById(event.getCalendarId());
@@ -288,6 +363,13 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
   }
 
+  /**
+   * Update calendar activity URL.
+   *
+   * @param event the event
+   * @param groupId the group id
+   * @throws Exception the exception
+   */
   private void updateCalendarActivityURL(CalendarEvent event, String groupId) throws Exception {
     ExoSocialActivity activity = activityManager.getActivity(event.getActivityId());
     if (activity != null) {
@@ -299,6 +381,15 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
   }
 
+  /**
+   * Gets the link.
+   *
+   * @param event the event
+   * @param activity the activity
+   * @param spaceGroupId the space group id
+   * @return the link
+   * @throws Exception the exception
+   */
   private String getLink(CalendarEvent event, ExoSocialActivity activity, String spaceGroupId) throws Exception {
     SiteKey siteKey = null;
     if (spaceGroupId == null) {
@@ -323,6 +414,7 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     return StringUtils.EMPTY;
   }
 
+  /** The Constant NULL_CONTEXT. */
   private static final UserPortalContext NULL_CONTEXT = new UserPortalContext() {
     public ResourceBundle getBundle(UserNavigation navigation) {
       return null;
@@ -333,6 +425,11 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     }
   };
 
+  /**
+   * Fix portal request.
+   *
+   * @return the request context
+   */
   private RequestContext fixPortalRequest() {
     RequestContext originalRequestContext;
     originalRequestContext = WebuiRequestContext.getCurrentInstance();
@@ -359,17 +456,26 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     return originalRequestContext;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getManagedFilesPrefix() {
     return "calendar/" + type + "/";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.contains(CalendarExportTask.CALENDAR_SEPARATOR)
         || (!filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.endsWith(ActivitiesExportTask.FILENAME));
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
@@ -382,6 +488,9 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String extractIdFromPath(String path) {
     String[] paths = path.split(CalendarExportTask.CALENDAR_SEPARATOR);
@@ -393,6 +502,9 @@ public class CalendarDataImportResource extends AbstractImportOperationHandler i
     return id;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getNodePath(String filePath) {
     String[] paths = filePath.split(CalendarExportTask.CALENDAR_SEPARATOR);

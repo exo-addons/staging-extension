@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -23,13 +20,21 @@
 package org.exoplatform.management.mop.binding.xml;
 
 /**
+ * The Enum Namespace.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public enum Namespace
 {
+  
+  /** The gatein objects 1 1. */
   GATEIN_OBJECTS_1_1("http://www.gatein.org/xml/ns/gatein_objects_1_1"),
+  
+  /** The gatein objects 1 2. */
   GATEIN_OBJECTS_1_2("http://www.gatein.org/xml/ns/gatein_objects_1_2"),
+  
+  /** The gatein objects 1 3. */
   GATEIN_OBJECTS_1_3("http://www.gatein.org/xml/ns/gatein_objects_1_3");
 
   /**
@@ -37,8 +42,14 @@ public enum Namespace
    */
   public static final Namespace CURRENT = GATEIN_OBJECTS_1_3;
 
+  /** The name. */
   private final String name;
 
+  /**
+   * Instantiates a new namespace.
+   *
+   * @param name the name
+   */
   Namespace(final String name) {
     this.name = name;
   }

@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -34,10 +31,16 @@ import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
 /**
+ * The Class AbstractSiteOperationHandler.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public abstract class AbstractSiteOperationHandler extends AbstractMopOperationHandler {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected final void execute(OperationContext operationContext, ResultHandler resultHandler, Workspace workspace, ObjectType<Site> siteType) throws ResourceNotFoundException, OperationException {
     String operationName = operationContext.getOperationName();
@@ -56,5 +59,14 @@ public abstract class AbstractSiteOperationHandler extends AbstractMopOperationH
     execute(operationContext, resultHandler, site);
   }
 
+  /**
+   * Execute.
+   *
+   * @param operationContext the operation context
+   * @param resultHandler the result handler
+   * @param site the site
+   * @throws ResourceNotFoundException the resource not found exception
+   * @throws OperationException the operation exception
+   */
   protected abstract void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException;
 }

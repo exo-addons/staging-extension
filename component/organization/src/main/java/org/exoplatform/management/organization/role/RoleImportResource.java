@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.organization.role;
 
 import java.io.InputStream;
@@ -23,13 +41,22 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import com.thoughtworks.xstream.XStream;
 
 /**
+ * The Class RoleImportResource.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
 public class RoleImportResource extends AbstractOperationHandler {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(RoleImportResource.class);
+  
+  /** The organization service. */
   private OrganizationService organizationService = null;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (organizationService == null) {
@@ -82,6 +109,13 @@ public class RoleImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Creates the role.
+   *
+   * @param zin the zin
+   * @param replaceExisting the replace existing
+   * @throws Exception the exception
+   */
   private void createRole(final ZipInputStream zin, Boolean replaceExisting) throws Exception {
     MembershipType membershipType = deserializeObject(zin, MembershipTypeImpl.class);
     MembershipType oldMembershipType = organizationService.getMembershipTypeHandler().findMembershipType(membershipType.getName());
@@ -98,6 +132,14 @@ public class RoleImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Deserialize object.
+   *
+   * @param <T> the generic type
+   * @param zin the zin
+   * @param objectClass the object class
+   * @return the t
+   */
   private <T> T deserializeObject(final ZipInputStream zin, Class<T> objectClass) {
     XStream xStream = new XStream();
     xStream.alias("organization", objectClass);

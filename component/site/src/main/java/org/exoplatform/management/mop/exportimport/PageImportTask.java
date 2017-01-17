@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,9 +19,6 @@
 
 package org.exoplatform.management.mop.exportimport;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.exoplatform.management.mop.operations.MOPSiteProvider;
 import org.exoplatform.management.mop.operations.page.PageUtils;
 import org.exoplatform.portal.config.DataStorage;
@@ -36,17 +30,41 @@ import org.exoplatform.portal.mop.page.PageKey;
 import org.exoplatform.portal.mop.page.PageService;
 import org.gatein.mop.api.workspace.Site;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
+ * The Class PageImportTask.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class PageImportTask extends AbstractImportTask<Page.PageSet> {
+  
+  /** The data storage. */
   private final DataStorage dataStorage;
+  
+  /** The page service. */
   private final PageService pageService;
+  
+  /** The site provider. */
   private final MOPSiteProvider siteProvider;
+  
+  /** The rollback saves. */
   private Page.PageSet rollbackSaves;
+  
+  /** The rollback deletes. */
   private Page.PageSet rollbackDeletes;
 
+  /**
+   * Instantiates a new page import task.
+   *
+   * @param data the data
+   * @param siteKey the site key
+   * @param dataStorage the data storage
+   * @param pageService the page service
+   * @param siteProvider the site provider
+   */
   public PageImportTask(Page.PageSet data, SiteKey siteKey, DataStorage dataStorage, PageService pageService, MOPSiteProvider siteProvider) {
     super(data, siteKey);
     this.dataStorage = dataStorage;
@@ -54,6 +72,9 @@ public class PageImportTask extends AbstractImportTask<Page.PageSet> {
     this.siteProvider = siteProvider;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void importData(ImportMode importMode) throws Exception {
     if (data == null || data.getPages() == null || data.getPages().isEmpty())
@@ -156,6 +177,9 @@ public class PageImportTask extends AbstractImportTask<Page.PageSet> {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void rollback() throws Exception {
     if (rollbackDeletes != null && !rollbackDeletes.getPages().isEmpty()) {
@@ -173,14 +197,31 @@ public class PageImportTask extends AbstractImportTask<Page.PageSet> {
     }
   }
 
+  /**
+   * Gets the rollback saves.
+   *
+   * @return the rollback saves
+   */
   Page.PageSet getRollbackSaves() {
     return rollbackSaves;
   }
 
+  /**
+   * Gets the rollback deletes.
+   *
+   * @return the rollback deletes
+   */
   Page.PageSet getRollbackDeletes() {
     return rollbackDeletes;
   }
 
+  /**
+   * Find page.
+   *
+   * @param pages the pages
+   * @param src the src
+   * @return the page
+   */
   private static Page findPage(List<Page> pages, Page src) {
     Page found = null;
     for (Page page : pages) {

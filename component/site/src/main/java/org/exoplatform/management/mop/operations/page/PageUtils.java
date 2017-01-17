@@ -1,8 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.mop.operations.page;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
@@ -27,13 +41,32 @@ import org.exoplatform.portal.mop.page.PageServiceImpl;
 import org.exoplatform.portal.mop.page.PageServiceWrapper;
 import org.exoplatform.portal.mop.page.PageState;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
+ * The Class PageUtils.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class PageUtils {
+  
+  /**
+   * Instantiates a new page utils.
+   */
   private PageUtils() {}
 
+  /**
+   * Gets the page.
+   *
+   * @param dataStorage the data storage
+   * @param pageService the page service
+   * @param pageKey the page key
+   * @return the page
+   * @throws Exception the exception
+   */
   public static Page getPage(DataStorage dataStorage, PageService pageService, PageKey pageKey) throws Exception {
     PageContext pageContext = pageService.loadPage(pageKey);
     if (pageContext == null)
@@ -48,6 +81,15 @@ public class PageUtils {
     return page;
   }
 
+  /**
+   * Gets the all pages.
+   *
+   * @param dataStorage the data storage
+   * @param pageService the page service
+   * @param siteKey the site key
+   * @return the all pages
+   * @throws Exception the exception
+   */
   public static Page.PageSet getAllPages(DataStorage dataStorage, PageService pageService, SiteKey siteKey) throws Exception {
     Page.PageSet pages = new Page.PageSet();
     List<PageContext> pageContextList;
@@ -74,11 +116,24 @@ public class PageUtils {
     return pages;
   }
 
+  /**
+   * To page state.
+   *
+   * @param page the page
+   * @return the page state
+   */
   public static PageState toPageState(Page page) {
     return new PageState(page.getTitle(), page.getDescription(), page.isShowMaxWindow(), page.getFactoryId(), page.getAccessPermissions() != null ? Arrays.asList(page.getAccessPermissions()) : null, page.getEditPermission(), page.getMoveAppsPermissions() != null ? Arrays.asList(page.getMoveAppsPermissions())
         : null, page.getMoveContainersPermissions() != null ? Arrays.asList(page.getMoveContainersPermissions()) : null);
   }
 
+  /**
+   * Copy.
+   *
+   * @param <S> the generic type
+   * @param existing the existing
+   * @return the application
+   */
   public static <S> Application<S> copy(Application<S> existing) {
     Application<S> application = new Application<S>(existing.getType());
     application.setAccessPermissions(copy(existing.getAccessPermissions()));
@@ -99,6 +154,14 @@ public class PageUtils {
     return application;
   }
 
+  /**
+   * Copy.
+   *
+   * @param <S> the generic type
+   * @param type the type
+   * @param existing the existing
+   * @return the application state
+   */
   public static <S> ApplicationState<S> copy(ApplicationType<S> type, ApplicationState<S> existing) {
     if (existing instanceof TransientApplicationState) {
       TransientApplicationState<S> state = (TransientApplicationState<S>) existing;
@@ -123,6 +186,12 @@ public class PageUtils {
     }
   }
 
+  /**
+   * Copy.
+   *
+   * @param existing the existing
+   * @return the container
+   */
   public static Container copy(Container existing) {
     Container container = new Container();
     copyFields(existing, container);
@@ -130,6 +199,12 @@ public class PageUtils {
     return container;
   }
 
+  /**
+   * Copy.
+   *
+   * @param existing the existing
+   * @return the dashboard
+   */
   public static Dashboard copy(Dashboard existing) {
     Dashboard dashboard = new Dashboard();
     copyFields(existing, dashboard);
@@ -137,6 +212,12 @@ public class PageUtils {
     return dashboard;
   }
 
+  /**
+   * Copy.
+   *
+   * @param existing the existing
+   * @return the page
+   */
   public static Page copy(Page existing) {
     Page page = new Page();
 
@@ -154,6 +235,12 @@ public class PageUtils {
     return page;
   }
 
+  /**
+   * Copy.
+   *
+   * @param existingPageSet the existing page set
+   * @return the page. page set
+   */
   public static Page.PageSet copy(Page.PageSet existingPageSet) {
     Page.PageSet pageSet = new Page.PageSet();
     ArrayList<Page> pages = new ArrayList<Page>(existingPageSet.getPages().size());
@@ -166,10 +253,22 @@ public class PageUtils {
     return pageSet;
   }
 
+  /**
+   * Copy.
+   *
+   * @param existing the existing
+   * @return the page body
+   */
   public static PageBody copy(PageBody existing) {
     return new PageBody();
   }
 
+  /**
+   * Copy.
+   *
+   * @param existing the existing
+   * @return the portal config
+   */
   public static PortalConfig copy(PortalConfig existing) {
     PortalConfig portalConfig = new PortalConfig(existing.getType(), existing.getName());
     portalConfig.setAccessPermissions(copy(existing.getAccessPermissions()));
@@ -184,6 +283,12 @@ public class PageUtils {
     return portalConfig;
   }
 
+  /**
+   * Copy fields.
+   *
+   * @param existing the existing
+   * @param container the container
+   */
   private static void copyFields(Container existing, Container container) {
     container.setAccessPermissions(copy(existing.getAccessPermissions()));
     container.setChildren(copyChildren(existing.getChildren()));
@@ -199,6 +304,12 @@ public class PageUtils {
     container.setWidth(existing.getWidth());
   }
 
+  /**
+   * Copy children.
+   *
+   * @param existing the existing
+   * @return the array list
+   */
   private static ArrayList<ModelObject> copyChildren(ArrayList<ModelObject> existing) {
     if (existing == null)
       return null;
@@ -222,6 +333,12 @@ public class PageUtils {
     return children;
   }
 
+  /**
+   * Copy.
+   *
+   * @param existing the existing
+   * @return the string[]
+   */
   private static String[] copy(String[] existing) {
     if (existing == null)
       return null;

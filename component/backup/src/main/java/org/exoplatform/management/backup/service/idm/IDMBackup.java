@@ -1,19 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.service.idm;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.zip.ZipEntry;
 
 import org.exoplatform.commons.utils.PrivilegedFileHelper;
 import org.exoplatform.container.PortalContainer;
@@ -30,24 +33,65 @@ import org.exoplatform.services.log.Log;
 import org.exoplatform.services.organization.OrganizationService;
 import org.hibernate.internal.SessionFactoryImpl;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Types;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.zip.ZipEntry;
+
 /**
+ * The Class IDMBackup.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class IDMBackup {
+  
+  /** The Constant LOG. */
   protected static final Log LOG = ExoLogger.getLogger(IDMBackup.class);
+  
+  /** The Constant CONTENT_ZIP_FILE. */
   protected static final String CONTENT_ZIP_FILE = "idm-dump.zip";
+  
+  /** The Constant CONTENT_LEN_ZIP_FILE. */
   protected static final String CONTENT_LEN_ZIP_FILE = "idm-dump-len.zip";
+  
+  /** The Constant TABLE_NAMES. */
   protected static final String[] TABLE_NAMES = { "jbid_attr_bin_value", "jbid_creden_bin_value", "jbid_io", "jbid_io_attr", "jbid_io_attr_text_values", "jbid_io_creden", "jbid_io_creden_props",
       "jbid_io_creden_type", "jbid_io_props", "jbid_io_rel", "jbid_io_rel_name", "jbid_io_rel_name_props", "jbid_io_rel_props", "jbid_io_rel_type", "jbid_io_type", "jbid_real_props", "jbid_realm" };
 
+  /** The Constant BACKUP_USER_LISTENER. */
   private static final BackupUserListener BACKUP_USER_LISTENER = new BackupUserListener();
+  
+  /** The Constant BACKUP_USER_PROFILE_LISTENER. */
   private static final BackupUserProfileListener BACKUP_USER_PROFILE_LISTENER = new BackupUserProfileListener();
+  
+  /** The Constant BACKUP_GROUP_LISTENER. */
   private static final BackupGroupListener BACKUP_GROUP_LISTENER = new BackupGroupListener();
+  
+  /** The Constant BACKUP_MEMBERSHIP_LISTENER. */
   private static final BackupMembershipListener BACKUP_MEMBERSHIP_LISTENER = new BackupMembershipListener();
+  
+  /** The Constant BACKUP_MEMBERSHIP_TYPE_LISTENER. */
   private static final BackupMembershipTypeListener BACKUP_MEMBERSHIP_TYPE_LISTENER = new BackupMembershipTypeListener();
 
+  /**
+   * Backup.
+   *
+   * @param portalContainer the portal container
+   * @param storageDir the storage dir
+   * @throws Exception the exception
+   */
   public static void backup(PortalContainer portalContainer, final File storageDir) throws Exception {
     Connection jdbcConn = null;
     try {
@@ -83,6 +127,9 @@ public class IDMBackup {
     }
   }
 
+  /**
+   * Intercept IDM modification operation.
+   */
   public static void interceptIDMModificationOperation() {
     if (BackupExportResource.backupInProgress) {
       if (BackupExportResource.WRITE_STRATEGY_NOTHING.equals(BackupExportResource.writeStrategy)) {
@@ -101,6 +148,11 @@ public class IDMBackup {
     }
   }
 
+  /**
+   * Adds the IDM backup listeners.
+   *
+   * @param portalContainer the portal container
+   */
   private static void addIDMBackupListeners(PortalContainer portalContainer) {
     getOrganizationService(portalContainer).getUserHandler().addUserEventListener(BACKUP_USER_LISTENER);
     getOrganizationService(portalContainer).getUserProfileHandler().addUserProfileEventListener(BACKUP_USER_PROFILE_LISTENER);
@@ -109,6 +161,11 @@ public class IDMBackup {
     getOrganizationService(portalContainer).getMembershipTypeHandler().addMembershipTypeEventListener(BACKUP_MEMBERSHIP_TYPE_LISTENER);
   }
 
+  /**
+   * Removes the IDM backup listeners.
+   *
+   * @param portalContainer the portal container
+   */
   private static void removeIDMBackupListeners(PortalContainer portalContainer) {
     getOrganizationService(portalContainer).getUserHandler().removeUserEventListener(BACKUP_USER_LISTENER);
     getOrganizationService(portalContainer).getUserProfileHandler().removeUserProfileEventListener(BACKUP_USER_PROFILE_LISTENER);
@@ -117,6 +174,14 @@ public class IDMBackup {
     getOrganizationService(portalContainer).getMembershipTypeHandler().removeMembershipTypeEventListener(BACKUP_MEMBERSHIP_TYPE_LISTENER);
   }
 
+  /**
+   * Backup.
+   *
+   * @param storageDir the storage dir
+   * @param jdbcConn the jdbc conn
+   * @param scripts the scripts
+   * @throws BackupException the backup exception
+   */
   public static void backup(File storageDir, Connection jdbcConn, Map<String, String> scripts) throws BackupException {
     Exception exc = null;
 
@@ -171,9 +236,14 @@ public class IDMBackup {
 
   /**
    * Dump table.
-   * 
-   * @throws IOException
-   * @throws SQLException
+   *
+   * @param jdbcConn the jdbc conn
+   * @param tableName the table name
+   * @param script the script
+   * @param contentWriter the content writer
+   * @param contentLenWriter the content len writer
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws SQLException the SQL exception
    */
   private static void dumpTable(Connection jdbcConn, String tableName, String script, ZipObjectWriter contentWriter, ZipObjectWriter contentLenWriter) throws IOException, SQLException {
     SecurityManager security = System.getSecurityManager();
@@ -243,10 +313,22 @@ public class IDMBackup {
     }
   }
 
+  /**
+   * Gets the hibernate service.
+   *
+   * @param portalContainer the portal container
+   * @return the hibernate service
+   */
   private static HibernateService getHibernateService(PortalContainer portalContainer) {
     return (HibernateService) portalContainer.getComponentInstanceOfType(HibernateService.class);
   }
 
+  /**
+   * Gets the organization service.
+   *
+   * @param portalContainer the portal container
+   * @return the organization service
+   */
   private static OrganizationService getOrganizationService(PortalContainer portalContainer) {
     return (OrganizationService) portalContainer.getComponentInstanceOfType(OrganizationService.class);
   }

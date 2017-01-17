@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -25,26 +22,53 @@ package org.exoplatform.management.mop.operations.navigation;
 import org.exoplatform.portal.mop.SiteKey;
 
 /**
+ * The Class NavigationKey.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class NavigationKey {
+  
+  /** The site key. */
   private SiteKey siteKey;
+  
+  /** The nav uri. */
   private String navUri;
 
+  /**
+   * Instantiates a new navigation key.
+   *
+   * @param siteKey the site key
+   */
   public NavigationKey(SiteKey siteKey) {
     this.siteKey = siteKey;
   }
 
+  /**
+   * Instantiates a new navigation key.
+   *
+   * @param siteKey the site key
+   * @param navUri the nav uri
+   */
   public NavigationKey(SiteKey siteKey, String navUri) {
     this.siteKey = siteKey;
     this.navUri = navUri;
   }
 
+  /**
+   * Gets the site key.
+   *
+   * @return the site key
+   */
   public SiteKey getSiteKey() {
     return siteKey;
   }
 
+  /**
+   * Gets the nav uri.
+   *
+   * @return the nav uri
+   */
   public String getNavUri() {
     return navUri;
   }

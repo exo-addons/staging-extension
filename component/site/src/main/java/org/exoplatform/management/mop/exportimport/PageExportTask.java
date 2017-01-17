@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,12 +19,6 @@
 
 package org.exoplatform.management.mop.exportimport;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.exoplatform.management.common.DataTransformerService;
 import org.exoplatform.management.mop.operations.page.PageUtils;
 import org.exoplatform.portal.config.DataStorage;
@@ -38,18 +29,43 @@ import org.exoplatform.portal.mop.page.PageService;
 import org.gatein.management.api.binding.Marshaller;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
+ * The Class PageExportTask.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class PageExportTask extends AbstractExportTask implements ExportTask {
+  
+  /** The Constant FILE. */
   public static final String FILE = "pages.xml";
 
+  /** The data storage. */
   private final DataStorage dataStorage;
+  
+  /** The page service. */
   private final PageService pageService;
+  
+  /** The marshaller. */
   private final Marshaller<Page.PageSet> marshaller;
+  
+  /** The page names. */
   private final List<String> pageNames;
 
+  /**
+   * Instantiates a new page export task.
+   *
+   * @param siteKey the site key
+   * @param dataStorage the data storage
+   * @param pageService the page service
+   * @param marshaller the marshaller
+   */
   public PageExportTask(SiteKey siteKey, DataStorage dataStorage, PageService pageService, Marshaller<Page.PageSet> marshaller) {
     super(siteKey);
     this.dataStorage = dataStorage;
@@ -58,6 +74,9 @@ public class PageExportTask extends AbstractExportTask implements ExportTask {
     pageNames = new ArrayList<String>();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void export(OutputStream outputStream) throws IOException {
     Page.PageSet pages = new Page.PageSet();
@@ -76,15 +95,28 @@ public class PageExportTask extends AbstractExportTask implements ExportTask {
     marshaller.marshal(pages, outputStream, false);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected String getXmlFileName() {
     return FILE;
   }
 
+  /**
+   * Adds the page name.
+   *
+   * @param pageName the page name
+   */
   public void addPageName(String pageName) {
     pageNames.add(pageName);
   }
 
+  /**
+   * Gets the page names.
+   *
+   * @return the page names
+   */
   public List<String> getPageNames() {
     return Collections.unmodifiableList(pageNames);
   }

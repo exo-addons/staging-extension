@@ -1,20 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.service.impl;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
-
-import javax.inject.Singleton;
-import javax.jcr.NodeIterator;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
 
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.management.common.AbstractOperationHandler;
@@ -37,18 +39,47 @@ import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
+
+import javax.inject.Singleton;
+import javax.jcr.NodeIterator;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+
 /**
- * Staging service
+ * Staging service.
  */
 @Singleton
 public class StagingServiceImpl implements StagingService {
 
+  /** The log. */
   private Log log = ExoLogger.getLogger(StagingServiceImpl.class);
 
+  /** The management controller. */
   private ManagementController managementController = null;
+  
+  /** The wcm configuration service. */
   private WCMConfigurationService wcmConfigurationService = null;
+  
+  /** The repository service. */
   private RepositoryService repositoryService = null;
 
+  /**
+   * Instantiates a new staging service impl.
+   *
+   * @param managementController the management controller
+   * @param wcmConfigurationService the wcm configuration service
+   * @param repositoryService the repository service
+   */
   public StagingServiceImpl(ManagementController managementController, WCMConfigurationService wcmConfigurationService, RepositoryService repositoryService) {
     this.managementController = managementController;
     this.wcmConfigurationService = wcmConfigurationService;
@@ -57,11 +88,10 @@ public class StagingServiceImpl implements StagingService {
 
   /**
    * Export selected resources with selected options.
-   * 
-   * @param resourcesPaths
-   * @param exportOptions
-   * @return
-   * @throws Exception
+   *
+   * @param selectedResourceCategories the selected resource categories
+   * @return the file
+   * @throws Exception the exception
    */
   public File export(List<ResourceCategory> selectedResourceCategories) throws Exception {
     File file = null;
@@ -155,6 +185,9 @@ public class StagingServiceImpl implements StagingService {
     return paths;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public Set<Resource> getResources(String path) {
     ManagedRequest request = ManagedRequest.Factory.create(OperationNames.READ_RESOURCE, PathAddress.pathAddress(path), ContentType.JSON);
     ManagedResponse response = getManagementController().execute(request);
@@ -183,16 +216,27 @@ public class StagingServiceImpl implements StagingService {
     return getResources(PORTAL_WIKIS_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Resource> getWikiGroupResources() {
     return getResources(GROUP_WIKIS_PATH);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Set<Resource> getWikiUserResources() {
     return getResources(USER_WIKIS_PATH);
   }
 
+  /**
+   * Gets the management controller.
+   *
+   * @return the management controller
+   */
   private ManagementController getManagementController() {
     if (managementController == null) {
       managementController = (ManagementController) PortalContainer.getInstance().getComponentInstanceOfType(ManagementController.class);
@@ -200,6 +244,11 @@ public class StagingServiceImpl implements StagingService {
     return managementController;
   }
 
+  /**
+   * Gets the WCM configuration service.
+   *
+   * @return the WCM configuration service
+   */
   private WCMConfigurationService getWCMConfigurationService() {
     if (wcmConfigurationService == null) {
       wcmConfigurationService = (WCMConfigurationService) PortalContainer.getInstance().getComponentInstanceOfType(WCMConfigurationService.class);
@@ -207,6 +256,11 @@ public class StagingServiceImpl implements StagingService {
     return wcmConfigurationService;
   }
 
+  /**
+   * Gets the repository service.
+   *
+   * @return the repository service
+   */
   private RepositoryService getRepositoryService() {
     if (repositoryService == null) {
       repositoryService = (RepositoryService) PortalContainer.getInstance().getComponentInstanceOfType(RepositoryService.class);

@@ -1,12 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.service.jcr;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
 
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.io.FileUtils;
@@ -23,9 +33,30 @@ import org.exoplatform.services.jcr.impl.backup.BackupException;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+
+/**
+ * The Class JCRRestore.
+ */
 public class JCRRestore {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(BackupImportResource.class);
 
+  /**
+   * Restore.
+   *
+   * @param portalContainer the portal container
+   * @param backupDirFile the backup dir file
+   * @return the list
+   * @throws Exception the exception
+   */
   public static List<File> restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
     RepositoryService repositoryService = (RepositoryService) portalContainer.getComponentInstanceOfType(RepositoryService.class);
 
@@ -63,6 +94,14 @@ public class JCRRestore {
     return logFiles;
   }
 
+  /**
+   * Gets the log files.
+   *
+   * @param backupDirFile the backup dir file
+   * @param filesList the files list
+   * @return the log files
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   private static List<File> getLogFiles(File backupDirFile, List<File> filesList) throws IOException {
     if (filesList == null) {
       filesList = new ArrayList<File>();
@@ -79,10 +118,25 @@ public class JCRRestore {
     return filesList;
   }
 
+  /**
+   * Removes the repository.
+   *
+   * @param repositoryService the repository service
+   * @param repositoryName the repository name
+   * @throws RepositoryException the repository exception
+   */
   private static void removeRepository(RepositoryService repositoryService, String repositoryName) throws RepositoryException {
     repositoryService.removeRepository(repositoryName, true);
   }
 
+  /**
+   * Suspend repository.
+   *
+   * @param repositoryService the repository service
+   * @param repositoryName the repository name
+   * @return the manageable repository
+   * @throws RepositoryConfigurationException the repository configuration exception
+   */
   private static ManageableRepository suspendRepository(RepositoryService repositoryService, String repositoryName) throws RepositoryConfigurationException {
     ManageableRepository repository = null;
     try {
@@ -94,6 +148,12 @@ public class JCRRestore {
     return repository;
   }
 
+  /**
+   * Resume repository.
+   *
+   * @param repositoryService the repository service
+   * @param repositoryName the repository name
+   */
   private static void resumeRepository(RepositoryService repositoryService, String repositoryName) {
     if (repositoryName != null) {
       try {
@@ -112,6 +172,14 @@ public class JCRRestore {
     }
   }
 
+  /**
+   * Restore repository.
+   *
+   * @param repositoryService the repository service
+   * @param portalContainer the portal container
+   * @param rblog the rblog
+   * @throws Exception the exception
+   */
   @SuppressWarnings("unchecked")
   private static void restoreRepository(RepositoryService repositoryService, PortalContainer portalContainer, RepositoryBackupChainLog rblog) throws Exception {
     RepositoryEntry repositoryEntry = rblog.getOriginalRepositoryEntry();

@@ -1,21 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.service.api;
-
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.net.ConnectException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
@@ -34,21 +35,51 @@ import org.gatein.management.api.controller.ManagedResponse;
 import org.gatein.management.api.controller.ManagementController;
 import org.gatein.management.api.operation.OperationNames;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.net.ConnectException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+
+/**
+ * The Class AbstractResourceHandler.
+ */
 public abstract class AbstractResourceHandler implements ResourceHandler {
 
+  /** The Constant MANAGED_COMPONENT_REST_URI. */
   protected static final String MANAGED_COMPONENT_REST_URI = "/rest/private/managed-components";
 
+  /** The log. */
   private Log log = ExoLogger.getLogger(this.getClass());
 
+  /**
+   * Gets the logger.
+   *
+   * @return the logger
+   */
   protected Log getLogger() {
     return log;
   }
 
-  /**
-   * GateIN Management Controller
-   */
+  /** GateIN Management Controller. */
   private ManagementController managementController = null;
 
+  /**
+   * Gets the gateIN Management Controller.
+   *
+   * @return the gateIN Management Controller
+   */
   protected ManagementController getManagementController() {
     if (managementController == null) {
       managementController = (ManagementController) PortalContainer.getInstance().getComponentInstanceOfType(ManagementController.class);
@@ -111,12 +142,13 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   }
 
   /**
-   * Sends data (exported zip) to the target server
-   * 
-   * @param response
-   * @param options
-   * @param targetServer
-   * @return
+   * Sends data (exported zip) to the target server.
+   *
+   * @param file the file
+   * @param options the options
+   * @param targetServer the target server
+   * @return true, if successful
+   * @throws Exception the exception
    */
   protected boolean sendData(File file, Map<String, String> options, TargetServer targetServer) throws Exception {
     FileInputStream fileInputStream = null;
@@ -161,12 +193,10 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
   /**
    * Call GateIN Management Controller to export selected resource using options
-   * passed in filters
-   * 
-   * @param path
-   *          managed path
-   * @param selectedOptions
-   *          passed to GateIN Management SPI
+   * passed in filters.
+   *
+   * @param path managed path
+   * @param selectedOptions passed to GateIN Management SPI
    * @return archive file exported from GateIN Management Controller call
    */
   public ManagedResponse getExportedResourceFromOperation(String path, Map<String, String> selectedOptions) {
@@ -182,12 +212,12 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   }
 
   /**
-   * Buil server URL
-   * 
-   * @param targetServer
-   * @param uri
-   * @param options
-   * @return
+   * Buil server URL.
+   *
+   * @param targetServer the target server
+   * @param uri the uri
+   * @param options the options
+   * @return the server URL
    */
   public static String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
     String targetServerURL = "http";
@@ -209,14 +239,21 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
   }
 
   /**
-   * Delete temp files created by GateIN management operations
-   * 
+   * Delete temp files created by GateIN management operations.
    */
   protected void clearTempFiles() {
     deleteTempFilesStartingWith("gatein-export(.*)\\.zip");
     deleteTempFilesStartingWith("data(.*)\\.xml");
   }
 
+  /**
+   * Export.
+   *
+   * @param resource the resource
+   * @param exportFileOS the export file OS
+   * @param exportOptions the export options
+   * @throws Exception the exception
+   */
   private void export(Resource resource, ZipOutputStream exportFileOS, Map<String, String> exportOptions) throws Exception {
     FileOutputStream outputStream = null;
     FileInputStream inputStream = null;
@@ -255,6 +292,15 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     }
   }
 
+  /**
+   * Synchronize.
+   *
+   * @param resource the resource
+   * @param exportOptions the export options
+   * @param importOptions the import options
+   * @param targetServer the target server
+   * @throws Exception the exception
+   */
   private void synchronize(Resource resource, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception {
     FileOutputStream fileOutputStream = null;
     File tmpFile = null;
@@ -283,6 +329,12 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     }
   }
 
+  /**
+   * Encode URL parameters.
+   *
+   * @param options the options
+   * @return the string
+   */
   private static String encodeURLParameters(Map<String, String> options) {
     Map<String, List<String>> attributes = extractAttributes(options);
     List<NameValuePair> parameters = new ArrayList<NameValuePair>();
@@ -303,9 +355,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    * Example : * filter/with-membership -> true * filter/replace-existing ->
    * true * importMode -> merge is converted to * filter ->
    * {with-membership:true, replace-existing} * importMode -> {merge}
-   * 
-   * @param selectedOptions
-   * @return
+   *
+   * @param selectedOptions the selected options
+   * @return the map
    */
   private static Map<String, List<String>> extractAttributes(Map<String, String> selectedOptions) {
     Map<String, List<String>> attributes = new HashMap<String, List<String>>();
@@ -339,6 +391,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     return attributes;
   }
 
+  /**
+   * Delete temp files starting with.
+   *
+   * @param regex the regex
+   */
   protected void deleteTempFilesStartingWith(String regex) {
     String tempDirPath = System.getProperty("java.io.tmpdir");
     File file = new File(tempDirPath);
@@ -353,6 +410,11 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
     }
   }
 
+  /**
+   * Delete file.
+   *
+   * @param tempFile the temp file
+   */
   protected void deleteFile(File tempFile) {
     if (tempFile != null && tempFile.exists() && !tempFile.isDirectory()) {
       try {

@@ -1,14 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.mop.operations;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-
-import javax.jcr.Session;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.chromattic.ChromatticLifeCycle;
@@ -48,12 +56,32 @@ import org.gatein.management.api.operation.model.NoResultModel;
 import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+
+import javax.jcr.Session;
+
+/**
+ * The Class MopImportResource.
+ */
 public class MopImportResource extends AbstractOperationHandler {
+  
+  /** The Constant RESOURCE_PATH_PATTERN. */
   private static final Pattern RESOURCE_PATH_PATTERN = Pattern.compile("^(portal|group|user)/(.*)/(pages\\.xml|navigation\\.xml|portal\\.xml|user\\.xml|group\\.xml)");
+  
+  /** The Constant log. */
   private static final Logger log = LoggerFactory.getLogger(MopImportResource.class);
 
   // TODO: Would like to see the step operations be handled by mgmt core.
 
+  /**
+   * {@inheritDoc}
+   */
   // TODO: Clean this up when we have time
   @Override
   public void execute(final OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
@@ -305,6 +333,11 @@ public class MopImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Increase chromattic session timeout.
+   *
+   * @param operationContext the operation context
+   */
   private void increaseChromatticSessionTimeout(OperationContext operationContext) {
     ChromatticManager manager = operationContext.getRuntimeContext().getRuntimeComponent(ChromatticManager.class);
     ChromatticLifeCycle chromatticLifeCycle = manager.getLifeCycle("mop");
@@ -321,6 +354,11 @@ public class MopImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Clear caches.
+   *
+   * @param cacheService the cache service
+   */
   @SuppressWarnings("rawtypes")
   public void clearCaches(CacheService cacheService) {
     for (Object o : cacheService.getAllCacheInstances()) {
@@ -334,6 +372,13 @@ public class MopImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Parses the entry.
+   *
+   * @param entry the entry
+   * @return the string[]
+   * @throws IOException Signals that an I/O exception has occurred.
+   */
   private static String[] parseEntry(ZipEntry entry) throws IOException {
     String name = entry.getName();
     Matcher matcher = RESOURCE_PATH_PATTERN.matcher(name);
@@ -348,9 +393,18 @@ public class MopImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * The Class MopImport.
+   */
   private static class MopImport {
+    
+    /** The site task. */
     private SiteLayoutImportTask siteTask;
+    
+    /** The page task. */
     private PageImportTask pageTask;
+    
+    /** The navigation task. */
     private NavigationImportTask navigationTask;
   }
 }

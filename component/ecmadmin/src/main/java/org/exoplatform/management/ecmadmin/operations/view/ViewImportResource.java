@@ -1,10 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.view;
-
-import java.util.Iterator;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.Node;
 
 import org.apache.tika.io.IOUtils;
 import org.exoplatform.container.xml.InitParams;
@@ -23,23 +35,48 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.util.Iterator;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.Node;
+
 /**
+ * The Class ViewImportResource.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
 public class ViewImportResource extends ECMAdminImportResource {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(ViewImportResource.class);
+  
+  /** The view service. */
   private static ManageViewService viewService = null;
+  
+  /** The node hierarchy creator. */
   private static NodeHierarchyCreator nodeHierarchyCreator;
 
+  /**
+   * Instantiates a new view import resource.
+   */
   public ViewImportResource() {
     this(null);
   }
 
+  /**
+   * Instantiates a new view import resource.
+   *
+   * @param filePath the file path
+   */
   public ViewImportResource(String filePath) {
     super(filePath);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream
@@ -134,10 +171,21 @@ public class ViewImportResource extends ECMAdminImportResource {
     }
   }
 
+  /**
+   * Gets the templates home path.
+   *
+   * @return the templates home path
+   */
   private String getTemplatesHomePath() {
     return nodeHierarchyCreator.getJcrPath(BasePath.ECM_EXPLORER_TEMPLATES);
   }
 
+  /**
+   * Extract template name.
+   *
+   * @param filePath the file path
+   * @return the string
+   */
   private String extractTemplateName(String filePath) {
     return filePath.replace("ecmadmin/view/templates/", "").replace(".gtmpl", "");
   }

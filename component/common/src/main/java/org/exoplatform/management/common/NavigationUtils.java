@@ -1,12 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.common;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
-import javax.jcr.RepositoryException;
 
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.Application;
@@ -23,10 +33,23 @@ import org.exoplatform.portal.mop.user.UserNode;
 import org.exoplatform.portal.mop.user.UserNodeFilterConfig;
 import org.exoplatform.portal.mop.user.UserPortal;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.jcr.RepositoryException;
+
+/**
+ * The Class NavigationUtils.
+ */
 public class NavigationUtils {
 
+  /** The Constant FILTER_CONFIG. */
   private final static UserNodeFilterConfig FILTER_CONFIG;
 
+  /** The Constant URIS_CACHE. */
   private final static Map<String, String> URIS_CACHE = new HashMap<String, String>();
 
   static {
@@ -37,12 +60,16 @@ public class NavigationUtils {
   }
 
   /**
-   * 
-   * @param siteName
-   * @param nodePath
+   * Gets the nav URI with application.
+   *
+   * @param pageService the page service
+   * @param dataStorage the data storage
+   * @param userPortal the user portal
+   * @param siteKey the site key
+   * @param applicationName the application name
    * @return the corresponding Navigation URI (without "/portal/{siteName}" as
    *         prefix)
-   * @throws Exception
+   * @throws Exception the exception
    */
   public static String getNavURIWithApplication(PageService pageService, DataStorage dataStorage, UserPortal userPortal, SiteKey siteKey, String applicationName) throws Exception {
     if (URIS_CACHE.containsKey(siteKey.toString() + applicationName)) {
@@ -72,6 +99,14 @@ public class NavigationUtils {
     return null;
   }
 
+  /**
+   * Search user node by page reference.
+   *
+   * @param userPortal the user portal
+   * @param nav the nav
+   * @param pageReference the page reference
+   * @return the user node
+   */
   private static UserNode searchUserNodeByPageReference(UserPortal userPortal, UserNavigation nav, String pageReference) {
     if (nav != null) {
       try {
@@ -90,6 +125,13 @@ public class NavigationUtils {
     return null;
   }
 
+  /**
+   * Search user node by page reference.
+   *
+   * @param userNodes the user nodes
+   * @param pageReference the page reference
+   * @return the user node
+   */
   private static UserNode searchUserNodeByPageReference(Collection<UserNode> userNodes, String pageReference) {
     if (userNodes == null || userNodes.isEmpty()) {
       return null;
@@ -107,6 +149,15 @@ public class NavigationUtils {
     return null;
   }
 
+  /**
+   * Page contains application.
+   *
+   * @param children the children
+   * @param applicationName the application name
+   * @return true, if successful
+   * @throws Exception the exception
+   * @throws RepositoryException the repository exception
+   */
   private static boolean pageContainsApplication(ArrayList<ModelObject> children, String applicationName) throws Exception, RepositoryException {
     if (children != null && !children.isEmpty()) {
       for (ModelObject modelObject : children) {

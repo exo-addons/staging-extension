@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,11 +19,6 @@
 
 package org.exoplatform.management.mop.exportimport;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.PortalConfig;
 import org.exoplatform.portal.mop.SiteKey;
@@ -34,11 +26,20 @@ import org.exoplatform.portal.mop.SiteType;
 import org.gatein.management.api.binding.Marshaller;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
+ * The Class SiteLayoutExportTask.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class SiteLayoutExportTask extends AbstractExportTask implements ExportTask {
+  
+  /** The Constant FILES. */
   public static final Set<String> FILES;
   static {
     HashSet<String> tmp = new HashSet<String>(3);
@@ -48,15 +49,28 @@ public class SiteLayoutExportTask extends AbstractExportTask implements ExportTa
     FILES = tmp;
   }
 
+  /** The data storage. */
   private final DataStorage dataStorage;
+  
+  /** The marshaller. */
   private final Marshaller<PortalConfig> marshaller;
 
+  /**
+   * Instantiates a new site layout export task.
+   *
+   * @param siteKey the site key
+   * @param dataStorage the data storage
+   * @param marshaller the marshaller
+   */
   public SiteLayoutExportTask(SiteKey siteKey, DataStorage dataStorage, Marshaller<PortalConfig> marshaller) {
     super(siteKey);
     this.dataStorage = dataStorage;
     this.marshaller = marshaller;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected String getXmlFileName() {
     if (siteKey.getType() == SiteType.PORTAL) {
@@ -70,6 +84,9 @@ public class SiteLayoutExportTask extends AbstractExportTask implements ExportTa
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void export(OutputStream outputStream) throws IOException {
     PortalConfig portalConfig;

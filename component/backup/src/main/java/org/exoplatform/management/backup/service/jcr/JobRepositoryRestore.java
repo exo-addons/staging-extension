@@ -1,13 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.service.jcr;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
-
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.RepositoryException;
 
 import org.exoplatform.commons.utils.ClassLoading;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -33,12 +42,25 @@ import org.exoplatform.services.jcr.impl.core.WorkspaceInitializer;
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.RepositoryException;
+
 /**
+ * The Class JobRepositoryRestore.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class JobRepositoryRestore extends Thread {
+  
+  /** The Constant LOG. */
   protected static final Log LOG = ExoLogger.getLogger(JobRepositoryRestore.class);
 
   /**
@@ -76,14 +98,26 @@ public class JobRepositoryRestore extends Thread {
    */
   private Throwable restoreException = null;
 
+  /** The repository service. */
   protected RepositoryService repositoryService;
 
+  /** The repository entry. */
   protected RepositoryEntry repositoryEntry;
 
+  /** The workspaces mapping. */
   protected Map<String, File> workspacesMapping;
 
+  /** The repository backup chain log file. */
   private File repositoryBackupChainLogFile;
 
+  /**
+   * Instantiates a new job repository restore.
+   *
+   * @param repoService the repo service
+   * @param repositoryEntry the repository entry
+   * @param workspacesMapping the workspaces mapping
+   * @param backupChainLog the backup chain log
+   */
   public JobRepositoryRestore(RepositoryService repoService, RepositoryEntry repositoryEntry, Map<String, File> workspacesMapping, File backupChainLog) {
     super("JobRepositoryRestore " + repositoryEntry.getName());
     this.repositoryService = repoService;
@@ -114,6 +148,11 @@ public class JobRepositoryRestore extends Thread {
     }
   }
 
+  /**
+   * Restore repository.
+   *
+   * @throws Exception the exception
+   */
   protected void restoreRepository() throws Exception {
     List<WorkspaceEntry> originalWorkspaceEntrys = repositoryEntry.getWorkspaceEntries();
 
@@ -150,6 +189,14 @@ public class JobRepositoryRestore extends Thread {
     }
   }
 
+  /**
+   * Restore system workspace.
+   *
+   * @param originalInitializer the original initializer
+   * @param currennWorkspaceName the currenn workspace name
+   * @throws RepositoryException the repository exception
+   * @throws RepositoryConfigurationException the repository configuration exception
+   */
   private void restoreSystemWorkspace(WorkspaceInitializerEntry originalInitializer, String currennWorkspaceName) throws RepositoryException, RepositoryConfigurationException {
     // set original initializer to created workspace.
     RepositoryImpl defRep = (RepositoryImpl) repositoryService.getRepository(repositoryEntry.getName());
@@ -178,6 +225,15 @@ public class JobRepositoryRestore extends Thread {
     createdWorkspaceEntry.setInitializer(originalInitializer);
   }
 
+  /**
+   * Inits the repository params.
+   *
+   * @param originalWorkspaceEntrys the original workspace entrys
+   * @return the workspace initializer entry
+   * @throws RepositoryRestoreExeption the repository restore exeption
+   * @throws BackupOperationException the backup operation exception
+   * @throws ClassNotFoundException the class not found exception
+   */
   private WorkspaceInitializerEntry initRepositoryParams(List<WorkspaceEntry> originalWorkspaceEntrys) throws RepositoryRestoreExeption, BackupOperationException, ClassNotFoundException {
     // Getting system workspace entry
     WorkspaceEntry systemWorkspaceEntry = null;
@@ -208,6 +264,14 @@ public class JobRepositoryRestore extends Thread {
     return wieOriginal;
   }
 
+  /**
+   * Removes the repository.
+   *
+   * @param repositoryService the repository service
+   * @param repositoryName the repository name
+   * @throws RepositoryException the repository exception
+   * @throws RepositoryConfigurationException the repository configuration exception
+   */
   protected void removeRepository(RepositoryService repositoryService, String repositoryName) throws RepositoryException, RepositoryConfigurationException {
     ManageableRepository mr = null;
     try {
@@ -221,6 +285,14 @@ public class JobRepositoryRestore extends Thread {
     }
   }
 
+  /**
+   * Gets the workspace initializer entry.
+   *
+   * @param systemBackupChainLog the system backup chain log
+   * @return the workspace initializer entry
+   * @throws BackupOperationException the backup operation exception
+   * @throws ClassNotFoundException the class not found exception
+   */
   private WorkspaceInitializerEntry getWorkspaceInitializerEntry(BackupChainLog systemBackupChainLog) throws BackupOperationException, ClassNotFoundException {
     String fullBackupPath = systemBackupChainLog.getJobEntryInfos().get(0).getURL().getPath();
     String fullbackupType = null;
@@ -248,6 +320,12 @@ public class JobRepositoryRestore extends Thread {
     return wiEntry;
   }
 
+  /**
+   * Close all session.
+   *
+   * @param mr the mr
+   * @throws NoSuchWorkspaceException the no such workspace exception
+   */
   private void closeAllSession(ManageableRepository mr) throws NoSuchWorkspaceException {
     for (String wsName : mr.getWorkspaceNames()) {
       if (!mr.canRemoveWorkspace(wsName)) {
@@ -318,8 +396,9 @@ public class JobRepositoryRestore extends Thread {
 
   /**
    * GetRepositoryBackupChainLog.
-   * 
+   *
    * @return repositoryBackupChainLog
+   * @throws BackupOperationException the backup operation exception
    */
   public RepositoryBackupChainLog getRepositoryBackupChainLog() throws BackupOperationException {
     return new RepositoryBackupChainLog(repositoryBackupChainLogFile);
@@ -334,6 +413,17 @@ public class JobRepositoryRestore extends Thread {
     return repositoryEntry;
   }
 
+  /**
+   * Restore over initializer.
+   *
+   * @param log the log
+   * @param repositoryName the repository name
+   * @param workspaceEntry the workspace entry
+   * @throws BackupOperationException the backup operation exception
+   * @throws RepositoryException the repository exception
+   * @throws RepositoryConfigurationException the repository configuration exception
+   * @throws BackupConfigurationException the backup configuration exception
+   */
   protected void restoreOverInitializer(BackupChainLog log, String repositoryName, WorkspaceEntry workspaceEntry) throws BackupOperationException, RepositoryException,
       RepositoryConfigurationException, BackupConfigurationException {
     List<JobEntryInfo> list = log.getJobEntryInfos();
@@ -370,6 +460,15 @@ public class JobRepositoryRestore extends Thread {
     }
   }
 
+  /**
+   * Full restore over initializer.
+   *
+   * @param pathBackupFile the path backup file
+   * @param repositoryName the repository name
+   * @param workspaceEntry the workspace entry
+   * @param fBackupType the f backup type
+   * @throws Exception the exception
+   */
   private void fullRestoreOverInitializer(String pathBackupFile, String repositoryName, WorkspaceEntry workspaceEntry, String fBackupType) throws Exception {
     WorkspaceInitializerEntry wieOriginal = workspaceEntry.getInitializer();
     RepositoryImpl defRep = (RepositoryImpl) repositoryService.getRepository(repositoryName);
@@ -409,6 +508,15 @@ public class JobRepositoryRestore extends Thread {
     createdWorkspaceEntry.setInitializer(wieOriginal);
   }
 
+  /**
+   * Workspace already exist.
+   *
+   * @param repository the repository
+   * @param workspace the workspace
+   * @return true, if successful
+   * @throws RepositoryException the repository exception
+   * @throws RepositoryConfigurationException the repository configuration exception
+   */
   private boolean workspaceAlreadyExist(String repository, String workspace) throws RepositoryException, RepositoryConfigurationException {
     String[] ws = repositoryService.getRepository(repository).getWorkspaceNames();
     for (int i = 0; i < ws.length; i++) {

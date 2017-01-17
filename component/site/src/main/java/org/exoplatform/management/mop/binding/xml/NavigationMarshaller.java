@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -25,16 +22,6 @@ package org.exoplatform.management.mop.binding.xml;
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.createWriter;
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.writeOptionalElement;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.xml.XMLConstants;
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLStreamException;
-
 import org.exoplatform.portal.config.model.LocalizedString;
 import org.exoplatform.portal.config.model.ModelUnmarshaller;
 import org.exoplatform.portal.config.model.NavigationFragment;
@@ -46,16 +33,38 @@ import org.gatein.management.api.binding.BindingException;
 import org.gatein.management.api.binding.Marshaller;
 import org.staxnav.StaxNavException;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.xml.XMLConstants;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamException;
+
 /**
+ * The Class NavigationMarshaller.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class NavigationMarshaller implements Marshaller<PageNavigation> {
 
+  /**
+   * {@inheritDoc}
+   */
   public void marshal(PageNavigation object, OutputStream outputStream, boolean pretty) throws BindingException {
     marshal(object, outputStream);
   }
 
+  /**
+   * Marshal.
+   *
+   * @param navigation the navigation
+   * @param outputStream the output stream
+   * @throws BindingException the binding exception
+   */
   public void marshal(PageNavigation navigation, OutputStream outputStream) throws BindingException {
     try {
       StaxWriter<Element> writer = createWriter(Element.class, outputStream);
@@ -67,6 +76,9 @@ public class NavigationMarshaller implements Marshaller<PageNavigation> {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public PageNavigation unmarshal(InputStream is) throws BindingException {
     try {
@@ -76,6 +88,13 @@ public class NavigationMarshaller implements Marshaller<PageNavigation> {
     }
   }
 
+  /**
+   * Marshal navigation.
+   *
+   * @param writer the writer
+   * @param navigation the navigation
+   * @throws XMLStreamException the XML stream exception
+   */
   private void marshalNavigation(StaxWriter<Element> writer, PageNavigation navigation) throws XMLStreamException {
     writer.writeStartElement(Element.NODE_NAVIGATION);
 
@@ -106,6 +125,13 @@ public class NavigationMarshaller implements Marshaller<PageNavigation> {
     writer.writeEndElement(); // End node-navigation
   }
 
+  /**
+   * Marshall node.
+   *
+   * @param writer the writer
+   * @param node the node
+   * @throws XMLStreamException the XML stream exception
+   */
   public void marshallNode(StaxWriter<Element> writer, PageNode node) throws XMLStreamException {
     writer.writeStartElement(Element.NODE);
     writer.writeElement(Element.NAME, node.getName());

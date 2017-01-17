@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -32,10 +29,16 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.mop.api.workspace.Site;
 
 /**
+ * The Class SiteLayoutReadConfigAsXml.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class SiteLayoutReadConfigAsXml extends AbstractSiteOperationHandler {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException {
     DataStorage dataStorage = operationContext.getRuntimeContext().getRuntimeComponent(DataStorage.class);

@@ -1,10 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.drive;
-
-import java.io.IOException;
-import java.io.StringReader;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.xml.ComponentPlugin;
@@ -25,22 +37,45 @@ import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
 /**
+ * The Class DriveImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class DriveImportResource extends ECMAdminImportResource {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(DriveImportResource.class);
+  
+  /** The drive service. */
   private ManageDriveService driveService;
 
+  /**
+   * Instantiates a new drive import resource.
+   */
   public DriveImportResource() {
     super(null);
   }
 
+  /**
+   * Instantiates a new drive import resource.
+   *
+   * @param filePath the file path
+   */
   public DriveImportResource(String filePath) {
     super(filePath);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream

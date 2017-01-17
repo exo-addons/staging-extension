@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -25,13 +22,6 @@ package org.exoplatform.management.mop.binding.xml;
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.createWriter;
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.writeOptionalElement;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.List;
-import java.util.Map;
-
-import javax.xml.stream.XMLStreamException;
-
 import org.exoplatform.portal.config.model.Container;
 import org.exoplatform.portal.config.model.ModelObject;
 import org.exoplatform.portal.config.model.ModelUnmarshaller;
@@ -40,16 +30,36 @@ import org.gatein.common.xml.stax.writer.StaxWriter;
 import org.gatein.management.api.binding.BindingException;
 import org.staxnav.StaxNavException;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Map;
+
+import javax.xml.stream.XMLStreamException;
+
 /**
+ * The Class SiteLayoutMarshaller.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class SiteLayoutMarshaller extends AbstractMarshaller<PortalConfig> {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void marshal(PortalConfig object, OutputStream outputStream, boolean pretty) throws BindingException {
     marshal(object, outputStream);
   }
 
+  /**
+   * Marshal.
+   *
+   * @param object the object
+   * @param outputStream the output stream
+   * @throws BindingException the binding exception
+   */
   public void marshal(PortalConfig object, OutputStream outputStream) throws BindingException {
     try {
       StaxWriter<Element> writer = createWriter(Element.class, outputStream);
@@ -68,6 +78,9 @@ public class SiteLayoutMarshaller extends AbstractMarshaller<PortalConfig> {
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public PortalConfig unmarshal(InputStream is) throws BindingException {
     try {
@@ -77,6 +90,13 @@ public class SiteLayoutMarshaller extends AbstractMarshaller<PortalConfig> {
     }
   }
 
+  /**
+   * Marshal portal config.
+   *
+   * @param writer the writer
+   * @param portalConfig the portal config
+   * @throws XMLStreamException the XML stream exception
+   */
   private void marshalPortalConfig(StaxWriter<Element> writer, PortalConfig portalConfig) throws XMLStreamException {
     writer.writeElement(Element.PORTAL_NAME, portalConfig.getName());
     writeOptionalElement(writer, Element.LABEL, portalConfig.getLabel());
@@ -124,12 +144,23 @@ public class SiteLayoutMarshaller extends AbstractMarshaller<PortalConfig> {
     }
   }
 
+  /**
+   * The Enum Attribute.
+   */
   private static enum Attribute
   {
+    
+    /** The properties key. */
     PROPERTIES_KEY("key");
 
+    /** The name. */
     private final String name;
 
+    /**
+     * Instantiates a new attribute.
+     *
+     * @param name the name
+     */
     Attribute(final String name) {
       this.name = name;
     }

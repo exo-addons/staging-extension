@@ -1,10 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.templates.nodetypes;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
 
 import org.exoplatform.management.common.AbstractOperationHandler;
 import org.exoplatform.management.ecmadmin.exporttask.NodeFileExportTask;
@@ -18,18 +30,33 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+
 /**
+ * The Class NodeTypesTemplatesExportResource.
+ *
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @version $Revision$
  */
 public class NodeTypesTemplatesExportResource extends AbstractOperationHandler {
 
+  /** The Constant EXPORT_BASE_PATH. */
   private static final String EXPORT_BASE_PATH = "ecmadmin/templates/nodetypes";
 
+  /** The metadata. */
   private NodeTypeTemplatesMetaData metadata;
+  
+  /** The template service. */
   private TemplateService templateService;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
@@ -87,13 +114,13 @@ public class NodeTypesTemplatesExportResource extends AbstractOperationHandler {
   }
 
   /**
-   * Add an export task for each templates of this type
-   * 
-   * @param exportTasks
-   * @param templatesHomePath
-   * @param node
-   * @param viewNode
-   * @throws RepositoryException
+   * Add an export task for each templates of this type.
+   *
+   * @param parentNode the parent node
+   * @param type the type
+   * @param templatesHomePath the templates home path
+   * @param exportTasks the export tasks
+   * @throws Exception the exception
    */
   private void exportTemplates(Node parentNode, String type, String templatesHomePath, List<ExportTask> exportTasks) throws Exception {
     if (parentNode != null) {

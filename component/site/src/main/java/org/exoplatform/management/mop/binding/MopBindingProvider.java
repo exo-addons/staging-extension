@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,10 +19,6 @@
 
 package org.exoplatform.management.mop.binding;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-
 import org.exoplatform.management.mop.binding.xml.NavigationMarshaller;
 import org.exoplatform.management.mop.binding.xml.PageMarshaller;
 import org.exoplatform.management.mop.binding.xml.SiteLayoutMarshaller;
@@ -37,15 +30,29 @@ import org.gatein.management.api.binding.BindingException;
 import org.gatein.management.api.binding.BindingProvider;
 import org.gatein.management.api.binding.Marshaller;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+
 /**
+ * The Class MopBindingProvider.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class MopBindingProvider implements BindingProvider {
+  
+  /** The Constant INSTANCE. */
   public static final MopBindingProvider INSTANCE = new MopBindingProvider();
 
+  /**
+   * Instantiates a new mop binding provider.
+   */
   private MopBindingProvider() {}
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public <T> Marshaller<T> getMarshaller(Class<T> type, ContentType contentType) throws BindingException {
     switch (contentType) {
@@ -58,6 +65,13 @@ public class MopBindingProvider implements BindingProvider {
     }
   }
 
+  /**
+   * Gets the xml marshaller.
+   *
+   * @param <T> the generic type
+   * @param type the type
+   * @return the xml marshaller
+   */
   @SuppressWarnings("unchecked")
   private <T> Marshaller<T> getXmlMarshaller(Class<T> type) {
     if (Page.class.isAssignableFrom(type)) {
@@ -73,12 +87,17 @@ public class MopBindingProvider implements BindingProvider {
     return null;
   }
 
+  /**
+   * The Class XmlMarshallers.
+   */
   private static class XmlMarshallers {
 
     // ------------------------------------ Page Marshallers
+    /** The pages marshaller. */
     // ------------------------------------//
     private static Marshaller<Page.PageSet> pages_marshaller = new PageMarshaller();
 
+    /** The page marshaller. */
     private static Marshaller<Page> page_marshaller = new Marshaller<Page>() {
 
       public void marshal(Page object, OutputStream outputStream, boolean pretty) throws BindingException {
@@ -107,8 +126,10 @@ public class MopBindingProvider implements BindingProvider {
       }
     };
 
+    /** The navigation marshaller. */
     private static Marshaller<PageNavigation> navigation_marshaller = new NavigationMarshaller();
 
+    /** The site marshaller. */
     private static Marshaller<PortalConfig> site_marshaller = new SiteLayoutMarshaller();
   }
 }

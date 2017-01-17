@@ -1,4 +1,30 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.common.importop;
+
+import org.exoplatform.commons.utils.ActivityTypeUtils;
+import org.exoplatform.management.common.FileEntry;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
+import org.exoplatform.services.cache.CacheService;
+import org.exoplatform.services.cache.ExoCache;
+import org.exoplatform.services.ecm.publication.PublicationService;
+import org.exoplatform.services.wcm.publication.WCMPublicationService;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,21 +43,29 @@ import javax.jcr.nodetype.NodeType;
 import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 
-import org.exoplatform.commons.utils.ActivityTypeUtils;
-import org.exoplatform.management.common.FileEntry;
-import org.exoplatform.management.common.exportop.JCRNodeExportTask;
-import org.exoplatform.services.cache.CacheService;
-import org.exoplatform.services.cache.ExoCache;
-import org.exoplatform.services.ecm.publication.PublicationService;
-import org.exoplatform.services.wcm.publication.WCMPublicationService;
-
+/**
+ * The Class AbstractJCRImportOperationHandler.
+ */
 public abstract class AbstractJCRImportOperationHandler extends AbstractImportOperationHandler {
 
+  /** The publication service. */
   protected PublicationService publicationService;
+  
+  /** The wcm publication service. */
   protected WCMPublicationService wcmPublicationService;
 
+  /** The is NT recursive map. */
   private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
+  /**
+   * Import node.
+   *
+   * @param fileEntry the file entry
+   * @param workspace the workspace
+   * @param isCleanPublication the is clean publication
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   protected final boolean importNode(FileEntry fileEntry, String workspace, boolean isCleanPublication) throws Exception {
     File xmlFile = fileEntry.getFile();
     if (xmlFile == null || !xmlFile.exists()) {
@@ -51,6 +85,17 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
+  /**
+   * Import node.
+   *
+   * @param nodePath the node path
+   * @param workspace the workspace
+   * @param inputStream the input stream
+   * @param historyFile the history file
+   * @param isCleanPublication the is clean publication
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   protected final boolean importNode(String nodePath, String workspace, InputStream inputStream, File historyFile, boolean isCleanPublication) throws Exception {
     String parentNodePath = nodePath.substring(0, nodePath.lastIndexOf("/"));
     parentNodePath = parentNodePath.replaceAll("//", "/");
@@ -126,6 +171,13 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
+  /**
+   * Removes the.
+   *
+   * @param node the node
+   * @param session the session
+   * @throws Exception the exception
+   */
   private void remove(Node node, Session session) throws Exception {
     if (node.hasNodes() && !isRecursiveDelete(node)) {
       NodeIterator subnodes = node.getNodes();
@@ -139,6 +191,13 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     session.save();
   }
 
+  /**
+   * Checks if is recursive delete.
+   *
+   * @param node the node
+   * @return true, if is recursive delete
+   * @throws Exception the exception
+   */
   protected final boolean isRecursiveDelete(Node node) throws Exception {
     NodeType nodeType = node.getPrimaryNodeType();
     NodeType[] nodeTypes = node.getMixinNodeTypes();
@@ -153,6 +212,13 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     return recursive;
   }
 
+  /**
+   * Checks if is recursive NT.
+   *
+   * @param nodeType the node type
+   * @return true, if is recursive NT
+   * @throws Exception the exception
+   */
   protected final boolean isRecursiveNT(NodeType nodeType) throws Exception {
     if (nodeType.getName().equals("exo:actionStorage")) {
       return true;
@@ -173,6 +239,13 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     return isNTRecursiveMap.get(nodeType.getName());
   }
 
+  /**
+   * Clean publication.
+   *
+   * @param parentPath the parent path
+   * @param session the session
+   * @throws Exception the exception
+   */
   protected final void cleanPublication(String parentPath, Session session) throws Exception {
     QueryManager manager = session.getWorkspace().getQueryManager();
     String statement = "select * from nt:base where jcr:path LIKE '" + parentPath + "/%' and publication:liveRevision IS NOT NULL";
@@ -188,6 +261,12 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
+  /**
+   * Clean publication.
+   *
+   * @param node the node
+   * @throws Exception the exception
+   */
   protected final void cleanPublication(Node node) throws Exception {
     if (node.hasProperty("publication:currentState")) {
       log.info("\"" + node.getName() + "\" publication lifecycle has been cleaned up");
@@ -211,6 +290,14 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     }
   }
 
+  /**
+   * Creates the JCR path.
+   *
+   * @param session the session
+   * @param path the path
+   * @return the node
+   * @throws RepositoryException the repository exception
+   */
   protected final Node createJCRPath(Session session, String path) throws RepositoryException {
     String[] ancestors = path.split("/");
     Node current = session.getRootNode();
@@ -230,6 +317,12 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     return current;
   }
 
+  /**
+   * Gets the node path.
+   *
+   * @param filePath the file path
+   * @return the node path
+   */
   public String getNodePath(String filePath) {
     String[] fileParts = filePath.split(JCRNodeExportTask.JCR_DATA_SEPARATOR);
     if (fileParts.length != 2) {
@@ -243,6 +336,12 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
     return nodePath;
   }
 
+  /**
+   * Clear caches.
+   *
+   * @param cacheService the cache service
+   * @param namePattern the name pattern
+   */
   @SuppressWarnings("rawtypes")
   public void clearCaches(CacheService cacheService, String namePattern) {
     for (Object o : cacheService.getAllCacheInstances()) {

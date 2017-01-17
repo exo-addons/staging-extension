@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -34,12 +31,6 @@ import static org.gatein.common.xml.stax.navigator.StaxNavUtils.requiresSibling;
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.writeOptionalContent;
 import static org.gatein.common.xml.stax.writer.StaxWriterUtils.writeOptionalElement;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.xml.stream.XMLStreamException;
-
 import org.exoplatform.container.ExoContainer;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.PortalContainer;
@@ -64,11 +55,28 @@ import org.gatein.management.api.binding.Marshaller;
 import org.staxnav.StaxNavigator;
 import org.staxnav.ValueType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.xml.stream.XMLStreamException;
+
 /**
+ * The Class AbstractMarshaller.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
+ * @param <T> the generic type
  */
 public abstract class AbstractMarshaller<T> implements Marshaller<T> {
+  
+  /**
+   * Marshal model object.
+   *
+   * @param writer the writer
+   * @param modelObject the model object
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalModelObject(StaxWriter<Element> writer, ModelObject modelObject) throws XMLStreamException {
     if (modelObject instanceof Application) {
       Application<?> application = (Application<?>) modelObject;
@@ -92,6 +100,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     }
   }
 
+  /**
+   * Marshal container.
+   *
+   * @param writer the writer
+   * @param container the container
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalContainer(StaxWriter<Element> writer, Container container) throws XMLStreamException {
     writer.writeStartElement(Element.CONTAINER);
 
@@ -117,6 +132,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     writer.writeEndElement(); // End of container element
   }
 
+  /**
+   * Unmarshal container.
+   *
+   * @param navigator the navigator
+   * @return the container
+   * @throws XMLStreamException the XML stream exception
+   */
   protected Container unmarshalContainer(StaxNavigator<Element> navigator) throws XMLStreamException {
     Container container = new Container();
     container.setId(navigator.getAttribute(Attribute.ID.getLocalName()));
@@ -182,6 +204,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return container;
   }
 
+  /**
+   * Marshal portlet application.
+   *
+   * @param writer the writer
+   * @param portletApplication the portlet application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalPortletApplication(StaxWriter<Element> writer, Application<Portlet> portletApplication) throws XMLStreamException {
     writer.writeStartElement(Element.PORTLET_APPLICATION).writeStartElement(Element.PORTLET);
 
@@ -252,6 +281,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     writer.writeEndElement(); // End of portlet-application
   }
 
+  /**
+   * Unmarshal portlet application.
+   *
+   * @param navigator the navigator
+   * @return the application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected Application<?> unmarshalPortletApplication(StaxNavigator<Element> navigator) throws XMLStreamException {
     Application<?> application;
     switch (navigator.child()) {
@@ -276,6 +312,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return unmarshalApplication(navigator, application);
   }
 
+  /**
+   * Unmarshal portlet application state.
+   *
+   * @param navigator the navigator
+   * @return the application state
+   * @throws XMLStreamException the XML stream exception
+   */
   private ApplicationState<Portlet> unmarshalPortletApplicationState(StaxNavigator<Element> navigator) throws XMLStreamException {
     // Application name
     requiresChild(navigator, Element.APPLICATION_REF);
@@ -333,6 +376,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return state;
   }
 
+  /**
+   * Marshal gadget application.
+   *
+   * @param writer the writer
+   * @param gadgetApplication the gadget application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalGadgetApplication(StaxWriter<Element> writer, Application<Gadget> gadgetApplication) throws XMLStreamException {
     writer.writeStartElement(Element.GADGET_APPLICATION).writeStartElement(Element.GADGET);
 
@@ -386,6 +436,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     writer.writeEndElement(); // End of gadget-application
   }
 
+  /**
+   * Unmarshal gadget application.
+   *
+   * @param navigator the navigator
+   * @return the application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected Application<Gadget> unmarshalGadgetApplication(StaxNavigator<Element> navigator) throws XMLStreamException {
     requiresChild(navigator, Element.GADGET);
     ApplicationState<Gadget> state = unmarshalGadgetApplicationState(navigator.fork());
@@ -396,6 +453,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return unmarshalApplication(navigator, gadget);
   }
 
+  /**
+   * Unmarshal gadget application state.
+   *
+   * @param navigator the navigator
+   * @return the application state
+   * @throws XMLStreamException the XML stream exception
+   */
   private ApplicationState<Gadget> unmarshalGadgetApplicationState(StaxNavigator<Element> navigator) throws XMLStreamException {
     requiresChild(navigator, Element.GADGET_REF);
     String gadgetRef = getRequiredContent(navigator, true);
@@ -410,6 +474,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return new TransientApplicationState<Gadget>(gadgetRef, gadget);
   }
 
+  /**
+   * Marshal wsrp application.
+   *
+   * @param writer the writer
+   * @param wsrpApplication the wsrp application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalWsrpApplication(StaxWriter<Element> writer, Application<WSRP> wsrpApplication) throws XMLStreamException {
     writer.writeStartElement(Element.PORTLET_APPLICATION);
 
@@ -442,6 +513,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     writer.writeEndElement(); // end portlet-application
   }
 
+  /**
+   * Unmarshal wsrp application state.
+   *
+   * @param navigator the navigator
+   * @return the application state
+   * @throws XMLStreamException the XML stream exception
+   */
   private ApplicationState<WSRP> unmarshalWsrpApplicationState(StaxNavigator<Element> navigator) throws XMLStreamException {
     String portletId = getRequiredContent(navigator, true);
     if (navigator.next() != null) {
@@ -451,6 +529,13 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return new TransientApplicationState<WSRP>(portletId, null);
   }
 
+  /**
+   * Marshal application.
+   *
+   * @param writer the writer
+   * @param application the application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalApplication(StaxWriter<Element> writer, Application<?> application) throws XMLStreamException {
     // Theme, Title
     writeOptionalElement(writer, Element.THEME, application.getTheme());
@@ -473,6 +558,15 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     writeOptionalElement(writer, Element.HEIGHT, application.getHeight());
   }
 
+  /**
+   * Unmarshal application.
+   *
+   * @param <S> the generic type
+   * @param navigator the navigator
+   * @param application the application
+   * @return the application
+   * @throws XMLStreamException the XML stream exception
+   */
   protected <S> Application<S> unmarshalApplication(StaxNavigator<Element> navigator, Application<S> application) throws XMLStreamException {
     boolean showInfoBarParsed = false;
 
@@ -537,12 +631,27 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     return application;
   }
 
+  /**
+   * Marshal access permissions.
+   *
+   * @param writer the writer
+   * @param accessPermissions the access permissions
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalAccessPermissions(StaxWriter<Element> writer, String[] accessPermissions) throws XMLStreamException {
     accessPermissions = (accessPermissions == null || accessPermissions.length == 0) ? null : accessPermissions;
 
     writeOptionalElement(writer, Element.ACCESS_PERMISSIONS, DelimitedValueType.SEMI_COLON, accessPermissions);
   }
 
+  /**
+   * Unmarshal access permissions.
+   *
+   * @param navigator the navigator
+   * @param required the required
+   * @return the string[]
+   * @throws XMLStreamException the XML stream exception
+   */
   protected String[] unmarshalAccessPermissions(StaxNavigator<Element> navigator, boolean required) throws XMLStreamException {
     if (required) {
       return parseRequiredContent(navigator, DelimitedValueType.SEMI_COLON);
@@ -551,23 +660,59 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     }
   }
 
+  /**
+   * Marshal edit permission.
+   *
+   * @param writer the writer
+   * @param editPermission the edit permission
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void marshalEditPermission(StaxWriter<Element> writer, String editPermission) throws XMLStreamException {
     writeOptionalElement(writer, Element.EDIT_PERMISSION, editPermission);
   }
 
+  /**
+   * Unmarshal edit permission.
+   *
+   * @param navigator the navigator
+   * @return the string
+   * @throws XMLStreamException the XML stream exception
+   */
   protected String unmarshalEditPermission(StaxNavigator<Element> navigator) throws XMLStreamException {
     return getContent(navigator, true);
   }
 
+  /**
+   * Write gatein objects namespace.
+   *
+   * @param writer the writer
+   * @throws XMLStreamException the XML stream exception
+   */
   protected void writeGateinObjectsNamespace(StaxWriter<Element> writer) throws XMLStreamException {
     Utils.writeGateinObjectsNamespace(writer);
   }
 
+  /**
+   * Safe cast.
+   *
+   * @param <S> the generic type
+   * @param application the application
+   * @param stateClass the state class
+   * @return the application
+   */
   @SuppressWarnings("unchecked")
   private <S> Application<S> safeCast(Application<?> application, Class<S> stateClass) {
     return (Application<S>) application;
   }
 
+  /**
+   * Write optional attribute.
+   *
+   * @param writer the writer
+   * @param attribute the attribute
+   * @param value the value
+   * @throws XMLStreamException the XML stream exception
+   */
   private static void writeOptionalAttribute(StaxWriter<?> writer, Attribute attribute, String value) throws XMLStreamException {
     if (value == null)
       return;
@@ -575,15 +720,32 @@ public abstract class AbstractMarshaller<T> implements Marshaller<T> {
     writer.writeAttribute(attribute.getLocalName(), value);
   }
 
+  /**
+   * The Enum Attribute.
+   */
   private static enum Attribute
   {
+    
+    /** The id. */
     ID("id"),
+    
+    /** The template. */
     TEMPLATE("template"),
+    
+    /** The width. */
     WIDTH("width"),
+    
+    /** The height. */
     HEIGHT("height");
 
+    /** The name. */
     private final String name;
 
+    /**
+     * Instantiates a new attribute.
+     *
+     * @param name the name
+     */
     Attribute(final String name) {
       this.name = name;
     }

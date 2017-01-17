@@ -1,4 +1,37 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.taxonomy;
+
+import com.thoughtworks.xstream.XStream;
+
+import org.apache.commons.io.IOUtils;
+import org.exoplatform.management.common.AbstractOperationHandler;
+import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
+import org.exoplatform.services.cms.taxonomy.TaxonomyService;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.gatein.common.logging.Logger;
+import org.gatein.common.logging.LoggerFactory;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationContext;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.ResultHandler;
+import org.gatein.management.api.operation.model.NoResultModel;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -14,43 +47,48 @@ import javax.jcr.ImportUUIDBehavior;
 import javax.jcr.Node;
 import javax.jcr.Session;
 
-import org.apache.commons.io.IOUtils;
-import org.exoplatform.management.common.AbstractOperationHandler;
-import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
-import org.exoplatform.services.cms.taxonomy.TaxonomyService;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.gatein.common.logging.Logger;
-import org.gatein.common.logging.LoggerFactory;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationContext;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.ResultHandler;
-import org.gatein.management.api.operation.model.NoResultModel;
-
-import com.thoughtworks.xstream.XStream;
-
 /**
+ * The Class TaxonomyImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class TaxonomyImportResource extends ECMAdminImportResource {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(TaxonomyImportResource.class);
 
+  /** The metadata map. */
   private static Map<String, TaxonomyMetaData> metadataMap = new HashMap<String, TaxonomyMetaData>();
+  
+  /** The export map. */
   private static Map<String, File> exportMap = new HashMap<String, File>();
 
+  /** The taxonomy service. */
   private TaxonomyService taxonomyService;
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
 
+  /**
+   * Instantiates a new taxonomy import resource.
+   */
   public TaxonomyImportResource() {
     super(null);
   }
 
+  /**
+   * Instantiates a new taxonomy import resource.
+   *
+   * @param filePath the file path
+   */
   public TaxonomyImportResource(String filePath) {
     super(filePath);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream
@@ -149,6 +187,12 @@ public class TaxonomyImportResource extends ECMAdminImportResource {
     }
   }
 
+  /**
+   * Extract taxonomy name.
+   *
+   * @param name the name
+   * @return the string
+   */
   private static String extractTaxonomyName(String name) {
     return name.split("/")[2];
   }

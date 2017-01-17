@@ -1,4 +1,39 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.service.idm;
+
+import org.apache.commons.lang.StringUtils;
+import org.exoplatform.commons.utils.IOUtil;
+import org.exoplatform.commons.utils.PrivilegedFileHelper;
+import org.exoplatform.commons.utils.PrivilegedSystemHelper;
+import org.exoplatform.container.PortalContainer;
+import org.exoplatform.services.database.HibernateService;
+import org.exoplatform.services.database.utils.DialectConstants;
+import org.exoplatform.services.database.utils.DialectDetecter;
+import org.exoplatform.services.jcr.dataflow.serialization.ObjectReader;
+import org.exoplatform.services.jcr.impl.Constants;
+import org.exoplatform.services.jcr.impl.dataflow.serialization.ZipObjectReader;
+import org.exoplatform.services.jcr.impl.storage.jdbc.DBConstants;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
@@ -19,31 +54,19 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.StringUtils;
-import org.exoplatform.commons.utils.IOUtil;
-import org.exoplatform.commons.utils.PrivilegedFileHelper;
-import org.exoplatform.commons.utils.PrivilegedSystemHelper;
-import org.exoplatform.container.PortalContainer;
-import org.exoplatform.services.database.HibernateService;
-import org.exoplatform.services.database.utils.DialectConstants;
-import org.exoplatform.services.database.utils.DialectDetecter;
-import org.exoplatform.services.jcr.dataflow.serialization.ObjectReader;
-import org.exoplatform.services.jcr.impl.Constants;
-import org.exoplatform.services.jcr.impl.dataflow.serialization.ZipObjectReader;
-import org.exoplatform.services.jcr.impl.storage.jdbc.DBConstants;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.hibernate.internal.SessionFactoryImpl;
-import org.hibernate.service.jdbc.connections.internal.DatasourceConnectionProviderImpl;
-
 /**
+ * The Class IDMRestore.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class IDMRestore {
+  
+  /** The Constant ID_COLUMNS_NAME. */
   public static final List<String> ID_COLUMNS_NAME = Arrays.asList(new String[] { "ID", "ATTRIBUTE_ID", "BIN_VALUE_ID" });
 
+  /** The Constant LOG. */
   protected static final Log LOG = ExoLogger.getLogger(IDMRestore.class);
 
   /**
@@ -86,12 +109,22 @@ public class IDMRestore {
    */
   protected List<String> successfulExecuted;
 
+  /** The db cleaner in auto commit. */
   protected boolean dbCleanerInAutoCommit;
 
+  /** The content file. */
   protected File contentFile = null;
 
+  /** The content len file. */
   protected File contentLenFile = null;
 
+  /**
+   * Instantiates a new IDM restore.
+   *
+   * @param storageDir the storage dir
+   * @param jdbcConn the jdbc conn
+   * @throws Exception the exception
+   */
   public IDMRestore(File storageDir, Connection jdbcConn) throws Exception {
     this.jdbcConn = jdbcConn;
     this.storageDir = storageDir;
@@ -105,6 +138,12 @@ public class IDMRestore {
     }
   }
 
+  /**
+   * Verify DS connections.
+   *
+   * @param portalContainer the portal container
+   * @throws Exception the exception
+   */
   public static void verifyDSConnections(PortalContainer portalContainer) throws Exception {
     try {
       int numberOfOpenConnections = 0;
@@ -137,6 +176,14 @@ public class IDMRestore {
     }
   }
 
+  /**
+   * Restore.
+   *
+   * @param portalContainer the portal container
+   * @param backupDirFile the backup dir file
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   public static boolean restore(PortalContainer portalContainer, File backupDirFile) throws Exception {
     File[] files = backupDirFile.listFiles(new FileFilter() {
       public boolean accept(File pathname) {
@@ -174,6 +221,11 @@ public class IDMRestore {
     return true;
   }
 
+  /**
+   * Clean.
+   *
+   * @throws Exception the exception
+   */
   public void clean() throws Exception {
     LOG.info("Clean IDM tables");
 
@@ -206,6 +258,11 @@ public class IDMRestore {
     executeSQLFile(sqlCreate, stmt, true);
   }
 
+  /**
+   * Apply constraints.
+   *
+   * @throws Exception the exception
+   */
   public void applyConstraints() throws Exception {
     LOG.info("Apply constraints on IDM tables");
 
@@ -233,7 +290,9 @@ public class IDMRestore {
   }
 
   /**
-   * {@inheritDoc}
+   * Restore.
+   *
+   * @throws Exception the exception
    */
   public void restore() throws Exception {
     LOG.info("Restore IDM tables");
@@ -250,14 +309,18 @@ public class IDMRestore {
   }
 
   /**
-   * {@inheritDoc}
+   * Commit.
+   *
+   * @throws Exception the exception
    */
   public void commit() throws Exception {
     jdbcConn.commit();
   }
 
   /**
-   * {@inheritDoc}
+   * Rollback.
+   *
+   * @throws RuntimeException the runtime exception
    */
   public void rollback() throws RuntimeException {
     try {
@@ -269,7 +332,9 @@ public class IDMRestore {
   }
 
   /**
-   * {@inheritDoc}
+   * Close.
+   *
+   * @throws RuntimeException the runtime exception
    */
   public void close() throws RuntimeException {
     try {
@@ -284,8 +349,14 @@ public class IDMRestore {
 
   /**
    * Restore table.
-   * 
-   * @return
+   *
+   * @param storageDir the storage dir
+   * @param jdbcConn the jdbc conn
+   * @param tableName the table name
+   * @param maxId the max id
+   * @return the int
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws SQLException the SQL exception
    */
   private int restoreTable(File storageDir, Connection jdbcConn, String tableName, int maxId) throws IOException, SQLException {
     ZipObjectReader contentReader = null;
@@ -449,6 +520,8 @@ public class IDMRestore {
 
   /**
    * Committing changes from batch.
+   *
+   * @throws SQLException the SQL exception
    */
   protected void commitBatch() throws SQLException {
     // commit every batch for sybase
@@ -459,6 +532,11 @@ public class IDMRestore {
 
   /**
    * Spool input stream.
+   *
+   * @param in the in
+   * @param contentLen the content len
+   * @return the input stream
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private InputStream spoolInputStream(ObjectReader in, long contentLen) throws IOException {
     byte[] buffer = new byte[0];
@@ -514,6 +592,14 @@ public class IDMRestore {
     }
   }
 
+  /**
+   * Execute SQL file.
+   *
+   * @param sql the sql
+   * @param stmt the stmt
+   * @param throwIfError the throw if error
+   * @throws Exception the exception
+   */
   private void executeSQLFile(String sql, Statement stmt, boolean throwIfError) throws Exception {
     String[] sqlDropStatements = sql.split(";");
     for (String sqlDropStatement : sqlDropStatements) {
@@ -534,6 +620,12 @@ public class IDMRestore {
     }
   }
 
+  /**
+   * Gets the hibernate service.
+   *
+   * @param portalContainer the portal container
+   * @return the hibernate service
+   */
   private static HibernateService getHibernateService(PortalContainer portalContainer) {
     return (HibernateService) portalContainer.getComponentInstanceOfType(HibernateService.class);
   }

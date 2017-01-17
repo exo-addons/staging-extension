@@ -1,41 +1,22 @@
 /*
- * Copyright (C) 2003-2014 eXo Platform SAS.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.exoplatform.management.social.operations;
-
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.jcr.LoginException;
-import javax.jcr.NoSuchWorkspaceException;
-import javax.jcr.Node;
-import javax.jcr.PathNotFoundException;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.ValueFormatException;
 
 import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
 import org.exoplatform.management.common.exportop.ActivitiesExportTask;
@@ -73,23 +54,56 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.jcr.LoginException;
+import javax.jcr.NoSuchWorkspaceException;
+import javax.jcr.Node;
+import javax.jcr.PathNotFoundException;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.ValueFormatException;
+
 /**
+ * The Class SocialDataExportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class SocialDataExportResource extends AbstractExportOperationHandler {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(SocialDataExportResource.class);
 
+  /** The Constant GROUPS_PATH. */
   private static final String GROUPS_PATH = "groupsPath";
 
+  /** The management controller. */
   private ManagementController managementController;
+  
+  /** The node hierarchy creator. */
   private NodeHierarchyCreator nodeHierarchyCreator;
+  
+  /** The data distribution manager. */
   private DataDistributionManager dataDistributionManager;
 
   // TODO For Space Dashboard export/import
   // private DataStorage dataStorage;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
@@ -186,6 +200,13 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
+  /**
+   * Export space activities.
+   *
+   * @param exportTasks the export tasks
+   * @param space the space
+   * @param spaceIdentity the space identity
+   */
   private void exportSpaceActivities(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) {
     RealtimeListAccess<ExoSocialActivity> spaceActivitiesList = activityManager.getActivitiesOfSpaceWithListAccess(spaceIdentity);
     ExoSocialActivity[] activities = null;
@@ -209,6 +230,18 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     exportTasks.add(new ActivitiesExportTask(identityManager, activitiesList, prefix));
   }
 
+  /**
+   * Export space avatar.
+   *
+   * @param exportTasks the export tasks
+   * @param space the space
+   * @param spaceIdentity the space identity
+   * @throws UnsupportedEncodingException the unsupported encoding exception
+   * @throws Exception the exception
+   * @throws PathNotFoundException the path not found exception
+   * @throws RepositoryException the repository exception
+   * @throws ValueFormatException the value format exception
+   */
   private void exportSpaceAvatar(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) throws UnsupportedEncodingException, Exception, PathNotFoundException, RepositoryException,
       ValueFormatException {
     // No method to get avatar using Social API, so we have to use JCR
@@ -231,6 +264,12 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     }
   }
 
+  /**
+   * Gets the entry resource path.
+   *
+   * @param application the application
+   * @return the entry resource path
+   */
   private String getEntryResourcePath(String application) {
     String path = null;
     if (application.contains(SocialExtension.FORUM_PORTLET)) {
@@ -246,6 +285,16 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     return path;
   }
 
+  /**
+   * Compute content filters.
+   *
+   * @param space the space
+   * @param attributesMap the attributes map
+   * @throws RepositoryException the repository exception
+   * @throws LoginException the login exception
+   * @throws NoSuchWorkspaceException the no such workspace exception
+   * @throws PathNotFoundException the path not found exception
+   */
   private void computeContentFilters(Space space, Map<String, List<String>> attributesMap) throws RepositoryException, LoginException, NoSuchWorkspaceException, PathNotFoundException {
     List<String> filters = attributesMap.get("filter");
     DataDistributionType dataDistributionType = dataDistributionManager.getDataDistributionType(DataDistributionMode.NONE);
@@ -265,6 +314,14 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
     attributesMap.put("excludePaths", Collections.singletonList(spaceNode.getPath() + "/ApplicationData/eXoWiki"));
   }
 
+  /**
+   * Adds the resource export tasks.
+   *
+   * @param exportTasks the export tasks
+   * @param attributesMap the attributes map
+   * @param path the path
+   * @param spaceId the space id
+   */
   private void addResourceExportTasks(List<ExportTask> exportTasks, Map<String, List<String>> attributesMap, String path, String spaceId) {
     ManagedRequest request = ManagedRequest.Factory.create(OperationNames.EXPORT_RESOURCE, PathAddress.pathAddress(path), attributesMap, ContentType.ZIP);
     ManagedResponse response = managementController.execute(request);

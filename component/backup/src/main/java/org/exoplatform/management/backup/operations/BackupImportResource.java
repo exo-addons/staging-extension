@@ -1,8 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.operations;
-
-import java.io.File;
-import java.util.List;
-import java.util.Map;
 
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.component.RequestLifeCycle;
@@ -23,17 +37,28 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
 /**
+ * The Class BackupImportResource.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class BackupImportResource extends AbstractOperationHandler {
 
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(BackupImportResource.class);
 
+  /** The restore in progress. */
   public static boolean restoreInProgress = false;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     Map<Object, Throwable> endedServicesLifecycle = null;
@@ -111,6 +136,12 @@ public class BackupImportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Clear caches.
+   *
+   * @param cacheService the cache service
+   * @param idmCacheService the idm cache service
+   */
   public void clearCaches(CacheService cacheService, PicketLinkIDMCacheService idmCacheService) {
     for (Object o : cacheService.getAllCacheInstances()) {
       try {

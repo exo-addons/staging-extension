@@ -1,4 +1,24 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.nodetype;
+
+import org.gatein.management.api.operation.model.ExportTask;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -9,27 +29,42 @@ import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.jcr.nodetype.PropertyDefinition;
 
-import org.gatein.management.api.operation.model.ExportTask;
-
 /**
+ * The Class NodeTypeExportTask.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class NodeTypeExportTask implements ExportTask {
 
+  /** The node type. */
   private NodeType nodeType = null;
+  
+  /** The type. */
   private String type;
 
+  /**
+   * Instantiates a new node type export task.
+   *
+   * @param nodeType the node type
+   * @param type the type
+   */
   public NodeTypeExportTask(NodeType nodeType, String type) {
     this.nodeType = nodeType;
     this.type = type;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getEntry() {
     return "ecmadmin/" + type + "/" + nodeType.getName().replace(":", "_") + "-nodeType.xml";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void export(OutputStream outputStream) throws IOException {
     try {
@@ -40,6 +75,12 @@ public class NodeTypeExportTask implements ExportTask {
     }
   }
 
+  /**
+   * Gets the node type XML.
+   *
+   * @param nodeTypes the node types
+   * @return the node type XML
+   */
   public static String getNodeTypeXML(Collection<NodeType> nodeTypes) {
     StringBuilder nodeTypeXML = new StringBuilder();
     nodeTypeXML.append("<nodeTypes xmlns:nt=").append("\"");
@@ -76,6 +117,12 @@ public class NodeTypeExportTask implements ExportTask {
     return nodeTypeXML.toString();
   }
 
+  /**
+   * Represent super types.
+   *
+   * @param nodeType the node type
+   * @return the string
+   */
   public static String representSuperTypes(NodeType nodeType) {
     StringBuilder superTypeXML = new StringBuilder();
     NodeType[] superType = nodeType.getDeclaredSupertypes();
@@ -90,6 +137,12 @@ public class NodeTypeExportTask implements ExportTask {
     return superTypeXML.toString();
   }
 
+  /**
+   * Represent property definition.
+   *
+   * @param nodeType the node type
+   * @return the string
+   */
   public static String representPropertyDefinition(NodeType nodeType) {
     String[] requireType = { "undefined", "String", "Binary", "Long", "Double", "Date", "Boolean", "Name", "Path", "Reference" };
     String[] onparentVersion = { "", "COPY", "VERSION", "INITIALIZE", "COMPUTE", "IGNORE", "ABORT" };
@@ -132,6 +185,12 @@ public class NodeTypeExportTask implements ExportTask {
     return propertyXML.toString();
   }
 
+  /**
+   * Represent child node definition.
+   *
+   * @param nodeType the node type
+   * @return the string
+   */
   public static String representChildNodeDefinition(NodeType nodeType) {
     String[] onparentVersion = { "", "COPY", "VERSION", "INITIALIZE", "COMPUTE", "IGNORE", "ABORT" };
     StringBuilder childNodeXML = new StringBuilder();

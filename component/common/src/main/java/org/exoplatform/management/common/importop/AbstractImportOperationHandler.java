@@ -1,22 +1,24 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.common.importop;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -42,39 +44,86 @@ import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationContext;
 import org.gatein.management.api.operation.OperationNames;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+/**
+ * The Class AbstractImportOperationHandler.
+ */
 public abstract class AbstractImportOperationHandler extends AbstractOperationHandler {
 
+  /** The Constant log. */
   protected static final Log log = ExoLogger.getLogger(AbstractImportOperationHandler.class);
 
+  /** The Constant EMPTY_STRING_ARRAY. */
   protected static final String[] EMPTY_STRING_ARRAY = new String[0];
 
+  /** The user ACL. */
   protected UserACL userACL;
+  
+  /** The activity manager. */
   protected ActivityManager activityManager;
+  
+  /** The activity storage. */
   protected ActivityStorage activityStorage;
 
+  /** The activities by post time. */
   // This is used to test on duplicated activities
   protected Set<Long> activitiesByPostTime = new HashSet<Long>();
 
+  /**
+   * Delete activities.
+   *
+   * @param activities the activities
+   */
   protected void deleteActivities(ExoSocialActivity[] activities) {
     for (ExoSocialActivity activity : activities) {
       deleteActivity(activity);
     }
   }
 
+  /**
+   * Delete activities.
+   *
+   * @param activities the activities
+   */
   protected void deleteActivities(List<ExoSocialActivity> activities) {
     for (ExoSocialActivity activity : activities) {
       deleteActivity(activity);
     }
   }
 
+  /**
+   * Delete activities by id.
+   *
+   * @param activityIds the activity ids
+   */
   protected void deleteActivitiesById(List<String> activityIds) {
     for (String activityId : activityIds) {
       deleteActivity(activityId);
     }
   }
 
+  /**
+   * Delete activity.
+   *
+   * @param activityId the activity id
+   */
   protected final void deleteActivity(String activityId) {
     if (activityId == null || activityId.isEmpty()) {
       return;
@@ -83,6 +132,11 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     deleteActivity(activity);
   }
 
+  /**
+   * Delete activity.
+   *
+   * @param activity the activity
+   */
   protected final void deleteActivity(ExoSocialActivity activity) {
     if (activity == null) {
       return;
@@ -108,6 +162,14 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Creates the space if not exists.
+   *
+   * @param spaceMetadataFile the space metadata file
+   * @param createSpace the create space
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   protected final boolean createSpaceIfNotExists(File spaceMetadataFile, boolean createSpace) throws Exception {
     if (spaceMetadataFile == null || !spaceMetadataFile.exists()) {
       return false;
@@ -145,6 +207,13 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return (space != null);
   }
 
+  /**
+   * Import activities.
+   *
+   * @param activitiesFile the activities file
+   * @param spacePrettyName the space pretty name
+   * @param clearImportedList the clear imported list
+   */
   protected void importActivities(File activitiesFile, String spacePrettyName, boolean clearImportedList) {
     if (clearImportedList) {
       activitiesByPostTime.clear();
@@ -221,6 +290,12 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Gets the attachement input stream.
+   *
+   * @param operationContext the operation context
+   * @return the attachement input stream
+   */
   protected InputStream getAttachementInputStream(OperationContext operationContext) {
     OperationAttachment attachment = operationContext.getAttachment(false);
     if (attachment == null) {
@@ -234,6 +309,12 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return attachmentInputStream;
   }
 
+  /**
+   * Save comment.
+   *
+   * @param activity the activity
+   * @param comment the comment
+   */
   protected final void saveComment(ExoSocialActivity activity, ExoSocialActivity comment) {
     long updatedTime = activity.getUpdated().getTime();
     if (activity.getId() == null) {
@@ -258,6 +339,12 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     log.info("Comment activity is imported: '" + comment.getTitle() + "'.");
   }
 
+  /**
+   * Save activity.
+   *
+   * @param activity the activity
+   * @param spacePrettyName the space pretty name
+   */
   protected final void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
     activityStorage.setInjectStreams(true);
     long updatedTime = activity.getUpdated().getTime();
@@ -300,6 +387,12 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Retrieve activities from file.
+   *
+   * @param activitiesFile the activities file
+   * @return the list
+   */
   @SuppressWarnings("unchecked")
   protected List<ExoSocialActivity> retrieveActivitiesFromFile(File activitiesFile) {
     List<ExoSocialActivity> activities = null;
@@ -312,6 +405,12 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return sanitizeContent(activities);
   }
 
+  /**
+   * Sanitize content.
+   *
+   * @param activities the activities
+   * @return the list
+   */
   protected final List<ExoSocialActivity> sanitizeContent(List<ExoSocialActivity> activities) {
     List<ExoSocialActivity> activitiesList = new ArrayList<ExoSocialActivity>();
     Identity identity = null;
@@ -378,6 +477,12 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return activitiesList;
   }
 
+  /**
+   * Change username id to identity.
+   *
+   * @param ids the ids
+   * @return the string[]
+   */
   private String[] changeUsernameIdToIdentity(String[] ids) {
     List<String> resultIds = new ArrayList<String>();
     if (ids != null && ids.length > 0) {
@@ -399,12 +504,28 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return ids;
   }
 
+  /**
+   * Copy attachement to local folder.
+   *
+   * @param attachmentInputStream the attachment input stream
+   * @return the file
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws FileNotFoundException the file not found exception
+   */
   protected final File copyAttachementToLocalFolder(InputStream attachmentInputStream) throws IOException, FileNotFoundException {
     File tmpZipFile = File.createTempFile("staging", ".zip");
     copyAttachementToLocalFolder(attachmentInputStream, tmpZipFile);
     return tmpZipFile;
   }
 
+  /**
+   * Copy attachement to local folder.
+   *
+   * @param attachmentInputStream the attachment input stream
+   * @param tmpZipFile the tmp zip file
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws FileNotFoundException the file not found exception
+   */
   protected final void copyAttachementToLocalFolder(InputStream attachmentInputStream, File tmpZipFile) throws IOException, FileNotFoundException {
     NonCloseableZipInputStream zis = null;
     try {
@@ -423,10 +544,26 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Copy to disk.
+   *
+   * @param input the input
+   * @param output the output
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   protected final static boolean copyToDisk(InputStream input, String output) throws Exception {
     return copyToDisk(input, new File(output));
   }
 
+  /**
+   * Copy to disk.
+   *
+   * @param input the input
+   * @param file the file
+   * @return true, if successful
+   * @throws Exception the exception
+   */
   protected final static boolean copyToDisk(InputStream input, File file) throws Exception {
     createFile(file, false);
 
@@ -445,11 +582,25 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Replace special chars.
+   *
+   * @param name the name
+   * @return the string
+   */
   protected final static String replaceSpecialChars(String name) {
     name = name.replaceAll(":", "_");
     return name.replaceAll("\\?", "_");
   }
 
+  /**
+   * Creates the file.
+   *
+   * @param file the file
+   * @param folder the folder
+   * @return the file
+   * @throws Exception the exception
+   */
   protected final static File createFile(File file, boolean folder) throws Exception {
     if (file.getParentFile() != null)
       createFile(file.getParentFile(), true);
@@ -461,6 +612,13 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return file;
   }
 
+  /**
+   * Gets the and remove file by path.
+   *
+   * @param fileEntries the file entries
+   * @param nodePath the node path
+   * @return the and remove file by path
+   */
   public final static FileEntry getAndRemoveFileByPath(List<FileEntry> fileEntries, String nodePath) {
     Iterator<FileEntry> iterator = fileEntries.iterator();
     while (iterator.hasNext()) {
@@ -473,6 +631,13 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return null;
   }
 
+  /**
+   * Gets the and remove files starts with.
+   *
+   * @param fileEntries the file entries
+   * @param nodePath the node path
+   * @return the and remove files starts with
+   */
   public final static List<FileEntry> getAndRemoveFilesStartsWith(List<FileEntry> fileEntries, String nodePath) {
     List<FileEntry> files = new ArrayList<FileEntry>();
     Iterator<FileEntry> iterator = fileEntries.iterator();
@@ -487,11 +652,11 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
   }
 
   /**
-   * Extract data from zip
-   * 
-   * @param attachment
-   * @return
-   * @return
+   * Extract data from zip.
+   *
+   * @param attachmentInputStream the attachment input stream
+   * @return the map
+   * @throws Exception the exception
    */
   public final Map<String, List<FileEntry>> extractDataFromZip(InputStream attachmentInputStream) throws Exception {
     Map<String, List<FileEntry>> contentsByOwner = new HashMap<String, List<FileEntry>>();
@@ -510,6 +675,15 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     return contentsByOwner;
   }
 
+  /**
+   * Extract files by owner.
+   *
+   * @param tmpZipFile the tmp zip file
+   * @param contentsByOwner the contents by owner
+   * @throws FileNotFoundException the file not found exception
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws Exception the exception
+   */
   protected final void extractFilesByOwner(File tmpZipFile, Map<String, List<FileEntry>> contentsByOwner) throws FileNotFoundException, IOException, Exception {
     // Open an input stream on local zip file
     NonCloseableZipInputStream zis = new NonCloseableZipInputStream(new FileInputStream(tmpZipFile));
@@ -575,6 +749,11 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Delete temp file.
+   *
+   * @param file the file
+   */
   protected static void deleteTempFile(File file) {
     try {
       if (file != null && file.exists()) {
@@ -591,6 +770,16 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Deserialize object.
+   *
+   * @param <T> the generic type
+   * @param file the file
+   * @param objectClass the object class
+   * @param alias the alias
+   * @return the t
+   * @throws Exception the exception
+   */
   protected static final <T> T deserializeObject(File file, Class<T> objectClass, String alias) throws Exception {
     FileInputStream inputStream = null;
     try {
@@ -604,6 +793,15 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
   }
 
+  /**
+   * Deserialize object.
+   *
+   * @param <T> the generic type
+   * @param zin the zin
+   * @param objectClass the object class
+   * @param alias the alias
+   * @return the t
+   */
   protected static final <T> T deserializeObject(final InputStream zin, Class<T> objectClass, String alias) {
     XStream xStream = new XStream();
     if (objectClass != null && alias != null) {
@@ -620,15 +818,32 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
   // a
   // ZipInputStream.
   // See http://bugs.sun.com/view_bug.do?bug_id=6539065 for more
+  /**
+   * The Class NonCloseableZipInputStream.
+   */
   // information.
   public static class NonCloseableZipInputStream extends ZipInputStream {
+    
+    /**
+     * Instantiates a new non closeable zip input stream.
+     *
+     * @param inputStream the input stream
+     */
     public NonCloseableZipInputStream(InputStream inputStream) {
       super(inputStream);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void close() throws IOException {}
 
+    /**
+     * Really close.
+     *
+     * @throws IOException Signals that an I/O exception has occurred.
+     */
     public void reallyClose() throws IOException {
       super.close();
     }

@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,10 +19,6 @@
 
 package org.exoplatform.management.mop.exportimport;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-
 import org.exoplatform.management.mop.operations.navigation.NavigationUtils;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.config.model.NavigationFragment;
@@ -43,18 +36,42 @@ import org.exoplatform.portal.mop.navigation.Scope;
 import org.gatein.common.logging.Logger;
 import org.gatein.common.logging.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 /**
+ * The Class NavigationImportTask.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
+  
+  /** The Constant log. */
   private static final Logger log = LoggerFactory.getLogger(NavigationImportTask.class);
 
+  /** The navigation service. */
   private NavigationService navigationService;
+  
+  /** The description service. */
   private DescriptionService descriptionService;
+  
+  /** The data storage. */
   private DataStorage dataStorage;
+  
+  /** The rollback task. */
   private RollbackTask rollbackTask;
 
+  /**
+   * Instantiates a new navigation import task.
+   *
+   * @param data the data
+   * @param siteKey the site key
+   * @param navigationService the navigation service
+   * @param descriptionService the description service
+   * @param dataStorage the data storage
+   */
   public NavigationImportTask(PageNavigation data, SiteKey siteKey, NavigationService navigationService, DescriptionService descriptionService, DataStorage dataStorage) {
     super(data, siteKey);
     this.navigationService = navigationService;
@@ -62,6 +79,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
     this.dataStorage = dataStorage;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void importData(ImportMode importMode) throws Exception {
     PortalConfig portalConfig = dataStorage.getPortalConfig(siteKey.getTypeName(), siteKey.getName());
@@ -126,6 +146,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
     importer.perform();
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void rollback() throws Exception {
     if (rollbackTask != null) {
@@ -133,16 +156,48 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
     }
   }
 
+  /**
+   * The Interface RollbackTask.
+   */
   private interface RollbackTask {
+    
+    /**
+     * Gets the description.
+     *
+     * @return the description
+     */
     String getDescription();
 
+    /**
+     * Rollback.
+     *
+     * @throws Exception the exception
+     */
     void rollback() throws Exception;
   }
 
+  /**
+   * The listener interface for receiving rollbackChange events.
+   * The class that is interested in processing a rollbackChange
+   * event implements this interface, and the object created
+   * with that class is registered with a component using the
+   * component's <code>addRollbackChangeListener</code> method. When
+   * the rollbackChange event occurs, that object's appropriate
+   * method is invoked.
+   *
+   * @see RollbackChangeEvent
+   */
   private static class RollbackChangeListener implements NodeChangeListener<NodeContext<NodeContext<?>>> {
+    
+    /** The tasks. */
     private List<RollbackTask> tasks = new ArrayList<RollbackTask>();
+    
+    /** The errors. */
     private boolean errors;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onAdd(final NodeContext<NodeContext<?>> target, final NodeContext<NodeContext<?>> parent, NodeContext<NodeContext<?>> previous) {
       tasks.add(new RollbackTask() {
@@ -158,6 +213,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onCreate(final NodeContext<NodeContext<?>> target, final NodeContext<NodeContext<?>> parent, final NodeContext<NodeContext<?>> previous, final String name) {
       tasks.add(new RollbackTask() {
@@ -173,6 +231,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onRemove(final NodeContext<NodeContext<?>> target, final NodeContext<NodeContext<?>> parent) {
       tasks.add(new RollbackTask() {
@@ -196,6 +257,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onDestroy(final NodeContext<NodeContext<?>> target, final NodeContext<NodeContext<?>> parent) {
       tasks.add(new RollbackTask() {
@@ -211,6 +275,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onRename(final NodeContext<NodeContext<?>> target, final NodeContext<NodeContext<?>> parent, final String name) {
       tasks.add(new RollbackTask() {
@@ -229,6 +296,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onUpdate(final NodeContext<NodeContext<?>> target, final NodeState state) {
       tasks.add(new RollbackTask() {
@@ -247,6 +317,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onMove(final NodeContext<NodeContext<?>> target, final NodeContext<NodeContext<?>> from, final NodeContext<NodeContext<?>> to, NodeContext<NodeContext<?>> previous) {
       tasks.add(new RollbackTask() {
@@ -263,6 +336,9 @@ public class NavigationImportTask extends AbstractImportTask<PageNavigation> {
       });
     }
 
+    /**
+     * Rollback.
+     */
     public void rollback() {
       boolean debug = log.isDebugEnabled();
       for (RollbackTask task : tasks) {

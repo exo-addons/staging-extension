@@ -1,12 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.wiki.operations;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import org.exoplatform.management.common.FileEntry;
 import org.exoplatform.management.common.exportop.ActivitiesExportTask;
@@ -38,23 +48,47 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Created by The eXo Platform SAS Author : eXoPlatform exo@exoplatform.com Mar
  * 5, 2014
  */
 public class WikiDataImportResource extends AbstractJCRImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(WikiDataImportResource.class);
 
+  /** The wiki type. */
   private WikiType wikiType;
+  
+  /** The mow service. */
   private MOWService mowService;
+  
+  /** The wiki service. */
   private WikiService wikiService;
+  
+  /** The cache service. */
   private CacheService cacheService;
 
+  /**
+   * Instantiates a new wiki data import resource.
+   *
+   * @param wikiType the wiki type
+   */
   public WikiDataImportResource(WikiType wikiType) {
     this.wikiType = wikiType;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
@@ -145,14 +179,23 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String getManagedFilesPrefix() {
     return "wiki/" + wikiType.name().toLowerCase() + "/";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(ActivitiesExportTask.FILENAME);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
       fileEntries.add(new FileEntry(SpaceMetadataExportTask.FILENAME, file));
@@ -164,12 +207,18 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String extractIdFromPath(String path) {
     int beginIndex = ("wiki/" + wikiType + "/___").length();
     int endIndex = path.indexOf("---/", beginIndex);
     return path.substring(beginIndex, endIndex);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment != null) {
       return;
@@ -183,6 +232,9 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     wikiService.updatePage(page, null);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
       String pageId = activity.getTemplateParams().get("page_id");
@@ -202,6 +254,13 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     }
   }
 
+  /**
+   * Delete activities.
+   *
+   * @param wikiType the wiki type
+   * @param wikiOwner the wiki owner
+   * @throws Exception the exception
+   */
   private void deleteActivities(String wikiType, String wikiOwner) throws Exception {
     // Delete Forum activity stream
     Wiki wiki = wikiService.getWikiByTypeAndOwner(wikiType, wikiOwner);
@@ -220,6 +279,13 @@ public class WikiDataImportResource extends AbstractJCRImportOperationHandler im
     deleteActivitiesById(activityIds);
   }
 
+  /**
+   * Compute child pages.
+   *
+   * @param pages the pages
+   * @param parentPage the parent page
+   * @throws Exception the exception
+   */
   private void computeChildPages(List<Page> pages, Page parentPage) throws Exception {
     pages.add(parentPage);
     List<Page> chilPages = wikiService.getChildrenPageOf(parentPage);

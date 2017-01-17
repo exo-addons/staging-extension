@@ -1,13 +1,24 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.content.operations.site.seo;
 
 import static org.exoplatform.portal.mop.Utils.objectType;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.jcr.Node;
-import javax.jcr.Session;
 
 import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
 import org.exoplatform.portal.config.DataStorage;
@@ -34,7 +45,16 @@ import org.gatein.mop.api.workspace.ObjectType;
 import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import javax.jcr.Node;
+import javax.jcr.Session;
+
 /**
+ * The Class SiteSEOExportResource.
+ *
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -43,12 +63,24 @@ import org.gatein.mop.api.workspace.Workspace;
  */
 public class SiteSEOExportResource extends AbstractExportOperationHandler {
 
+  /** The data storage. */
   private DataStorage dataStorage = null;
+  
+  /** The wcm configuration service. */
   private WCMConfigurationService wcmConfigurationService = null;
+  
+  /** The session provider service. */
   private SessionProviderService sessionProviderService = null;
+  
+  /** The repository service. */
   private RepositoryService repositoryService = null;
+  
+  /** The pom session manager. */
   private POMSessionManager pomSessionManager = null;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     try {
@@ -82,6 +114,15 @@ public class SiteSEOExportResource extends AbstractExportOperationHandler {
     }
   }
 
+  /**
+   * Gets the SEO export task.
+   *
+   * @param operationContext the operation context
+   * @param siteName the site name
+   * @param lang the lang
+   * @return the SEO export task
+   * @throws Exception the exception
+   */
   private SiteSEOExportTask getSEOExportTask(OperationContext operationContext, String siteName, String lang) throws Exception {
     // FIXME comment this until ECMS-4030 get fixed
     // SEOService seoService =
@@ -104,6 +145,12 @@ public class SiteSEOExportResource extends AbstractExportOperationHandler {
     return new SiteSEOExportTask(pageMetadataModels, siteName, lang);
   }
 
+  /**
+   * Gets the site navigations.
+   *
+   * @param siteName the site name
+   * @return the site navigations
+   */
   private List<Navigation> getSiteNavigations(String siteName) {
     POMSession session = pomSessionManager.getSession();
     ObjectType<Site> objectType = objectType(SiteType.PORTAL);
@@ -117,6 +164,12 @@ public class SiteSEOExportResource extends AbstractExportOperationHandler {
     return navigations;
   }
 
+  /**
+   * Compute all navigations.
+   *
+   * @param navigations the navigations
+   * @param i the i
+   */
   private void computeAllNavigations(List<Navigation> navigations, int i) {
     if (i >= navigations.size()) {
       return;

@@ -1,13 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.operations;
-
-import java.io.File;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.container.PortalContainer;
@@ -30,32 +39,66 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
+ * The Class BackupExportResource.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class BackupExportResource extends AbstractOperationHandler {
 
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(BackupExportResource.class);
+  
+  /** The Constant backupDirPattern. */
   private static final Pattern backupDirPattern = Pattern.compile("^directory:(.*)$");
 
+  /** The Constant WRITE_STRATEGY_SUSPEND. */
   public static final String WRITE_STRATEGY_SUSPEND = "suspend";
+  
+  /** The Constant WRITE_STRATEGY_EXCEPTION. */
   public static final String WRITE_STRATEGY_EXCEPTION = "exception";
+  
+  /** The Constant WRITE_STRATEGY_NOTHING. */
   public static final String WRITE_STRATEGY_NOTHING = "nothing";
 
+  /** The Constant DISPLAY_MESSAGE_FOR_ALL. */
   public static final String DISPLAY_MESSAGE_FOR_ALL = "all";
+  
+  /** The Constant DISPLAY_MESSAGE_FOR_ADMIN. */
   public static final String DISPLAY_MESSAGE_FOR_ADMIN = "admin";
 
+  /** The Constant DATE_FORMAT. */
   public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yy-MMM-dd-HH-mm-ss");
 
+  /** The backup in progress. */
   public static boolean backupInProgress = false;
+  
+  /** The write strategy. */
   public static String writeStrategy = null;
+  
+  /** The display message for. */
   public static String displayMessageFor = null;
+  
+  /** The message. */
   public static String message = null;
 
+  /** The job scheduler service. */
   private JobSchedulerService jobSchedulerService = null;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (backupInProgress) {
@@ -138,6 +181,9 @@ public class BackupExportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Handle write operations.
+   */
   private void handleWriteOperations() {
     deleteWriteOperationHandler();
     PortalRequestContext portalRequestContext = PortalRequestContext.getCurrentInstance();
@@ -145,6 +191,9 @@ public class BackupExportResource extends AbstractOperationHandler {
     application.getApplicationLifecycle().add(new BackupExceptionHandlerLifeCycle());
   }
 
+  /**
+   * Delete write operation handler.
+   */
   private void deleteWriteOperationHandler() {
     PortalRequestContext portalRequestContext = PortalRequestContext.getCurrentInstance();
     Application application = portalRequestContext.getApplication();
@@ -158,6 +207,13 @@ public class BackupExportResource extends AbstractOperationHandler {
     }
   }
 
+  /**
+   * Gets the backup directory file.
+   *
+   * @param attributes the attributes
+   * @param create the create
+   * @return the backup directory file
+   */
   public static File getBackupDirectoryFile(OperationAttributes attributes, boolean create) {
     String backupDir = attributes.getValue("directory");
     if (backupDir == null) {

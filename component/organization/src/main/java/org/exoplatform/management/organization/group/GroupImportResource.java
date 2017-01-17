@@ -1,3 +1,21 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.organization.group;
 
 import java.io.File;
@@ -38,15 +56,25 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
 /**
+ * The Class GroupImportResource.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
 public class GroupImportResource extends AbstractJCRImportOperationHandler {
+  
+  /** The Constant GROUPS_PARENT_PATH. */
   private static final String GROUPS_PARENT_PATH = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_GROUP + "/";
 
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(GroupImportResource.class);
+  
+  /** The organization service. */
   private OrganizationService organizationService = null;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     if (organizationService == null) {
@@ -96,6 +124,16 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     }
   }
 
+  /**
+   * Import group JCR nodes.
+   *
+   * @param tempFile the temp file
+   * @param newlyCreatedGroups the newly created groups
+   * @param replaceExisting the replace existing
+   * @throws FileNotFoundException the file not found exception
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws Exception the exception
+   */
   private void importGroupJCRNodes(File tempFile, Set<String> newlyCreatedGroups, boolean replaceExisting) throws FileNotFoundException, IOException, Exception {
     ManageableRepository manageableRepository = repositoryService.getCurrentRepository();
     String defaultWorkspace = manageableRepository.getConfiguration().getDefaultWorkspaceName();
@@ -134,6 +172,14 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     }
   }
 
+  /**
+   * Import groups.
+   *
+   * @param tempFile the temp file
+   * @param replaceExisting the replace existing
+   * @return the sets the
+   * @throws Exception the exception
+   */
   private Set<String> importGroups(File tempFile, boolean replaceExisting) throws Exception {
     Set<String> newlyCreatedGroups = new HashSet<String>();
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
@@ -163,6 +209,12 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     return newlyCreatedGroups;
   }
 
+  /**
+   * Import memberships.
+   *
+   * @param tempFile the temp file
+   * @throws Exception the exception
+   */
   private void importMemberships(File tempFile) throws Exception {
     ZipInputStream zin = new ZipInputStream(new FileInputStream(tempFile));
     try {
@@ -187,6 +239,12 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     }
   }
 
+  /**
+   * Creates the membership.
+   *
+   * @param zin the zin
+   * @throws Exception the exception
+   */
   @SuppressWarnings("deprecation")
   private void createMembership(final ZipInputStream zin) throws Exception {
     Membership membership = null;
@@ -210,6 +268,14 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     }
   }
 
+  /**
+   * Creates the group.
+   *
+   * @param zin the zin
+   * @param replaceExisting the replace existing
+   * @return the string
+   * @throws Exception the exception
+   */
   private String createGroup(final ZipInputStream zin, Boolean replaceExisting) throws Exception {
     Group group = deserializeObject(zin, organizationService.getGroupHandler().createGroupInstance().getClass(), "organization");
     Group oldGroup = organizationService.getGroupHandler().findGroupById(group.getId());
@@ -228,6 +294,13 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     return (oldGroup == null ? group.getId() : null);
   }
 
+  /**
+   * Creates the group if not exists.
+   *
+   * @param groupId the group id
+   * @return the group
+   * @throws Exception the exception
+   */
   private Group createGroupIfNotExists(String groupId) throws Exception {
     if (groupId == null || groupId.trim().isEmpty()) {
       return null;
@@ -250,6 +323,13 @@ public class GroupImportResource extends AbstractJCRImportOperationHandler {
     return group;
   }
 
+  /**
+   * Extract param.
+   *
+   * @param filePath the file path
+   * @param i the i
+   * @return the string
+   */
   private static String extractParam(String filePath, int i) {
     Pattern pattern = Pattern.compile(GROUPS_PARENT_PATH + "(.*)/" + JCRNodeExportTask.JCR_DATA_SEPARATOR + "(.*)");
     Matcher matcher = pattern.matcher(filePath);

@@ -1,25 +1,22 @@
 /*
- * Copyright (C) 2003-2009 eXo Platform SAS.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Affero General Public License
- * as published by the Free Software Foundation; either version 3
- * of the License, or (at your option) any later version.
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, see<http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.exoplatform.management.uiextension;
-
-import java.util.List;
-import java.util.Map;
-
-import javax.jcr.Node;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.services.log.ExoLogger;
@@ -32,13 +29,28 @@ import org.exoplatform.services.wcm.utils.WCMCoreUtils;
 import org.exoplatform.webui.ext.filter.UIExtensionFilter;
 import org.exoplatform.webui.ext.filter.UIExtensionFilterType;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.jcr.Node;
+
+/**
+ * The Class CanPushContentFilter.
+ */
 public class CanPushContentFilter implements UIExtensionFilter {
 
+  /** The Constant PERMISSIONS_VARIABLE. */
   private static final String PERMISSIONS_VARIABLE = "exo.staging.explorer.content.permissions";
+  
+  /** The Constant LOG. */
   private static final Log LOG = ExoLogger.getLogger(CanPushContentFilter.class.getName());
 
   /**
-   * This method checks if the current node is of the right type
+   * This method checks if the current node is of the right type.
+   *
+   * @param context the context
+   * @return true, if successful
+   * @throws Exception the exception
    */
   public boolean accept(Map<String, Object> context) throws Exception {
     // Retrieve the current node from the context
@@ -77,14 +89,19 @@ public class CanPushContentFilter implements UIExtensionFilter {
   }
 
   /**
-   * This is the type of the filter
+   * This is the type of the filter.
+   *
+   * @return the type
    */
   public UIExtensionFilterType getType() {
     return UIExtensionFilterType.MANDATORY;
   }
 
   /**
-   * This is called when the filter has failed
+   * This is called when the filter has failed.
+   *
+   * @param context the context
+   * @throws Exception the exception
    */
   public void onDeny(Map<String, Object> context) throws Exception {
     if (LOG.isWarnEnabled()) {

@@ -1,24 +1,22 @@
 /*
- * Copyright (C) 2003-2014 eXo Platform SAS.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * This software is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  */
 package org.exoplatform.management.forum.operations;
-
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.exoplatform.forum.service.Category;
 import org.exoplatform.forum.service.Forum;
@@ -37,20 +35,36 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ReadResourceModel;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
+ * The Class ForumDataReadResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class ForumDataReadResource extends AbstractOperationHandler {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(ForumDataReadResource.class);
 
+  /** The is space forum type. */
   private boolean isSpaceForumType;
 
+  /**
+   * Instantiates a new forum data read resource.
+   *
+   * @param isSpaceForumType the is space forum type
+   */
   public ForumDataReadResource(boolean isSpaceForumType) {
     this.isSpaceForumType = isSpaceForumType;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @SuppressWarnings("deprecation")
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
@@ -87,6 +101,13 @@ public class ForumDataReadResource extends AbstractOperationHandler {
     resultHandler.completed(new ReadResourceModel("All forums:", children));
   }
 
+  /**
+   * Gets the space display name.
+   *
+   * @param spaceService the space service
+   * @param forum the forum
+   * @return the space display name
+   */
   private String getSpaceDisplayName(SpaceService spaceService, Forum forum) {
     if (forum.getId().startsWith(Utils.FORUM_SPACE_ID_PREFIX)) {
       String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + forum.getId().replace(Utils.FORUM_SPACE_ID_PREFIX, "");

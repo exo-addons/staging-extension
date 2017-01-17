@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -37,10 +34,16 @@ import org.gatein.mop.api.workspace.Site;
 import org.gatein.mop.api.workspace.Workspace;
 
 /**
+ * The Class AbstractMopOperationHandler.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public abstract class AbstractMopOperationHandler extends AbstractOperationHandler {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public final void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
 
@@ -73,16 +76,45 @@ public abstract class AbstractMopOperationHandler extends AbstractOperationHandl
     }
   }
 
+  /**
+   * Execute.
+   *
+   * @param operationContext the operation context
+   * @param resultHandler the result handler
+   * @param workspace the workspace
+   * @param siteType the site type
+   * @throws ResourceNotFoundException the resource not found exception
+   * @throws OperationException the operation exception
+   */
   protected abstract void execute(OperationContext operationContext, ResultHandler resultHandler, Workspace workspace, ObjectType<Site> siteType) throws ResourceNotFoundException, OperationException;
 
+  /**
+   * Gets the site type.
+   *
+   * @param objectType the object type
+   * @return the site type
+   */
   protected SiteType getSiteType(ObjectType<? extends Site> objectType) {
     return Utils.getSiteType(objectType);
   }
 
+  /**
+   * Gets the site key.
+   *
+   * @param objectType the object type
+   * @param name the name
+   * @return the site key
+   */
   protected SiteKey getSiteKey(ObjectType<? extends Site> objectType, String name) {
     return Utils.siteKey(Utils.getSiteType(objectType), name);
   }
 
+  /**
+   * Gets the site key.
+   *
+   * @param site the site
+   * @return the site key
+   */
   protected SiteKey getSiteKey(Site site) {
     return getSiteKey(site.getObjectType(), site.getName());
   }

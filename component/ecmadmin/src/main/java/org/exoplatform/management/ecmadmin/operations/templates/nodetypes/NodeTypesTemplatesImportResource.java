@@ -1,17 +1,24 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.templates.nodetypes;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.PathNotFoundException;
+import com.thoughtworks.xstream.XStream;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.management.ecmadmin.operations.ECMAdminImportResource;
@@ -26,31 +33,67 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
-import com.thoughtworks.xstream.XStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.PathNotFoundException;
 
 /**
+ * The Class NodeTypesTemplatesImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
+  
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(NodeTypesTemplatesImportResource.class);
+  
+  /** The template service. */
   private TemplateService templateService;
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
 
+  /** The template entry pattern. */
   private Pattern templateEntryPattern = Pattern.compile("ecmadmin/templates/nodetypes/(.*)/(.*)/(.*)\\.gtmpl");
+  
+  /** The metadata entry pattern. */
   private Pattern metadataEntryPattern = Pattern.compile("ecmadmin/templates/nodetypes/(.*)/metadata.xml");
 
+  /** The metadatas. */
   private Map<String, NodeTypeTemplatesMetaData> metadatas = new HashMap<String, NodeTypeTemplatesMetaData>();
+  
+  /** The templates content. */
   private Map<String, byte[]> templatesContent = new HashMap<String, byte[]>();
 
+  /**
+   * Instantiates a new node types templates import resource.
+   */
   public NodeTypesTemplatesImportResource() {
     super(null);
   }
 
+  /**
+   * Instantiates a new node types templates import resource.
+   *
+   * @param filePath the file path
+   */
   public NodeTypesTemplatesImportResource(String filePath) {
     super(filePath);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream
@@ -146,6 +189,16 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * Update template content.
+   *
+   * @param templateType the template type
+   * @param nodeTypeName the node type name
+   * @param templateName the template name
+   * @param replaceExisting the replace existing
+   * @param inputStream the input stream
+   * @throws Exception the exception
+   */
   private void updateTemplateContent(String templateType, String nodeTypeName, String templateName, boolean replaceExisting, InputStream inputStream) throws Exception {
     String templateContent;
     try {
@@ -178,6 +231,15 @@ public class NodeTypesTemplatesImportResource extends ECMAdminImportResource {
     templateService.addTemplate(templateType, nodeTypeName, nodeTypeTemplatesMetaData.getLabel(), true, templateName, roles, inputStream);
   }
 
+  /**
+   * Put data.
+   *
+   * @param nodeTypeName the node type name
+   * @param contentType the content type
+   * @param fileName the file name
+   * @param inputStream the input stream
+   * @throws Exception the exception
+   */
   private void putData(String nodeTypeName, String contentType, String fileName, InputStream inputStream) throws Exception {
     byte[] bytes = IOUtils.toByteArray(inputStream);
     templatesContent.put("ecmadmin/templates/nodetypes/" + nodeTypeName + "/" + contentType + "/" + fileName, bytes);

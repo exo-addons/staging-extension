@@ -1,4 +1,36 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.content.operations.site.contents;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
+import org.exoplatform.ecm.webui.utils.Utils;
+import org.exoplatform.management.common.exportop.JCRNodeExportTask;
+import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.content.operations.site.SiteUtil;
+import org.exoplatform.services.compress.CompressData;
+import org.exoplatform.services.jcr.RepositoryService;
+import org.exoplatform.services.log.ExoLogger;
+import org.exoplatform.services.log.Log;
+import org.gatein.management.api.exceptions.OperationException;
+import org.gatein.management.api.operation.OperationNames;
+import org.gatein.management.api.operation.model.ExportTask;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -20,35 +52,50 @@ import javax.jcr.query.Query;
 import javax.jcr.query.QueryManager;
 import javax.jcr.query.QueryResult;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.exoplatform.ecm.webui.utils.Utils;
-import org.exoplatform.management.common.exportop.JCRNodeExportTask;
-import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
-import org.exoplatform.management.content.operations.site.SiteUtil;
-import org.exoplatform.services.compress.CompressData;
-import org.exoplatform.services.jcr.RepositoryService;
-import org.exoplatform.services.log.ExoLogger;
-import org.exoplatform.services.log.Log;
-import org.gatein.management.api.exceptions.OperationException;
-import org.gatein.management.api.operation.OperationNames;
-import org.gatein.management.api.operation.model.ExportTask;
-
+/**
+ * The Class SiteContentsVersionHistoryExportTask.
+ */
 public class SiteContentsVersionHistoryExportTask implements ExportTask {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(JCRNodeExportTask.class);
 
+  /** The Constant VERSION_HISTORY_FILE_SUFFIX. */
   public static final String VERSION_HISTORY_FILE_SUFFIX = "_VersionHistory.zip";
+  
+  /** The Constant ROOT_SQL_QUERY. */
   public static final String ROOT_SQL_QUERY = "select * from mix:versionable order by exo:dateCreated DESC";
+  
+  /** The Constant VERSION_SQL_QUERY. */
   public static final String VERSION_SQL_QUERY = "select * from mix:versionable where jcr:path like '$0/%' " + "order by exo:dateCreated DESC";
 
+  /** The temp files. */
   private static List<File> tempFiles = new ArrayList<File>();
 
+  /** The repository service. */
   private final RepositoryService repositoryService;
+  
+  /** The workspace. */
   private final String workspace;
+  
+  /** The absolute path. */
   private final String absolutePath;
+  
+  /** The site name. */
   private final String siteName;
+  
+  /** The recurse. */
   private final boolean recurse;
 
+  /**
+   * Instantiates a new site contents version history export task.
+   *
+   * @param repositoryService the repository service
+   * @param workspace the workspace
+   * @param siteName the site name
+   * @param absolutePath the absolute path
+   * @param recurse the recurse
+   */
   public SiteContentsVersionHistoryExportTask(RepositoryService repositoryService, String workspace, String siteName, String absolutePath, boolean recurse) {
     this.repositoryService = repositoryService;
     this.workspace = workspace;
@@ -57,11 +104,17 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     this.recurse = recurse;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getEntry() {
     return SiteUtil.getSiteContentsBasePath(siteName) + "/" + JCRNodeExportTask.JCR_DATA_SEPARATOR + absolutePath + VERSION_HISTORY_FILE_SUFFIX;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void export(OutputStream outputStream) throws IOException {
     log.info("Export VersionHistory: " + workspace + ":" + absolutePath);
@@ -149,8 +202,7 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   }
 
   /**
-   * Delete temp files created by GateIN management operations
-   * 
+   * Delete temp files created by GateIN management operations.
    */
   protected void clearTempFiles() {
     for (File tempFile : tempFiles) {
@@ -160,6 +212,13 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     }
   }
 
+  /**
+   * Gets the query result.
+   *
+   * @param currentNode the current node
+   * @return the query result
+   * @throws Exception the exception
+   */
   private QueryResult getQueryResult(Node currentNode) throws Exception {
     QueryManager queryManager = currentNode.getSession().getWorkspace().getQueryManager();
     String queryStatement = "";
@@ -172,6 +231,12 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     return query.execute();
   }
 
+  /**
+   * Gets the current node.
+   *
+   * @return the current node
+   * @throws Exception the exception
+   */
   private Node getCurrentNode() throws Exception {
     Session session = null;
     try {
@@ -182,6 +247,13 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
     }
   }
 
+  /**
+   * Gets the history value.
+   *
+   * @param node the node
+   * @return the history value
+   * @throws Exception the exception
+   */
   private String getHistoryValue(Node node) throws Exception {
     String versionHistory = node.getProperty("jcr:versionHistory").getValue().getString();
     String baseVersion = node.getProperty("jcr:baseVersion").getValue().getString();
@@ -198,9 +270,12 @@ public class SiteContentsVersionHistoryExportTask implements ExportTask {
   }
 
   /**
-   * Create temp file to allow download a big data
-   * 
+   * Create temp file to allow download a big data.
+   *
+   * @param prefix the prefix
+   * @param suffix the suffix
    * @return file
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private static File getExportedFile(String prefix, String suffix) throws IOException {
     File tempFile = File.createTempFile(prefix.concat(UUID.randomUUID().toString()), suffix);

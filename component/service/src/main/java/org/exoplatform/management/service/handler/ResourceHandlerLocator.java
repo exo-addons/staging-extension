@@ -1,6 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.service.handler;
-
-import java.util.Arrays;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.management.service.api.ResourceHandler;
@@ -11,12 +27,16 @@ import org.exoplatform.management.service.handler.forum.ForumHandler;
 import org.exoplatform.management.service.handler.mop.MOPSiteHandler;
 import org.exoplatform.portal.mop.SiteType;
 
+import java.util.Arrays;
+
 /**
- * Service Locator for resources handlers, based on the resource category's path
- * 
+ * Service Locator for resources handlers, based on the resource category's path.
+ *
  * @author Thomas Delhoménie
  */
 public class ResourceHandlerLocator {
+  
+  /** The registry. */
   private static ResourceHandlerRegistry registry;
 
   static {
@@ -75,10 +95,22 @@ public class ResourceHandlerLocator {
     registry.register(new MOPSiteHandler(SiteType.USER));
   }
 
+  /**
+   * Gets the resource handler.
+   *
+   * @param path the path
+   * @return the resource handler
+   */
   public static ResourceHandler getResourceHandler(String path) {
     return registry.get(path);
   }
 
+  /**
+   * Find resource by path.
+   *
+   * @param path the path
+   * @return the resource handler
+   */
   public static ResourceHandler findResourceByPath(String path) {
     String[] fileNameParts = path.split("/");
     for (int i = fileNameParts.length; i > 0; i--) {

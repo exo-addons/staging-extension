@@ -1,13 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.ecmadmin.operations.queries;
-
-import java.io.StringReader;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.Node;
-import javax.jcr.query.Query;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.container.xml.ComponentPlugin;
@@ -32,25 +41,57 @@ import org.jibx.runtime.BindingDirectory;
 import org.jibx.runtime.IBindingFactory;
 import org.jibx.runtime.IUnmarshallingContext;
 
+import java.io.StringReader;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.Node;
+import javax.jcr.query.Query;
+
 /**
+ * The Class QueriesImportResource.
+ *
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  */
 public class QueriesImportResource extends ECMAdminImportResource {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(QueriesImportResource.class);
+  
+  /** The query service. */
   private QueryService queryService;
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
+  
+  /** The dms configuration. */
   private DMSConfiguration dmsConfiguration;
+  
+  /** The node hierarchy creator. */
   private NodeHierarchyCreator nodeHierarchyCreator;
 
+  /**
+   * Instantiates a new queries import resource.
+   */
   public QueriesImportResource() {
     super(null);
   }
 
+  /**
+   * Instantiates a new queries import resource.
+   *
+   * @param filePath the file path
+   */
   public QueriesImportResource(String filePath) {
     super(filePath);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     // get attributes and attachement inputstream

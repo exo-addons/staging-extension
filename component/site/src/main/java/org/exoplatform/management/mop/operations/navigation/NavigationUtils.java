@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,12 +19,6 @@
 
 package org.exoplatform.management.mop.operations.navigation;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
 import org.exoplatform.portal.config.model.I18NString;
 import org.exoplatform.portal.config.model.LocalizedString;
 import org.exoplatform.portal.config.model.NavigationFragment;
@@ -42,13 +33,33 @@ import org.exoplatform.portal.mop.navigation.NodeContext;
 import org.exoplatform.portal.mop.navigation.NodeModel;
 import org.exoplatform.portal.mop.navigation.Scope;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
 /**
+ * The Class NavigationUtils.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class NavigationUtils {
+  
+  /**
+   * Instantiates a new navigation utils.
+   */
   private NavigationUtils() {}
 
+  /**
+   * Load page navigation.
+   *
+   * @param key the key
+   * @param navigationService the navigation service
+   * @param descriptionService the description service
+   * @return the page navigation
+   */
   public static PageNavigation loadPageNavigation(NavigationKey key, NavigationService navigationService, DescriptionService descriptionService) {
     NavigationContext navigation = navigationService.loadNavigation(key.getSiteKey());
     if (navigation == null)
@@ -65,6 +76,14 @@ public class NavigationUtils {
     }
   }
 
+  /**
+   * Load node.
+   *
+   * @param navigationService the navigation service
+   * @param navigation the navigation
+   * @param navUri the nav uri
+   * @return the node context
+   */
   public static NodeContext<NodeContext<?>> loadNode(NavigationService navigationService, NavigationContext navigation, String navUri) {
     if (navigation == null)
       return null;
@@ -84,6 +103,14 @@ public class NavigationUtils {
     }
   }
 
+  /**
+   * Creates the page navigation.
+   *
+   * @param service the service
+   * @param navigation the navigation
+   * @param node the node
+   * @return the page navigation
+   */
   public static PageNavigation createPageNavigation(DescriptionService service, NavigationContext navigation, NodeContext<NodeContext<?>> node) {
     PageNavigation pageNavigation = new PageNavigation();
     pageNavigation.setPriority(navigation.getState().getPriority());
@@ -104,6 +131,14 @@ public class NavigationUtils {
     return pageNavigation;
   }
 
+  /**
+   * Creates the fragmented page navigation.
+   *
+   * @param service the service
+   * @param navigation the navigation
+   * @param node the node
+   * @return the page navigation
+   */
   private static PageNavigation createFragmentedPageNavigation(DescriptionService service, NavigationContext navigation, NodeContext<NodeContext<?>> node) {
     PageNavigation pageNavigation = new PageNavigation();
     pageNavigation.setPriority(navigation.getState().getPriority());
@@ -124,6 +159,12 @@ public class NavigationUtils {
     return pageNavigation;
   }
 
+  /**
+   * Gets the path.
+   *
+   * @param node the node
+   * @param parentUri the parent uri
+   */
   private static void getPath(NodeContext<NodeContext<?>> node, StringBuilder parentUri) {
     if (node == null)
       return;
@@ -134,6 +175,13 @@ public class NavigationUtils {
     getPath(node.getParent(), parentUri);
   }
 
+  /**
+   * Creates the page node.
+   *
+   * @param service the service
+   * @param node the node
+   * @return the page node
+   */
   private static PageNode createPageNode(DescriptionService service, NodeContext<NodeContext<?>> node) {
     PageNode pageNode = new PageNode();
     pageNode.setName(node.getName());
@@ -182,6 +230,12 @@ public class NavigationUtils {
     return pageNode;
   }
 
+  /**
+   * Trim.
+   *
+   * @param array the array
+   * @return the string[]
+   */
   private static String[] trim(String[] array) {
     List<String> trimmed = new ArrayList<String>(array.length);
     for (String s : array) {

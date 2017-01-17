@@ -1,16 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.gadget.operations;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-
-import javax.jcr.ImportUUIDBehavior;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
 
 import org.apache.commons.io.IOUtils;
 import org.exoplatform.application.gadget.Gadget;
@@ -31,19 +37,44 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+
+import javax.jcr.ImportUUIDBehavior;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+
 /**
+ * The Class GadgetImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class GadgetImportResource extends AbstractOperationHandler {
 
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(GadgetImportResource.class);
+  
+  /** The Constant DEFAULT_JCR_PATH. */
   private static final String DEFAULT_JCR_PATH = "/production/app:gadgets/";
 
+  /** The chromattic manager. */
   private ChromatticManager chromatticManager;
+  
+  /** The repository service. */
   private RepositoryService repositoryService;
+  
+  /** The gadget registry service. */
   private GadgetRegistryService gadgetRegistryService;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
 
@@ -156,6 +187,15 @@ public class GadgetImportResource extends AbstractOperationHandler {
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * Do import gadget.
+   *
+   * @param jcrPath the jcr path
+   * @param zis the zis
+   * @param session the session
+   * @throws IOException Signals that an I/O exception has occurred.
+   * @throws RepositoryException the repository exception
+   */
   private void doImportGadget(String jcrPath, ZipInputStream zis, Session session) throws IOException, RepositoryException {
     ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(IOUtils.toByteArray(zis));
     session.importXML(jcrPath, byteArrayInputStream, ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);

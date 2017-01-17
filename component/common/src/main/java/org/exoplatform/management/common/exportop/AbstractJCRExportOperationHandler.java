@@ -1,4 +1,26 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.common.exportop;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.exoplatform.services.cms.templates.TemplateService;
+import org.gatein.management.api.operation.model.ExportTask;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,16 +31,25 @@ import javax.jcr.NodeIterator;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.exoplatform.services.cms.templates.TemplateService;
-import org.gatein.management.api.operation.model.ExportTask;
-
+/**
+ * The Class AbstractJCRExportOperationHandler.
+ */
 public abstract class AbstractJCRExportOperationHandler extends AbstractExportOperationHandler {
 
+  /** The template service. */
   protected TemplateService templateService = null;
 
+  /** The is NT recursive map. */
   private Map<String, Boolean> isNTRecursiveMap = new HashMap<String, Boolean>();
 
+  /**
+   * Export node.
+   *
+   * @param childNode the child node
+   * @param subNodesExportTask the sub nodes export task
+   * @param params the params
+   * @throws Exception the exception
+   */
   protected final void exportNode(Node childNode, List<ExportTask> subNodesExportTask, String... params) throws Exception {
     String path = childNode.getPath();
     boolean recursive = isRecursiveExport(childNode);
@@ -34,6 +65,13 @@ public abstract class AbstractJCRExportOperationHandler extends AbstractExportOp
     }
   }
 
+  /**
+   * Checks if is recursive export.
+   *
+   * @param node the node
+   * @return true, if is recursive export
+   * @throws Exception the exception
+   */
   protected final boolean isRecursiveExport(Node node) throws Exception {
     NodeType nodeType = node.getPrimaryNodeType();
     NodeType[] nodeTypes = node.getMixinNodeTypes();
@@ -48,6 +86,13 @@ public abstract class AbstractJCRExportOperationHandler extends AbstractExportOp
     return recursive;
   }
 
+  /**
+   * Checks if is recursive NT.
+   *
+   * @param nodeType the node type
+   * @return true, if is recursive NT
+   * @throws Exception the exception
+   */
   protected final boolean isRecursiveNT(NodeType nodeType) throws Exception {
     if (nodeType.getName().equals("exo:actionStorage")) {
       return true;
@@ -71,5 +116,14 @@ public abstract class AbstractJCRExportOperationHandler extends AbstractExportOp
     return isNTRecursiveMap.get(nodeType.getName());
   }
 
+  /**
+   * Adds the JCR node export task.
+   *
+   * @param childNode the child node
+   * @param subNodesExportTask the sub nodes export task
+   * @param recursive the recursive
+   * @param params the params
+   * @throws Exception the exception
+   */
   protected abstract void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception;
 }

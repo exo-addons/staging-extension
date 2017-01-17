@@ -1,9 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.backup.service.jcr;
-
-import java.io.File;
-import java.util.List;
-
-import javax.jcr.RepositoryException;
 
 import org.exoplatform.container.PortalContainer;
 import org.exoplatform.container.xml.InitParams;
@@ -28,17 +41,36 @@ import org.exoplatform.services.jcr.impl.dataflow.persistent.WorkspacePersistent
 import org.exoplatform.services.log.ExoLogger;
 import org.exoplatform.services.log.Log;
 
+import java.io.File;
+import java.util.List;
+
+import javax.jcr.RepositoryException;
+
 /**
+ * The Class JCRBackup.
+ *
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  * @version $Revision$
  */
 public class JCRBackup {
 
+  /** The Constant LOG. */
   private static final Log LOG = ExoLogger.getLogger(JCRBackup.class);
 
+  /** The Constant BACKUP_JCR_LISTENER. */
   private static final BackupJCRListener BACKUP_JCR_LISTENER = new BackupJCRListener();
 
+  /**
+   * Backup.
+   *
+   * @param portalContainer the portal container
+   * @param backupDirFile the backup dir file
+   * @throws RepositoryException the repository exception
+   * @throws RepositoryConfigurationException the repository configuration exception
+   * @throws BackupOperationException the backup operation exception
+   * @throws BackupConfigurationException the backup configuration exception
+   */
   public static void backup(PortalContainer portalContainer, File backupDirFile) throws RepositoryException, RepositoryConfigurationException, BackupOperationException, BackupConfigurationException {
     RepositoryService repositoryService = (RepositoryService) portalContainer.getComponentInstanceOfType(RepositoryService.class);
     RegistryService registryService = (RegistryService) portalContainer.getComponentInstanceOfType(RegistryService.class);
@@ -118,6 +150,12 @@ public class JCRBackup {
     }
   }
 
+  /**
+   * Resume search manager.
+   *
+   * @param searchManager the search manager
+   * @param workspaceName the workspace name
+   */
   private static void resumeSearchManager(Suspendable searchManager, String workspaceName) {
     if (searchManager.isSuspended()) {
       try {

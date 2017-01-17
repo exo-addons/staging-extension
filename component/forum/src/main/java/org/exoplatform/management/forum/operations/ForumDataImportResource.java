@@ -1,11 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.forum.operations;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.forum.common.jcr.KSDataLocation;
@@ -42,24 +53,48 @@ import org.gatein.management.api.operation.OperationNames;
 import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.NoResultModel;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 /**
+ * The Class ForumDataImportResource.
+ *
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
 public class ForumDataImportResource extends AbstractJCRImportOperationHandler implements ActivityImportOperationInterface, FileImportOperationInterface {
 
+  /** The Constant log. */
   final private static Logger log = LoggerFactory.getLogger(ForumDataImportResource.class);
 
+  /** The forum service. */
   private ForumService forumService;
+  
+  /** The poll service. */
   private PollService pollService;
+  
+  /** The data location. */
   private KSDataLocation dataLocation;
 
+  /** The type. */
   private String type;
 
+  /**
+   * Instantiates a new forum data import resource.
+   *
+   * @param isSpaceForumType the is space forum type
+   */
   public ForumDataImportResource(boolean isSpaceForumType) {
     type = isSpaceForumType ? ForumExtension.SPACE_FORUM_TYPE : ForumExtension.PUBLIC_FORUM_TYPE;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
@@ -188,19 +223,31 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     resultHandler.completed(NoResultModel.INSTANCE);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public String getNodePath(String filePath) {
     return super.getNodePath(filePath);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String getManagedFilesPrefix() {
     return "forum/" + type + "/";
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isUnKnownFileFormat(String filePath) {
     return !filePath.endsWith(".xml") && !filePath.endsWith(SpaceMetadataExportTask.FILENAME) && !filePath.contains(ActivitiesExportTask.FILENAME);
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean addSpecialFile(List<FileEntry> fileEntries, String filePath, File file) {
     if (filePath.endsWith(SpaceMetadataExportTask.FILENAME)) {
       fileEntries.add(new FileEntry(SpaceMetadataExportTask.FILENAME, file));
@@ -212,6 +259,9 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (activity.getTemplateParams().containsKey("PollLink")) {
       if (comment == null) {
@@ -244,6 +294,9 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     }
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (activity.getTemplateParams().containsKey("PollLink")) {
       String topicId = activity.getTemplateParams().get("Id");
@@ -289,12 +342,22 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
     return false;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   public String extractIdFromPath(String path) {
     int beginIndex = ("forum/" + type + "/").length();
     int endIndex = path.indexOf("/", beginIndex + 1);
     return path.substring(beginIndex, endIndex);
   }
 
+  /**
+   * Delete activities.
+   *
+   * @param categoryId the category id
+   * @param forumId the forum id
+   * @throws Exception the exception
+   */
   private void deleteActivities(String categoryId, String forumId) throws Exception {
     // Delete Forum activity stream
     TopicFilter topicFilter = new TopicFilter(categoryId, forumId);

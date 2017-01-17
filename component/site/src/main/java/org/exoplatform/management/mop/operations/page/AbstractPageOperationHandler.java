@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -31,10 +28,16 @@ import org.gatein.mop.api.workspace.Page;
 import org.gatein.mop.api.workspace.Site;
 
 /**
+ * The Class AbstractPageOperationHandler.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public abstract class AbstractPageOperationHandler extends AbstractSiteOperationHandler {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void execute(OperationContext operationContext, ResultHandler resultHandler, Site site) throws ResourceNotFoundException, OperationException {
     Page pages = site.getRootPage().getChild("pages");
@@ -44,5 +47,14 @@ public abstract class AbstractPageOperationHandler extends AbstractSiteOperation
     execute(operationContext, resultHandler, pages);
   }
 
+  /**
+   * Execute.
+   *
+   * @param operationContext the operation context
+   * @param resultHandler the result handler
+   * @param page the page
+   * @throws ResourceNotFoundException the resource not found exception
+   * @throws OperationException the operation exception
+   */
   protected abstract void execute(OperationContext operationContext, ResultHandler resultHandler, Page page) throws ResourceNotFoundException, OperationException;
 }

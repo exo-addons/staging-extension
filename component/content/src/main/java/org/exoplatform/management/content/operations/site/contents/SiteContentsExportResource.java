@@ -1,16 +1,22 @@
+/*
+ * Copyright (C) 2003-2017 eXo Platform SAS.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 2.1 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this software; if not, write to the Free
+ * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+ */
 package org.exoplatform.management.content.operations.site.contents;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.jcr.Node;
-import javax.jcr.NodeIterator;
-import javax.jcr.RepositoryException;
-import javax.jcr.Session;
-import javax.jcr.query.Query;
 
 import org.apache.commons.lang.StringUtils;
 import org.exoplatform.commons.utils.ActivityTypeUtils;
@@ -38,7 +44,21 @@ import org.gatein.management.api.operation.ResultHandler;
 import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.jcr.Node;
+import javax.jcr.NodeIterator;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.query.Query;
+
 /**
+ * The Class SiteContentsExportResource.
+ *
  * @author <a href="mailto:thomas.delhomenie@exoplatform.com">Thomas
  *         Delhoménie</a>
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
@@ -46,12 +66,19 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @version $Revision$
  */
 public class SiteContentsExportResource extends AbstractJCRExportOperationHandler {
+  
+  /** The Constant log. */
   private static final Log log = ExoLogger.getLogger(SiteContentsExportResource.class);
 
+  /** The Constant FILTER_SEPARATOR. */
   public static final String FILTER_SEPARATOR = ":";
 
+  /** The wcm configuration service. */
   private WCMConfigurationService wcmConfigurationService = null;
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws OperationException {
     increaseCurrentTransactionTimeOut(operationContext);
@@ -129,6 +156,13 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     }
   }
 
+  /**
+   * Export activities.
+   *
+   * @param exportTasks the export tasks
+   * @param activitiesId the activities id
+   * @param siteName the site name
+   */
   private void exportActivities(List<ExportTask> exportTasks, Set<String> activitiesId, String siteName) {
     // In case of minimal profile
     if (activityManager != null) {
@@ -147,13 +181,16 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
   }
 
   /**
-   * 
-   * @param workspace
-   * @param siteRootNodePath
-   * @param exportVersionHistory
-   * @param metaData
-   * @param exportOnlyMetadata
-   * @return
+   * Export site.
+   *
+   * @param workspace the workspace
+   * @param siteRootNodePath the site root node path
+   * @param exportVersionHistory the export version history
+   * @param metaData the meta data
+   * @param activitiesId the activities id
+   * @param exportOnlyMetadata the export only metadata
+   * @return the list
+   * @throws Exception the exception
    */
   private List<ExportTask> exportSite(String workspace, String siteRootNodePath, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId, boolean exportOnlyMetadata)
       throws Exception {
@@ -170,14 +207,18 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
   }
 
   /**
-   * 
-   * @param workspace
-   * @param siteRootNodePath
-   * @param excludePaths
-   * @param exportVersionHistory
-   * @param metaData
-   * @param exportOnlyMetadata
-   * @return
+   * Export query result.
+   *
+   * @param workspace the workspace
+   * @param siteRootNodePath the site root node path
+   * @param jcrQuery the jcr query
+   * @param excludePaths the exclude paths
+   * @param exportVersionHistory the export version history
+   * @param metaData the meta data
+   * @param activitiesId the activities id
+   * @param exportOnlyMetadata the export only metadata
+   * @return the list
+   * @throws Exception the exception
    */
   private List<ExportTask> exportQueryResult(String workspace, String siteRootNodePath, String jcrQuery, List<String> excludePaths, boolean exportVersionHistory, SiteMetaData metaData,
       Set<String> activitiesId, boolean exportOnlyMetadata) throws Exception {
@@ -211,16 +252,18 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
   }
 
   /**
-   * 
-   * @param workspace
-   * @param path
-   * @param exportSiteTaxonomy
-   * @param exportVersionHistory
-   * @param metaData
-   * @param exportOnlyMetadata
-   * @return
-   * @throws Exception
-   * @throws RepositoryException
+   * Export site without skeleton.
+   *
+   * @param workspace the workspace
+   * @param path the path
+   * @param exportSiteTaxonomy the export site taxonomy
+   * @param exportVersionHistory the export version history
+   * @param metaData the meta data
+   * @param activitiesId the activities id
+   * @param exportOnlyMetadata the export only metadata
+   * @return the list
+   * @throws Exception the exception
+   * @throws RepositoryException the repository exception
    */
   private List<ExportTask> exportSiteWithoutSkeleton(String workspace, String path, boolean exportSiteTaxonomy, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId,
       boolean exportOnlyMetadata) throws Exception, RepositoryException {
@@ -272,16 +315,17 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
   }
 
   /**
-   * Export all sub-nodes of the given node
-   * 
-   * @param repositoryService
-   * @param workspace
-   * @param parentNode
-   * @param excludedNodes
-   * @param metaData
-   * @param exportOnlyMetadata
-   * @return
-   * @throws RepositoryException
+   * Export all sub-nodes of the given node.
+   *
+   * @param workspace the workspace
+   * @param parentNode the parent node
+   * @param excludedNodes the excluded nodes
+   * @param exportVersionHistory the export version history
+   * @param metaData the meta data
+   * @param activitiesId the activities id
+   * @param exportOnlyMetadata the export only metadata
+   * @return the list
+   * @throws Exception the exception
    */
   protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId,
       boolean exportOnlyMetadata) throws Exception {
@@ -294,6 +338,20 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     return subNodesExportTask;
   }
 
+  /**
+   * Export node.
+   *
+   * @param workspace the workspace
+   * @param parentNode the parent node
+   * @param excludedNodes the excluded nodes
+   * @param exportVersionHistory the export version history
+   * @param subNodesExportTask the sub nodes export task
+   * @param childNode the child node
+   * @param metaData the meta data
+   * @param activitiesId the activities id
+   * @param exportOnlyMetadata the export only metadata
+   * @throws Exception the exception
+   */
   private void exportNode(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, List<ExportTask> subNodesExportTask, Node childNode, SiteMetaData metaData,
       Set<String> activitiesId, boolean exportOnlyMetadata) throws Exception {
     if (excludedNodes == null || (!excludedNodes.contains(childNode.getName()) && !excludedNodes.contains(childNode.getPath()))) {
@@ -354,6 +412,14 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     }
   }
 
+  /**
+   * Gets the parameter value.
+   *
+   * @param filters the filters
+   * @param prefix the prefix
+   * @param defaultValue the default value
+   * @return the parameter value
+   */
   private String getParameterValue(List<String> filters, String prefix, String defaultValue) {
     String value = null;
     for (String filterValue : filters) {
@@ -368,6 +434,9 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
     return value;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) throws Exception {}
 }

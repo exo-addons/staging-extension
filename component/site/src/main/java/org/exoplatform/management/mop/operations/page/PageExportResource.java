@@ -1,8 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
- * Copyright 2011, Red Hat, Inc., and individual contributors
- * as indicated by the @author tags. See the copyright.txt file in the
- * distribution for a full listing of individual contributors.
+ * Copyright (C) 2003-2017 eXo Platform SAS.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,12 +19,6 @@
 
 package org.exoplatform.management.mop.operations.page;
 
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
 import org.exoplatform.management.mop.exportimport.PageExportTask;
 import org.exoplatform.portal.config.DataStorage;
 import org.exoplatform.portal.mop.SiteKey;
@@ -45,11 +36,23 @@ import org.gatein.management.api.operation.model.ExportResourceModel;
 import org.gatein.management.api.operation.model.ExportTask;
 import org.gatein.mop.api.workspace.Page;
 
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 /**
+ * The Class PageExportResource.
+ *
  * @author <a href="mailto:nscavell@redhat.com">Nick Scavelli</a>
  * @version $Revision$
  */
 public class PageExportResource extends AbstractPageOperationHandler {
+  
+  /**
+   * {@inheritDoc}
+   */
   @Override
   protected void execute(OperationContext operationContext, ResultHandler resultHandler, Page pages) throws ResourceNotFoundException, OperationException {
     SiteKey siteKey = getSiteKey(pages.getSite());
