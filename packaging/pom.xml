@@ -113,10 +113,8 @@
 							<goal>single</goal>
 						</goals>
 						<configuration>
-							<finalName>staging</finalName>
-							<appendAssemblyId>false</appendAssemblyId>
 							<descriptors>
-								<descriptor>src/main/assemblies/staging-extension.xml</descriptor>
+								<descriptor>src/main/assemblies/packaging-archive.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</execution>
