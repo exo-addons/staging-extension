@@ -84,7 +84,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         synchronize(new Resource(getPath(), getPath(), getPath()), exportOptions, importOptions, targetServer);
       } else {
         String resourcePath = resource.getPath().replace(getPath() + "/", "");
-
+        if(resourcePath.contains("//")){
+          resourcePath = resourcePath.substring(resourcePath.lastIndexOf("/")+1);
+        }
         Map<String, String> exportOptionsTmp = new HashMap<String, String>(exportOptions);
         exportOptionsTmp.put("filter/" + resourcePath, null);
 
@@ -103,6 +105,9 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
         export(new Resource(getPath(), getPath(), getPath()), exportFileOS, exportOptions);
       } else {
         String resourcePath = resource.getPath().replace(getPath() + "/", "");
+        if(resourcePath.contains("//")){
+          resourcePath = resourcePath.substring(resourcePath.lastIndexOf("/")+1);
+        }
         exportOptionsTmp.put("filter/" + resourcePath, null);
       }
     }
@@ -121,6 +126,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
    */
   protected boolean sendData(File file, Map<String, String> options, TargetServer targetServer) throws Exception {
     FileInputStream fileInputStream = null;
+    // issue : We got the message "synchronization successfully" independently of synchronisation success
     Boolean isOk = false;
     try {
       getLogger().info("Sending data to server: " + targetServer.getHost());

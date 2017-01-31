@@ -18,17 +18,18 @@ package org.exoplatform.management.answer.operations;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.jcr.Node;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.poi.util.IOUtils;
 import org.exoplatform.faq.service.Category;
 import org.exoplatform.faq.service.FAQService;
+import org.exoplatform.faq.service.FileAttachment;
 import org.exoplatform.faq.service.Question;
+import org.exoplatform.faq.service.QuestionPageList;
 import org.exoplatform.faq.service.Utils;
 import org.exoplatform.management.answer.AnswerExtension;
-import org.exoplatform.management.common.exportop.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.InputStreamWrapper;
+import org.exoplatform.management.common.exportop.AbstractExportOperationHandler;
 import org.exoplatform.management.common.exportop.ActivityExportOperationInterface;
-import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.common.exportop.SpaceMetadataExportTask;
 import org.exoplatform.portal.config.UserACL;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
@@ -52,7 +53,7 @@ import org.gatein.management.api.operation.model.ExportTask;
  * @author <a href="mailto:bkhanfir@exoplatform.com">Boubaker Khanfir</a>
  * @version $Revision$
  */
-public class AnswerDataExportResource extends AbstractJCRExportOperationHandler implements ActivityExportOperationInterface {
+public class AnswerDataExportResource extends AbstractExportOperationHandler implements ActivityExportOperationInterface {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataExportResource.class);
 
@@ -78,14 +79,17 @@ public class AnswerDataExportResource extends AbstractJCRExportOperationHandler 
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
+    //export all categories instead of one category
     List<String> names = operationContext.getAttributes().getValues("filter");
+    boolean exportSubCategories = operationContext.getAttributes().getValues("filter").contains("with-subcategories:true");
+
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
     boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
 
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     try {
-      if (names == null || names.isEmpty()) {
+      if (names == null || names.isEmpty() ) {
         log.info("Exporting all FAQ of type: " + (isSpaceType ? "Spaces" : "Public"));
         List<Category> categories = faqService.getAllCategories();
         for (Category category : categories) {
@@ -96,32 +100,34 @@ public class AnswerDataExportResource extends AbstractJCRExportOperationHandler 
           if (isSpaceType) {
             space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, ""));
           }
-          exportAnswer(exportTasks, category, space, exportSpaceMetadata);
+          exportAnswer(exportTasks, category, space, exportSpaceMetadata, exportSubCategories);
         }
       } else {
         for (String name : names) {
-          if (isSpaceType) {
-            Space space = spaceService.getSpaceByDisplayName(name);
-            String groupName = space.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
+          if(!name.equals("with-subcategories:true") && !name.equals("with-subcategories:false")){
+            if (isSpaceType) {
+              Space space = spaceService.getSpaceByDisplayName(name);
+              String groupName = space.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
 
-            Category category = faqService.getCategoryById(Utils.CATE_SPACE_ID_PREFIX + groupName);
-            if (category != null) {
-              exportAnswer(exportTasks, category, space, exportSpaceMetadata);
+              Category category = faqService.getCategoryById(Utils.CATE_SPACE_ID_PREFIX + groupName);
+              if (category != null) {
+                exportAnswer(exportTasks, category, space, exportSpaceMetadata, exportSubCategories);
+              } else {
+                log.info("Cannot find Answer Category of Space: " + space.getDisplayName());
+              }
             } else {
-              log.info("Cannot find Answer Category of Space: " + space.getDisplayName());
-            }
-          } else {
-            if (name.equals(AnswerExtension.ROOT_CATEGORY)) {
-              Category defaultCategory = faqService.getCategoryById(Utils.CATEGORY_HOME);
-              // Export questions from root category
-              exportAnswer(exportTasks, defaultCategory, null, exportSpaceMetadata);
-            } else {
-              List<Category> categories = faqService.getAllCategories();
-              for (Category category : categories) {
-                if (!category.getName().equals(name)) {
-                  continue;
+              if (name.equals(AnswerExtension.ROOT_CATEGORY)) {
+                Category defaultCategory = faqService.getCategoryById(Utils.CATEGORY_HOME);
+                // Export questions from root category
+                exportAnswer(exportTasks, defaultCategory, null, exportSpaceMetadata, exportSubCategories);
+              } else {
+                List<Category> categories = faqService.getAllCategories();
+                for (Category category : categories) {
+                  if (!category.getName().equals(name)) {
+                    continue;
+                  }
+                  exportAnswer(exportTasks, category, null, exportSpaceMetadata, exportSubCategories);
                 }
-                exportAnswer(exportTasks, category, null, exportSpaceMetadata);
               }
             }
           }
@@ -133,16 +139,22 @@ public class AnswerDataExportResource extends AbstractJCRExportOperationHandler 
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportAnswer(List<ExportTask> exportTasks, Category category, Space space, boolean exportSpaceMetadata) throws Exception {
-    // Export category
-    exportTasks.add(new AnswerExportTask(type, category));
-    // Export category metadata
-    exportTasks.add(new CategoryMetaDataExportTask(category, type));
-
+  private void exportAnswer(List<ExportTask> exportTasks, Category category, Space space, boolean exportSpaceMetadata, boolean exportSubCategories) throws Exception {
+    QuestionPageList questionsPageList = faqService.getAllQuestionsByCatetory(category.getId(), AnswerExtension.EMPTY_FAQ_SETTIGNS);
+    List<Question> questions = questionsPageList.getAll();
+    for (Question question : questions) {
+      if (question.getAttachMent() != null && !question.getAttachMent().isEmpty()) {
+        List<FileAttachment> attachments = question.getAttachMent();
+        for (FileAttachment fileAttachment : attachments) {
+          InputStreamWrapper inputStream = new InputStreamWrapper(IOUtils.toByteArray(fileAttachment.getInputStream()));
+          fileAttachment.setInputStream(inputStream);
+        }
+      }
+    }
+    exportTasks.add(new AnswerExportTask(type, category, questions,faqService, exportSubCategories));
     categoryThreadLocal.set(category);
     // In case of minimal profile
     if (activityManager != null) {
-      // Export activities metadata
       String prefix = "answer/" + type + "/" + category.getId() + "/";
       exportActivities(exportTasks, space == null ? ((category.getModerators() == null || category.getModerators().length == 0) ? userACL.getSuperUser() : category.getModerators()[0])
               : space.getPrettyName(), prefix, ANSWER_ACTIVITY_TYPE);
@@ -151,7 +163,7 @@ public class AnswerDataExportResource extends AbstractJCRExportOperationHandler 
         if (space == null) {
           log.warn("Should export space DATA but it is null");
         } else {
-          // Export space metadata
+          prefix = "answer/space/" + category.getId() + "/";
           exportTasks.add(new SpaceMetadataExportTask(space, prefix));
         }
       }
@@ -196,16 +208,5 @@ public class AnswerDataExportResource extends AbstractJCRExportOperationHandler 
       }
       return categoryThreadLocal.get().getId().equals(question.getCategoryId());
     }
-  }
-
-  @Override
-  protected void addJCRNodeExportTask(Node childNode, List<ExportTask> subNodesExportTask, boolean recursive, String... params) {
-    if (params.length != 4) {
-      log.warn("Cannot add Answer Export Task, 4 parameters was expected, got: " + ArrayUtils.toString(params));
-      return;
-    }
-    String entryPath = "answer/" + type + "/" + (params[2] == null || params[2].isEmpty() ? params[1] : params[2]);
-    JCRNodeExportTask exportTask = new JCRNodeExportTask(repositoryService, params[0], params[3], entryPath, recursive, true);
-    subNodesExportTask.add(exportTask);
   }
 }

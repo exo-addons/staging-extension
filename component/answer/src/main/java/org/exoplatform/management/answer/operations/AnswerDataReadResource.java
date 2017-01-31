@@ -46,12 +46,34 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
 
   final private static Logger log = LoggerFactory.getLogger(AnswerDataReadResource.class);
 
+  private FAQService faqService;
+
   public AnswerDataReadResource(boolean isSpaceType) {
     this.isSpaceType = isSpaceType;
   }
 
+  private String getFullPath(Category category,  FAQService faqService){
+    String fullPath= category.getName();
+    Category cat = getParenCategory(category,faqService);
+    while (!cat.getName().equals("categories")){
+    fullPath = cat.getName()+"//"+fullPath;
+    cat = getParenCategory(cat,faqService);
+    }
+    return fullPath;
+  }
+ private Category getParenCategory(Category category, FAQService faqService){
+   String parentId = category.getPath().replace("/" + category.getId(), "");
+   Category parentCategory = null;
+   try {
+     parentCategory = faqService.getCategoryById(parentId);
+   } catch (Exception e) {
+     log.error("Error while listing FAQ categories.", e);
+   }
+   return parentCategory;
+ }
   @Override
   public void execute(OperationContext operationContext, ResultHandler resultHandler) throws ResourceNotFoundException, OperationException {
+    faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
     Set<String> children = new LinkedHashSet<String>();
     FAQService faqService = operationContext.getRuntimeContext().getRuntimeComponent(FAQService.class);
     SpaceService spaceService = operationContext.getRuntimeContext().getRuntimeComponent(SpaceService.class);
@@ -59,33 +81,26 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
     try {
       List<Category> categories = faqService.getAllCategories();
       for (Category category : categories) {
-        if (isParent(category)) {
-          if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
+        if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
+          continue;
+        }
+        String fullPath = getFullPath(category,faqService);
+        if (isSpaceType) {
+          String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
+          Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+          if (space == null) {
             continue;
           }
-          String name = category.getName();
-          if (isSpaceType) {
-            String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
-            Space space = spaceService.getSpaceByGroupId(spaceGroupId);
-            if (space == null) {
-              continue;
-            }
-            name = space.getDisplayName();
-          }
-          children.add(name);
+          fullPath = space.getDisplayName();
         }
+        children.add(fullPath);
+      }
+      if (!isSpaceType) {
+        children.add(AnswerExtension.ROOT_CATEGORY);
       }
     } catch (Exception e) {
       log.error("Error while listing FAQ categories.", e);
     }
     resultHandler.completed(new ReadResourceModel("All FAQ:", children));
-  }
-
-  public boolean isParent(Category category) {
-    String isParent = category.getPath().replace("/" + category.getId(), "");
-    if (isParent.equals("categories")) {
-      return true;
-    }
-    return false;
   }
 }
