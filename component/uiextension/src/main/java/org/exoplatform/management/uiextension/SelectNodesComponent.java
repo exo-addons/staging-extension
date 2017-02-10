@@ -146,10 +146,16 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     pushContentPopupComponent.modifiedDateFilter = modifiedDateFilter = fromDateModified.getCalendar();
     pushContentPopupComponent.stateString = stateString = stateSelectBoxInput.getValue();
     pushContentPopupComponent.publishedContentOnly = publishedContentOnly = publishedCheckBoxInput.getValue();
-
+    differentiateNodes(comparisons,alreadySelectedNodes);
     for (NodeComparison nodeComparison : comparisons) {
       if (!alreadySelectedNodes.contains(nodeComparison) && checkFilter(nodeComparison)) {
-        filteredComparison.add(nodeComparison);
+        if(!nodeComparison.isFolder()) {
+          filteredComparison.add(nodeComparison);
+        }else {
+          if(nodeComparison.isEmptyFolder()){
+            filteredComparison.add(nodeComparison);
+          }
+        }
       }
     }
     int currentPage = nodesGrid.getUIPageIterator().getCurrentPage();
@@ -330,5 +336,22 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
     }
     return isMatch;
   }
-
+  private void differentiateNodes(List<NodeComparison> comparisons, List<NodeComparison> alreadySelectedNodes){
+    for(NodeComparison comparison : comparisons){
+      if(comparison.isFolder()){
+        if(alreadySelectedNodes.containsAll(comparison.getChildren())){
+          comparison.setEmptyFolder(true);
+        }
+        for(NodeComparison enfant : comparison.getChildren()){
+          if(!alreadySelectedNodes.contains(enfant)){
+            comparison.setEmptyFolder(false);
+            if(alreadySelectedNodes.contains(comparison)){
+              pushContentPopupComponent.getSelectedNodes().remove(comparison);
+            }
+            break;
+          }
+        }
+      }
+    }
+  }
 }
