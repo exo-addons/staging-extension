@@ -52,7 +52,7 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
     this.isSpaceType = isSpaceType;
   }
 
-  private String getFullPath(Category category,  FAQService faqService){
+  private String getFullPath(Category category){
     String fullPath= category.getName();
     Category cat = getParenCategory(category,faqService);
     while (!cat.getName().equals("categories")){
@@ -67,7 +67,7 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
    try {
      parentCategory = faqService.getCategoryById(parentId);
    } catch (Exception e) {
-     log.error("Error while listing FAQ categories.", e);
+     log.error("Error when trying to get the parent of the category : "+category.getName(), e);
    }
    return parentCategory;
  }
@@ -84,7 +84,7 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
         if ((isSpaceType && !category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX)) || (!isSpaceType && category.getId().startsWith(Utils.CATE_SPACE_ID_PREFIX))) {
           continue;
         }
-        String fullPath = getFullPath(category,faqService);
+        String fullPath = getFullPath(category);
         if (isSpaceType) {
           String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, "");
           Space space = spaceService.getSpaceByGroupId(spaceGroupId);

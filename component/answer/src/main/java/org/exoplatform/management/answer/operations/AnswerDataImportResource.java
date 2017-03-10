@@ -113,7 +113,8 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
   @SuppressWarnings("unchecked")
   private void importAnswerData(File file, File spaceMetadataFile, boolean replaceExisting, boolean createSpace) throws Exception {
     List<Object> objects = (List<Object>) deserializeObject(file, null, null);
-    for(int i=0 ; i<objects.size(); i+=2) {
+    // object i : the category, object i+1 : the list of category questions
+    for (int i=0 ; i<objects.size(); i+=2) {
       Category category = (Category) objects.get(i);
       String parentId = category.getPath().replace("/" + category.getId(), "");
       List<Question> questions = (List<Question>) objects.get(i+1);
@@ -132,17 +133,10 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
 
       Category toReplaceCategory = faqService.getCategoryById(category.getId());
       if (toReplaceCategory != null) {
-        // User can synchronize the default category(ROOT-CATEGORY) with replace existing option => delete the root category(Overwrite existing FAQ Category: 'categories' (replace-existing=true) )=> can not synchronize any other category.
         if (replaceExisting ) {
           log.info("Overwrite existing FAQ Category: '" + toReplaceCategory.getName() + "'  (replace-existing=true)");
-
           deleteActivities(category.getId(), null);
-          if(faqService.getCategoryById(category.getId()) != null) {
-            removeCategoryQuestions(category,questions);
-          }else{
-            log.info("Fail ro remove category: "+category.getName()+"Path : "+category.getPath()+"Not found ");
-          }
-
+          removeCategoryQuestions(category, questions);
         } else {
           log.info("Ignore existing FAQ Category: '" + category.getName() + "'  (replace-existing=false)");
           return;
@@ -282,7 +276,8 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
   }
   private void removeCategoryQuestions(Category category, List<Question> questions){
     try {
-      for(Question question : faqService.getAllQuestionsByCatetory(category.getId(),AnswerExtension.EMPTY_FAQ_SETTIGNS).getAll()){
+      List<Question> catQuestions = faqService.getAllQuestionsByCatetory(category.getId(),AnswerExtension.EMPTY_FAQ_SETTIGNS).getAll();
+      for(Question question : catQuestions){
         for(Question question1 : questions){
           if(question1.getPath().equals(question.getPath())){
             faqService.removeQuestion(question.getPath());

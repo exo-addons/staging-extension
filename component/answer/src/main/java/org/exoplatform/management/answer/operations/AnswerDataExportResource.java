@@ -79,7 +79,6 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
-    //export all categories instead of one category
     List<String> names = operationContext.getAttributes().getValues("filter");
     boolean exportSubCategories = operationContext.getAttributes().getValues("filter").contains("with-subcategories:true");
 
@@ -89,7 +88,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     try {
-      if (names == null || names.isEmpty() ) {
+      if (names == null || names.isEmpty()) {
         log.info("Exporting all FAQ of type: " + (isSpaceType ? "Spaces" : "Public"));
         List<Category> categories = faqService.getAllCategories();
         for (Category category : categories) {
@@ -151,7 +150,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
         }
       }
     }
-    exportTasks.add(new AnswerExportTask(type, category, questions,faqService, exportSubCategories));
+    exportTasks.add(new AnswerExportTask(type, category, questions, exportSubCategories));
     categoryThreadLocal.set(category);
     // In case of minimal profile
     if (activityManager != null) {
