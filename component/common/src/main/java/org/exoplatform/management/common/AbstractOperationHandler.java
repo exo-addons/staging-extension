@@ -151,7 +151,7 @@ public abstract class AbstractOperationHandler implements OperationHandler {
     } catch (UndeclaredThrowableException ute) {
       log.warn("Failed to retrieve identity from {}",id);
     } catch (Exception e){
-      log.error("Error while retrieving identity: ", e);
+      log.error("Error while retrieving identity from {}",id,e);
     }
     return null;
   }
