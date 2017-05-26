@@ -95,7 +95,7 @@ public class PageCLVTransformer implements DataTransformerPlugin {
           String folderPath = portlet == null || portlet.getPreference("folderPath") == null ? null : portlet.getPreference("folderPath").getValue();
           if (!StringUtils.isEmpty(folderPath)) {
             String path = convertPath(folderPath);
-            String newFolderPath = path.replace(";", "");
+            String newFolderPath = path.substring(0, path.lastIndexOf(';'));
             portlet.setValue("folderPath", newFolderPath);
           }
         } catch (Exception e) {
