@@ -259,12 +259,4 @@ public class Utils {
       }
     }
   }
-  private static  boolean notAdded(String path, List<NodeComparison> comparisons){
-    for (NodeComparison comparison : comparisons){
-      if(comparison.getPath().equals(path)){
-        return false;
-      }
-    }
-    return true;
-  }
 }
