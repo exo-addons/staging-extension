@@ -341,15 +341,9 @@ public class SelectNodesComponent extends UIForm implements UIPopupComponent {
       if(comparison.isFolder()){
         if(alreadySelectedNodes.containsAll(comparison.getChildren())){
           comparison.setEmptyFolder(true);
-        }
-        for(NodeComparison enfant : comparison.getChildren()){
-          if(!alreadySelectedNodes.contains(enfant)){
-            comparison.setEmptyFolder(false);
-            if(alreadySelectedNodes.contains(comparison)){
-              pushContentPopupComponent.getSelectedNodes().remove(comparison);
-            }
-            break;
-          }
+        } else {
+          comparison.setEmptyFolder(false);
+          pushContentPopupComponent.getSelectedNodes().remove(comparison);
         }
       }
     }

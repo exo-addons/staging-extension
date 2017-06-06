@@ -166,10 +166,16 @@ public class Utils {
         comparisonContent.setEmptyFolder(false);
         comparisonContent.setState(NodeComparisonState.NOT_FOUND_ON_SOURCE);
         if (sourceParentNodeMetadata == null) {
-          if (notAdded(parentPath, nodesComparison)) {
-            NodeComparison comparisonFolder = new NodeComparison();
+          NodeComparison comparisonFolder = new NodeComparison();
+          comparisonFolder.setPath(parentPath);
+          if(nodesComparison.contains(comparisonFolder)){
+            for(NodeComparison comparison : nodesComparison){
+              if(comparison.isFolder() && comparison.getPath().equals(parentPath)){
+                comparison.addChild(comparisonContent);
+              }
+            }
+          } else {
             comparisonFolder.setTitle(parentPath.substring(parentPath.lastIndexOf("/") + 1));
-            comparisonFolder.setPath(parentPath);
             comparisonFolder.setPublished(null);
             comparisonFolder.setLastModifierUserName(null);
             comparisonFolder.setTargetModificationDateCalendar(null);
@@ -181,12 +187,6 @@ public class Utils {
             children.add(comparisonContent);
             comparisonFolder.setChildren(children);
             nodesComparison.add(comparisonFolder);
-          }else{
-            for(NodeComparison comparison : nodesComparison){
-              if(comparison.isFolder() && comparison.getPath().equals(parentPath)){
-               comparison.addChild(comparisonContent);
-              }
-            }
           }
         }
         nodesComparison.add(comparisonContent);
