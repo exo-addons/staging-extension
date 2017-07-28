@@ -299,15 +299,7 @@ public class SiteContentsExportResource extends AbstractJCRExportOperationHandle
 
   /**
    * Export all sub-nodes of the given node
-   * 
-   * @param repositoryService
-   * @param workspace
-   * @param parentNode
-   * @param excludedNodes
-   * @param metaData
-   * @param exportOnlyMetadata
-   * @return
-   * @throws RepositoryException
+   *
    */
   protected List<ExportTask> exportSubNodes(String workspace, Node parentNode, List<String> excludedNodes, boolean exportVersionHistory, SiteMetaData metaData, Set<String> activitiesId,
       boolean exportOnlyMetadata) throws Exception {

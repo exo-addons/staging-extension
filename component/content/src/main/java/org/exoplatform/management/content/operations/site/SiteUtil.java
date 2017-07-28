@@ -15,10 +15,7 @@ public class SiteUtil {
 
   /**
    * Builds the base path of the site in the exported zip
-   * 
-   * @param site
-   *          Site's name
-   * @return
+   *
    */
   public static final String getSiteBasePath(String site) {
     return new StringBuilder(30).append(getSitesBasePath()).append("/").append(site).toString();
