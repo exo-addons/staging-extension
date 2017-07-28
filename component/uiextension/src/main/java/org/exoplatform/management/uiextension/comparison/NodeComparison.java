@@ -3,6 +3,7 @@ package org.exoplatform.management.uiextension.comparison;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import org.exoplatform.management.uiextension.PushContentPopupComponent;
@@ -12,9 +13,14 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
 
   private static final DateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy (HH:mm:ss)");
 
+  private boolean isFolder;
+  private boolean isEmptyFolder;
+  private ArrayList<NodeComparison> children;
+
   String title;
   String path;
   String lastModifierUserName;
+
 
   String[] sourcePermissions;
   String[] targetPermissions;
@@ -127,6 +133,34 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
     return targetModificationDateCalendar;
   }
 
+  public boolean isFolder() {
+    return isFolder;
+  }
+
+  public void setFolder(boolean folder) {
+    isFolder = folder;
+  }
+
+  public boolean isEmptyFolder() {
+    return isEmptyFolder;
+  }
+
+  public void setEmptyFolder(boolean emptyFolder) {
+    isEmptyFolder = emptyFolder;
+  }
+
+  public ArrayList<NodeComparison> getChildren() {
+    return children;
+  }
+
+  public void setChildren(ArrayList<NodeComparison> children) {
+    this.children = children;
+  }
+
+  public void addChild(NodeComparison child) {
+    this.children.add(child);
+  }
+  
   @Override
   public int compareTo(NodeComparison o) {
     if (o.getState().equals(getState())) {
@@ -144,5 +178,4 @@ public class NodeComparison implements Comparable<NodeComparison>, Serializable 
     String otherPath = ((NodeComparison) obj).getPath();
     return path != null && otherPath != null && otherPath.equals(path);
   }
-
 }

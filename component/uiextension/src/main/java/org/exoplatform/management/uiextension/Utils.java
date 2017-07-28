@@ -151,18 +151,45 @@ public class Utils {
     // Check only nodes added on target and not present in source
     for (NodeMetadata targetNodeMetadata : targetNodeMetadatas) {
       String path = targetNodeMetadata.getPath();
+      String parentPath = path.replace(path.substring(path.lastIndexOf("/")),"");
       NodeMetadata sourceNodeMetadata = sourceServerMetadata.get(path);
+      NodeMetadata sourceParentNodeMetadata = sourceServerMetadata.get(parentPath);
       if (sourceNodeMetadata == null) {
-        NodeComparison comparison = new NodeComparison();
-        comparison.setTitle(targetNodeMetadata.getTitle());
-        comparison.setPath(path);
-        comparison.setPublished(targetNodeMetadata.isPublished());
-        comparison.setLastModifierUserName(targetNodeMetadata.getLastModifier());
-        comparison.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getLiveDate() : null);
-        comparison.setSourceModificationDateCalendar(null);
-
-        comparison.setState(NodeComparisonState.NOT_FOUND_ON_SOURCE);
-        nodesComparison.add(comparison);
+        NodeComparison comparisonContent = new NodeComparison();
+        comparisonContent.setTitle(targetNodeMetadata.getTitle());
+        comparisonContent.setPath(path);
+        comparisonContent.setPublished(targetNodeMetadata.isPublished());
+        comparisonContent.setLastModifierUserName(targetNodeMetadata.getLastModifier());
+        comparisonContent.setTargetModificationDateCalendar(targetNodeMetadata != null ? targetNodeMetadata.getLiveDate() : null);
+        comparisonContent.setSourceModificationDateCalendar(null);
+        comparisonContent.setFolder(false);
+        comparisonContent.setEmptyFolder(false);
+        comparisonContent.setState(NodeComparisonState.NOT_FOUND_ON_SOURCE);
+        if (sourceParentNodeMetadata == null) {
+          NodeComparison comparisonFolder = new NodeComparison();
+          comparisonFolder.setPath(parentPath);
+          if(nodesComparison.contains(comparisonFolder)){
+            for(NodeComparison comparison : nodesComparison){
+              if(comparison.isFolder() && comparison.getPath().equals(parentPath)){
+                comparison.addChild(comparisonContent);
+              }
+            }
+          } else {
+            comparisonFolder.setTitle(parentPath.substring(parentPath.lastIndexOf("/") + 1));
+            comparisonFolder.setPublished(null);
+            comparisonFolder.setLastModifierUserName(null);
+            comparisonFolder.setTargetModificationDateCalendar(null);
+            comparisonFolder.setSourceModificationDateCalendar(null);
+            comparisonFolder.setFolder(true);
+            comparisonFolder.setEmptyFolder(false);
+            comparisonFolder.setState(NodeComparisonState.NOT_FOUND_ON_SOURCE);
+            ArrayList children = new ArrayList<NodeComparison>();
+            children.add(comparisonContent);
+            comparisonFolder.setChildren(children);
+            nodesComparison.add(comparisonFolder);
+          }
+        }
+        nodesComparison.add(comparisonContent);
       }
     }
     Collections.sort(nodesComparison);
