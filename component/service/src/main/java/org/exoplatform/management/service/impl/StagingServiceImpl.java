@@ -57,11 +57,7 @@ public class StagingServiceImpl implements StagingService {
 
   /**
    * Export selected resources with selected options.
-   * 
-   * @param resourcesPaths
-   * @param exportOptions
-   * @return
-   * @throws Exception
+   *
    */
   public File export(List<ResourceCategory> selectedResourceCategories) throws Exception {
 

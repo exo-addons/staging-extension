@@ -12,10 +12,7 @@ public interface SynchronizationService {
 
   /**
    * Synchronize Managed Resources
-   * 
-   * @param selectedResourcesCategories
-   * @param targetServer
-   * @throws java.io.IOException
+   *
    */
   void synchronize(List<ResourceCategory> selectedResourcesCategories, TargetServer targetServer) throws Exception;
 

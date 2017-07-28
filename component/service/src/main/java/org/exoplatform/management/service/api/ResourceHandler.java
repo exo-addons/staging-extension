@@ -14,11 +14,7 @@ public interface ResourceHandler {
   /**
    * Synchronise selected resources with host identified by host and port, by
    * using the selected options.
-   * 
-   * @param resourcesPaths
-   * @param exportOptions
-   * @param importOptions
-   * @param targetServer
+   *
    */
   public abstract void synchronize(List<Resource> resourcesPaths, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception;
 
@@ -40,11 +36,7 @@ public interface ResourceHandler {
   /**
    * Synchronise selected resources as filter with host identified by host and
    * port, by using the selected options.
-   * 
-   * @param resourcesPaths
-   * @param exportOptions
-   * @param importOptions
-   * @param targetServer
+   *
    */
   public abstract void synchronizeResourcesInFilter(List<Resource> resourcesPaths, Map<String, String> exportOptions, Map<String, String> importOptions, TargetServer targetServer) throws Exception;
 
