@@ -489,10 +489,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
 
   /**
    * Extract data from zip
-   * 
-   * @param attachment
-   * @return
-   * @return
+   *
    */
   public final Map<String, List<FileEntry>> extractDataFromZip(InputStream attachmentInputStream) throws Exception {
     Map<String, List<FileEntry>> contentsByOwner = new HashMap<String, List<FileEntry>>();
