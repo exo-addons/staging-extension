@@ -32,14 +32,7 @@ public class NavigationUtils {
     FILTER_CONFIG = builder.build();
   }
 
-  /**
-   * 
-   * @param siteName
-   * @param nodePath
-   * @return the corresponding Navigation URI (without "/portal/{siteName}" as
-   *         prefix)
-   * @throws Exception
-   */
+
   public static String getNavURIWithApplication(PageService pageService, DataStorage dataStorage, UserPortal userPortal, SiteKey siteKey, String applicationName) throws Exception {
     Iterator<PageContext> pagesQueryResult = pageService.findPages(0, Integer.MAX_VALUE, siteKey.getType(), siteKey.getName(), null, null).iterator();
     // Map of (key: JCR Node path, Value: Page that has a portlet that
