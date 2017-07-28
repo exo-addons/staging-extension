@@ -53,20 +53,13 @@ public interface StagingService {
 
   /**
    * Export selected resources with selected options.
-   * 
-   * @param resourcesPaths
-   * @param exportOptions
-   * @return
-   * @throws Exception
+   *
    */
   public File export(List<ResourceCategory> selectedResourceCategoriesWithExceptions) throws Exception;
 
   /**
    * Import resources
-   * 
-   * @param selectedResourcePath
-   * @param file
-   * @throws IOException
+   *
    */
   void importResource(String selectedResourcePath, FileItem file, Map<String, List<String>> attributes) throws IOException;
 
@@ -91,10 +84,7 @@ public interface StagingService {
 
   /**
    * Execute an SQL JCR Query
-   * 
-   * @param sql
-   * @param selectedResources
-   * @throws Exception
+   *
    */
   Set<String> executeSQL(String sql, Set<String> sites) throws Exception;
 

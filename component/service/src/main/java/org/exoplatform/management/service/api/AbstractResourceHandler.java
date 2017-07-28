@@ -113,11 +113,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
   /**
    * Sends data (exported zip) to the target server
-   * 
-   * @param response
-   * @param options
-   * @param targetServer
-   * @return
+   *
    */
   protected boolean sendData(File file, Map<String, String> options, TargetServer targetServer) throws Exception {
     FileInputStream fileInputStream = null;
@@ -187,11 +183,7 @@ public abstract class AbstractResourceHandler implements ResourceHandler {
 
   /**
    * Buil server URL
-   * 
-   * @param targetServer
-   * @param uri
-   * @param options
-   * @return
+   *
    */
   public String getServerURL(TargetServer targetServer, String uri, Map<String, String> options) {
     String targetServerURL = "http";

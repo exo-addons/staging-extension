@@ -110,8 +110,7 @@ public class SynchronizationServicePortletPrefsImpl implements SynchronizationSe
   /**
    * Workaround to get up to date preferences. Can't use @Inject
    * PortletPreferences probably due to an issue in Juzu.
-   * 
-   * @return
+   *
    */
   protected PortletPreferences getPortletPreferences() {
     Request request = Request.getCurrent();
