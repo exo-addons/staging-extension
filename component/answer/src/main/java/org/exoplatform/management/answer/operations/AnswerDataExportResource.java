@@ -79,7 +79,8 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
     identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
     identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
 
-    String name = operationContext.getAttributes().getValue("filter");
+    List<String> names = operationContext.getAttributes().getValues("filter");
+    boolean exportSubCategories = operationContext.getAttributes().getValues("filter").contains("with-subcategories:true");
 
     String excludeSpaceMetadataString = operationContext.getAttributes().getValue("exclude-space-metadata");
     boolean exportSpaceMetadata = excludeSpaceMetadataString == null || excludeSpaceMetadataString.trim().equalsIgnoreCase("false");
@@ -87,7 +88,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
     List<ExportTask> exportTasks = new ArrayList<ExportTask>();
 
     try {
-      if (name == null || name.isEmpty()) {
+      if (names == null || names.isEmpty()) {
         log.info("Exporting all FAQ of type: " + (isSpaceType ? "Spaces" : "Public"));
         List<Category> categories = faqService.getAllCategories();
         for (Category category : categories) {
@@ -98,31 +99,35 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
           if (isSpaceType) {
             space = spaceService.getSpaceByGroupId(SpaceUtils.SPACE_GROUP + "/" + category.getId().replace(Utils.CATE_SPACE_ID_PREFIX, ""));
           }
-          exportAnswer(exportTasks, category, space, exportSpaceMetadata);
+          exportAnswer(exportTasks, category, space, exportSpaceMetadata, exportSubCategories);
         }
       } else {
-        if (isSpaceType) {
-          Space space = spaceService.getSpaceByDisplayName(name);
-          String groupName = space.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
+        for (String name : names) {
+          if(!name.equals("with-subcategories:true") && !name.equals("with-subcategories:false")){
+            if (isSpaceType) {
+              Space space = spaceService.getSpaceByDisplayName(name);
+              String groupName = space.getGroupId().replace(SpaceUtils.SPACE_GROUP + "/", "");
 
-          Category category = faqService.getCategoryById(Utils.CATE_SPACE_ID_PREFIX + groupName);
-          if (category != null) {
-            exportAnswer(exportTasks, category, space, exportSpaceMetadata);
-          } else {
-            log.info("Cannot find Answer Category of Space: " + space.getDisplayName());
-          }
-        } else {
-          if (name.equals(AnswerExtension.ROOT_CATEGORY)) {
-            Category defaultCategory = faqService.getCategoryById(Utils.CATEGORY_HOME);
-            // Export questions from root category
-            exportAnswer(exportTasks, defaultCategory, null, exportSpaceMetadata);
-          } else {
-            List<Category> categories = faqService.getAllCategories();
-            for (Category category : categories) {
-              if (!category.getName().equals(name)) {
-                continue;
+              Category category = faqService.getCategoryById(Utils.CATE_SPACE_ID_PREFIX + groupName);
+              if (category != null) {
+                exportAnswer(exportTasks, category, space, exportSpaceMetadata, exportSubCategories);
+              } else {
+                log.info("Cannot find Answer Category of Space: " + space.getDisplayName());
               }
-              exportAnswer(exportTasks, category, null, exportSpaceMetadata);
+            } else {
+              if (name.equals(AnswerExtension.ROOT_CATEGORY)) {
+                Category defaultCategory = faqService.getCategoryById(Utils.CATEGORY_HOME);
+                // Export questions from root category
+                exportAnswer(exportTasks, defaultCategory, null, exportSpaceMetadata, exportSubCategories);
+              } else {
+                List<Category> categories = faqService.getAllCategories();
+                for (Category category : categories) {
+                  if (!category.getName().equals(name)) {
+                    continue;
+                  }
+                  exportAnswer(exportTasks, category, null, exportSpaceMetadata, exportSubCategories);
+                }
+              }
             }
           }
         }
@@ -133,7 +138,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
     resultHandler.completed(new ExportResourceModel(exportTasks));
   }
 
-  private void exportAnswer(List<ExportTask> exportTasks, Category category, Space space, boolean exportSpaceMetadata) throws Exception {
+  private void exportAnswer(List<ExportTask> exportTasks, Category category, Space space, boolean exportSpaceMetadata, boolean exportSubCategories) throws Exception {
     QuestionPageList questionsPageList = faqService.getAllQuestionsByCatetory(category.getId(), AnswerExtension.EMPTY_FAQ_SETTIGNS);
     List<Question> questions = questionsPageList.getAll();
     for (Question question : questions) {
@@ -145,8 +150,7 @@ public class AnswerDataExportResource extends AbstractExportOperationHandler imp
         }
       }
     }
-    exportTasks.add(new AnswerExportTask(type, category, questions));
-
+    exportTasks.add(new AnswerExportTask(type, category, questions, exportSubCategories));
     categoryThreadLocal.set(category);
     // In case of minimal profile
     if (activityManager != null) {

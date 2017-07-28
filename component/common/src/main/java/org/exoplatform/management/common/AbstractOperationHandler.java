@@ -16,6 +16,7 @@ import javax.jcr.Session;
 import javax.jcr.nodetype.NodeDefinition;
 import javax.jcr.nodetype.NodeType;
 import javax.transaction.SystemException;
+import java.lang.reflect.UndeclaredThrowableException;
 
 import org.apache.commons.io.FileUtils;
 import org.exoplatform.services.cms.templates.TemplateService;
@@ -147,8 +148,10 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         }
         return spaceIdentity;
       }
-    } catch (Exception e) {
-      log.error("Error while retrieving identity: ", e);
+    } catch (UndeclaredThrowableException ute) {
+      log.warn("Failed to retrieve identity from {}",id);
+    } catch (Exception e){
+      log.error("Error while retrieving identity from {}",id,e);
     }
     return null;
   }

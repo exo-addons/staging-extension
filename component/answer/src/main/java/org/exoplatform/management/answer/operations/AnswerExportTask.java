@@ -21,10 +21,19 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.List;
 
+import org.apache.poi.util.IOUtils;
 import org.chromattic.common.collection.Collections;
-import org.exoplatform.faq.service.Answer;
+import org.exoplatform.container.PortalContainer;
 import org.exoplatform.faq.service.Category;
+import org.exoplatform.faq.service.FAQService;
+import org.exoplatform.faq.service.FileAttachment;
 import org.exoplatform.faq.service.Question;
+import org.exoplatform.faq.service.QuestionPageList;
+import org.exoplatform.faq.service.Answer;
+import org.exoplatform.management.answer.AnswerExtension;
+import org.exoplatform.management.common.InputStreamWrapper;
+import org.gatein.common.logging.Logger;
+import org.gatein.common.logging.LoggerFactory;
 import org.gatein.management.api.operation.model.ExportTask;
 
 import com.thoughtworks.xstream.XStream;
@@ -35,15 +44,18 @@ import com.thoughtworks.xstream.XStream;
  */
 public class AnswerExportTask implements ExportTask {
   public static final String FILENAME = "/category.xml";
+  final private static Logger log = LoggerFactory.getLogger(AnswerExportTask.class);
 
   private final String type;
   private final Category category;
   private final List<Question> questions;
+  private final boolean exportSubCategories;
 
-  public AnswerExportTask(String type, Category category, List<Question> questions) {
+  public AnswerExportTask(String type, Category category, List<Question> questions, boolean exportSubCategories) {
     this.category = category;
     this.type = type;
     this.questions = questions;
+    this.exportSubCategories = exportSubCategories;
   }
 
   @Override
@@ -54,7 +66,37 @@ public class AnswerExportTask implements ExportTask {
   public static String getEntryPath(String type, String id) {
     return new StringBuilder("answer/").append(type).append("/").append(id).append(FILENAME).toString();
   }
-
+  private void addSubCategories(Category category,List<Object> objects){
+    FAQService faqService = (FAQService) PortalContainer.getInstance().getComponentInstanceOfType(FAQService.class);
+    try {
+      List<Category> listOfSubCategory = faqService.getSubCategories(category.getPath(),AnswerExtension.EMPTY_FAQ_SETTIGNS,true,null);
+      for(Category cat : listOfSubCategory) {
+          QuestionPageList subQuestionsPageList = faqService.getAllQuestionsByCatetory(cat.getId(), AnswerExtension.EMPTY_FAQ_SETTIGNS);
+          List<Question> subQuestions = subQuestionsPageList.getAll();
+          for (Question subQuestion : subQuestions) {
+            if (subQuestion.getAttachMent() != null && !subQuestion.getAttachMent().isEmpty()) {
+              List<FileAttachment> attachments = subQuestion.getAttachMent();
+              for (FileAttachment fileAttachment : attachments) {
+                InputStreamWrapper inputStream = new InputStreamWrapper(IOUtils.toByteArray(fileAttachment.getInputStream()));
+                fileAttachment.setInputStream(inputStream);
+              }
+            }
+          }
+          for (Question subQuestion : subQuestions) {
+            for (Answer answer : subQuestion.getAnswers()) {
+              if (answer.getLanguage() == null) {
+                answer.setLanguage(subQuestion.getLanguage());
+              }
+            }
+          }
+          objects.add(cat);
+          objects.add(subQuestions);
+          addSubCategories(cat, objects);
+      }
+    } catch (Exception e) {
+      log.error("Error when exporting subCategories",e);
+    }
+  }
   @Override
   public void export(OutputStream outputStream) throws IOException {
     XStream xStream = new XStream();
@@ -67,8 +109,10 @@ public class AnswerExportTask implements ExportTask {
         }
       }
     }
-
     List<Object> objects = Collections.list(category, questions);
+    if(exportSubCategories) {
+      addSubCategories(category, objects);
+    }
     xStream.toXML(objects, writer);
     writer.flush();
   }

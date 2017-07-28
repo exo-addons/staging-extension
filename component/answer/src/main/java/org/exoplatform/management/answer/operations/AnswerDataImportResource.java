@@ -113,62 +113,63 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
   @SuppressWarnings("unchecked")
   private void importAnswerData(File file, File spaceMetadataFile, boolean replaceExisting, boolean createSpace) throws Exception {
     List<Object> objects = (List<Object>) deserializeObject(file, null, null);
-    Category category = (Category) objects.get(0);
-    String parentId = category.getPath().replace("/" + category.getId(), "");
-    List<Question> questions = (List<Question>) objects.get(1);
-    Category parentCategory = faqService.getCategoryById(parentId);
-    if (parentCategory == null) {
-      log.warn("Parent Answer Category of Category '" + category.getName() + "' doesn't exist, ignore import operation for this category.");
-      return;
-    }
-
-    if (spaceMetadataFile != null && spaceMetadataFile.exists()) {
-      boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile, createSpace);
-      if (!spaceCreatedOrAlreadyExists) {
-        log.warn("Import of Answer category '" + parentCategory.getName() + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
-      }
-    }
-
-    Category toReplaceCategory = faqService.getCategoryById(category.getId());
-    if (toReplaceCategory != null) {
-      if (replaceExisting) {
-        log.info("Overwrite existing FAQ Category: '" + toReplaceCategory.getName() + "'  (replace-existing=true)");
-        deleteActivities(category.getId(), null);
-        faqService.removeCategory(category.getPath());
-
-        // FIXME Exception swallowed FORUM-971, so we have to make test
-        if (faqService.getCategoryById(category.getId()) != null) {
-          throw new RuntimeException("Cannot delete category: " + category.getName() + ". Internal error.");
-        }
-      } else {
-        log.info("Ignore existing FAQ Category: '" + category.getName() + "'  (replace-existing=false)");
+    // object i : the category, object i+1 : the list of category questions
+    for (int i=0 ; i<objects.size(); i+=2) {
+      Category category = (Category) objects.get(i);
+      String parentId = category.getPath().replace("/" + category.getId(), "");
+      List<Question> questions = (List<Question>) objects.get(i+1);
+      Category parentCategory = faqService.getCategoryById(parentId);
+      if (parentCategory == null) {
+        log.warn("Parent Answer Category of Category '" + category.getName() + "' doesn't exist, ignore import operation for this category.");
         return;
       }
-    }
 
-    faqService.saveCategory(parentId, category, true);
-
-    // FIXME Exception swallowed FORUM-971, so we have to make test
-    if (faqService.getCategoryById(category.getId()) == null) {
-      throw new RuntimeException("Category isn't imported");
-    }
-
-    for (Question question : questions) {
-      faqService.saveQuestion(question, true, AnswerExtension.EMPTY_FAQ_SETTIGNS);
-      if (question.getAnswers() != null) {
-        for (Answer answer : question.getAnswers()) {
-          answer.setNew(true);
-          faqService.saveAnswer(question.getPath(), answer, true);
+      if (spaceMetadataFile != null && spaceMetadataFile.exists()) {
+        boolean spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile, createSpace);
+        if (!spaceCreatedOrAlreadyExists) {
+          log.warn("Import of Answer category '" + parentCategory.getName() + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
         }
       }
-      if (question.getComments() != null) {
-        for (Comment comment : question.getComments()) {
-          comment.setNew(true);
-          faqService.saveComment(question.getPath(), comment, question.getLanguage());
+
+      Category toReplaceCategory = faqService.getCategoryById(category.getId());
+      if (toReplaceCategory != null) {
+        if (replaceExisting ) {
+          log.info("Overwrite existing FAQ Category: '" + toReplaceCategory.getName() + "'  (replace-existing=true)");
+          deleteActivities(category.getId(), null);
+          removeCategoryQuestions(category, questions);
+        } else {
+          log.info("Ignore existing FAQ Category: '" + category.getName() + "'  (replace-existing=false)");
+          return;
+        }
+        if(!category.getName().equals(toReplaceCategory.getName())){
+          toReplaceCategory.setName(category.getName());
+        }
+      } else {
+        faqService.saveCategory(parentId, category, true);
+      }
+
+      // FIXME Exception swallowed FORUM-971, so we have to make test
+      if (faqService.getCategoryById(category.getId()) == null) {
+        throw new RuntimeException("Category isn't imported");
+      }
+
+      for (Question question : questions) {
+        faqService.saveQuestion(question, true, AnswerExtension.EMPTY_FAQ_SETTIGNS);
+        if (question.getAnswers() != null) {
+          for (Answer answer : question.getAnswers()) {
+            answer.setNew(true);
+            faqService.saveAnswer(question.getPath(), answer, true);
+          }
+        }
+        if (question.getComments() != null) {
+          for (Comment comment : question.getComments()) {
+            comment.setNew(true);
+            faqService.saveComment(question.getPath(), comment, question.getLanguage());
+          }
         }
       }
+      deleteActivities(category.getId(), questions);
     }
-    deleteActivities(category.getId(), questions);
   }
 
   private void deleteActivities(String categoryId, List<Question> questions) throws Exception {
@@ -272,6 +273,20 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
       }
     }
     return false;
+  }
+  private void removeCategoryQuestions(Category category, List<Question> questions){
+    try {
+      List<Question> catQuestions = faqService.getAllQuestionsByCatetory(category.getId(),AnswerExtension.EMPTY_FAQ_SETTIGNS).getAll();
+      for(Question question : catQuestions){
+        for(Question question1 : questions){
+          if(question1.getPath().equals(question.getPath())){
+            faqService.removeQuestion(question.getPath());
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.error("Fail to remove questions of category: "+category.getName(),e);
+    }
   }
 
 }
