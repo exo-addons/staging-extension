@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <artifactId>addons-parent-pom</artifactId>
@@ -8,7 +7,7 @@
   </parent>
   <groupId>org.exoplatform.addons.staging</groupId>
   <artifactId>staging-extension-parent</artifactId>
-  <version>2.6.x-SNAPSHOT</version>
+  <version>2.6.1</version>
   <packaging>pom</packaging>
   <name>Staging Extension</name>
   <description>Staging Extension for eXo Platform 4</description>
@@ -16,7 +15,7 @@
     <connection>scm:git:git://github.com/exo-addons/staging-extension.git</connection>
     <developerConnection>scm:git:git@github.com:exo-addons/staging-extension.git</developerConnection>
     <url>https://github.com/exo-addons/staging-extension</url>
-    <tag>HEAD</tag>
+    <tag>2.6.1</tag>
   </scm>
   <properties>
     <!-- Defaut compiler settings -->
