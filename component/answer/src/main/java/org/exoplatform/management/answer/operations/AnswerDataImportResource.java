@@ -133,6 +133,7 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
           log.warn("Import of Answer category '" + parentCategory.getName() + "' is ignored. Turn on 'create-space:true' option if you want to automatically create the space.");
         }
       }
+
       Category toReplaceCategory = faqService.getCategoryById(category.getId());
       if (toReplaceCategory != null) {
         if (replaceExisting ) {
@@ -316,27 +317,19 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
           sourceCategoriesList.add(sub_category);
         }
       }
-
       for(Category sub_category : targetCategoriesList){
         if(!sourceCategoriesList.contains(sub_category)){
           log.info("Delete the category: '" + sub_category.getName() + "' because it's only founded here (delete-newcategories=true)");
           deleteActivities(sub_category.getId(), null);
           faqService.removeCategory(sub_category.getPath());
-
           if (faqService.getCategoryById(sub_category.getId()) != null) {
             throw new RuntimeException("Cannot delete category: " + sub_category.getName() + ". Internal error.");
           }
         }
       }
-
     } catch (Exception e) {
-      log.error("Error when trying to delete new categories");
+      log.error("Error when trying to delete new categories",e);
     }
-
-  }
-
-  private void removeNewQuestions(){
-
   }
 
   private String getParentPath(Category category){
