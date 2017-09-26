@@ -55,9 +55,14 @@ public class AnswerDataReadResource extends AbstractOperationHandler {
   private String getFullPath(Category category){
     String fullPath= category.getName();
     Category cat = getParenCategory(category,faqService);
-    while (!cat.getName().equals("categories")){
-    fullPath = cat.getName()+"//"+fullPath;
-    cat = getParenCategory(cat,faqService);
+    try {
+      String rootCategoryName = faqService.getCategoryById(Utils.CATEGORY_HOME).getName();
+      while (!cat.getName().equals(rootCategoryName)){
+        fullPath = cat.getName()+"//"+fullPath;
+        cat = getParenCategory(cat,faqService);
+      }
+    } catch (Exception e) {
+      log.error("Error when trying to get the full path of the  category :"+category.getName(), e);
     }
     return fullPath;
   }
