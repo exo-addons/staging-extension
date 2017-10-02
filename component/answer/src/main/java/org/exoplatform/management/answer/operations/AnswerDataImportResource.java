@@ -319,12 +319,9 @@ public class AnswerDataImportResource extends AbstractImportOperationHandler imp
       }
       for(Category sub_category : targetCategoriesList){
         if(!sourceCategoriesList.contains(sub_category)){
-          log.info("Delete the category: '" + sub_category.getName() + "' because it's only founded here (delete-newcategories=true)");
+          log.info("Delete the category: '" + sub_category.getName() + "' because it's only found here (delete-newcategories=true)");
           deleteActivities(sub_category.getId(), null);
           faqService.removeCategory(sub_category.getPath());
-          if (faqService.getCategoryById(sub_category.getId()) != null) {
-            throw new RuntimeException("Cannot delete category: " + sub_category.getName() + ". Internal error.");
-          }
         }
       }
     } catch (Exception e) {

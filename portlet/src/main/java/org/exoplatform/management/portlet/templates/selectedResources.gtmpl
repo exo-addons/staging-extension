@@ -185,11 +185,11 @@
       </div>
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/public_IMPORT_filter/delete-newcategories"
-                                                ng-model="optionsModel['/answer/public_IMPORT_filter/delete-newcategories']"><span>Delete new categories founded in the target</span></label>
+                                                ng-model="optionsModel['/answer/public_IMPORT_filter/delete-newcategories']"><span>Delete new categories found in the target</span></label>
     </div>
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/public_IMPORT_filter/delete-newquestions"
-                                                ng-model="optionsModel['/answer/public_IMPORT_filter/delete-newquestions']"><span>Delete new questions founded in the target</span></label>
+                                                ng-model="optionsModel['/answer/public_IMPORT_filter/delete-newquestions']"><span>Delete new questions found in the target</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
@@ -221,11 +221,11 @@
       </div>
     <div ng-show="mode == 'export' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/space_IMPORT_filter/delete-newcategories"
-                                                ng-model="optionsModel['/answer/space_IMPORT_filter/delete-newcategories']"/><span>Delete new categories founded in the target</span></label>
+                                                ng-model="optionsModel['/answer/space_IMPORT_filter/delete-newcategories']"/><span>Delete new categories found in the target</span></label>
     </div>
     <div ng-show="mode == 'export' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/answer/space_IMPORT_filter/delete-newquestions"
-                                                ng-model="optionsModel['/answer/space_IMPORT_filter/delete-newquestions']"/><span>Delete new questions founded in the target</span></label>
+                                                ng-model="optionsModel['/answer/space_IMPORT_filter/delete-newquestions']"/><span>Delete new questions found in the target</span></label>
     </div>
     <div class="selected-resource-table" ng-show="mode != 'import'">
       <table class="table table-striped table-condensed">
