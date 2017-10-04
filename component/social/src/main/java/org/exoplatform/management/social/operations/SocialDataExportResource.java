@@ -32,6 +32,7 @@ import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.exoplatform.social.common.RealtimeListAccess;
 import org.exoplatform.social.core.activity.model.ExoSocialActivity;
 import org.exoplatform.social.core.identity.model.Identity;
+import org.exoplatform.social.core.identity.model.Profile;
 import org.exoplatform.social.core.identity.provider.SpaceIdentityProvider;
 import org.exoplatform.social.core.manager.ActivityManager;
 import org.exoplatform.social.core.manager.IdentityManager;
@@ -244,23 +245,20 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
    */
   private void exportSpaceAvatar(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) throws UnsupportedEncodingException, Exception, PathNotFoundException, RepositoryException,
       ValueFormatException {
-    // No method to get avatar using Social API, so we have to use JCR
     String avatarURL = spaceIdentity.getProfile().getAvatarUrl();
     avatarURL = avatarURL == null ? null : URLDecoder.decode(avatarURL, "UTF-8");
     if (avatarURL != null && avatarURL.contains(space.getPrettyName())) {
-      int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
-      int endIndexAvatarPath = avatarURL.indexOf("?");
-      String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
-      Session session = AbstractJCRImportOperationHandler.getSession(repositoryService, "social");
-      Node avatarNode = (Node) session.getItem(avatarNodePath);
-      Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
+      InputStream inputStream = identityManager.getAvatarInputStream(spaceIdentity);
+      Profile profile = spaceIdentity.getProfile();
+      Long lastModified = profile.getAvatarLastUpdated();
       String fileName = "avatar";
-      String mimeType = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:mimeType").getString() : null;
-      InputStream inputStream = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:data").getStream() : null;
-      Calendar lastModified = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:lastModified").getDate() : null;
 
-      AvatarAttachment avatar = new AvatarAttachment(null, fileName, mimeType, inputStream, null, lastModified.getTimeInMillis());
+      //as already set in org/exoplatform/social/rest/impl/space/SpaceRestResourcesV1.java, the mimetype is forced to "image/png"
+      //we have no solution here to get the mimetype
+      String mimeType = "image/png";
+      AvatarAttachment avatar = new AvatarAttachment(null, fileName, mimeType, inputStream, null, lastModified);
       exportTasks.add(new SpaceAvatarExportTask(space.getPrettyName(), avatar));
+
     }
   }
 
