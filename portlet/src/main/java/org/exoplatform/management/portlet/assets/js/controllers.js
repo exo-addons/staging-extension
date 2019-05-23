@@ -418,6 +418,11 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	          scope.refreshController();
             });
           });
+          setTimeout(function() {
+              $scope.setResultMessage("", "info");
+              $scope.button_clicked = false;
+              $scope.refreshController();
+          },3000);
         } catch(exception) {
       	  $scope.button_clicked = false;
 	      $scope.refreshController();
