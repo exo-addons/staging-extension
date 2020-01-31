@@ -420,7 +420,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
               scope.refreshController();
             });
            })
-          .catch(() => {alert('oh no!');
+          .catch(() => {
             $scope.$apply(function(scope) {
               scope.setResultMessage(data, "error");
               scope.button_clicked = false;
