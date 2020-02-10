@@ -132,7 +132,10 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
         if (isSpaceForum) {
           String forumId = categoryId;
           FileEntry spaceMetadataFile = getAndRemoveFileByPath(fileEntries, SpaceMetadataExportTask.FILENAME);
-          boolean spaceCreatedOrAlreadyExists = false;
+          String spaceGroupName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
+          String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + spaceGroupName;
+          Space space = spaceService.getSpaceByGroupId(spaceGroupId);
+          boolean spaceCreatedOrAlreadyExists = space != null;
           if (spaceMetadataFile != null && spaceMetadataFile.getFile().exists()) {
             spaceCreatedOrAlreadyExists = createSpaceIfNotExists(spaceMetadataFile.getFile(), createSpace);
           }
@@ -167,10 +170,6 @@ public class ForumDataImportResource extends AbstractJCRImportOperationHandler i
 
           // Import activities
           if (activitiesFile != null && activitiesFile.getFile().exists()) {
-            String spaceGroupName = forumId.replace(Utils.FORUM_SPACE_ID_PREFIX, "");
-            String spaceGroupId = SpaceUtils.SPACE_GROUP + "/" + spaceGroupName;
-            Space space = spaceService.getSpaceByGroupId(spaceGroupId);
-
             log.info("Importing Forum activities");
             importActivities(activitiesFile.getFile(), space.getPrettyName(), true);
           }
