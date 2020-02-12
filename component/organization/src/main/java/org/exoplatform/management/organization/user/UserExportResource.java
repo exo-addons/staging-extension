@@ -26,6 +26,7 @@ import javax.jcr.Node;
 
 import org.exoplatform.commons.utils.ListAccess;
 import org.exoplatform.management.common.exportop.AbstractJCRExportOperationHandler;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.management.organization.OrganizationModelExportTask;
@@ -35,6 +36,10 @@ import org.exoplatform.services.jcr.ext.hierarchy.NodeHierarchyCreator;
 import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserProfile;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.manager.IdentityManager;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.management.api.PathAddress;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttributes;
@@ -73,6 +78,15 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
         repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
         hierarchyCreator = operationContext.getRuntimeContext().getRuntimeComponent(NodeHierarchyCreator.class);
       }
+      if(identityStorage == null){
+        identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
+      }
+      if(activityManager == null){
+        activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
+      }
+      if(identityManager == null) {
+        identityManager = operationContext.getRuntimeContext().getRuntimeComponent(IdentityManager.class);
+      }
 
       PathAddress address = operationContext.getAddress();
       String userName = address.resolvePathTemplate("user-name");
@@ -84,6 +98,8 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
       boolean withContent = filters.contains("with-jcr-content:true");
       // "with-membership" attribute. Defaults to true.
       boolean withMemberships = !filters.contains("with-membership:false");
+      // "with-activities" attribute. Defaults to true.
+      boolean withActivities = !filters.contains("with-activities:false");
 
       // "new-password" attribute. Defaults to null (means : don't change
       // passwords).
@@ -101,7 +117,7 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
           throw new OperationException(OperationNames.EXPORT_RESOURCE, "User with name '" + userName + "' doesn't exist");
         }
         user.setPassword(newPassword);
-        exportUser(user, withContent, withMemberships, exportTasks);
+        exportUser(user, withContent, withMemberships, withActivities, exportTasks);
       } else {
         ListAccess<User> allUsers = organizationService.getUserHandler().findAllUsers();
         int size = allUsers.getSize();
@@ -112,7 +128,7 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
           User[] users = allUsers.load(i, length);
           for (User user : users) {
             user.setPassword(newPassword);
-            exportUser(user, withContent, withMemberships, exportTasks);
+            exportUser(user, withContent, withMemberships, withActivities, exportTasks);
           }
           i += pageSize;
         }
@@ -126,6 +142,23 @@ public class UserExportResource extends AbstractJCRExportOperationHandler {
     }
   }
 
+  /**
+   * Export user.
+   *
+   * @param user the user
+   * @param withContent the with content
+   * @param withMemberships the with memberships
+   * @param withActivities
+   * @param exportTasks the export tasks
+   * @throws Exception the exception
+   */
+  private void exportUser(User user, boolean withContent, boolean withMemberships, boolean withActivities, List<ExportTask> exportTasks) throws Exception {
+    if(withActivities) {
+      String prefix = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/" + user.getUserName() + "/";
+      exportActivities(exportTasks, user.getUserName(), prefix);
+    }
+    exportUser(user, withContent, withMemberships, exportTasks);
+  }
   /**
    * Export user.
    *

@@ -329,6 +329,8 @@
                                                 ng-model="optionsModel['/organization/user_EXPORT_filter/with-jcr-content']"/><span>{{i18n.withPErsonalJCRFolder}}</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-membership"
                                                 ng-model="optionsModel['/organization/user_EXPORT_filter/with-membership']"/><span>{{i18n.withMemberships}}</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-activities"
+                                                ng-model="optionsModel['/organization/user_EXPORT_filter/with-activities']"/><span>{{i18n.withActivities}}</span></label>
     </div>
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_IMPORT_filter/replace-existing"

@@ -323,7 +323,6 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
     }
     activity = activityManager.getActivity(activity.getId());
     try {
-      activityStorage.setInjectStreams(true);
       activityManager.saveComment(activity, comment);
     } catch (NullPointerException e) {
       log.warn("Error while importing comment: '" + comment.getTitle() + "'.");
@@ -346,7 +345,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
    * @param spacePrettyName the space pretty name
    */
   protected final void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
-    activityStorage.setInjectStreams(true);
+    //activityStorage.setInjectStreams(true);
     long updatedTime = activity.getUpdated().getTime();
     if (spacePrettyName == null) {
       if (activity.getActivityStream() != null && activity.getActivityStream().getType().equals(Type.SPACE) && activity.getActivityStream().getPrettyId() != null) {
@@ -379,7 +378,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         if (activity.getId() == null) {
           log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
         } else {
-          log.info("Activity  is imported: '" + activity.getTitle() + "'");
+          log.info("Activity is imported: '" + activity.getTitle() + "'");
         }
       } catch (ActivityStorageException e) {
         log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");
