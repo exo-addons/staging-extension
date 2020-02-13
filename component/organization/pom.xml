@@ -29,6 +29,10 @@
 			<artifactId>exo.portal.component.identity</artifactId>
 			<scope>provided</scope>
 		</dependency>
+        <dependency>
+            <groupId>org.exoplatform.social</groupId>
+		    <artifactId>social-component-core</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.exoplatform.addons.staging</groupId>
 			<artifactId>staging-extension-common</artifactId>

@@ -17,8 +17,10 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.poi.util.IOUtils;
 import org.exoplatform.management.common.FileEntry;
+import org.exoplatform.management.common.exportop.ActivitiesExportTask;
 import org.exoplatform.management.common.exportop.JCRNodeExportTask;
 import org.exoplatform.management.common.importop.AbstractJCRImportOperationHandler;
+import org.exoplatform.management.common.importop.ActivityImportOperationInterface;
 import org.exoplatform.management.common.importop.FileImportOperationInterface;
 import org.exoplatform.management.organization.OrganizationManagementExtension;
 import org.exoplatform.services.jcr.RepositoryService;
@@ -31,6 +33,9 @@ import org.exoplatform.services.organization.OrganizationService;
 import org.exoplatform.services.organization.User;
 import org.exoplatform.services.organization.UserProfile;
 import org.exoplatform.services.organization.impl.MembershipImpl;
+import org.exoplatform.social.core.activity.model.ExoSocialActivity;
+import org.exoplatform.social.core.manager.ActivityManager;
+import org.exoplatform.social.core.storage.api.IdentityStorage;
 import org.gatein.management.api.exceptions.OperationException;
 import org.gatein.management.api.operation.OperationAttachment;
 import org.gatein.management.api.operation.OperationAttributes;
@@ -43,7 +48,7 @@ import org.gatein.management.api.operation.model.NoResultModel;
  * @author <a href="mailto:boubaker.khanfir@exoplatform.com">Boubaker
  *         Khanfir</a>
  */
-public class UserImportResource extends AbstractJCRImportOperationHandler implements FileImportOperationInterface {
+public class UserImportResource extends AbstractJCRImportOperationHandler implements FileImportOperationInterface, ActivityImportOperationInterface {
   private static final Log log = ExoLogger.getLogger(UserImportResource.class);
 
   private static final String USERS_BASE_PATH = OrganizationManagementExtension.PATH_ORGANIZATION + "/" + OrganizationManagementExtension.PATH_ORGANIZATION_USER + "/";
@@ -55,6 +60,12 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
     if (organizationService == null) {
       organizationService = operationContext.getRuntimeContext().getRuntimeComponent(OrganizationService.class);
       repositoryService = operationContext.getRuntimeContext().getRuntimeComponent(RepositoryService.class);
+    }
+    if(identityStorage == null){
+      identityStorage = operationContext.getRuntimeContext().getRuntimeComponent(IdentityStorage.class);
+    }
+    if(activityManager == null){
+      activityManager = operationContext.getRuntimeContext().getRuntimeComponent(ActivityManager.class);
     }
 
     increaseCurrentTransactionTimeOut(operationContext);
@@ -91,6 +102,9 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
       // Content
       importUserJCRNodes(tempFile);
 
+      // Activities
+      importUserActivities(tempFile);
+
       resultHandler.completed(NoResultModel.INSTANCE);
     } catch (Exception e) {
       throw new OperationException(OperationNames.IMPORT_RESOURCE, "Error while reading View Templates from Stream.", e);
@@ -104,6 +118,31 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
       }
     }
   }
+
+  /**
+   * Import user social Activities
+   * @param tempFile
+   * @throws IOException
+   */
+  private void importUserActivities(File tempFile) throws IOException { ZipEntry entry;
+    try (ZipInputStream zin = new NonCloseableZipInputStream(new FileInputStream(tempFile))) {
+      while ((entry = zin.getNextEntry()) != null) {
+        String filePath = entry.getName();
+         if (filePath.startsWith(USERS_BASE_PATH) && filePath.endsWith(ActivitiesExportTask.FILENAME)) {
+           log.info("Parsing : " + filePath);
+           String userName = extractIdFromPath(filePath);
+           File targetFile = File.createTempFile("activities" + userName, "xml");
+           copyAttachementToLocalFolder(zin, targetFile);
+          importActivities(targetFile, userName, true);
+        }
+         try {
+           zin.closeEntry();
+           } catch (Exception e) {
+             // Already closed, expected
+           }
+           }
+        }
+    }
 
   private void importUserJCRNodes(File tempFile) throws Exception {
     // extract data from zip
@@ -274,5 +313,15 @@ public class UserImportResource extends AbstractJCRImportOperationHandler implem
       throw new IllegalStateException("Incorrect file path (" + filePath + ") must start with /organization/users/");
     }
     return username;
+  }
+
+  @Override
+  public void attachActivityToEntity(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+
+  }
+
+  @Override
+  public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
+    return false;
   }
 }

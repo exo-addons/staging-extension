@@ -479,6 +479,8 @@
                                                 ng-model="optionsModel['/organization/user_EXPORT_filter/with-jcr-content']"/><span>With Personal JCR Content</span></label>
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-membership"
                                                 ng-model="optionsModel['/organization/user_EXPORT_filter/with-membership']"/><span>With memberships</span></label>
+      <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_EXPORT_filter/with-activities"
+                                                ng-model="optionsModel['/organization/user_EXPORT_filter/with-activities']"/><span>With activities</span></label>
     </div>
     <div ng-show="mode == 'import' || mode == 'synchronize'">
       <label class="checkbox uiCheckbox"><input class="option" type="checkbox" name="/organization/user_IMPORT_filter/replace-existing"

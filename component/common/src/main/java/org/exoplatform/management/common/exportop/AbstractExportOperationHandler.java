@@ -34,7 +34,11 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
     if (identity.getProviderId().equals(SpaceIdentityProvider.NAME)) {
       listAccess = activityManager.getActivitiesOfSpaceWithListAccess(identity);
     } else if (identity.getProviderId().equals(OrganizationIdentityProvider.NAME)) {
-      listAccess = activityManager.getActivitiesByPoster(identity, type);
+      if(type != null && type.length > 0) {
+        listAccess = activityManager.getActivitiesByPoster(identity, type);
+      } else {
+        listAccess = activityManager.getActivitiesByPoster(identity);
+      }
     }
     if (listAccess == null) {
       return;
@@ -46,10 +50,14 @@ public abstract class AbstractExportOperationHandler extends AbstractOperationHa
     List<String> types = Arrays.asList(type);
     ExoSocialActivity[] activities = listAccess.load(0, listAccess.getSize());
     for (ExoSocialActivity activity : activities) {
-      if (activity.getType() != null && types.contains(activity.getType())) {
-        if (!activity.isComment() && ((ActivityExportOperationInterface) this).isActivityValid(activity)) {
-          addActivityWithComments(activitiesList, activity);
+      if(type.length > 0) {
+        if (activity.getType() != null && types.contains(activity.getType())) {
+          if (!activity.isComment() && ((ActivityExportOperationInterface) this).isActivityValid(activity)) {
+            addActivityWithComments(activitiesList, activity);
+          }
         }
+      } else {
+        addActivityWithComments(activitiesList, activity);
       }
     }
     if (!activitiesList.isEmpty()) {
