@@ -1,5 +1,5 @@
-Staging Extension for eXo Platform 4
-====================================
+Staging Extension for eXo Platform
+==================================
 
 See full documentation in eXo Community Website:
 
