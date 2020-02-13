@@ -319,25 +319,17 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
     if (comment != null) {
       return;
     }
-    String contentLink = activity.getTemplateParams().get("contenLink");
-    Matcher matcher = CONTENT_LINK_PATTERN.matcher(contentLink);
-
-    if (matcher.matches()) {
-      String workspace = matcher.group(2);
-      String contentPath = "/" + matcher.group(3);
-
-      Session session = null;
-      try {
-        session = getSession(workspace);
-        ActivityTypeUtils.attachActivityId(((Node) session.getItem(contentPath)), activity.getId());
-        session.save();
-      } finally {
-        if (session != null) {
-          session.logout();
-        }
+    String contentPath = activity.getTemplateParams().get("DOCPATH");
+    String workspace = activity.getTemplateParams().get("WORKSPACE");
+    Session session = null;
+    try {
+      session = getSession(workspace);
+      ActivityTypeUtils.attachActivityId(((Node) session.getItem(contentPath)), activity.getId());
+      session.save();
+    } finally {
+      if (session != null) {
+        session.logout();
       }
-    } else {
-      log.warn("Cannot attach activity for content activity with contentLink = " + contentLink);
     }
   }
 
@@ -346,17 +338,11 @@ public class SiteContentsImportResource extends AbstractJCRImportOperationHandle
    */
   public boolean isActivityNotValid(ExoSocialActivity activity, ExoSocialActivity comment) throws Exception {
     if (comment == null) {
-      String contentLink = activity.getTemplateParams().get("contenLink");
-      String workspace = null;
-      String contentPath = null;
-      if (contentLink != null && !contentLink.isEmpty()) {
-        Matcher matcher = CONTENT_LINK_PATTERN.matcher(contentLink);
-        if (matcher.matches() && matcher.groupCount() == 3) {
-          workspace = matcher.group(2);
-          contentPath = "/" + matcher.group(3);
-        }
+      String workspace = activity.getTemplateParams().get("WORKSPACE");
+      String contentPath = activity.getTemplateParams().get("DOCPATH");
+      if (contentPath != null && !contentPath.isEmpty()) {
         if (workspace == null || workspace.isEmpty()) {
-          log.warn("ContentLink param was found in activity params, but it doesn't refer to a correct path: " + contentLink);
+          log.warn("workspace param was found in activity params!");
           return true;
         }
         Session session = null;

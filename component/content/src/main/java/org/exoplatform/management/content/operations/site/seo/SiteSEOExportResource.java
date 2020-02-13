@@ -181,7 +181,12 @@ public class SiteSEOExportResource extends AbstractExportOperationHandler {
   }
 
   /**
-   * {@inheritDoc}
+   * Gets the page metadata.
+   *
+   * @param pageUUID the page UUID
+   * @param language the language
+   * @return the page metadata
+   * @throws Exception the exception
    */
   public PageMetadataModel getPageMetadata(String pageUUID, String language) throws Exception {
     PageMetadataModel metaModel = null;

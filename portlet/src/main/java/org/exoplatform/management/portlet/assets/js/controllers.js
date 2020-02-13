@@ -403,7 +403,31 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
         $scope.setResultMessage($scope.i18n.processing, "info");
 
 	    var downloadOptions = {};
-        $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
+	    fetch(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
+          .then(resp => resp.blob())
+          .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'staging-extension.zip';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            $scope.$apply(function(scope) {
+              scope.setResultMessage("", "info");
+              scope.button_clicked = false;
+              scope.refreshController();
+            });
+           })
+          .catch(() => {
+            $scope.$apply(function(scope) {
+              scope.setResultMessage(data, "error");
+              scope.button_clicked = false;
+              scope.refreshController();
+            });
+          });
+/*        $.fileDownload(stagingContainer.jzURL('StagingExtensionController.export') + paramsResourceCategories + paramsResources + paramsOptions, downloadOptions)
           .done(function () {
             $scope.$apply(function(scope) {
               scope.setResultMessage("", "info");
@@ -417,7 +441,7 @@ define( "stagingControllers", [ "SHARED/jquery", "SHARED/juzu-ajax" ], function 
 	          scope.button_clicked = false;
 	          scope.refreshController();
             });
-          });
+          });*/
         } catch(exception) {
       	  $scope.button_clicked = false;
 	      $scope.refreshController();

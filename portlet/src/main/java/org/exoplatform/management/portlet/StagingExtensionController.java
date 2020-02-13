@@ -605,7 +605,8 @@ public class StagingExtensionController {
       if (file == null) {
         return Response.content(500, getResourceBundle().getString("staging.emptyResourceList"));
       } else {
-        return Response.ok(new FileInputStream(file)).withMimeType("application/zip").withHeader("Set-Cookie", "fileDownload=true; path=/").withHeader("Content-Disposition", "filename=\"StagingExport.zip\"");
+        return Response.ok(new FileInputStream(file)).withMimeType("application/zip")
+                .withHeader("Content-Disposition", "attachment;filename=\"StagingExport.zip\"");
       }
     } catch (Throwable e) {
       log.error("Error while exporting resources, ", e);

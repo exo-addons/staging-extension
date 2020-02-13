@@ -242,15 +242,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
               log.warn("Attempt to add a comment activity to a non existing page activity.");
               continue;
             }
-            // FIXME getParentId not compatible with 4.0.7
-            // if (activity.getParentId() == null) {
-            // log.warn("Attempt to add a comment activity with null parent id.");
-            // continue;
-            // }
-            // if (!activity.getParentId().equals(originialParentActivityId)) {
-            // log.warn("Attempt to add a comment activity with different parent id from previous saved Activity.");
-            // continue;
-            // }
+
             if (parentActivity == null) {
               log.warn("Attempt to add a comment on null parent activity.");
               continue;
@@ -345,7 +337,6 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
    * @param spacePrettyName the space pretty name
    */
   protected final void saveActivity(ExoSocialActivity activity, String spacePrettyName) {
-    //activityStorage.setInjectStreams(true);
     long updatedTime = activity.getUpdated().getTime();
     if (spacePrettyName == null) {
       if (activity.getActivityStream() != null && activity.getActivityStream().getType().equals(Type.SPACE) && activity.getActivityStream().getPrettyId() != null) {

@@ -244,22 +244,12 @@ public class SocialDataExportResource extends AbstractExportOperationHandler {
    */
   private void exportSpaceAvatar(List<ExportTask> exportTasks, Space space, Identity spaceIdentity) throws UnsupportedEncodingException, Exception, PathNotFoundException, RepositoryException,
       ValueFormatException {
-    // No method to get avatar using Social API, so we have to use JCR
-    String avatarURL = spaceIdentity.getProfile().getAvatarUrl();
-    avatarURL = avatarURL == null ? null : URLDecoder.decode(avatarURL, "UTF-8");
-    if (avatarURL != null && avatarURL.contains(space.getPrettyName())) {
-      int beginIndexAvatarPath = avatarURL.indexOf("repository/social") + ("repository/social").length();
-      int endIndexAvatarPath = avatarURL.indexOf("?");
-      String avatarNodePath = endIndexAvatarPath >= 0 ? avatarURL.substring(beginIndexAvatarPath, endIndexAvatarPath) : avatarURL.substring(beginIndexAvatarPath);
-      Session session = AbstractJCRImportOperationHandler.getSession(repositoryService, "social");
-      Node avatarNode = (Node) session.getItem(avatarNodePath);
-      Node avatarJCRContentNode = avatarNode.getNode("jcr:content");
+    InputStream inputStream = identityManager.getAvatarInputStream(spaceIdentity);
+    if (inputStream != null) {
       String fileName = "avatar";
-      String mimeType = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:mimeType").getString() : null;
-      InputStream inputStream = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:data").getStream() : null;
-      Calendar lastModified = avatarJCRContentNode.hasProperty("jcr:data") ? avatarJCRContentNode.getProperty("jcr:lastModified").getDate() : null;
+      Long lastModified = spaceIdentity.getProfile().getAvatarLastUpdated();
 
-      AvatarAttachment avatar = new AvatarAttachment(null, fileName, mimeType, inputStream, null, lastModified.getTimeInMillis());
+      AvatarAttachment avatar = new AvatarAttachment(null, fileName, "image/png", inputStream, null, lastModified);
       exportTasks.add(new SpaceAvatarExportTask(space.getPrettyName(), avatar));
     }
   }
