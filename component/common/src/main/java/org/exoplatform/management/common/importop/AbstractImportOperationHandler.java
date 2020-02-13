@@ -369,7 +369,7 @@ public abstract class AbstractImportOperationHandler extends AbstractOperationHa
         if (activity.getId() == null) {
           log.warn("Activity '" + activity.getTitle() + "' is not imported, id is null");
         } else {
-          log.info("Activity  is imported: '" + activity.getTitle() + "'");
+          log.info("Activity is imported: '" + activity.getTitle() + "'");
         }
       } catch (ActivityStorageException e) {
         log.warn("Activity is not imported, it may already exist: '" + activity.getTitle() + "'.");

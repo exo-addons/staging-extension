@@ -283,7 +283,11 @@ public abstract class AbstractOperationHandler implements OperationHandler {
         return spaceIdentity;
       }
     } catch (Exception e) {
-      log.error("Error while retrieving identity: ", e);
+      if (log.isDebugEnabled()){
+        log.error("Error while retrieving identity : {}", id, e);
+      } else {
+        log.warn("Error while retrieving identity : {}", id);
+      }
     }
     return null;
   }
