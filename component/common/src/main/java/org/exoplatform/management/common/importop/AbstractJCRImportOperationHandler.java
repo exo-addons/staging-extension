@@ -279,7 +279,7 @@ public abstract class AbstractJCRImportOperationHandler extends AbstractImportOp
           node.setProperty("publication:revisionData", new String[] { node.getUUID() + ",published," + user });
         }
       }
-      node.setProperty("publication:liveRevision", "");
+      node.setProperty("publication:liveRevision", (javax.jcr.Value) null);
       node.setProperty("publication:currentState", "published");
       node.getSession().save();
 
