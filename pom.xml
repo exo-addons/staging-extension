@@ -28,7 +28,7 @@
     <junit.version>4.12</junit.version>
     <xmlunit.version>1.3</xmlunit.version>
     <gatein.management.version>2.1.0.Final</gatein.management.version>
-    <org.exoplatform.platform.version>5.1.0</org.exoplatform.platform.version>
+    <org.exoplatform.platform.version>5.1.3-CP01</org.exoplatform.platform.version>
   </properties>
   <dependencyManagement>
     <dependencies>
