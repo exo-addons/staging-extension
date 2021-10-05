@@ -5,7 +5,7 @@
 			<unableToConnect>Le serveur cible ne répond pas</unableToConnect>
 			<synchronizationError>Une erreur est survenue lors de la synchronisation</synchronizationError>
 			<targetServerMandatory>Le choix du serveur cible est obligatoire</targetServerMandatory>
-			<synchronizationDone>La synhronisation est terminée avec succès</synchronizationDone>
+			<synchronizationDone>La synchronisation est terminée avec succès</synchronizationDone>
 			<synchronizationInProgress>Synchronisation en cours ...</synchronizationInProgress>
 			<groupSiteSynchronization>Vous êtes sur le point de synchroniser un site de groupe.</groupSiteSynchronization>
 		</msg>
